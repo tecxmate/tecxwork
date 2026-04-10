@@ -123,11 +123,11 @@ export function SlotPicker({
                 key={slot.id}
                 onClick={() => handleSelect(slot)}
                 className={cn(
-                  "cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors duration-150",
+                  "min-h-[44px] cursor-pointer rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors duration-150",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   isSelected
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/5"
+                    : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/5 active:scale-95"
                 )}
                 aria-pressed={isSelected}
               >

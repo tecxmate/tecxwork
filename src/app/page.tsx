@@ -18,11 +18,11 @@ const ROLES = [
     icon: GraduationCap,
     title: "I'm a Student",
     description:
-      "Browse participating companies and book interview slots. Register as an applicant to also let recruiters discover you.",
-    cta: "Sign up / Log in",
+      "Browse participating companies and book interview slots. Register to also let recruiters discover you.",
+    cta: "Sign up",
     primaryHref: "/register",
     secondaryHref: "/login",
-    secondaryLabel: "Already registered? Log in",
+    secondaryLabel: "Already have an account? Log in",
   },
   {
     id: "recruiter",
@@ -30,17 +30,17 @@ const ROLES = [
     title: "I'm a Recruiter",
     description:
       "View your scheduled interviews, browse student profiles, and book candidates directly.",
-    cta: "Recruiter Login",
-    primaryHref: "/login",
-    secondaryHref: null,
-    secondaryLabel: null,
+    cta: "Sign up",
+    primaryHref: "/recruiter/signup",
+    secondaryHref: "/login",
+    secondaryLabel: "Already have an account? Log in",
   },
   {
     id: "admin",
     icon: ShieldCheck,
     title: "I'm an Admin",
     description:
-      "Manage recruiters, event settings, and oversee all bookings for the recruitment fair.",
+      "Manage recruiter access, event settings, and oversee all bookings for the recruitment fair.",
     cta: "Admin Login",
     primaryHref: "/login",
     secondaryHref: null,
@@ -112,23 +112,23 @@ export default async function Home() {
                   <h2 className="font-heading text-xl font-semibold">
                     {role.title}
                   </h2>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col justify-between gap-4">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="min-h-[4.5rem] text-sm text-muted-foreground">
                     {role.description}
                   </p>
-                  <div className="space-y-2">
-                    <Link
-                      href={role.primaryHref}
-                      className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {role.cta}
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
+                </CardHeader>
+                <CardContent className="mt-auto flex flex-col gap-2">
+                  <Link
+                    href={role.primaryHref}
+                    className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    {role.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <div className="h-4 text-center">
                     {role.secondaryHref && (
                       <Link
                         href={role.secondaryHref}
-                        className="block text-center text-xs text-muted-foreground hover:text-foreground"
+                        className="text-xs text-muted-foreground hover:text-foreground"
                       >
                         {role.secondaryLabel}
                       </Link>

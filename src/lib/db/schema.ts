@@ -151,6 +151,18 @@ export const bookings = pgTable("bookings", {
     .defaultNow(),
 });
 
+// ---- Allowed recruiter email domains (admin whitelist) ----
+
+export const allowedDomains = pgTable("allowed_domains", {
+  id: serial("id").primaryKey(),
+  domain: text("domain").notNull().unique(),
+  company: text("company").notNull(),
+  industry: text("industry").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ---- Event config (single-row table for global settings) ----
 
 export const eventConfig = pgTable("event_config", {

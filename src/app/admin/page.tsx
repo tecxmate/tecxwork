@@ -1,6 +1,14 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { db, recruiters, bookings, slots, applicantProfiles, eventConfig } from "@/lib/db";
+import {
+  db,
+  recruiters,
+  bookings,
+  slots,
+  applicantProfiles,
+  eventConfig,
+  allowedDomains,
+} from "@/lib/db";
 import { count, eq } from "drizzle-orm";
 import { AdminDashboard } from "./admin-dashboard";
 
@@ -24,12 +32,23 @@ export default async function AdminPage() {
     .select({ count: count() })
     .from(slots)
     .where(eq(slots.status, "available"));
-  const [applicantCount] = await db.select({ count: count() }).from(applicantProfiles);
-  const [config] = await db.select({ mode: eventConfig.mode }).from(eventConfig).limit(1);
+  const [applicantCount] = await db
+    .select({ count: count() })
+    .from(applicantProfiles);
+  const [config] = await db
+    .select({ mode: eventConfig.mode })
+    .from(eventConfig)
+    .limit(1);
+
+  const domains = await db
+    .select()
+    .from(allowedDomains)
+    .orderBy(allowedDomains.company);
 
   return (
     <AdminDashboard
       recruiters={recruiterList}
+      domains={domains}
       stats={{
         totalRecruiters: recruiterList.length,
         totalBookings: bookingCount.count,

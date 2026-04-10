@@ -1,0 +1,118 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db, users, recruiters, allowedDomains, slots } from "@/lib/db";
+import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
+import { eq } from "drizzle-orm";
+
+/** POST — Recruiter self-signup with allowed-domain check */
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const {
+    email,
+    password,
+    name,
+    company,
+    industry,
+    description,
+    positions,
+    contactEmail,
+    jdLink,
+  } = body;
+
+  if (!email || !password || !name || !company || !industry) {
+    return NextResponse.json(
+      { error: "Missing required fields" },
+      { status: 400 }
+    );
+  }
+
+  if (password.length < 6) {
+    return NextResponse.json(
+      { error: "Password must be at least 6 characters" },
+      { status: 400 }
+    );
+  }
+
+  // Verify email domain is allowed
+  const domain = email.split("@")[1]?.trim().toLowerCase();
+  if (!domain) {
+    return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+  }
+
+  const [allowed] = await db
+    .select()
+    .from(allowedDomains)
+    .where(eq(allowedDomains.domain, domain));
+
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error:
+          "This email domain is not authorized. Contact the event admin to be added to the recruiter list.",
+      },
+      { status: 403 }
+    );
+  }
+
+  try {
+    // Create user
+    const passwordHash = await hashPassword(password);
+    const [user] = await db
+      .insert(users)
+      .values({ email, name, passwordHash, role: "recruiter" })
+      .returning();
+
+    // Create recruiter profile
+    const [recruiter] = await db
+      .insert(recruiters)
+      .values({
+        userId: user.id,
+        company: company ?? allowed.company,
+        industry: industry ?? allowed.industry,
+        description: description ?? "",
+        positions: positions ?? [],
+        contactEmail: contactEmail ?? email,
+        jdLink: jdLink ?? null,
+      })
+      .returning();
+
+    // Generate default slots for event day (9am–5pm, 15-min intervals)
+    const eventDate = "2026-06-10";
+    const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] = [];
+    for (let h = 9; h < 17; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        const start = new Date(
+          `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
+        );
+        const end = new Date(start.getTime() + 15 * 60 * 1000);
+        slotValues.push({ recruiterId: recruiter.id, startTime: start, endTime: end });
+      }
+    }
+    await db.insert(slots).values(slotValues);
+
+    // Auto-login
+    const token = createToken({
+      userId: user.id,
+      email: user.email,
+      role: "recruiter",
+    });
+
+    const res = NextResponse.json({ recruiter }, { status: 201 });
+    res.cookies.set(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("unique")) {
+      return NextResponse.json(
+        { error: "An account with this email already exists. Try logging in." },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
+}

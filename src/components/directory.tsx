@@ -34,9 +34,9 @@ export function Directory() {
   }, [query, industry, recruiters]);
 
   return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm">
+    <section className="space-y-4 sm:space-y-6">
+      <div className="space-y-3">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
@@ -47,17 +47,23 @@ export function Directory() {
             aria-label="Search companies or positions"
           />
         </div>
-        <p className="text-sm text-muted-foreground">
+
+        {/* Horizontally scrollable filter chips on mobile */}
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <IndustryFilter selected={industry} onSelect={setIndustry} />
+        </div>
+
+        <p className="text-xs text-muted-foreground sm:text-sm">
           {filtered.length} {filtered.length === 1 ? "company" : "companies"}
         </p>
       </div>
 
-      <IndustryFilter selected={industry} onSelect={setIndustry} />
-
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Loading companies...</span>
+          <span className="ml-2 text-sm text-muted-foreground">
+            Loading companies...
+          </span>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
@@ -69,7 +75,7 @@ export function Directory() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((r) => (
             <RecruiterCard key={r.id} recruiter={r} />
           ))}

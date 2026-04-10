@@ -11,7 +11,11 @@ export function IndustryFilter({
   onSelect: (industry: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter by industry">
+    <div
+      className="flex gap-2 whitespace-nowrap sm:flex-wrap"
+      role="tablist"
+      aria-label="Filter by industry"
+    >
       {INDUSTRIES.map((industry) => (
         <button
           key={industry}

@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyToken, COOKIE_NAME } from "@/lib/auth";
 
-const PROTECTED_ROUTES = ["/browse", "/dashboard", "/admin", "/recruiter"];
-const AUTH_ROUTES = ["/login", "/register"];
+const AUTH_ROUTES = ["/login", "/register", "/recruiter/signup"];
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -10,15 +9,9 @@ export function proxy(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   const session = token ? verifyToken(token) : null;
 
-  const isProtected = PROTECTED_ROUTES.some((p) => pathname.startsWith(p));
-  const isAuthRoute = AUTH_ROUTES.some((p) => pathname === p);
+  const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-  // Redirect unauthenticated users away from protected routes
-  if (isProtected && !session) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // Redirect authenticated users away from login/register to their dashboard
+  // Redirect authenticated users away from login/signup pages to their dashboard
   if (isAuthRoute && session) {
     if (session.role === "admin") {
       return NextResponse.redirect(new URL("/admin", req.url));
@@ -29,18 +22,29 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/browse", req.url));
   }
 
-  // Role-based access to protected routes
-  if (session) {
-    if (pathname.startsWith("/admin") && session.role !== "admin") {
+  // Admin-only
+  if (pathname.startsWith("/admin")) {
+    if (!session) return NextResponse.redirect(new URL("/login", req.url));
+    if (session.role !== "admin") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    if (pathname.startsWith("/dashboard") && session.role !== "recruiter") {
+  }
+
+  // Recruiter-only (but /recruiter/signup is public, handled above)
+  if (pathname.startsWith("/dashboard")) {
+    if (!session) return NextResponse.redirect(new URL("/login", req.url));
+    if (session.role !== "recruiter") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    if (
-      (pathname.startsWith("/browse") || pathname.startsWith("/recruiter/")) &&
-      session.role !== "applicant"
-    ) {
+  }
+
+  // Applicant-only: /browse and /recruiter/[id] (but not /recruiter/signup)
+  if (
+    pathname.startsWith("/browse") ||
+    (pathname.startsWith("/recruiter/") && pathname !== "/recruiter/signup")
+  ) {
+    if (!session) return NextResponse.redirect(new URL("/login", req.url));
+    if (session.role !== "applicant") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
   }
