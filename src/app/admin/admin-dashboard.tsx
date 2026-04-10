@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { SiteFooter } from "@/components/site-footer";
 
 type Recruiter = {
   id: number;
@@ -362,6 +363,7 @@ export function AdminDashboard({
           </div>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

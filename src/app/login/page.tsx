@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Users, AlertCircle, ArrowLeft } from "lucide-react";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -157,6 +158,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   );
 }

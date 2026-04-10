@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/countdown";
 import { Directory } from "@/components/directory";
 import { LogoutButton } from "@/components/logout-button";
+import { SiteFooter } from "@/components/site-footer";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 
@@ -80,7 +81,7 @@ export default async function BrowsePage() {
 
       <Separator />
 
-      <footer className="px-4 py-6 sm:px-6">
+      <div className="px-4 py-6 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
             <div className="flex items-start gap-2 sm:gap-3">
@@ -95,7 +96,9 @@ export default async function BrowsePage() {
             </div>
           </div>
         </div>
-      </footer>
+      </div>
+
+      <SiteFooter />
     </div>
   );
 }

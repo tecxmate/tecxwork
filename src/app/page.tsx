@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Countdown } from "@/components/countdown";
+import { SiteFooter } from "@/components/site-footer";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 
@@ -141,9 +142,7 @@ export default async function Home() {
         </div>
       </main>
 
-      <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
-        &copy; 2026 TecxWork &middot; PIPA compliant
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

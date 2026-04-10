@@ -17,6 +17,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { SiteFooter } from "@/components/site-footer";
 
 type Step = "form" | "availability" | "done";
 
@@ -400,6 +401,7 @@ export default function RegisterPage() {
           </Card>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

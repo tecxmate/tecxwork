@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SlotPicker } from "@/components/slot-picker";
 import { BookingForm } from "@/components/booking-form";
+import { SiteFooter } from "@/components/site-footer";
 import { EVENT_CONFIG } from "@/lib/data";
 
 type Recruiter = {
@@ -221,6 +222,7 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
           </div>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

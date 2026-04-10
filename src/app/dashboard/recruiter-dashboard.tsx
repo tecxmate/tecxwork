@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { SlotPicker } from "@/components/slot-picker-applicant";
+import { SiteFooter } from "@/components/site-footer";
 
 type Booking = {
   id: number;
@@ -147,6 +148,7 @@ export function RecruiterDashboard({
           )}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
