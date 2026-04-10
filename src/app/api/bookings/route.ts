@@ -1,32 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, slots, bookings } from "@/lib/db";
+import { db, slots, bookings, applicantProfiles } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
+/**
+ * POST — Applicant books a recruiter's slot (Mode A).
+ * Requires applicant session. Uses profile data from DB, not client input.
+ */
 export async function POST(req: NextRequest) {
-  let body: {
-    slotId: number;
-    recruiterId: number;
-    name: string;
-    email: string;
-    cvLink: string;
-    pipaConsent: boolean;
-  };
+  // Auth: must be applicant
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.role !== "applicant") {
+    return NextResponse.json(
+      { error: "Only applicants can book recruiter slots" },
+      { status: 403 }
+    );
+  }
 
+  let body: { slotId: number; pipaConsent: boolean; cvLink?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.slotId || !body.recruiterId || !body.name || !body.email || !body.cvLink) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  if (!body.slotId) {
+    return NextResponse.json({ error: "slotId is required" }, { status: 400 });
   }
 
   if (!body.pipaConsent) {
-    return NextResponse.json({ error: "PIPA consent is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "PIPA consent is required" },
+      { status: 400 }
+    );
   }
 
-  // Atomic: only update if slot is still available (prevents double-booking)
+  // Fetch the applicant profile from session (trust DB, not client)
+  const [profile] = await db
+    .select({
+      id: applicantProfiles.id,
+      name: applicantProfiles.name,
+      email: applicantProfiles.email,
+      cvLink: applicantProfiles.cvLink,
+    })
+    .from(applicantProfiles)
+    .where(eq(applicantProfiles.userId, session.userId));
+
+  if (!profile) {
+    return NextResponse.json(
+      { error: "Applicant profile not found" },
+      { status: 404 }
+    );
+  }
+
+  // Validate slot exists and get its true recruiterId (don't trust client)
+  const [slot] = await db
+    .select({ id: slots.id, recruiterId: slots.recruiterId, status: slots.status })
+    .from(slots)
+    .where(eq(slots.id, body.slotId));
+
+  if (!slot) {
+    return NextResponse.json({ error: "Slot not found" }, { status: 404 });
+  }
+
+  // Atomic: only update if slot is still available
   const updated = await db
     .update(slots)
     .set({ status: "booked" })
@@ -44,12 +84,14 @@ export async function POST(req: NextRequest) {
     const [booking] = await db
       .insert(bookings)
       .values({
+        direction: "applicant_books_recruiter",
         slotId: body.slotId,
-        recruiterId: body.recruiterId,
-        applicantName: body.name,
-        applicantEmail: body.email,
-        cvLink: body.cvLink,
-        pipaConsent: body.pipaConsent,
+        recruiterId: slot.recruiterId,
+        applicantId: profile.id,
+        applicantName: profile.name,
+        applicantEmail: profile.email,
+        cvLink: body.cvLink?.trim() || profile.cvLink,
+        pipaConsent: true,
       })
       .returning();
 

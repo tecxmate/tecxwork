@@ -1,28 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, applicantSlots, bookings, applicantProfiles } from "@/lib/db";
+import {
+  db,
+  applicantSlots,
+  bookings,
+  applicantProfiles,
+  recruiters,
+} from "@/lib/db";
 import { eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
-/** POST — Recruiter books an applicant's slot (Mode B) */
+/**
+ * POST — Recruiter books an applicant's slot (Mode B).
+ * Requires recruiter session. Uses session recruiter ID, not client input.
+ */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { applicantSlotId, recruiterId, applicantId } = body;
-
-  if (!applicantSlotId || !recruiterId || !applicantId) {
+  // Auth: must be recruiter
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.role !== "recruiter") {
     return NextResponse.json(
-      { error: "Missing required fields" },
+      { error: "Only recruiters can book applicants" },
+      { status: 403 }
+    );
+  }
+
+  const body = await req.json();
+  const { applicantSlotId } = body;
+
+  if (!applicantSlotId) {
+    return NextResponse.json(
+      { error: "applicantSlotId is required" },
       { status: 400 }
     );
   }
 
-  // Get applicant info
+  // Fetch recruiter record from session (not client)
+  const [recruiter] = await db
+    .select({ id: recruiters.id })
+    .from(recruiters)
+    .where(eq(recruiters.userId, session.userId));
+
+  if (!recruiter) {
+    return NextResponse.json(
+      { error: "Recruiter profile not found" },
+      { status: 404 }
+    );
+  }
+
+  // Fetch slot and its owner (applicant)
+  const [slot] = await db
+    .select({
+      id: applicantSlots.id,
+      applicantId: applicantSlots.applicantId,
+    })
+    .from(applicantSlots)
+    .where(eq(applicantSlots.id, applicantSlotId));
+
+  if (!slot) {
+    return NextResponse.json({ error: "Slot not found" }, { status: 404 });
+  }
+
+  // Fetch applicant info
   const [applicant] = await db
     .select({
+      id: applicantProfiles.id,
       name: applicantProfiles.name,
       email: applicantProfiles.email,
       cvLink: applicantProfiles.cvLink,
     })
     .from(applicantProfiles)
-    .where(eq(applicantProfiles.id, applicantId));
+    .where(eq(applicantProfiles.id, slot.applicantId));
 
   if (!applicant) {
     return NextResponse.json(
@@ -56,8 +105,8 @@ export async function POST(req: NextRequest) {
       .values({
         direction: "recruiter_books_applicant",
         applicantSlotId,
-        recruiterId,
-        applicantId,
+        recruiterId: recruiter.id,
+        applicantId: applicant.id,
         applicantName: applicant.name,
         applicantEmail: applicant.email,
         cvLink: applicant.cvLink,

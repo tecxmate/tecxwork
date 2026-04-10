@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, applicantSlots } from "@/lib/db";
+import { db, applicantSlots, applicantProfiles } from "@/lib/db";
 import { eq, and, gte, lt } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
-// GET — available slots for an applicant on a given date
+// GET — available slots for an applicant on a given date (public: recruiters need to see)
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const applicantId = url.searchParams.get("applicantId");
@@ -13,6 +14,11 @@ export async function GET(req: NextRequest) {
       { error: "Missing applicantId or date" },
       { status: 400 }
     );
+  }
+
+  const parsedId = parseInt(applicantId);
+  if (isNaN(parsedId)) {
+    return NextResponse.json({ error: "Invalid applicantId" }, { status: 400 });
   }
 
   const dayStart = new Date(`${date}T00:00:00+08:00`);
@@ -28,7 +34,7 @@ export async function GET(req: NextRequest) {
     .from(applicantSlots)
     .where(
       and(
-        eq(applicantSlots.applicantId, parseInt(applicantId)),
+        eq(applicantSlots.applicantId, parsedId),
         gte(applicantSlots.startTime, dayStart),
         lt(applicantSlots.startTime, dayEnd)
       )
@@ -38,14 +44,53 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ slots: result });
 }
 
-// POST — applicant creates their own availability slots
+// POST — applicant creates their own availability slots (requires applicant session)
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { applicantId, date, startHour = 9, endHour = 17, durationMinutes = 15 } = body;
-
-  if (!applicantId || !date) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.role !== "applicant") {
     return NextResponse.json(
-      { error: "applicantId and date are required" },
+      { error: "Only applicants can create availability slots" },
+      { status: 403 }
+    );
+  }
+
+  const body = await req.json();
+  const { date, startHour = 9, endHour = 17, durationMinutes = 15 } = body;
+
+  if (!date) {
+    return NextResponse.json({ error: "date is required" }, { status: 400 });
+  }
+
+  // Fetch the applicant profile from session — never trust client-supplied ID
+  const [profile] = await db
+    .select({ id: applicantProfiles.id })
+    .from(applicantProfiles)
+    .where(eq(applicantProfiles.userId, session.userId));
+
+  if (!profile) {
+    return NextResponse.json(
+      { error: "Applicant profile not found" },
+      { status: 404 }
+    );
+  }
+
+  // Sanity-check inputs to prevent abuse
+  if (
+    typeof startHour !== "number" ||
+    typeof endHour !== "number" ||
+    typeof durationMinutes !== "number" ||
+    startHour < 0 ||
+    startHour > 23 ||
+    endHour <= startHour ||
+    endHour > 24 ||
+    durationMinutes < 5 ||
+    durationMinutes > 120
+  ) {
+    return NextResponse.json(
+      { error: "Invalid time parameters" },
       { status: 400 }
     );
   }
@@ -62,7 +107,11 @@ export async function POST(req: NextRequest) {
         `${date}T${String(endHour).padStart(2, "0")}:00:00+08:00`
       );
       if (end > endLimit) break;
-      newSlots.push({ applicantId, startTime: start, endTime: end });
+      newSlots.push({
+        applicantId: profile.id,
+        startTime: start,
+        endTime: end,
+      });
     }
   }
 
