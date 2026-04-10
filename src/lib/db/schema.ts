@@ -11,7 +11,11 @@ import {
 
 // ---- Enums ----
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "recruiter"]);
+export const userRoleEnum = pgEnum("user_role", [
+  "admin",
+  "recruiter",
+  "applicant",
+]);
 export const slotStatusEnum = pgEnum("slot_status", [
   "available",
   "booked",
@@ -63,10 +67,11 @@ export const recruiters = pgTable("recruiters", {
     .defaultNow(),
 });
 
-// ---- Applicant profiles (self-registered, no login required) ----
+// ---- Applicant profiles (linked to a user account) ----
 
 export const applicantProfiles = pgTable("applicant_profiles", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).unique(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   major: text("major").notNull().default(""),

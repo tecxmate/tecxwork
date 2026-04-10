@@ -1,12 +1,62 @@
 import Link from "next/link";
-import { MapPin, Clock, Users, ShieldCheck, UserPlus } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { redirect } from "next/navigation";
+import {
+  GraduationCap,
+  Building2,
+  ShieldCheck,
+  ArrowRight,
+  Users,
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Countdown } from "@/components/countdown";
-import { Directory } from "@/components/directory";
 import { EVENT_CONFIG } from "@/lib/data";
+import { getSession } from "@/lib/auth";
 
-export default function Home() {
+const ROLES = [
+  {
+    id: "applicant",
+    icon: GraduationCap,
+    title: "I'm a Student",
+    description:
+      "Browse participating companies and book interview slots. Register as an applicant to also let recruiters discover you.",
+    cta: "Sign up / Log in",
+    primaryHref: "/register",
+    secondaryHref: "/login",
+    secondaryLabel: "Already registered? Log in",
+  },
+  {
+    id: "recruiter",
+    icon: Building2,
+    title: "I'm a Recruiter",
+    description:
+      "View your scheduled interviews, browse student profiles, and book candidates directly.",
+    cta: "Recruiter Login",
+    primaryHref: "/login",
+    secondaryHref: null,
+    secondaryLabel: null,
+  },
+  {
+    id: "admin",
+    icon: ShieldCheck,
+    title: "I'm an Admin",
+    description:
+      "Manage recruiters, event settings, and oversee all bookings for the recruitment fair.",
+    cta: "Admin Login",
+    primaryHref: "/login",
+    secondaryHref: null,
+    secondaryLabel: null,
+  },
+] as const;
+
+export default async function Home() {
+  // Auto-redirect logged-in users
+  const session = await getSession();
+  if (session) {
+    if (session.role === "admin") redirect("/admin");
+    if (session.role === "recruiter") redirect("/dashboard");
+    if (session.role === "applicant") redirect("/browse");
+  }
+
   const formattedDate = EVENT_CONFIG.date.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -16,110 +66,83 @@ export default function Home() {
   });
 
   return (
-    <div className="flex flex-1 flex-col">
-      {/* Header */}
+    <div className="flex min-h-full flex-1 flex-col">
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Users className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="font-heading text-lg font-bold">TecxMeet</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              <UserPlus className="h-3.5 w-3.5" />
-              Register
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Login
-            </Link>
-          </div>
+          <span className="text-xs text-muted-foreground">
+            {EVENT_CONFIG.location}
+          </span>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="border-b bg-card px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-7xl text-center">
-          <Badge className="mb-4">2026 Recruitment Event</Badge>
-          <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            {EVENT_CONFIG.name}
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
-            {EVENT_CONFIG.subtitle} — Browse companies, find open positions, and
-            book your interview slot. Recruiters can also discover and book
-            candidates.
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
+      <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
+        <div className="w-full max-w-5xl space-y-10">
+          <div className="text-center">
+            <p className="text-sm font-medium text-primary">
               {formattedDate}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" />
-              {EVENT_CONFIG.location}
-            </span>
-          </div>
+            </p>
+            <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight sm:text-5xl">
+              {EVENT_CONFIG.name}
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
+              {EVENT_CONFIG.subtitle}. Choose your role to get started.
+            </p>
 
-          <div className="mt-8 flex justify-center">
-            <Countdown target={EVENT_CONFIG.date} />
-          </div>
-        </div>
-      </section>
-
-      {/* Directory */}
-      <main className="flex-1 px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mx-auto max-w-7xl">
-          <Directory />
-        </div>
-      </main>
-
-      <Separator />
-
-      {/* PIPA Notice & Footer */}
-      <footer className="px-4 py-8 sm:px-6">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 sm:p-6">
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              <div className="space-y-1 text-sm">
-                <p className="font-semibold">
-                  Personal Data Protection Notice (PIPA)
-                </p>
-                <p className="text-muted-foreground">
-                  Your CV link is shared only with the specific recruiter you
-                  book with. We do not store your files — Google Drive
-                  permissions are managed directly between you and the
-                  recruiter. All centralized booking data will be permanently
-                  purged within 2 days of the event. This system complies with
-                  Taiwan&apos;s Personal Data Protection Act.
-                </p>
-              </div>
+            <div className="mt-6 flex justify-center">
+              <Countdown target={EVENT_CONFIG.date} />
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-between gap-4 text-xs text-muted-foreground sm:flex-row">
-            <p>&copy; 2026 TecxMeet. All rights reserved.</p>
-            <p>
-              Hosted on{" "}
-              <a
-                href="https://vercel.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-foreground"
+          <div className="grid gap-4 sm:grid-cols-3">
+            {ROLES.map((role) => (
+              <Card
+                key={role.id}
+                className="flex flex-col transition-shadow duration-200 hover:shadow-md"
               >
-                Vercel
-              </a>
-            </p>
+                <CardHeader className="gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary">
+                    <role.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h2 className="font-heading text-xl font-semibold">
+                    {role.title}
+                  </h2>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col justify-between gap-4">
+                  <p className="text-sm text-muted-foreground">
+                    {role.description}
+                  </p>
+                  <div className="space-y-2">
+                    <Link
+                      href={role.primaryHref}
+                      className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {role.cta}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    {role.secondaryHref && (
+                      <Link
+                        href={role.secondaryHref}
+                        className="block text-center text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        {role.secondaryLabel}
+                      </Link>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
+      </main>
+
+      <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
+        &copy; 2026 TecxMeet &middot; PIPA compliant &middot; Hosted on Vercel
       </footer>
     </div>
   );

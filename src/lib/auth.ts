@@ -7,10 +7,12 @@ import { eq } from "drizzle-orm";
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 const COOKIE_NAME = "tecxmeet_session";
 
-type SessionPayload = {
+export type UserRole = "admin" | "recruiter" | "applicant";
+
+export type SessionPayload = {
   userId: number;
   email: string;
-  role: "admin" | "recruiter";
+  role: UserRole;
 };
 
 export async function hashPassword(password: string): Promise<string> {

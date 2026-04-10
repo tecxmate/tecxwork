@@ -31,8 +31,10 @@ export default function LoginPage() {
 
       if (data.user.role === "admin") {
         router.push("/admin");
-      } else {
+      } else if (data.user.role === "recruiter") {
         router.push("/dashboard");
+      } else {
+        router.push("/browse");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");

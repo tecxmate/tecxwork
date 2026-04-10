@@ -29,6 +29,7 @@ export default function RegisterPage() {
   // Form fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [major, setMajor] = useState("");
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
@@ -39,7 +40,12 @@ export default function RegisterPage() {
   // Created profile
   const [profileId, setProfileId] = useState<number | null>(null);
 
-  const canSubmit = name.trim() && email.trim() && cvLink.trim() && pipaConsent;
+  const canSubmit =
+    name.trim() &&
+    email.trim() &&
+    password.length >= 6 &&
+    cvLink.trim() &&
+    pipaConsent;
 
   function addSkill() {
     const s = skillInput.trim();
@@ -66,6 +72,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
+          password,
           major: major.trim(),
           skills,
           cvLink: cvLink.trim(),
@@ -134,7 +141,7 @@ export default function RegisterPage() {
             <p className="text-xs text-muted-foreground">
               You can also browse companies and book interviews yourself.
             </p>
-            <Button onClick={() => router.push("/")} className="mt-2">
+            <Button onClick={() => router.push("/browse")} className="mt-2">
               Browse Companies
             </Button>
           </CardContent>
@@ -246,6 +253,22 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@university.edu.tw"
                     autoComplete="email"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="reg-password" className="text-sm font-medium">
+                    Password <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    id="reg-password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 6 characters"
+                    autoComplete="new-password"
                   />
                 </div>
 
