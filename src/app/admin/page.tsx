@@ -8,6 +8,7 @@ import {
   applicantProfiles,
   eventConfig,
   allowedDomains,
+  users,
 } from "@/lib/db";
 import { count, eq } from "drizzle-orm";
 import { AdminDashboard } from "./admin-dashboard";
@@ -19,12 +20,27 @@ export default async function AdminPage() {
   const recruiterList = await db
     .select({
       id: recruiters.id,
+      name: users.name,
       company: recruiters.company,
       industry: recruiters.industry,
       contactEmail: recruiters.contactEmail,
+      email: users.email,
+      createdAt: recruiters.createdAt,
     })
     .from(recruiters)
+    .innerJoin(users, eq(recruiters.userId, users.id))
     .orderBy(recruiters.company);
+
+  const applicantList = await db
+    .select({
+      id: applicantProfiles.id,
+      name: applicantProfiles.name,
+      email: applicantProfiles.email,
+      major: applicantProfiles.major,
+      createdAt: applicantProfiles.createdAt,
+    })
+    .from(applicantProfiles)
+    .orderBy(applicantProfiles.name);
 
   const [bookingCount] = await db.select({ count: count() }).from(bookings);
   const [slotCount] = await db.select({ count: count() }).from(slots);
@@ -32,9 +48,6 @@ export default async function AdminPage() {
     .select({ count: count() })
     .from(slots)
     .where(eq(slots.status, "available"));
-  const [applicantCount] = await db
-    .select({ count: count() })
-    .from(applicantProfiles);
   const [config] = await db
     .select({ mode: eventConfig.mode, locked: eventConfig.modeLocked })
     .from(eventConfig)
@@ -48,13 +61,14 @@ export default async function AdminPage() {
   return (
     <AdminDashboard
       recruiters={recruiterList}
+      applicants={applicantList}
       domains={domains}
       stats={{
         totalRecruiters: recruiterList.length,
         totalBookings: bookingCount.count,
         totalSlots: slotCount.count,
         availableSlots: availableCount.count,
-        totalApplicants: applicantCount.count,
+        totalApplicants: applicantList.length,
       }}
       currentMode={config?.mode ?? "both"}
       initialLocked={config?.locked ?? false}
