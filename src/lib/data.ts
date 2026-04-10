@@ -1,8 +1,8 @@
 export const EVENT_CONFIG = {
-  name: "TecxMeet 2026",
+  name: "TecxWork 2026",
   subtitle: "University Recruitment Fair",
-  date: new Date("2026-05-15T09:00:00+08:00"),
-  endDate: new Date("2026-05-15T17:00:00+08:00"),
+  date: new Date("2026-06-10T09:00:00+08:00"),
+  endDate: new Date("2026-06-10T17:00:00+08:00"),
   location: "National Taiwan University, Taipei",
   timezone: "Asia/Taipei",
   slotDuration: 15,

@@ -16,7 +16,7 @@ async function seed() {
   const adminHash = await bcrypt.hash("admin123", 12);
   const [admin] = await db
     .insert(schema.users)
-    .values({ email: "admin@tecxmeet.tw", name: "Event Admin", passwordHash: adminHash, role: "admin" })
+    .values({ email: "admin@tecxwork.tw", name: "Event Admin", passwordHash: adminHash, role: "admin" })
     .onConflictDoNothing()
     .returning();
 
@@ -24,12 +24,12 @@ async function seed() {
 
   // Sample recruiters
   const companies = [
-    { name: "TSMC Recruiter", email: "tsmc@tecxmeet.tw", company: "TSMC", industry: "Semiconductor", description: "The world's largest dedicated independent semiconductor foundry.", positions: ["Process Engineer", "Equipment Engineer", "R&D Researcher"], contactEmail: "campus@tsmc.com" },
-    { name: "Google TW Recruiter", email: "google@tecxmeet.tw", company: "Google Taiwan", industry: "Technology", description: "Taipei engineering office focusing on hardware and cloud.", positions: ["Software Engineer", "Hardware Engineer", "UX Designer"], contactEmail: "tw-campus@google.com" },
-    { name: "MediaTek Recruiter", email: "mediatek@tecxmeet.tw", company: "MediaTek", industry: "Semiconductor", description: "Global fabless semiconductor company for mobile and IoT.", positions: ["IC Design Engineer", "Firmware Engineer", "AI Researcher"], contactEmail: "hr@mediatek.com" },
-    { name: "Cathay Recruiter", email: "cathay@tecxmeet.tw", company: "Cathay Financial", industry: "Finance", description: "Taiwan's largest financial holding company.", positions: ["Data Analyst", "Risk Manager", "Fintech Developer"], contactEmail: "recruit@cathayholdings.com.tw" },
-    { name: "Appier Recruiter", email: "appier@tecxmeet.tw", company: "Appier", industry: "Technology", description: "AI-driven SaaS company helping businesses solve marketing challenges.", positions: ["ML Engineer", "Backend Engineer", "Solutions Architect"], contactEmail: "jobs@appier.com" },
-    { name: "Deloitte Recruiter", email: "deloitte@tecxmeet.tw", company: "Deloitte Taiwan", industry: "Consulting", description: "Professional services firm specializing in audit, tax, and consulting.", positions: ["Consultant", "Auditor", "Tax Associate"], contactEmail: "tw-campus@deloitte.com" },
+    { name: "TSMC Recruiter", email: "tsmc@tecxwork.tw", company: "TSMC", industry: "Semiconductor", description: "The world's largest dedicated independent semiconductor foundry.", positions: ["Process Engineer", "Equipment Engineer", "R&D Researcher"], contactEmail: "campus@tsmc.com" },
+    { name: "Google TW Recruiter", email: "google@tecxwork.tw", company: "Google Taiwan", industry: "Technology", description: "Taipei engineering office focusing on hardware and cloud.", positions: ["Software Engineer", "Hardware Engineer", "UX Designer"], contactEmail: "tw-campus@google.com" },
+    { name: "MediaTek Recruiter", email: "mediatek@tecxwork.tw", company: "MediaTek", industry: "Semiconductor", description: "Global fabless semiconductor company for mobile and IoT.", positions: ["IC Design Engineer", "Firmware Engineer", "AI Researcher"], contactEmail: "hr@mediatek.com" },
+    { name: "Cathay Recruiter", email: "cathay@tecxwork.tw", company: "Cathay Financial", industry: "Finance", description: "Taiwan's largest financial holding company.", positions: ["Data Analyst", "Risk Manager", "Fintech Developer"], contactEmail: "recruit@cathayholdings.com.tw" },
+    { name: "Appier Recruiter", email: "appier@tecxwork.tw", company: "Appier", industry: "Technology", description: "AI-driven SaaS company helping businesses solve marketing challenges.", positions: ["ML Engineer", "Backend Engineer", "Solutions Architect"], contactEmail: "jobs@appier.com" },
+    { name: "Deloitte Recruiter", email: "deloitte@tecxwork.tw", company: "Deloitte Taiwan", industry: "Consulting", description: "Professional services firm specializing in audit, tax, and consulting.", positions: ["Consultant", "Auditor", "Tax Associate"], contactEmail: "tw-campus@deloitte.com" },
   ];
 
   const recruiterPassword = await bcrypt.hash("recruiter123", 12);
@@ -57,7 +57,7 @@ async function seed() {
 
       if (rec) {
         // Generate slots for event day: 9am-5pm, 15-min intervals
-        const eventDate = "2026-05-15";
+        const eventDate = "2026-06-10";
         const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] = [];
         for (let h = 9; h < 17; h++) {
           for (let m = 0; m < 60; m += 15) {
@@ -76,8 +76,8 @@ async function seed() {
   await db
     .insert(schema.eventConfig)
     .values({
-      eventName: "TecxMeet 2026",
-      eventDate: new Date("2026-05-15T09:00:00+08:00"),
+      eventName: "TecxWork 2026",
+      eventDate: new Date("2026-06-10T09:00:00+08:00"),
       location: "National Taiwan University, Taipei",
       slotDurationMinutes: 15,
     })

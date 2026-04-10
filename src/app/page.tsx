@@ -73,7 +73,7 @@ export default async function Home() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Users className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold">TecxMeet</span>
+            <span className="font-heading text-lg font-bold">TecxWork</span>
           </div>
           <span className="text-xs text-muted-foreground">
             {EVENT_CONFIG.location}
@@ -142,7 +142,7 @@ export default async function Home() {
       </main>
 
       <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
-        &copy; 2026 TecxMeet &middot; PIPA compliant &middot; Hosted on Vercel
+        &copy; 2026 TecxWork &middot; PIPA compliant
       </footer>
     </div>
   );

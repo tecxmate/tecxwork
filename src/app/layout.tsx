@@ -20,7 +20,7 @@ const ebGaramond = EB_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "TecxMeet - University Recruitment Fair",
+  title: "TecxWork — University Recruitment Fair",
   description:
     "Browse participating companies and book your interview slot for the university recruitment event.",
 };

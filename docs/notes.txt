@@ -1,0 +1,106 @@
+Limitations
+
+  ┌─────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────┐
+  │                   Limitation                    │                               Impact                               │                     Workaround                     │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Booking requires eventTypeId (numeric), not     │ Need to fetch event type ID first via the event tRPC endpoint, or  │ Add an event lookup call, or store IDs in          │
+  │ just username+slug                              │ hardcode per recruiter                                             │ recruiter data after setup                         │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ No API key management                           │ Can't use API v2 programmatically for admin tasks (creating users, │ Set up recruiters manually via Cal.com UI at :3001 │
+  │                                                 │  event types)                                                      │                                                    │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Rate limited by IP                              │ ~120 req/min per IP on booking endpoint                            │ Fine for 1,000 users — each books once             │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ No webhook subscriptions without license        │ Can't get push notifications on new bookings                       │ Poll the database or check Cal.com UI              │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Custom booking fields must be configured in     │ CV link + PIPA checkbox need manual setup per event type           │ One-time setup — configure once, applies to all    │
+  │ Cal.com UI                                      │                                                                    │ bookings                                           │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Bot detection / CAPTCHA                         │ Turnstile only if you set it up (env var)                          │ Optional for an internal university event          │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ No multi-tenant org features                    │ Can't use Cal.com Organizations (enterprise)                       │ Use individual accounts or a single Team (free)    │
+  ├─────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Booking endpoint needs the full responses shape │ Must match exactly what Cal.com expects for that event type's      │ Fetch the event type config first to know field    │
+  │                                                 │ custom fields                                                      │ names                                              │
+  └─────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────┘
+
+  Bottom Line
+
+  For TecxMeet's use case (1-day event, ~50 recruiters, ~1,000 students), the public endpoints are more than sufficient. The main work is:
+
+  1. Set up recruiter accounts + event types in Cal.com UI (:3001)
+  2. Store their eventTypeIds in TecxMeet's recruiter data
+  3. Configure the CV link + PIPA custom fields once per event type
+
+  How it works now
+
+  Student clicks "View & Book" on recruiter card
+    → /recruiter/[id] loads with slot picker
+    → GET /api/cal/slots → Cal.com /api/trpc/public/slots.getSchedule
+    → Student picks a time, fills form (name, email, CV link, PIPA consent)
+    → GET /api/cal/event-type → resolves eventTypeId (cached after first call)
+    → POST /api/cal/bookings → Cal.com /api/book/event
+    → Success confirmation shown
+
+  Three public endpoints used, zero API keys needed:
+
+  ┌─────────────────────┬────────────────────────────────────┬───────────────────────┐
+  │        Route        │          Cal.com Endpoint          │        Purpose        │
+  ├─────────────────────┼────────────────────────────────────┼───────────────────────┤
+  │ /api/cal/slots      │ /api/trpc/public/slots.getSchedule │ Get available times   │
+  ├─────────────────────┼────────────────────────────────────┼───────────────────────┤
+  │ /api/cal/event-type │ /api/trpc/public/event             │ Resolve event type ID │
+  ├─────────────────────┼────────────────────────────────────┼───────────────────────┤
+  │ /api/cal/bookings   │ /api/book/event                    │ Create booking        │
+
+
+┌──────────┬─────────────────────────────────────┬─────────────────────────────────────┬───────────────────────┐                                                                 
+│ Service  │                What                 │               Command               │          URL          │                                                                 
+├──────────┼─────────────────────────────────────┼─────────────────────────────────────┼───────────────────────┤                                                                 
+│ Cal.com  │ Self-hosted booking engine (Docker) │ cd tecxmeet && docker compose up -d │ http://localhost:3001 │                                                                 
+├──────────┼─────────────────────────────────────┼─────────────────────────────────────┼───────────────────────┤                                                                 
+│ TecxMeet │ Next.js frontend                    │ cd tecxmeet/app && npm run dev      │ http://localhost:3000 │                                                                 
+  └──────────┴─────────────────────────────────────┴─────────────────────────────────────┴───────────────────────┘                                                                 
+                                                                                                                                                                                   
+  Setup steps (one-time):                                                                                                                                                          
+                                                                                                                                                                                   
+  1. Start Cal.com: docker compose up -d (already running)                                                                                                                         
+  2. Create an admin account at http://localhost:3001/auth/setup                                                                                                                   
+  3. Create a test recruiter user in Cal.com with username matching one in data.ts (e.g. tecxmeet-tsmc)
+  4. Create a "15min-interview" event type for that user with availability set                                                                                                     
+  5. Start TecxMeet: cd app && npm run dev                        
+  6. Test: Go to http://localhost:3000 → click TSMC → pick a slot → book   
+
+
+  FINAL 
+
+    Your app is at: https://tecxwork.vercel.app
+
+  ┌──────────────┬────────────────────────────┐
+  │     URL      │            What            │
+  ├──────────────┼────────────────────────────┤
+  │ /            │ Public recruiter directory │
+  ├──────────────┼────────────────────────────┤
+  │ /recruiter/1 │ Book a slot (TSMC)         │
+  ├──────────────┼────────────────────────────┤
+  │ /login       │ Admin/Recruiter login      │
+  ├──────────────┼────────────────────────────┤
+  │ /admin       │ Admin dashboard            │
+  ├──────────────┼────────────────────────────┤
+  │ /dashboard   │ Recruiter dashboard        │
+  └──────────────┴────────────────────────────┘
+
+  Test credentials
+
+  ┌───────────────┬───────────────────┬──────────────┐
+  │     Role      │       Email       │   Password   │
+  ├───────────────┼───────────────────┼──────────────┤
+  │ Admin         │ admin@tecxmeet.tw │ admin123     │
+  ├───────────────┼───────────────────┼──────────────┤
+  │ Any recruiter │ tsmc@tecxmeet.tw  │ recruiter123 │
+  └───────────────┴───────────────────┴──────────────┘
+
+  Seeded data
+
+  - 6 recruiters (TSMC, Google TW, MediaTek, Cathay, Appier, Deloitte)
+  - 32 slots each (9am–5pm, 15-min intervals on May 15, 2026)

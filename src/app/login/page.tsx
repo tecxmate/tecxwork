@@ -50,14 +50,14 @@ export default function LoginPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
             <Users className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="font-heading text-xl font-bold">TecxMeet Login</h1>
+          <h1 className="font-heading text-xl font-bold">TecxWork Login</h1>
           <p className="text-sm text-muted-foreground">Admin & Recruiter access</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-sm font-medium">Email</label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@tecxmeet.tw" autoComplete="email" />
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@tecxwork.tw" autoComplete="email" />
             </div>
             <div className="space-y-1.5">
               <label htmlFor="password" className="text-sm font-medium">Password</label>

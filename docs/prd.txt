@@ -1,0 +1,184 @@
+Technical Handoff & PRD: University Recruitment Booking System
+
+1. Executive Summary
+
+This document outlines the architecture, deployment strategy, and configuration for a single-day, high-concurrency recruitment booking platform.
+
+The Constraint: The system will experience an immediate traffic spike (approx. 1,000 concurrent users) when the event opens.
+The Solution: Instead of building a custom booking engine, we are deploying a self-hosted instance of Cal.com to handle the scheduling logic, supported by a static frontend directory. File storage (CVs/JDs) is completely offloaded to Google Drive to save bandwidth and storage costs, utilizing strict permission controls to ensure data privacy.
+
+2. System Architecture & Tech Stack
+
+2.1 Core Infrastructure (Cloud VM / VPS)
+
+Provider: DigitalOcean, AWS (EC2), or Google Cloud (Compute Engine).
+
+App Server Specs (Minimum): 8 vCPU, 16 GB RAM, 50GB NVMe SSD. (Cal.com relies on Next.js Server-Side Rendering, which is highly CPU-intensive under concurrent load).
+
+Deployment Method: Docker Compose (for self-contained network routing).
+
+Timezone: Must be strictly configured to Asia/Taipei (UTC+8) across the OS, Database, and App configurations to avoid scheduling drift.
+
+2.2 Network & Edge Caching
+
+Proxy/WAF: Cloudflare.
+
+Requirement: Strict Page Rules must be configured to cache all static assets aggressively. Only /api/ routes and dynamic SSR pages should hit the origin server.
+
+SSL: Let's Encrypt (Automated via Traefik or Nginx proxy in Docker).
+
+2.3 Database & State
+
+Primary DB: PostgreSQL v15+.
+
+Connection Pooling (CRITICAL): PgBouncer MUST be utilized. 1,000 concurrent Node.js clients will immediately exhaust PostgreSQL's default max_connections. Configure PgBouncer in transaction mode.
+
+Cache/Queue: Redis v7. Essential for Cal.com session management and background cron jobs.
+
+2.4 Third-Party Integrations
+
+Authentication: Google OAuth 2.0 (Google Cloud Console).
+
+Transactional Email: Amazon SES, Resend, or SendGrid.
+
+Warning: Do not use a standard SMTP server. You must authenticate the sending domain (e.g., @event.university.edu.tw) with SPF, DKIM, and DMARC to ensure booking confirmations bypass spam filters.
+
+3. Frontend Architecture: The Directory
+
+Cal.com does not have a native "Gallery" for multiple independent users. The engineering team must build a lightweight frontend "Front Door."
+
+Stack: Next.js (Static Export), Astro, or basic HTML/CSS. Hosted freely on Vercel or Cloudflare Pages.
+
+Functionality: A simple grid listing all participating recruiters/companies.
+
+Routing: Clicking a company routes the user directly to that recruiter's specific Cal.com booking link (e.g., cal.event.edu.tw/company-a/15min-interview).
+
+4. Cal.com Specific Configurations (App Logic & Data Privacy)
+
+To comply with Taiwan's Personal Data Protection Act (PDPA/PIPA) and prevent unauthorized access to CVs, the system utilizes "Explicit Targeted Sharing" via Google Drive.
+
+4.1 Recruiter Setup (Data In)
+
+Admin provisions Cal.com accounts for Recruiters.
+
+Recruiter authenticates via Google.
+
+Recruiter sets their event day availability (e.g., 09:00 - 17:00).
+
+Job Description (JD) & Authorized Email (CRITICAL): Recruiter pastes the Google Drive link to their JD directly into the Description field of their Cal.com event type. Crucially, the recruiter MUST clearly state their official corporate email address in this description (e.g., "Please grant CV file access to: hr@company.com").
+
+4.2 Jobseeker Flow (Data Out)
+
+User clicks recruiter link from the Static Directory.
+
+User selects an available time slot.
+
+The Secure CV Link (CRITICAL CONFIG): The engineering team must configure a Required Custom Field in the Cal.com booking form:
+
+Label: "Link to your CV (Google Drive)"
+
+Type: URL / Text
+
+Helper Text: "IMPORTANT: Do NOT set your link to 'Anyone can view'. For your privacy, you must explicitly share your Google Drive file ONLY with the recruiter's official email address listed in their description."
+
+PIPA Compliance Checkbox: Add a required boolean (checkbox) custom field:
+
+Label: "I consent to the collection of my CV link for this recruitment event in accordance with Taiwan's Personal Data Protection Act. I confirm I have only granted Drive access to the specified recruiter."
+
+5. Load Testing & QA Protocol
+
+The system MUST be tested for the "9:00 AM Thundering Herd" problem.
+
+Tooling: Use k6 (Grafana) or Locust.
+
+Target Metrics:
+
+Simulate 1,000 Virtual Users (VUs) ramping up over 60 seconds.
+
+Target endpoint: The Cal.com availability API (/api/trpc/public/slots.getSchedule).
+
+Acceptable Error Rate: < 0.1%.
+
+Acceptable p95 Response Time: < 800ms.
+
+Monitoring: Monitor htop (CPU usage) and PostgreSQL active connections during the test. If CPU hits 95%+, scale the VM to 16 vCPU.
+
+6. Execution & Deployment Timeline
+
+T-Minus 14 Days (Infrastructure):
+
+Provision Cloud VM.
+
+Set up Cloudflare DNS and Tunnels.
+
+Deploy Docker Compose stack (Postgres + PgBouncer + Redis + Cal.com).
+
+Verify Google OAuth and SMTP (SES) domain verification.
+
+T-Minus 10 Days (Configuration & Static Site):
+
+Configure Cal.com Event Types, Custom Fields, and PIPA checkbox.
+
+Deploy static frontend directory.
+
+T-Minus 7 Days (Load Test):
+
+Execute k6 load test. Tune PgBouncer limits based on results.
+
+T-Minus 3 Days (Data Entry):
+
+Recruiters onboard, generate links, paste JD links, and list their authorized receiving emails.
+
+Event Day:
+
+DevOps on standby monitoring Cloudflare analytics and server CPU.
+
+Event Day + 2 (Teardown & Data Purge):
+
+Export PostgreSQL database (for university records/metrics).
+
+Destroy Cloud VM and Database to halt billing and permanently purge all personal data (CV links/emails), ensuring strict privacy compliance.
+
+7. Cost Estimation (Fact-Checked for 2026)
+
+This model leverages open-source software and existing university infrastructure to keep software licensing costs at $0, shifting the budget entirely to temporary cloud compute and labor.
+
+7.1 Infrastructure & SaaS Costs (Estimated for 1 Month)
+
+Cloud VM (e.g., DigitalOcean): ~$96.00 USD
+
+Based on current 2026 pricing for an 8 vCPU / 16 GB RAM Basic Droplet. This covers the setup phase, internal QA, load testing, and the event day. Because billing is hourly/per-second, destroying the VM immediately after exporting event data will further reduce this cost.
+
+Transactional Email (Amazon SES): < $1.00 USD
+
+SES charges $0.10 per 1,000 emails. Assuming 1,000 users trigger ~10,000 automated emails (confirmations, reschedules, recruiter calendar invites), the raw compute cost is exactly $1.00.
+
+(Optional: $24.95/mo for a Dedicated IP to guarantee bypassing strict spam filters, though usually unnecessary if authenticating an official university .edu.tw domain).
+
+Edge Caching & DNS (Cloudflare): $0
+
+The Free Tier strictly handles the required static caching and DDoS protection.
+
+Storage (Google Drive): $0
+
+Jobseekers and Recruiters utilize their own personal or workspace Google Drive quotas.
+
+Domain Registration: $0
+
+Assumes the use of an existing university subdomain (e.g., recruit.university.edu.tw).
+
+Total Software & Infrastructure: ~$97.00 USD (Approx. $3,100 NTD)
+
+7.2 Labor Costs (DevOps / Implementation)
+
+To safely deploy Docker, configure PgBouncer connection limits securely, handle Google OAuth/SES integrations, and build the static HTML front-door directory:
+
+Freelance / Contract Rate in Taiwan: $15,000 – $35,000 NTD ($500 – $1,100 USD) depending on seniority and the turnaround time.
+
+7.3 Total Estimated Budget
+
+Best-Case Scenario: ~$18,000 NTD
+
+Conservative Ceiling: ~$38,000 NTD
+
+(For comparison: A traditional custom-built scalable platform or an enterprise event-matching software license to support 1,000 concurrent users would easily start at $150,000+ NTD).

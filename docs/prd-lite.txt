@@ -1,0 +1,172 @@
+Technical Handoff & PRD: University Recruitment Booking System
+
+1. Executive Summary
+
+This document outlines the architecture, deployment strategy, and configuration for a single-day, high-concurrency recruitment booking platform.
+
+The Constraint: The system will experience an immediate traffic spike (approx. 1,000 concurrent users) when the event opens.
+The Solution: Instead of building custom booking logic or self-hosting complex server infrastructure, we are leveraging the managed Cal.com SaaS platform to handle all scheduling and traffic load. This is supported by a simple static frontend directory. File storage (CVs/JDs) is completely offloaded to Google Drive to save bandwidth and ensure strict data privacy.
+
+2. System Architecture & Tech Stack
+
+By utilizing Cal.com's managed enterprise infrastructure, the technical footprint of this event is drastically reduced.
+
+2.1 Core Booking Engine (Managed SaaS)
+
+Provider: Cal.com (Cloud/SaaS).
+
+Tier: Teams Plan ($15/user/month).
+
+Why Teams instead of Free? The Teams tier allows the University Admin to create a standardized "Event Type" (with the mandatory PIPA compliance and CV link fields) and enforce it across all 50+ recruiter accounts. Relying on the Free tier would require trusting 50 individual recruiters to perfectly configure their own complex custom fields, creating an unacceptable risk of human error.
+
+Email Infrastructure: Handled natively by Cal.com (no custom SMTP/Amazon SES required).
+
+Timezone: Must be strictly configured to Asia/Taipei (UTC+8) at the organizational level.
+
+2.2 Frontend Architecture: The Directory
+
+Cal.com does not have a native "Gallery" for multiple independent companies. The engineering team must build a lightweight frontend "Front Door."
+
+Stack: Next.js (Static Export), Astro, or basic HTML/CSS.
+
+Hosting: Vercel, Cloudflare Pages, or GitHub Pages.
+
+Functionality: A simple grid listing all participating recruiters/companies.
+
+Routing: Clicking a company routes the user directly to that recruiter's specific Cal.com booking link (e.g., cal.com/university-event/company-a-interview).
+
+3. Configuration & Data Privacy Protocol
+
+To comply with Taiwan's Personal Data Protection Act (PDPA/PIPA) and prevent unauthorized access to CVs, the system utilizes "Explicit Targeted Sharing" via Google Drive.
+
+3.1 Recruiter Setup (Data In)
+
+Admin creates a Cal.com Team for the event and invites the Recruiters.
+
+Recruiters authenticate via Google/Microsoft and connect their calendars.
+
+Recruiters set their event day availability (e.g., 09:00 - 17:00).
+
+Job Description (JD) & Authorized Email (CRITICAL): The recruiter pastes the Google Drive link to their JD directly into their profile description. Crucially, the recruiter MUST clearly state their official corporate email address in this description (e.g., "Please grant CV file access to: hr@company.com").
+
+3.2 Jobseeker Flow (Data Out)
+
+User clicks the recruiter link from the Static Directory.
+
+User selects an available time slot on Cal.com.
+
+The Secure CV Link (CRITICAL CONFIG): The Admin must configure a Required Custom Field in the Cal.com Team Event Type:
+
+Label: "Link to your CV (Google Drive)"
+
+Type: URL / Text
+
+Helper Text: "IMPORTANT: Do NOT set your link to 'Anyone can view'. For your privacy, you must explicitly share your Google Drive file ONLY with the recruiter's official email address listed in their description."
+
+PIPA Compliance Checkbox: Add a required boolean (checkbox) custom field:
+
+Label: "I consent to the collection of my CV link for this recruitment event in accordance with Taiwan's Personal Data Protection Act. I confirm I have only granted Drive access to the specified recruiter."
+
+4. Load Testing & QA Protocol
+
+Because we are using Cal.com's managed SaaS, we do not need to (and should not) load test the booking engine. Spiking Cal.com's API with simulated traffic may trigger their automated DDoS protection and flag the university's account.
+
+Target of QA: The static Frontend Directory.
+
+Tooling: Use k6 or Loader.io to hit the Vercel/Cloudflare hosted directory with 1,000 concurrent Virtual Users (VUs).
+
+Internal Logic Test: Have 5 internal team members attempt to book the exact same time slot for a single recruiter simultaneously to verify Cal.com's race-condition handling and ensure double-bookings do not occur.
+
+5. Execution & Deployment Timeline
+
+T-Minus 14 Days (Configuration):
+
+Create Cal.com Organization/Team account.
+
+Build and deploy the static frontend directory.
+
+Configure the global Event Type (15-min slots, custom CV fields, PIPA checkbox).
+
+T-Minus 10 Days (Recruiter Onboarding):
+
+Invite recruiters to the Cal.com Team.
+
+Recruiters connect calendars, set availability, and paste JD links.
+
+T-Minus 5 Days (Link Finalization):
+
+Admin extracts all final recruiter Cal.com URLs and maps them to the "Book Now" buttons on the static directory.
+
+Event Day:
+
+Support team on standby for user error (e.g., jobseekers pasting broken Drive links).
+
+Event Day + 2 (Teardown & Data Purge):
+
+Export all booking data/CSV logs for university metrics.
+
+Delete the Cal.com Team account to halt monthly billing and permanently purge all centralized booking data, ensuring strict privacy compliance.
+
+6. Cost Estimation (Fact-Checked for 2026)
+
+By utilizing Cal.com's SaaS, server infrastructure costs drop to $0, replaced by predictable per-user SaaS licensing.
+
+6.1 SaaS Costs (Estimated for 1 Month)
+
+Cal.com Teams Plan: ~$750 USD (Approx. $24,000 NTD)
+
+Calculation: $15 per user/month (monthly billing tier) × 50 recruiters.
+
+Note: You only pay for the single month the event is active. The account is deleted afterward.
+
+Hosting (Cloudflare Pages / Vercel): $0
+
+Static directories easily fit within generous free tiers.
+
+Storage (Google Drive): $0
+
+Jobseekers and Recruiters utilize their own quotas.
+
+Total Software Costs: ~$750 USD (Approx. $24,000 NTD)
+
+6.2 Labor Costs (Frontend / Implementation)
+
+To build the static HTML front-door directory and act as the Cal.com administrator to set up the Team workflows:
+
+Freelance / Contract Rate in Taiwan: $10,000 – $20,000 NTD ($300 – $650 USD).
+
+(Note: This is lower than the self-hosted labor estimate because the developer does not need DevOps/Docker/Postgres experience).
+
+6.3 Total Estimated Budget
+
+Estimated Ceiling: ~$44,000 NTD
+(This provides a highly stable, enterprise-grade experience for a fraction of the cost of custom development).
+
+7. Contingency Plan (Disaster Recovery)
+
+Even enterprise SaaS platforms experience outages. If Cal.com goes down during the event, a low-tech fallback must be ready.
+
+7.1 The Fallback Mechanism: Pre-Built Form
+
+Tool: Google Forms.
+
+Preparation: Prior to the event, create a master Google Form titled "Emergency Interview Waitlist."
+
+Fields: 1. Student Name
+2. Student Email
+3. Dropdown: "Which Company are you trying to book?"
+4. Short Answer: "Link to your CV (Google Drive)"
+
+7.2 The "Switch" Protocol
+
+If Cal.com experiences downtime exceeding 15 minutes:
+
+The admin team updates the Frontend Static Directory codebase.
+
+All recruiter-specific Cal.com links behind the "Book Now" buttons are batch-replaced with the single Google Form URL.
+
+The Static Directory is redeployed (takes < 1 minute).
+
+7.3 Post-Event Resolution
+
+After the event, the university admin exports the Google Sheet attached to the form and emails the data to the respective recruiters to manually follow up with interested students.

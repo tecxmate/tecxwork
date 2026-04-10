@@ -24,7 +24,7 @@ export function SlotPicker({
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
 
   useEffect(() => {
-    setSelectedDate(startOfDay(new Date("2026-05-15T00:00:00+08:00")));
+    setSelectedDate(startOfDay(new Date("2026-06-10T00:00:00+08:00")));
     setMounted(true);
   }, []);
 

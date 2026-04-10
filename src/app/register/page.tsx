@@ -104,7 +104,7 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           applicantId: profileId,
-          date: "2026-05-15",
+          date: "2026-06-10",
           startHour: 9,
           endHour: 17,
           durationMinutes: 15,
