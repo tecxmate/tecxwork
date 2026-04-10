@@ -393,9 +393,16 @@ export default function RegisterPage() {
                       Registering...
                     </>
                   ) : (
-                    "Register"
+                    "Sign Up"
                   )}
                 </Button>
+
+                <p className="text-center text-xs text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link href="/login" className="text-primary hover:underline">
+                    Log in
+                  </Link>
+                </p>
               </form>
             </CardContent>
           </Card>

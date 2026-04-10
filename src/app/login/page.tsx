@@ -7,39 +7,62 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Users, AlertCircle, ArrowLeft } from "lucide-react";
+import {
+  Loader2,
+  Users,
+  AlertCircle,
+  ArrowLeft,
+  GraduationCap,
+  Building2,
+} from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+
+type ErrorState =
+  | { code: "NONE" }
+  | { code: "INVALID_PASSWORD"; message: string }
+  | { code: "USER_NOT_FOUND"; email: string }
+  | { code: "OTHER"; message: string };
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errorState, setErrorState] = useState<ErrorState>({ code: "NONE" });
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setErrorState({ code: "NONE" });
 
     try {
+      const cleanEmail = email.trim().toLowerCase();
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password,
-        }),
+        body: JSON.stringify({ email: cleanEmail, password }),
       });
 
       const data = await res.json();
+
       if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error("Invalid email or password");
+        if (data.code === "USER_NOT_FOUND") {
+          setErrorState({ code: "USER_NOT_FOUND", email: cleanEmail });
+        } else if (data.code === "INVALID_PASSWORD") {
+          setErrorState({
+            code: "INVALID_PASSWORD",
+            message: data.error || "Invalid password",
+          });
+        } else {
+          setErrorState({
+            code: "OTHER",
+            message: data.error || "Login failed",
+          });
         }
-        throw new Error(data.error || "Login failed");
+        return;
       }
 
+      // Success — route by role
       if (data.user.role === "admin") {
         router.push("/admin");
       } else if (data.user.role === "recruiter") {
@@ -48,8 +71,11 @@ export default function LoginPage() {
         router.push("/browse");
       }
       router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+    } catch {
+      setErrorState({
+        code: "OTHER",
+        message: "Network error. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -76,9 +102,7 @@ export default function LoginPage() {
               <Users className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="font-heading text-xl font-bold">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">
-              Log in to TecxWork
-            </p>
+            <p className="text-sm text-muted-foreground">Log in to TecxWork</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,10 +137,53 @@ export default function LoginPage() {
                 />
               </div>
 
-              {error && (
+              {errorState.code === "INVALID_PASSWORD" && (
                 <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{error}</span>
+                  <span>{errorState.message}</span>
+                </div>
+              )}
+
+              {errorState.code === "OTHER" && (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{errorState.message}</span>
+                </div>
+              )}
+
+              {errorState.code === "USER_NOT_FOUND" && (
+                <div className="space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-start gap-2 text-sm">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div className="space-y-1">
+                      <p className="font-medium text-foreground">
+                        No account found
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        No account exists for{" "}
+                        <span className="font-medium text-foreground">
+                          {errorState.email}
+                        </span>
+                        . Would you like to sign up?
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Link
+                      href="/register"
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium transition-colors hover:border-primary/40"
+                    >
+                      <GraduationCap className="h-3.5 w-3.5" />
+                      Sign up as Student
+                    </Link>
+                    <Link
+                      href="/recruiter/signup"
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium transition-colors hover:border-primary/40"
+                    >
+                      <Building2 className="h-3.5 w-3.5" />
+                      Sign up as Recruiter
+                    </Link>
+                  </div>
                 </div>
               )}
 
@@ -131,30 +198,19 @@ export default function LoginPage() {
                     Signing in...
                   </>
                 ) : (
-                  "Sign In"
+                  "Log In"
                 )}
               </Button>
             </form>
 
             <Separator className="my-6" />
 
-            <div className="space-y-2 text-center text-xs text-muted-foreground">
-              <p>Don&apos;t have an account?</p>
-              <div className="flex flex-col gap-1">
-                <Link
-                  href="/register"
-                  className="text-primary hover:underline"
-                >
-                  Sign up as a student
-                </Link>
-                <Link
-                  href="/recruiter/signup"
-                  className="text-primary hover:underline"
-                >
-                  Sign up as a recruiter
-                </Link>
-              </div>
-            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              New to TecxWork?{" "}
+              <Link href="/" className="text-primary hover:underline">
+                Choose your role
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </main>

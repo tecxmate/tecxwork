@@ -11,12 +11,28 @@ export async function POST(req: NextRequest) {
   }
 
   if (!body.email || !body.password) {
-    return NextResponse.json({ error: "Email and password required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Email and password required" },
+      { status: 400 }
+    );
   }
 
-  const result = await login(body.email, body.password);
-  if (!result) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  const result = await login(body.email.trim().toLowerCase(), body.password);
+
+  if (!result.ok) {
+    if (result.code === "USER_NOT_FOUND") {
+      return NextResponse.json(
+        {
+          error: "No account found for this email. Would you like to sign up?",
+          code: "USER_NOT_FOUND",
+        },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Invalid password. Please try again.", code: "INVALID_PASSWORD" },
+      { status: 401 }
+    );
   }
 
   const res = NextResponse.json({ user: result.user });
@@ -24,7 +40,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24, // 24h
+    maxAge: 60 * 60 * 24,
     path: "/",
   });
 

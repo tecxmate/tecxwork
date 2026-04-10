@@ -60,7 +60,7 @@ Limitations
 │ Cal.com  │ Self-hosted booking engine (Docker) │ cd tecxmeet && docker compose up -d │ http://localhost:3001 │                                                                 
 ├──────────┼─────────────────────────────────────┼─────────────────────────────────────┼───────────────────────┤                                                                 
 │ TecxMeet │ Next.js frontend                    │ cd tecxmeet/app && npm run dev      │ http://localhost:3000 │                                                                 
-  └──────────┴─────────────────────────────────────┴─────────────────────────────────────┴───────────────────────┘                                                                 
+└──────────┴─────────────────────────────────────┴─────────────────────────────────────┴───────────────────────┘                                                                 
                                                                                                                                                                                    
   Setup steps (one-time):                                                                                                                                                          
                                                                                                                                                                                    
@@ -104,3 +104,152 @@ Limitations
 
   - 6 recruiters (TSMC, Google TW, MediaTek, Cathay, Appier, Deloitte)
   - 32 slots each (9am–5pm, 15-min intervals on May 15, 2026)
+
+
+  Login is managed with a simple custom JWT + bcrypt system — no external auth service. Here's how it works:
+
+    Auth Stack (all in src/lib/auth.ts)
+
+    ┌──────────────────┬─────────────────────────────┬────────────────────────────────────────────────┐
+    │      Piece       │           Library           │                    Purpose                     │
+    ├──────────────────┼─────────────────────────────┼────────────────────────────────────────────────┤
+    │ Password hashing │ bcryptjs                    │ Hashes passwords with 12 rounds before storing │
+    ├──────────────────┼─────────────────────────────┼────────────────────────────────────────────────┤
+    │ Session tokens   │ jsonwebtoken                │ Signs a JWT with userId, email, role           │
+    ├──────────────────┼─────────────────────────────┼────────────────────────────────────────────────┤
+    │ Session storage  │ cookies() from next/headers │ HTTP-only cookie named tecxwork_session        │
+    ├──────────────────┼─────────────────────────────┼────────────────────────────────────────────────┤
+    │ Secret           │ JWT_SECRET env var          │ Signing key (set in Vercel env)                │
+    └──────────────────┴─────────────────────────────┴────────────────────────────────────────────────┘
+
+    Flow
+
+    Signup (applicant) — POST /api/applicants
+    1. User submits email + password + profile
+    2. hashPassword(password) → bcrypt hash stored in users.password_hash
+    3. createToken({ userId, email, role: "applicant" }) → JWT
+    4. JWT set as HTTP-only cookie (24h expiry)
+    5. User is now logged in
+
+    Login — POST /api/auth/login
+    1. Lookup user by email in the users table
+    2. bcrypt.compare(password, user.passwordHash) → true/false
+    3. If valid, create JWT and set cookie
+    4. Frontend redirects based on role (admin → /admin, recruiter → /dashboard, applicant → /browse)
+
+    Session check (every request)
+    - getSession() reads the cookie, verifies JWT signature, returns { userId, email, role } or null
+    - Used by proxy.ts (Next.js 16 middleware) to protect routes
+    - Used by server components for role-based redirects
+
+    Logout — POST /api/auth/logout
+    - Sets the cookie to empty with maxAge: 0
+
+    Why no Google OAuth?
+
+    - No Google API keys, consent screens, or OAuth setup required
+    - Works fully self-contained with just a Neon Postgres users table
+    - Admin creates recruiter accounts manually; applicants self-signup with email+password
+    - For a single-day recruitment event with ~1000 users, this is simpler and cheaper than integrating OAuth
+
+    Users hit /login with email + password — that's it. Credentials live in users.email + users.password_hash on Neon.
+
+
+    Lock workflow:
+  1. Go to /admin → Event Mode section
+  2. Pick your mode (e.g., "Applicants book Recruiters")
+  3. Click the "Unlocked" button (top-right) → confirms → becomes "Locked"
+  4. All 3 mode cards are now disabled + grayed out
+  5. A purple banner shows "Mode is locked"
+  6. Any accidental attempt to change mode is rejected by the API (423 Locked)
+
+  To unlock: just click the "Locked" button — no confirmation needed since you're intentionally unlocking.
+
+  Safe for event day.                                                                                                                                   
+                            
+✻ Cooked for 5m 18s
+                  
+  /btwWhat is the drawback of neon as a database? How much do they pay? And like I want to know the limitation and what do I need to pay? This cannot be
+       free and good, right?                  
+                                          
+    Good question — you're right to be skeptical. Here's the honest breakdown of Neon's free tier and its drawbacks:
+                                                                                                                                                        
+    Neon Free Tier (what you get)             
+                                                                                                                                                        
+    - 1 project, up to 10 branches                          
+    - 0.5 GB storage per branch                                                                                                                         
+    - 190 compute hours/month (enough for hobby traffic)
+    - Autosuspend after 5 min of inactivity (your DB goes to sleep)                                                                                     
+                                         
+    Drawbacks
+
+    1. Cold starts (the biggest one)
+
+    When your DB has been idle for 5+ minutes, the next query takes 300ms–2 seconds to wake the compute. For a single-day event with 1,000 concurrent
+    users hitting at 9 AM, this is fine — after the first query, it stays warm for the whole event. But for a low-traffic site, users occasionally hit a
+     slow first page load.
+
+    2. Storage cap
+
+    0.5 GB is small. For TecxWork that's plenty (recruiters, slots, bookings = tiny data), but if you ever store large JSON blobs, file metadata, or
+    lots of historical data, you'll hit the wall fast.
+
+    3. Compute hours
+
+    190 hours/month ≈ 6.3 hours/day of active compute. If your DB is constantly queried, you'll burn through it. Since Neon auto-suspends when idle,
+    typical hobby usage doesn't come close.
+
+    4. One project only
+
+    Can't spin up separate staging/prod/testing as isolated projects without paying.
+
+    5. Branch limits
+
+    10 branches max — fine for now, but if you use Neon's killer feature (git-like DB branching per PR), you'll run out.
+
+    6. No point-in-time recovery beyond 24 hours
+
+    Free tier keeps history for 24h. If you delete data and notice 2 days later, it's gone.
+
+    7. Shared infrastructure
+
+    You're on multi-tenant compute. Noisy neighbors can affect you during peaks, though I've never seen it in practice.
+
+    Paid Tiers
+
+    ┌────────────┬────────────┬─────────────────────────────────────────────────────────────────────────────┐
+    │    Plan    │   Price    │                                What you get                                 │
+    ├────────────┼────────────┼─────────────────────────────────────────────────────────────────────────────┤
+    │ Launch     │ $19/month  │ 10 GB storage, 300 compute hours, 7-day history, email support              │
+    ├────────────┼────────────┼─────────────────────────────────────────────────────────────────────────────┤
+    │ Scale      │ $69/month  │ 50 GB storage, 750 compute hours, 14-day history, autoscaling               │
+    ├────────────┼────────────┼─────────────────────────────────────────────────────────────────────────────┤
+    │ Business   │ $700/month │ 500 GB storage, 1000 compute hours, 30-day history, priority support, SOC 2 │
+    ├────────────┼────────────┼─────────────────────────────────────────────────────────────────────────────┤
+    │ Enterprise │ Custom     │ Dedicated infra, SLAs, HIPAA, custom terms                                  │
+    └────────────┴────────────┴─────────────────────────────────────────────────────────────────────────────┘
+
+    Overage pricing (if you exceed plan quotas):
+    - Storage: ~$1.50/GB/month above plan limit
+    - Compute: ~$0.16/compute-unit-hour above plan limit
+    - Data transfer: free within AWS region, charged across regions
+
+    The Honest Take
+
+    For TecxWork specifically: Free tier is genuinely sufficient. A single-day event with 1,000 users hitting for 8 hours is nothing — you'll use maybe
+    10 compute hours total and a few MB of storage. After the event you can delete the project.
+
+    "This cannot be free and good" — actually it can, because:
+    1. Neon makes money from paid users; free tier is a loss-leader to get devs hooked
+    2. Serverless Postgres is cheap to run when idle (autosuspend = $0 compute)
+    3. Your usage profile (burst on one day, idle the rest) is ideal for their pricing model
+
+    The real risk isn't price — it's vendor lock-in to a young company. Neon was acquired by Databricks in 2025. Terms could change. Mitigation: it's
+    just Postgres, so you can pg_dump and move to any other Postgres provider (Supabase, Railway, RDS, self-hosted) in ~1 hour.
+
+    Alternatives to consider if you outgrow Neon:
+    - Supabase — similar free tier, bundles auth + storage, no autosuspend on paid tiers
+    - Railway — $5/month Hobby, simpler pricing
+    - Self-hosted Postgres on a $6 VPS — cheapest long-term, you manage backups
+
+    For a short-lived recruitment event: stay on free tier, delete the project after. Total cost: $0.

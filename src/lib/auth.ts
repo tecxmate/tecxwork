@@ -57,10 +57,14 @@ export async function requireAdmin(): Promise<SessionPayload> {
   return session;
 }
 
+export type LoginResult =
+  | { ok: true; token: string; user: SessionPayload }
+  | { ok: false; code: "USER_NOT_FOUND" | "INVALID_PASSWORD" };
+
 export async function login(
   email: string,
   password: string
-): Promise<{ token: string; user: SessionPayload } | null> {
+): Promise<LoginResult> {
   const [user] = await db
     .select({
       id: users.id,
@@ -71,10 +75,10 @@ export async function login(
     .from(users)
     .where(eq(users.email, email));
 
-  if (!user) return null;
+  if (!user) return { ok: false, code: "USER_NOT_FOUND" };
 
   const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) return null;
+  if (!valid) return { ok: false, code: "INVALID_PASSWORD" };
 
   const payload: SessionPayload = {
     userId: user.id,
@@ -82,7 +86,7 @@ export async function login(
     role: user.role,
   };
 
-  return { token: createToken(payload), user: payload };
+  return { ok: true, token: createToken(payload), user: payload };
 }
 
 export { COOKIE_NAME };

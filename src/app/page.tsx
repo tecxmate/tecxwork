@@ -13,17 +13,24 @@ import { SiteFooter } from "@/components/site-footer";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 
-const ROLES = [
+type Role = {
+  id: string;
+  icon: typeof GraduationCap;
+  title: string;
+  description: string;
+  loginHref: string;
+  signupHref: string | null;
+};
+
+const ROLES: Role[] = [
   {
     id: "applicant",
     icon: GraduationCap,
     title: "I'm a Student",
     description:
       "Browse participating companies and book interview slots. Register to also let recruiters discover you.",
-    cta: "Sign up",
-    primaryHref: "/register",
-    secondaryHref: "/login",
-    secondaryLabel: "Already have an account? Log in",
+    loginHref: "/login",
+    signupHref: "/register",
   },
   {
     id: "recruiter",
@@ -31,10 +38,8 @@ const ROLES = [
     title: "I'm a Recruiter",
     description:
       "View your scheduled interviews, browse student profiles, and book candidates directly.",
-    cta: "Sign up",
-    primaryHref: "/recruiter/signup",
-    secondaryHref: "/login",
-    secondaryLabel: "Already have an account? Log in",
+    loginHref: "/login",
+    signupHref: "/recruiter/signup",
   },
   {
     id: "admin",
@@ -42,12 +47,10 @@ const ROLES = [
     title: "I'm an Admin",
     description:
       "Manage recruiter access, event settings, and oversee all bookings for the recruitment fair.",
-    cta: "Admin Login",
-    primaryHref: "/login",
-    secondaryHref: null,
-    secondaryLabel: null,
+    loginHref: "/login",
+    signupHref: null,
   },
-] as const;
+];
 
 export default async function Home() {
   // Auto-redirect logged-in users
@@ -104,38 +107,44 @@ export default async function Home() {
             {ROLES.map((role) => (
               <Card
                 key={role.id}
-                className="flex flex-col transition-shadow duration-200 hover:shadow-md"
+                className="flex flex-col gap-4 p-5 transition-shadow duration-200 hover:shadow-md"
               >
-                <CardHeader className="gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary">
-                    <role.icon className="h-6 w-6 text-primary" />
-                  </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary">
+                  <role.icon className="h-6 w-6 text-primary" />
+                </div>
+                <div>
                   <h2 className="font-heading text-xl font-semibold">
                     {role.title}
                   </h2>
-                  <p className="min-h-[4.5rem] text-sm text-muted-foreground">
+                  <p className="mt-1 min-h-[4.5rem] text-sm text-muted-foreground">
                     {role.description}
                   </p>
-                </CardHeader>
-                <CardContent className="mt-auto flex flex-col gap-2">
+                </div>
+
+                <div className="mt-auto flex flex-col gap-2">
+                  {/* Primary CTA: Log in */}
                   <Link
-                    href={role.primaryHref}
+                    href={role.loginHref}
                     className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
-                    {role.cta}
+                    Log In
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <div className="h-4 text-center">
-                    {role.secondaryHref && (
-                      <Link
-                        href={role.secondaryHref}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {role.secondaryLabel}
-                      </Link>
-                    )}
-                  </div>
-                </CardContent>
+
+                  {/* Secondary: Sign up (same size, outline) */}
+                  {role.signupHref ? (
+                    <Link
+                      href={role.signupHref}
+                      className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                      Sign Up
+                    </Link>
+                  ) : (
+                    <div className="flex h-10 items-center justify-center text-xs text-muted-foreground">
+                      Contact admin for access
+                    </div>
+                  )}
+                </div>
               </Card>
             ))}
           </div>
