@@ -174,6 +174,7 @@ export const eventConfig = pgTable("event_config", {
     .default("National Taiwan University, Taipei"),
   slotDurationMinutes: integer("slot_duration_minutes").notNull().default(15),
   mode: eventModeEnum("mode").notNull().default("both"),
+  modeLocked: boolean("mode_locked").notNull().default(false),
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),
 });

@@ -18,6 +18,8 @@ import {
   Trash2,
   Mail,
   AtSign,
+  Lock,
+  LockOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -69,14 +71,17 @@ export function AdminDashboard({
   domains: initialDomains,
   stats,
   currentMode,
+  initialLocked,
 }: {
   recruiters: Recruiter[];
   domains: Domain[];
   stats: Stats;
   currentMode: string;
+  initialLocked: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState(currentMode);
+  const [locked, setLocked] = useState(initialLocked);
   const [saving, setSaving] = useState(false);
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
 
@@ -94,13 +99,38 @@ export function AdminDashboard({
   }
 
   async function handleModeChange(newMode: string) {
+    if (locked) return;
     setSaving(true);
     setMode(newMode);
-    await fetch("/api/admin/mode", {
+    const res = await fetch("/api/admin/mode", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mode: newMode }),
     });
+    if (!res.ok) {
+      // revert
+      setMode(currentMode);
+    }
+    setSaving(false);
+    router.refresh();
+  }
+
+  async function handleToggleLock() {
+    if (!locked) {
+      if (
+        !confirm(
+          "Lock the event mode? This prevents further changes until you unlock it. Use this before the event starts to avoid accidental changes."
+        )
+      )
+        return;
+    }
+    setSaving(true);
+    await fetch("/api/admin/mode", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lock: !locked }),
+    });
+    setLocked(!locked);
     setSaving(false);
     router.refresh();
   }
@@ -194,23 +224,66 @@ export function AdminDashboard({
 
           {/* Event Mode Toggle */}
           <div>
-            <div className="mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-heading text-lg font-semibold">Event Mode</h2>
-              {saving && (
-                <span className="text-xs text-muted-foreground">Saving...</span>
-              )}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-muted-foreground" />
+                <h2 className="font-heading text-lg font-semibold">
+                  Event Mode
+                </h2>
+                {saving && (
+                  <span className="text-xs text-muted-foreground">
+                    Saving...
+                  </span>
+                )}
+              </div>
+              <Button
+                variant={locked ? "default" : "outline"}
+                size="sm"
+                onClick={handleToggleLock}
+                disabled={saving}
+              >
+                {locked ? (
+                  <>
+                    <Lock className="mr-1.5 h-3.5 w-3.5" />
+                    Locked
+                  </>
+                ) : (
+                  <>
+                    <LockOpen className="mr-1.5 h-3.5 w-3.5" />
+                    Unlocked
+                  </>
+                )}
+              </Button>
             </div>
+
+            {locked && (
+              <div className="mb-3 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">
+                    Mode is locked.
+                  </span>{" "}
+                  Changes are prevented until you click &quot;Locked&quot; to
+                  unlock. This protects against accidental changes during the
+                  event.
+                </p>
+              </div>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-3">
               {MODES.map((m) => (
                 <button
                   key={m.value}
                   onClick={() => handleModeChange(m.value)}
+                  disabled={locked}
                   className={cn(
-                    "cursor-pointer rounded-lg border p-4 text-left transition-colors",
+                    "rounded-lg border p-4 text-left transition-colors",
+                    locked
+                      ? "cursor-not-allowed opacity-60"
+                      : "cursor-pointer",
                     mode === m.value
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/40"
+                      : !locked && "border-border hover:border-primary/40"
                   )}
                 >
                   <p className="text-sm font-medium">{m.label}</p>

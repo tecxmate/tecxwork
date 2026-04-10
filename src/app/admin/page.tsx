@@ -36,7 +36,7 @@ export default async function AdminPage() {
     .select({ count: count() })
     .from(applicantProfiles);
   const [config] = await db
-    .select({ mode: eventConfig.mode })
+    .select({ mode: eventConfig.mode, locked: eventConfig.modeLocked })
     .from(eventConfig)
     .limit(1);
 
@@ -57,6 +57,7 @@ export default async function AdminPage() {
         totalApplicants: applicantCount.count,
       }}
       currentMode={config?.mode ?? "both"}
+      initialLocked={config?.locked ?? false}
     />
   );
 }

@@ -5,11 +5,14 @@ import { eq } from "drizzle-orm";
 
 export async function GET() {
   const [config] = await db
-    .select({ mode: eventConfig.mode })
+    .select({ mode: eventConfig.mode, locked: eventConfig.modeLocked })
     .from(eventConfig)
     .limit(1);
 
-  return NextResponse.json({ mode: config?.mode ?? "both" });
+  return NextResponse.json({
+    mode: config?.mode ?? "both",
+    locked: config?.locked ?? false,
+  });
 }
 
 export async function PUT(req: NextRequest) {
@@ -19,17 +22,48 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { mode } = await req.json();
-  if (!["applicant_books_recruiter", "recruiter_books_applicant", "both"].includes(mode)) {
-    return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
-  }
+  const body = await req.json();
+  const { mode, lock } = body;
 
-  const [config] = await db.select({ id: eventConfig.id }).from(eventConfig).limit(1);
+  const [config] = await db
+    .select({ id: eventConfig.id, locked: eventConfig.modeLocked })
+    .from(eventConfig)
+    .limit(1);
+
   if (!config) {
     return NextResponse.json({ error: "Event config not found" }, { status: 404 });
   }
 
-  await db.update(eventConfig).set({ mode }).where(eq(eventConfig.id, config.id));
+  // Lock toggle — always allowed by admin
+  if (typeof lock === "boolean") {
+    await db
+      .update(eventConfig)
+      .set({ modeLocked: lock })
+      .where(eq(eventConfig.id, config.id));
+    return NextResponse.json({ locked: lock });
+  }
 
-  return NextResponse.json({ mode });
+  // Mode change — blocked if currently locked
+  if (mode) {
+    if (config.locked) {
+      return NextResponse.json(
+        { error: "Event mode is locked. Unlock it first to make changes." },
+        { status: 423 }
+      );
+    }
+
+    if (
+      !["applicant_books_recruiter", "recruiter_books_applicant", "both"].includes(mode)
+    ) {
+      return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
+    }
+
+    await db
+      .update(eventConfig)
+      .set({ mode })
+      .where(eq(eventConfig.id, config.id));
+    return NextResponse.json({ mode });
+  }
+
+  return NextResponse.json({ error: "No changes provided" }, { status: 400 });
 }
