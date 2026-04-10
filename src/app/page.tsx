@@ -79,23 +79,29 @@ export default async function Home() {
             </div>
             <span className="font-heading text-lg font-bold">TecxWork</span>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {EVENT_CONFIG.location}
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            {EVENT_CONFIG.organizerShort} &middot; {EVENT_CONFIG.hostedAt}
           </span>
         </div>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
-        <div className="w-full max-w-5xl space-y-10">
+      <main className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+        <div className="w-full max-w-5xl space-y-8 sm:space-y-10">
           <div className="text-center">
-            <p className="text-sm font-medium text-primary">
-              {formattedDate}
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary sm:text-sm">
+              {EVENT_CONFIG.organizer}
             </p>
-            <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight sm:text-5xl">
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
+              {formattedDate} &middot; 10:00 – 17:30
+            </p>
+            <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight sm:text-5xl">
               {EVENT_CONFIG.name}
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
-              {EVENT_CONFIG.subtitle}. Choose your role to get started.
+            <p className="mx-auto mt-3 max-w-2xl text-sm italic text-muted-foreground sm:text-base">
+              &ldquo;{EVENT_CONFIG.tagline}&rdquo;
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+              Hosted at <span className="font-medium text-foreground">{EVENT_CONFIG.hostedAt}</span>
             </p>
 
             <div className="mt-6 flex justify-center">

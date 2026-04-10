@@ -75,11 +75,16 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Generate default slots for event day (9am–5pm, 15-min intervals)
-    const eventDate = "2026-06-10";
+    // Generate default slots for event day (10:00–17:30, 15-min intervals)
+    const eventDate = "2026-06-06";
+    const startHour = 10;
+    const endHour = 17;
+    const endMinutes = 30; // 17:30
     const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] = [];
-    for (let h = 9; h < 17; h++) {
+    for (let h = startHour; h < endHour + 1; h++) {
       for (let m = 0; m < 60; m += 15) {
+        if (h === endHour && m >= endMinutes) break;
+        if (h > endHour) break;
         const start = new Date(
           `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
         );

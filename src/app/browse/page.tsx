@@ -46,23 +46,23 @@ export default async function BrowsePage() {
       {/* Compact hero on mobile, bigger on desktop */}
       <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12 lg:py-16">
         <div className="mx-auto max-w-7xl text-center">
-          <Badge className="mb-2 sm:mb-4">2026 Event</Badge>
+          <Badge className="mb-2 sm:mb-4">{EVENT_CONFIG.organizerShort}</Badge>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
             {EVENT_CONFIG.name}
           </h1>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground sm:mt-3 sm:text-lg">
-            Browse companies and book your interview slot.
+          <p className="mx-auto mt-2 max-w-2xl text-xs italic text-muted-foreground sm:mt-3 sm:text-sm">
+            &ldquo;{EVENT_CONFIG.tagline}&rdquo;
           </p>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground sm:mt-6 sm:gap-x-6 sm:gap-y-3 sm:text-sm">
             <span className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {formattedDate}
+              {formattedDate} &middot; 10:00 – 17:30
             </span>
             <span className="flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="max-w-[180px] truncate sm:max-w-none">
-                {EVENT_CONFIG.location}
+              <span className="max-w-[220px] truncate sm:max-w-none">
+                {EVENT_CONFIG.hostedAt}
               </span>
             </span>
           </div>

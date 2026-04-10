@@ -253,3 +253,82 @@ Limitations
     - Self-hosted Postgres on a $6 VPS — cheapest long-term, you manage backups
 
     For a short-lived recruitment event: stay on free tier, delete the project after. Total cost: $0.
+
+
+
+    People Section                                                                                                       
+                                          
+  Tabs: Recruiters / Students — with live counts                                                                           
+                                                                                                                           
+  Per-row data (real-time from DB):                                                                                        
+                                                                                                                           
+  ┌────────────────────────────────────────┬────────────────────────────┐                                                  
+  │               Recruiters               │          Students          │                                                  
+  ├────────────────────────────────────────┼────────────────────────────┤                                                  
+  │ Name, Company, Email, Industry, Joined │ Name, Email, Major, Joined │                                                  
+  └────────────────────────────────────────┴────────────────────────────┘
+                                                                                                                           
+  Features:                               
+  - Sort — click any column header to toggle asc/desc (with arrow indicators)                                              
+  - Search — live filter by name, email, company/major                                                                     
+  - Email links — click any email to open mailto      
+  - Delete — trash icon per row → confirm → cascade delete (user, profile, slots, bookings)                                
+  - Responsive — industry/major/joined columns hidden on narrow screens                                                    
+                                                                       
+  Safety:                                                                                                                  
+  - Confirmation dialog before delete with explicit warning 
+  - Cascades everything in one go (no orphan data)                                                                         
+  - Admin-only (enforced on API + UI)  
+
+  Security Audit Report
+
+  🔴 Fixed (Critical)
+
+  1. Booking endpoint authentication — /api/bookings now requires applicant session; uses profile data from
+  DB instead of client-supplied values
+  2. Reverse booking endpoint authentication — /api/bookings/reverse now requires recruiter session; derives
+  recruiter ID from session
+  3. Applicant slot creation — /api/applicant-slots POST now requires applicant session; only creates slots
+  for the authenticated user
+  4. IDOR prevention — slot's true recruiterId is fetched from DB, not trusted from client
+
+  ✅ Already Secure
+
+  - SQL injection — Drizzle ORM parameterizes all queries
+  - XSS — React escapes output; no dangerouslySetInnerHTML
+  - CSRF — httpOnly + sameSite=lax cookies
+  - Password storage — bcrypt cost 12
+  - Admin endpoints — all /api/admin/* enforce requireAdmin()
+  - Double-booking — atomic UPDATE ... WHERE status='available'
+  - Proxy role checks — proxy.ts gates all protected routes
+  - HTTPS — enforced by Vercel
+  - Secrets — .env.local gitignored; JWT_SECRET set in Vercel env
+
+  🟡 Accepted Trade-offs
+
+  - User enumeration on login — We distinguish USER_NOT_FOUND vs INVALID_PASSWORD for the "no account? sign
+  up" UX. Acceptable for a scoped single-day event.
+  - No rate limiting — OK for 1,000 users over one day. For scale, add Upstash-based rate limit later.
+
+  ⚠️  Pre-Deploy Actions (for you)
+
+  1. Change seed admin password — currently admin123. Log in as admin on first visit and change via a future
+  "Account Settings" page (or manually update in DB).
+  2. Rotate JWT_SECRET — already set by Vercel during initial deploy, but if you share/fork, rotate.
+  3. Test recruiter seed passwords — recruiter123 for all seeded recruiters. Same note.
+
+  Live at https://tecxwork.vercel.app, pushed to GitHub.
+
+✻ Worked for 6m 2s
+
+❯ Change the location to National Taipei University of Science and Technology (Taipei Tech), add these       
+official info [Image #7]                                                                                     
+  ⎿  [Image #7]
+
+⏺ I can extract these details from the image:
+  - Event: NGÀY HỘI VIỆC LÀM VSATW 2026 — "V-GEN TRIDENT"
+  - Tagline: "The Vietnamese Generation — Versatile in Talent, Value in Action"
+  - Date: Saturday, June 6, 2026
+  - Time: 10:00 – 17:30
+  - Location: NTUT (Taipei Tech)
+  - Organizer: Vietnamese Student Association in Taiwan (VSATW)

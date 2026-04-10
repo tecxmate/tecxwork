@@ -104,9 +104,8 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          applicantId: profileId,
-          date: "2026-06-10",
-          startHour: 9,
+          date: "2026-06-06",
+          startHour: 10,
           endHour: 17,
           durationMinutes: 15,
         }),
@@ -160,8 +159,8 @@ export default function RegisterPage() {
               Set Your Availability
             </h2>
             <p className="text-sm text-muted-foreground">
-              This creates 15-minute interview slots on event day (May 15, 2026)
-              from 9:00 AM to 5:00 PM for recruiters to book.
+              This creates 15-minute interview slots on event day (June 6, 2026)
+              from 10:00 AM to 5:30 PM for recruiters to book.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -182,7 +181,7 @@ export default function RegisterPage() {
                   Creating slots...
                 </>
               ) : (
-                "Create Availability (9 AM – 5 PM)"
+                "Create Availability (10 AM – 5:30 PM)"
               )}
             </Button>
             <Button
