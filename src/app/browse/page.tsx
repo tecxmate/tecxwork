@@ -32,7 +32,7 @@ export default async function BrowsePage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Users className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold">TecxWork</span>
+            <span className="font-heading text-lg font-bold">V-GEN</span>
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden max-w-[200px] truncate text-sm text-muted-foreground md:inline">

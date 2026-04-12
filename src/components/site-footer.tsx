@@ -12,7 +12,7 @@ export function SiteFooter() {
           TECXMATE.COM
         </a>
       </p>
-      <p className="mt-1">&copy; 2026 TecxWork &middot; PIPA compliant</p>
+      <p className="mt-1">&copy; 2026 V-GEN TRIDENT &middot; PIPA compliant</p>
     </footer>
   );
 }

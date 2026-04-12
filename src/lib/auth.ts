@@ -5,7 +5,7 @@ import { db, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
-const COOKIE_NAME = "tecxwork_session";
+const COOKIE_NAME = "vgen_session";
 
 export type UserRole = "admin" | "recruiter" | "applicant";
 

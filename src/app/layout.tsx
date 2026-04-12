@@ -20,7 +20,7 @@ const ebGaramond = EB_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "TecxWork — University Recruitment Fair",
+  title: "V-GEN TRIDENT — VSATW Career Fair 2026",
   description:
     "Browse participating companies and book your interview slot for the university recruitment event.",
 };

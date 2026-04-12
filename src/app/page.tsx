@@ -77,7 +77,7 @@ export default async function Home() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Users className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold">TecxWork</span>
+            <span className="font-heading text-lg font-bold">V-GEN</span>
           </div>
           <span className="hidden text-xs text-muted-foreground sm:inline">
             {EVENT_CONFIG.organizerShort} &middot; {EVENT_CONFIG.hostedAt}

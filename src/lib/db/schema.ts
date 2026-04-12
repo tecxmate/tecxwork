@@ -167,7 +167,7 @@ export const allowedDomains = pgTable("allowed_domains", {
 
 export const eventConfig = pgTable("event_config", {
   id: serial("id").primaryKey(),
-  eventName: text("event_name").notNull().default("TecxWork 2026"),
+  eventName: text("event_name").notNull().default("V-GEN TRIDENT 2026"),
   eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
   location: text("location")
     .notNull()
