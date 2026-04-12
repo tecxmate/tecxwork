@@ -19,6 +19,7 @@ import {
   Calendar,
   Loader2,
   GraduationCap,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -153,8 +154,20 @@ export function RecruiterDashboard({
   );
 }
 
-function BookingsTab({ bookings }: { bookings: Booking[] }) {
-  if (bookings.length === 0) {
+function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
+  const [items, setItems] = useState(initialBookings);
+  const router = useRouter();
+
+  async function handleCancel(id: number) {
+    if (!confirm("Cancel this interview? The slot will be released.")) return;
+    const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setItems(items.filter((b) => b.id !== id));
+      router.refresh();
+    }
+  }
+
+  if (items.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -168,7 +181,7 @@ function BookingsTab({ bookings }: { bookings: Booking[] }) {
 
   return (
     <div className="space-y-3">
-      {bookings.map((b) => (
+      {items.map((b) => (
         <Card key={b.id}>
           <CardContent className="py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -204,6 +217,13 @@ function BookingsTab({ bookings }: { bookings: Booking[] }) {
                   CV
                   <ExternalLink className="h-3 w-3" />
                 </a>
+                <button
+                  onClick={() => handleCancel(b.id)}
+                  className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  aria-label="Cancel booking"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
                 <Badge
                   variant={
                     b.status === "confirmed" ? "default" : "secondary"

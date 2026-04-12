@@ -41,6 +41,7 @@ export function proxy(req: NextRequest) {
   // Applicant-only: /browse and /recruiter/[id] (but not /recruiter/signup)
   if (
     pathname.startsWith("/browse") ||
+    pathname.startsWith("/profile") ||
     (pathname.startsWith("/recruiter/") && pathname !== "/recruiter/signup")
   ) {
     if (!session) return NextResponse.redirect(new URL("/login", req.url));
@@ -58,6 +59,7 @@ export const config = {
     "/dashboard/:path*",
     "/admin/:path*",
     "/recruiter/:path*",
+    "/profile/:path*",
     "/login",
     "/register",
   ],

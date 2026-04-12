@@ -73,6 +73,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Slot not found" }, { status: 404 });
   }
 
+  // Time conflict check: does this applicant already have a booking at the same time?
+  const conflicting = await db
+    .select({ id: bookings.id })
+    .from(bookings)
+    .innerJoin(slots, eq(bookings.slotId, slots.id))
+    .where(
+      and(
+        eq(bookings.applicantEmail, profile.email),
+        eq(slots.startTime, slot.startTime)
+      )
+    );
+
+  if (conflicting.length > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "You already have an interview booked at this time. Choose a different slot to avoid a scheduling conflict.",
+      },
+      { status: 409 }
+    );
+  }
+
   // Atomic: only update if slot is still available
   const updated = await db
     .update(slots)

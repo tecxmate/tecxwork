@@ -22,7 +22,21 @@ const ebGaramond = EB_Garamond({
 export const metadata: Metadata = {
   title: "V-GEN TRIDENT — VSATW Career Fair 2026",
   description:
-    "Browse participating companies and book your interview slot for the university recruitment event.",
+    "Ngày Hội Việc Làm VSATW 2026 — The Vietnamese Generation: Versatile in Talent, Value in Action. June 6, 2026 at NTUT (Taipei Tech).",
+  openGraph: {
+    title: "V-GEN TRIDENT — VSATW Career Fair 2026",
+    description:
+      "Ngày Hội Việc Làm VSATW 2026 — The Vietnamese Generation: Versatile in Talent, Value in Action. Book your interview slot now.",
+    type: "website",
+    locale: "en_US",
+    siteName: "V-GEN TRIDENT",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "V-GEN TRIDENT — VSATW Career Fair 2026",
+    description:
+      "Career fair for Vietnamese students in Taiwan. June 6, 2026 at NTUT (Taipei Tech).",
+  },
 };
 
 export default function RootLayout({

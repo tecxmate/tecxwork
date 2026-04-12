@@ -19,6 +19,7 @@ import {
   AtSign,
   Lock,
   LockOpen,
+  Download,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -268,6 +269,17 @@ export function AdminDashboard({
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* Export */}
+          <div className="flex justify-end">
+            <a
+              href="/api/admin/export"
+              className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
+            >
+              <Download className="h-4 w-4" />
+              Export Bookings (CSV)
+            </a>
           </div>
 
           <Separator />

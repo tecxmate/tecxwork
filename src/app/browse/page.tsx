@@ -34,10 +34,13 @@ export default async function BrowsePage() {
             </div>
             <span className="font-heading text-lg font-bold">V-GEN</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="hidden max-w-[200px] truncate text-sm text-muted-foreground md:inline">
-              {session.email}
-            </span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/profile"
+              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
+            >
+              My Profile
+            </Link>
             <LogoutButton />
           </div>
         </div>
