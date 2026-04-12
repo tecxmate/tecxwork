@@ -5,9 +5,11 @@ import {
   bookings,
   applicantProfiles,
   recruiters,
+  users,
 } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { sendBookingEmails } from "@/lib/email";
 
 /**
  * POST — Recruiter books an applicant's slot (Mode B).
@@ -54,6 +56,8 @@ export async function POST(req: NextRequest) {
     .select({
       id: applicantSlots.id,
       applicantId: applicantSlots.applicantId,
+      startTime: applicantSlots.startTime,
+      endTime: applicantSlots.endTime,
     })
     .from(applicantSlots)
     .where(eq(applicantSlots.id, applicantSlotId));
@@ -113,6 +117,31 @@ export async function POST(req: NextRequest) {
         pipaConsent: true,
       })
       .returning();
+
+    // Fetch recruiter details for email
+    const [rec] = await db
+      .select({
+        company: recruiters.company,
+        contactEmail: recruiters.contactEmail,
+        name: users.name,
+      })
+      .from(recruiters)
+      .innerJoin(users, eq(recruiters.userId, users.id))
+      .where(eq(recruiters.id, recruiter.id));
+
+    if (rec) {
+      sendBookingEmails({
+        applicantName: applicant.name,
+        applicantEmail: applicant.email,
+        recruiterName: rec.name,
+        recruiterEmail: rec.contactEmail,
+        company: rec.company,
+        slotStart: slot.startTime,
+        slotEnd: slot.endTime,
+        cvLink: applicant.cvLink,
+        direction: "recruiter_books_applicant",
+      }).catch(() => {});
+    }
 
     return NextResponse.json({ booking });
   } catch {

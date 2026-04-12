@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, slots, bookings, applicantProfiles } from "@/lib/db";
+import { db, slots, bookings, applicantProfiles, recruiters, users } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { sendBookingEmails } from "@/lib/email";
 
 /**
  * POST — Applicant books a recruiter's slot (Mode A).
@@ -58,7 +59,13 @@ export async function POST(req: NextRequest) {
 
   // Validate slot exists and get its true recruiterId (don't trust client)
   const [slot] = await db
-    .select({ id: slots.id, recruiterId: slots.recruiterId, status: slots.status })
+    .select({
+      id: slots.id,
+      recruiterId: slots.recruiterId,
+      status: slots.status,
+      startTime: slots.startTime,
+      endTime: slots.endTime,
+    })
     .from(slots)
     .where(eq(slots.id, body.slotId));
 
@@ -94,6 +101,32 @@ export async function POST(req: NextRequest) {
         pipaConsent: true,
       })
       .returning();
+
+    // Fetch recruiter info for the email
+    const [rec] = await db
+      .select({
+        company: recruiters.company,
+        contactEmail: recruiters.contactEmail,
+        name: users.name,
+      })
+      .from(recruiters)
+      .innerJoin(users, eq(recruiters.userId, users.id))
+      .where(eq(recruiters.id, slot.recruiterId));
+
+    // Send emails (non-blocking — don't fail the booking)
+    if (rec) {
+      sendBookingEmails({
+        applicantName: profile.name,
+        applicantEmail: profile.email,
+        recruiterName: rec.name,
+        recruiterEmail: rec.contactEmail,
+        company: rec.company,
+        slotStart: slot.startTime,
+        slotEnd: slot.endTime,
+        cvLink: body.cvLink?.trim() || profile.cvLink,
+        direction: "applicant_books_recruiter",
+      }).catch(() => {});
+    }
 
     return NextResponse.json({ booking });
   } catch {

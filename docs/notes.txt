@@ -342,3 +342,91 @@ official info [Image #7]
   - Time: 10:00 – 17:30
   - Location: NTUT (Taipei Tech)
   - Organizer: Vietnamese Student Association in Taiwan (VSATW)
+
+
+❯ Is this production ready? Thinking of adding notification system. How does that work for a Web App? Can you send notification when see web running on  
+the background on the phone?                                                                                                                             
+
+⏺ Production Ready?
+
+  Honest assessment — functional but has gaps for a real event with 1,000 users:
+
+  ┌───────────────────────────┬────────┬─────────────────────────────────────────┐
+  │           Area            │ Status │                   Gap                   │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Booking flow              │ ✅     │ —                                       │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Auth + role protection    │ ✅     │ —                                       │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Double-booking prevention │ ✅     │ —                                       │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ PIPA compliance           │ ✅     │ —                                       │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Admin management          │ ✅     │ —                                       │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Booking confirmations     │ ❌     │ No email/push sent on booking           │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Cancel/reschedule         │ ❌     │ Users can't modify bookings             │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Password reset            │ ❌     │ Only admin can help                     │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Data export               │ ❌     │ Admin can't export CSV                  │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Error monitoring          │ ❌     │ No Sentry/logging                       │
+  ├───────────────────────────┼────────┼─────────────────────────────────────────┤
+  │ Rate limiting             │ ❌     │ Open to spam (low risk for 1-day event) │
+  └───────────────────────────┴────────┴─────────────────────────────────────────┘
+
+  The notification gap is the biggest one. Students book an interview and get no confirmation email — they have to remember the time from the success
+  screen.
+
+  How Web Notifications Work
+
+  There are 3 options:
+
+  1. Email (Recommended for this event)
+
+  Sent via Resend (free tier: 3,000 emails/month — plenty for 1,000 users).
+  - Student books → email to student + recruiter with time/details
+  - Works everywhere, no permission needed
+  - Most reliable
+
+  2. Web Push Notifications (Background)
+
+  Uses Service Workers + Push API. This is what you're asking about — yes, it CAN work in the background:
+
+  ┌──────────────────┬──────────────────┬───────────────────────────────────────┐
+  │     Platform     │ Background Push? │              Requirement              │
+  ├──────────────────┼──────────────────┼───────────────────────────────────────┤
+  │ Android Chrome   │ ✅ Yes           │ Just grant permission                 │
+  ├──────────────────┼──────────────────┼───────────────────────────────────────┤
+  │ Android Firefox  │ ✅ Yes           │ Just grant permission                 │
+  ├──────────────────┼──────────────────┼───────────────────────────────────────┤
+  │ iOS Safari       │ ⚠️  Conditional   │ Must "Add to Home Screen" first (PWA) │
+  ├──────────────────┼──────────────────┼───────────────────────────────────────┤
+  │ Desktop browsers │ ✅ Yes           │ Just grant permission                 │
+  └──────────────────┴──────────────────┴───────────────────────────────────────┘
+
+  How it works:
+  1. User visits site → browser asks "Allow notifications?"
+  2. If allowed → browser gives you a push subscription (endpoint URL + keys)
+  3. Store that subscription in your DB
+  4. When a booking happens → your server sends a push message to that subscription via Web Push protocol
+  5. The Service Worker receives it and shows a native OS notification — even if the browser tab is closed
+
+  Complexity: Medium. Needs VAPID keys, Service Worker file, push subscription storage, and a server-side push sender.
+
+  3. In-App (Polling/SSE)
+
+  Only works while the tab is open. Not useful for "I booked 2 hours ago, remind me."
+
+  My Recommendation
+
+  For a single-day career fair: Email first, Web Push optional.
+
+  - Email covers 100% of users with zero friction
+  - Web Push is nice-to-have for real-time "someone just booked you!" alerts to recruiters during the event
+  - Both can be added in parallel
+
+  Want me to add email notifications via Resend? It's the fastest path to production-ready. I can add Web Push later if you want the real-time recruiter
+  alerts too.
