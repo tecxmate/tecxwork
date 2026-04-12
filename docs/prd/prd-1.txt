@@ -166,7 +166,7 @@ The admin team updates the Frontend Static Directory codebase.
 All recruiter-specific Cal.com links behind the "Book Now" buttons are batch-replaced with the single Google Form URL.
 
 The Static Directory is redeployed (takes < 1 minute).
-
+remove
 7.3 Post-Event Resolution
 
 After the event, the university admin exports the Google Sheet attached to the form and emails the data to the respective recruiters to manually follow up with interested students.
