@@ -48,10 +48,10 @@ export function Directory() {
           />
         </div>
 
-        {/* Horizontally scrollable filter chips on mobile */}
-        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        {/* Industry filter chips — temporarily disabled */}
+        {/* <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <IndustryFilter selected={industry} onSelect={setIndustry} />
-        </div>
+        </div> */}
 
         <p className="text-xs text-muted-foreground sm:text-sm">
           {filtered.length} {filtered.length === 1 ? "company" : "companies"}
