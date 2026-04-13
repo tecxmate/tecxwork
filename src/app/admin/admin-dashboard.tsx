@@ -110,6 +110,7 @@ export function AdminDashboard({
   const [tf, setTf] = useState(initialTimeFrame);
   const [tfSaving, setTfSaving] = useState(false);
   const [tfSaved, setTfSaved] = useState(false);
+  const [tfError, setTfError] = useState("");
 
   // Domain form
   const [newDomain, setNewDomain] = useState("");
@@ -387,15 +388,21 @@ export function AdminDashboard({
                     e.preventDefault();
                     setTfSaving(true);
                     setTfSaved(false);
-                    await fetch("/api/admin/timeframe", {
+                    setTfError("");
+                    const res = await fetch("/api/admin/timeframe", {
                       method: "PUT",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(tf),
                     });
+                    if (!res.ok) {
+                      const d = await res.json().catch(() => ({}));
+                      setTfError(d.error || "Failed to save");
+                    } else {
+                      setTfSaved(true);
+                      setTimeout(() => setTfSaved(false), 3000);
+                    }
                     setTfSaving(false);
-                    setTfSaved(true);
                     router.refresh();
-                    setTimeout(() => setTfSaved(false), 3000);
                   }}
                   className="space-y-4"
                 >
@@ -443,14 +450,27 @@ export function AdminDashboard({
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Event runs {String(tf.startHour).padStart(2, "0")}:00 – {String(tf.endHour).padStart(2, "0")}:{String(tf.endMinute).padStart(2, "0")} with {tf.slotDuration}-minute slots.
-                    Saving will regenerate all unbooked slots for every recruiter.
                   </p>
+
+                  {stats.totalBookings > 0 && (
+                    <div className="flex items-start gap-2 rounded-lg border border-yellow-300/50 bg-yellow-50 p-3 text-xs dark:border-yellow-800/50 dark:bg-yellow-900/10">
+                      <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-700 dark:text-yellow-400" />
+                      <p className="text-yellow-800 dark:text-yellow-300">
+                        <span className="font-semibold">Locked.</span> {stats.totalBookings} booking{stats.totalBookings > 1 ? "s" : ""} exist.
+                        Cancel or reject all active bookings before changing the time frame.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-3">
-                    <Button type="submit" disabled={tfSaving} size="sm">
+                    <Button type="submit" disabled={tfSaving || stats.totalBookings > 0} size="sm">
                       {tfSaving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Saving...</> : "Save & Regenerate Slots"}
                     </Button>
                     {tfSaved && (
                       <span className="text-xs text-green-600">Saved!</span>
+                    )}
+                    {tfError && (
+                      <span className="text-xs text-destructive">{tfError}</span>
                     )}
                   </div>
                 </form>

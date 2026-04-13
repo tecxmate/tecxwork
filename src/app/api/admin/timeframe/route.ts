@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, eventConfig, slots, recruiters } from "@/lib/db";
+import { db, eventConfig, slots, recruiters, bookings } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 
 /**
  * PUT /api/admin/timeframe
@@ -13,6 +13,36 @@ export async function PUT(req: NextRequest) {
     await requireAdmin();
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Block changes if any bookings exist (pending, accepted, or waitlisted)
+  const [activeBookings] = await db
+    .select({ count: count() })
+    .from(bookings)
+    .where(
+      eq(bookings.status, "pending")
+    );
+
+  const [acceptedBookings] = await db
+    .select({ count: count() })
+    .from(bookings)
+    .where(eq(bookings.status, "accepted"));
+
+  const [waitlistedBookings] = await db
+    .select({ count: count() })
+    .from(bookings)
+    .where(eq(bookings.status, "waitlisted"));
+
+  const totalActive =
+    activeBookings.count + acceptedBookings.count + waitlistedBookings.count;
+
+  if (totalActive > 0) {
+    return NextResponse.json(
+      {
+        error: `Cannot change time frame — ${totalActive} active booking${totalActive > 1 ? "s" : ""} exist (${acceptedBookings.count} accepted, ${activeBookings.count} pending, ${waitlistedBookings.count} waitlisted). Cancel or reject all bookings first.`,
+      },
+      { status: 423 }
+    );
   }
 
   const body = await req.json();
