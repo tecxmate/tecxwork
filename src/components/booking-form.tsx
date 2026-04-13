@@ -15,12 +15,12 @@ import {
   User,
   Mail,
   FileText,
+  Briefcase,
 } from "lucide-react";
 
 type BookingState = "idle" | "submitting" | "success" | "error";
 
 type SelectedSlot = {
-  id: number;
   startTime: string;
   endTime: string;
 };
@@ -32,25 +32,28 @@ type Profile = {
 };
 
 export function BookingForm({
+  recruiterId,
   company,
   contactEmail,
+  positions,
   slot,
   onBack,
 }: {
-  recruiterId?: number; // kept for backwards compat — ignored server-side
+  recruiterId: number;
   company: string;
   contactEmail: string;
+  positions: string[];
   slot: SelectedSlot;
   onBack: () => void;
 }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState("");
+  const [position, setPosition] = useState(positions[0] ?? "");
   const [cvLink, setCvLink] = useState("");
   const [pipaConsent, setPipaConsent] = useState(false);
   const [state, setState] = useState<BookingState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Fetch the applicant's own profile on mount
   useEffect(() => {
     fetch("/api/me/profile")
       .then(async (r) => {
@@ -68,7 +71,7 @@ export function BookingForm({
 
   const slotDate = new Date(slot.startTime);
   const formattedTime = format(slotDate, "EEEE, MMMM d 'at' HH:mm");
-  const canSubmit = !!profile && cvLink.trim() && pipaConsent;
+  const canSubmit = !!profile && !!position && cvLink.trim() && pipaConsent;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,7 +85,9 @@ export function BookingForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          slotId: slot.id,
+          recruiterId,
+          startTime: slot.startTime,
+          position,
           cvLink: cvLink.trim(),
           pipaConsent: true,
         }),
@@ -112,20 +117,20 @@ export function BookingForm({
               Interview Booked!
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your interview with {company} is confirmed for {formattedTime}.
+              Your interview with {company} for <span className="font-medium text-foreground">{position}</span> is
+              confirmed for {formattedTime}.
             </p>
           </div>
           <Separator />
           <div className="space-y-1 text-sm text-muted-foreground">
             <p>
-              A confirmation will be sent to{" "}
+              Confirmation sent to{" "}
               <span className="font-medium text-foreground">
                 {profile?.email}
               </span>
-              .
             </p>
             <p>
-              Remember to share your CV with{" "}
+              Share your CV with{" "}
               <span className="font-medium text-foreground">
                 {contactEmail}
               </span>{" "}
@@ -146,9 +151,7 @@ export function BookingForm({
         <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
           <p className="text-sm text-muted-foreground">{profileError}</p>
-          <Button variant="outline" onClick={onBack}>
-            Back
-          </Button>
+          <Button variant="outline" onClick={onBack}>Back</Button>
         </CardContent>
       </Card>
     );
@@ -159,9 +162,7 @@ export function BookingForm({
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">
-            Loading your profile...
-          </span>
+          <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
         </CardContent>
       </Card>
     );
@@ -180,7 +181,7 @@ export function BookingForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Profile summary — read-only, from DB */}
+          {/* Profile summary */}
           <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -192,12 +193,43 @@ export function BookingForm({
             </div>
           </div>
 
-          {/* CV link — editable, can override profile default */}
+          {/* Position selector */}
+          <div className="space-y-1.5">
+            <label htmlFor="position" className="text-sm font-medium">
+              <Briefcase className="mr-1 inline h-3.5 w-3.5" />
+              Position applying for <span className="text-destructive">*</span>
+            </label>
+            {positions.length > 1 ? (
+              <select
+                id="position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                required
+                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
+              >
+                {positions.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium">
+                {position}
+              </p>
+            )}
+            {positions.length > 1 && (
+              <p className="text-xs text-muted-foreground">
+                You can apply for multiple positions at different time slots.
+              </p>
+            )}
+          </div>
+
+          {/* CV link */}
           <div className="space-y-1.5">
             <label htmlFor="cv-link" className="text-sm font-medium">
               <FileText className="mr-1 inline h-3.5 w-3.5" />
-              CV Link for this interview{" "}
-              <span className="text-destructive">*</span>
+              CV Link <span className="text-destructive">*</span>
             </label>
             <Input
               id="cv-link"
@@ -209,15 +241,13 @@ export function BookingForm({
             />
             <p className="text-xs text-muted-foreground">
               Share only with{" "}
-              <span className="font-medium text-foreground">
-                {contactEmail}
-              </span>
-              . Do NOT set to &quot;Anyone can view&quot;.
+              <span className="font-medium text-foreground">{contactEmail}</span>.
             </p>
           </div>
 
           <Separator />
 
+          {/* PIPA */}
           <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
             <input
               id="pipa-consent"
@@ -232,9 +262,8 @@ export function BookingForm({
               className="cursor-pointer text-xs leading-relaxed text-muted-foreground"
             >
               <ShieldCheck className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-primary" />
-              I consent to sharing my profile with {company} in accordance with
-              Taiwan&apos;s Personal Data Protection Act. I confirm I have only
-              granted Drive access to {contactEmail}.
+              I consent to sharing my profile with {company} for the {position} position
+              in accordance with Taiwan&apos;s PIPA.
             </label>
           </div>
 
@@ -249,19 +278,10 @@ export function BookingForm({
           )}
 
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={onBack} className="flex-1">
               Back
             </Button>
-            <Button
-              type="submit"
-              disabled={!canSubmit || state === "submitting"}
-              className="flex-1"
-            >
+            <Button type="submit" disabled={!canSubmit || state === "submitting"} className="flex-1">
               {state === "submitting" ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

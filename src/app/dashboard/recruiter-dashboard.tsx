@@ -50,6 +50,7 @@ type Recruiter = {
   positions: string[];
   contactEmail: string;
   jdLink: string | null;
+  interviewerCount: number;
 };
 
 type Applicant = {
@@ -556,6 +557,7 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
   const [positionInput, setPositionInput] = useState("");
   const [positions, setPositions] = useState<string[]>(recruiter.positions);
   const [jdLink, setJdLink] = useState(recruiter.jdLink ?? "");
+  const [interviewerCount, setInterviewerCount] = useState(recruiter.interviewerCount);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -580,6 +582,7 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
           description: description.trim(),
           positions,
           jdLink: jdLink.trim() || null,
+          interviewerCount,
         }),
       });
 
@@ -674,6 +677,27 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
             />
             <p className="text-xs text-muted-foreground">
               Students will see this link on your company page before booking.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="interviewer-count" className="text-sm font-medium">
+              Number of Interviewers
+            </label>
+            <Input
+              id="interviewer-count"
+              type="number"
+              min={1}
+              max={10}
+              value={interviewerCount}
+              onChange={(e) =>
+                setInterviewerCount(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              If you have {interviewerCount} interviewer{interviewerCount > 1 ? "s" : ""}, students
+              will see {interviewerCount}x slots per time (e.g., {interviewerCount} students can book 10:00 simultaneously).
+              Interviewers are assigned randomly — students cannot choose.
             </p>
           </div>
 

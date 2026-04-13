@@ -32,7 +32,6 @@ type Recruiter = {
 };
 
 type SelectedSlot = {
-  id: number;
   startTime: string;
   endTime: string;
 };
@@ -241,6 +240,7 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
                   recruiterId={recruiter.id}
                   company={recruiter.company}
                   contactEmail={recruiter.contactEmail}
+                  positions={recruiter.positions}
                   slot={selectedSlot}
                   onBack={handleBack}
                 />

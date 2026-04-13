@@ -62,6 +62,7 @@ export const recruiters = pgTable("recruiters", {
   positions: text("positions").array().notNull().default([]),
   contactEmail: text("contact_email").notNull(),
   jdLink: text("jd_link"),
+  interviewerCount: integer("interviewer_count").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -95,10 +96,15 @@ export const slots = pgTable(
       .references(() => recruiters.id),
     startTime: timestamp("start_time", { withTimezone: true }).notNull(),
     endTime: timestamp("end_time", { withTimezone: true }).notNull(),
+    interviewerNumber: integer("interviewer_number").notNull().default(1),
     status: slotStatusEnum("status").notNull().default("available"),
   },
   (table) => [
-    uniqueIndex("unique_recruiter_slot").on(table.recruiterId, table.startTime),
+    uniqueIndex("unique_recruiter_slot_interviewer").on(
+      table.recruiterId,
+      table.startTime,
+      table.interviewerNumber
+    ),
   ]
 );
 
@@ -141,6 +147,7 @@ export const bookings = pgTable("bookings", {
     .references(() => recruiters.id),
   applicantId: integer("applicant_id").references(() => applicantProfiles.id),
   /** Denormalized for Mode A where applicant has no profile */
+  position: text("position"),
   applicantName: text("applicant_name").notNull(),
   applicantEmail: text("applicant_email").notNull(),
   cvLink: text("cv_link").notNull(),

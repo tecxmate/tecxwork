@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, slots, bookings, applicantProfiles, recruiters, users } from "@/lib/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { sendBookingEmails } from "@/lib/email";
 
 /**
- * POST — Applicant books a recruiter's slot (Mode A).
- * Requires applicant session. Uses profile data from DB, not client input.
+ * POST — Applicant books a recruiter at a specific time (Mode A).
+ *
+ * Body: { recruiterId, startTime (ISO), position, cvLink?, pipaConsent }
+ *
+ * The system randomly assigns an available interviewer slot at that time.
+ * This prevents interviewer selection bias.
  */
 export async function POST(req: NextRequest) {
-  // Auth: must be applicant
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,15 +24,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { slotId: number; pipaConsent: boolean; cvLink?: string };
+  let body: {
+    recruiterId: number;
+    startTime: string;
+    position: string;
+    cvLink?: string;
+    pipaConsent: boolean;
+  };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.slotId) {
-    return NextResponse.json({ error: "slotId is required" }, { status: 400 });
+  if (!body.recruiterId || !body.startTime || !body.position) {
+    return NextResponse.json(
+      { error: "recruiterId, startTime, and position are required" },
+      { status: 400 }
+    );
   }
 
   if (!body.pipaConsent) {
@@ -39,7 +51,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fetch the applicant profile from session (trust DB, not client)
+  // Fetch applicant profile from session
   const [profile] = await db
     .select({
       id: applicantProfiles.id,
@@ -57,54 +69,88 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Validate slot exists and get its true recruiterId (don't trust client)
-  const [slot] = await db
-    .select({
-      id: slots.id,
-      recruiterId: slots.recruiterId,
-      status: slots.status,
-      startTime: slots.startTime,
-      endTime: slots.endTime,
-    })
-    .from(slots)
-    .where(eq(slots.id, body.slotId));
+  const requestedTime = new Date(body.startTime);
 
-  if (!slot) {
-    return NextResponse.json({ error: "Slot not found" }, { status: 404 });
-  }
-
-  // Time conflict check: does this applicant already have a booking at the same time?
-  const conflicting = await db
+  // Check: same student + same time (any recruiter) = conflict
+  const timeConflict = await db
     .select({ id: bookings.id })
     .from(bookings)
     .innerJoin(slots, eq(bookings.slotId, slots.id))
     .where(
       and(
         eq(bookings.applicantEmail, profile.email),
-        eq(slots.startTime, slot.startTime)
+        eq(slots.startTime, requestedTime)
       )
     );
 
-  if (conflicting.length > 0) {
+  if (timeConflict.length > 0) {
     return NextResponse.json(
       {
         error:
-          "You already have an interview booked at this time. Choose a different slot to avoid a scheduling conflict.",
+          "You already have an interview at this time. Choose a different slot.",
       },
       { status: 409 }
     );
   }
 
-  // Atomic: only update if slot is still available
+  // Check: same student + same recruiter + same position = already applied
+  const positionConflict = await db
+    .select({ id: bookings.id })
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.applicantEmail, profile.email),
+        eq(bookings.recruiterId, body.recruiterId),
+        eq(bookings.position, body.position)
+      )
+    );
+
+  if (positionConflict.length > 0) {
+    return NextResponse.json(
+      {
+        error: `You have already applied for "${body.position}" at this company. Choose a different position.`,
+      },
+      { status: 409 }
+    );
+  }
+
+  // Randomly pick one available slot at this time for this recruiter
+  // ORDER BY random() LIMIT 1 — server-side randomness, ungameable
+  const [randomSlot] = await db
+    .select({
+      id: slots.id,
+      recruiterId: slots.recruiterId,
+      startTime: slots.startTime,
+      endTime: slots.endTime,
+    })
+    .from(slots)
+    .where(
+      and(
+        eq(slots.recruiterId, body.recruiterId),
+        eq(slots.startTime, requestedTime),
+        eq(slots.status, "available")
+      )
+    )
+    .orderBy(sql`random()`)
+    .limit(1);
+
+  if (!randomSlot) {
+    return NextResponse.json(
+      { error: "No available slots at this time. Please choose another." },
+      { status: 409 }
+    );
+  }
+
+  // Atomic lock
   const updated = await db
     .update(slots)
     .set({ status: "booked" })
-    .where(and(eq(slots.id, body.slotId), eq(slots.status, "available")))
+    .where(and(eq(slots.id, randomSlot.id), eq(slots.status, "available")))
     .returning({ id: slots.id });
 
   if (!updated.length) {
     return NextResponse.json(
-      { error: "This slot is no longer available. Please choose another time." },
+      { error: "Slot was just taken. Please try again." },
       { status: 409 }
     );
   }
@@ -114,9 +160,10 @@ export async function POST(req: NextRequest) {
       .insert(bookings)
       .values({
         direction: "applicant_books_recruiter",
-        slotId: body.slotId,
-        recruiterId: slot.recruiterId,
+        slotId: randomSlot.id,
+        recruiterId: body.recruiterId,
         applicantId: profile.id,
+        position: body.position,
         applicantName: profile.name,
         applicantEmail: profile.email,
         cvLink: body.cvLink?.trim() || profile.cvLink,
@@ -124,7 +171,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Fetch recruiter info for the email
+    // Send emails (non-blocking)
     const [rec] = await db
       .select({
         company: recruiters.company,
@@ -133,9 +180,8 @@ export async function POST(req: NextRequest) {
       })
       .from(recruiters)
       .innerJoin(users, eq(recruiters.userId, users.id))
-      .where(eq(recruiters.id, slot.recruiterId));
+      .where(eq(recruiters.id, body.recruiterId));
 
-    // Send emails (non-blocking — don't fail the booking)
     if (rec) {
       sendBookingEmails({
         applicantName: profile.name,
@@ -143,8 +189,8 @@ export async function POST(req: NextRequest) {
         recruiterName: rec.name,
         recruiterEmail: rec.contactEmail,
         company: rec.company,
-        slotStart: slot.startTime,
-        slotEnd: slot.endTime,
+        slotStart: randomSlot.startTime,
+        slotEnd: randomSlot.endTime,
         cvLink: body.cvLink?.trim() || profile.cvLink,
         direction: "applicant_books_recruiter",
       }).catch(() => {});
@@ -152,11 +198,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ booking });
   } catch {
-    // Roll back slot status if booking insert fails
+    // Roll back
     await db
       .update(slots)
       .set({ status: "available" })
-      .where(eq(slots.id, body.slotId));
+      .where(eq(slots.id, randomSlot.id));
 
     return NextResponse.json(
       { error: "Failed to create booking. Please try again." },
