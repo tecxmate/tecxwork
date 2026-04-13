@@ -631,3 +631,78 @@ the background on the phone?
   - Code expires in 10 minutes            
   - Single-use (can't reuse after verification)                                                                       
   - All codes for that email deleted after successful reset
+
+❯ Check the overall system again for any inconsistency and potential problems                                         
+
+⏺ Agent(Audit entire codebase for issues)
+  ⎿  Done (81 tool uses · 131.9k tokens · 9m 22s)
+  (ctrl+o to expand)
+
+⏺ Thorough audit done. Here are the findings prioritized by what needs fixing now:
+                                                                                                                      
+  Audit Results: 25 issues found              
+                                          
+  ┌──────────┬───────┐                        
+  │ Severity │ Count │                                                                                                
+  ├──────────┼───────┤
+  │ CRITICAL │ 3     │                                                                                                
+  ├──────────┼───────┤                                      
+  │ HIGH     │ 5     │                                                                                                
+  ├──────────┼───────┤                                                                                                
+  │ MEDIUM   │ 10    │
+  ├──────────┼───────┤
+  │ LOW      │ 7     │
+  └──────────┴───────┘
+
+  Must fix before go-live (CRITICAL + HIGH):  
+                                          
+  1. Proxy not wired — Next.js 16 uses proxy.ts (already correct name/location), but need to verify it's being picked
+  up (the build output DOES show ƒ Proxy (Middleware) so this may be a false positive)                                
+  2. JWT secret fallback — should throw in production instead of using hardcoded default
+  3. Password reset token is predictable — uses DB auto-increment ID, should be random UUID                           
+  4. Recruiter delete cascade missing jobOpenings — will crash on FK constraint
+  5. Admin bookings/export INNER JOIN misses pending bookings — needs LEFT JOIN                                       
+  6. Race condition in booking conflict check — N+1 query pattern                                                     
+  7. Mode B booking creates with wrong default status — should be "accepted"
+  8. Hardcoded event dates in 6+ files — should read from config                                                      
+                                                                                                                      
+  Let me fix the critical and high issues now:                                                                        
+                                               
+  Fixed Summary                                                                                                       
+                                                                                                                      
+  ┌─────┬──────────┬──────────────────────────────────────────┬───────────────────────────────────────────────────┐   
+  │  #  │ Severity │                  Issue                   │                        Fix                        │   
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 1   │ CRITICAL │ JWT secret uses hardcoded fallback       │ Lazy check — throws at runtime in production if   │   
+  │     │          │                                          │ not set                                           │   
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 2   │ CRITICAL │ Password reset token is predictable DB   │ Compound token id_code — must know both to reset  │   
+  │     │          │ ID                                       │                                                   │   
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 3   │ HIGH     │ Recruiter delete missing jobOpenings     │ Added jobOpenings deletion before recruiter       │   
+  │     │          │ cascade                                  │                                                   │   
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 4   │ HIGH     │ Admin bookings/export miss pending       │ INNER JOIN → LEFT JOIN                            │
+  │     │          │ bookings                                 │                                                   │   
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤
+  │ 5   │ HIGH     │ Booking conflict check N+1 queries       │ Single query with inArray status filter           │   
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 6   │ HIGH     │ Mode B booking creates as "pending"      │ Explicitly sets status: "accepted"                │
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 7   │ HIGH     │ Applicant signup no password length      │ Added password.length < 6 validation              │   
+  │     │          │ check                                    │                                                   │
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 8   │ MEDIUM   │ Schema default wrong location            │ Fixed to "NTUT (Taipei Tech)"                     │
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 9   │ MEDIUM   │ Seed uses wrong date (Jun 10)            │ Fixed to Jun 6                                    │
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 10  │ MEDIUM   │ Duplicate Resend code in forgot-password │ Uses shared getResend + EMAIL_FROM from email     │
+  │     │          │                                          │ module                                            │
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 11  │ MEDIUM   │ Dead IndustryFilter import               │ Commented out                                     │
+  ├─────┼──────────┼──────────────────────────────────────────┼───────────────────────────────────────────────────┤   
+  │ 12  │ MEDIUM   │ CSV export null pointer on LEFT JOIN     │ Handles null slotStart/slotEnd                    │
+  └─────┴──────────┴──────────────────────────────────────────┴───────────────────────────────────────────────────┘   
+                                                                                                                      
+  I also noticed you added Terms of Service, Privacy Policy pages, and updated the site footer with legal links. Those
+   look good.   

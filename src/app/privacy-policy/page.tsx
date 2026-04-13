@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | V-GEN TRIDENT",
@@ -7,9 +8,10 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-6">V-GEN Privacy Policy</h1>
-      <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
+    <div className="flex min-h-full flex-1 flex-col">
+      <main className="flex-1 max-w-3xl mx-auto px-4 py-12 w-full">
+        <h1 className="text-3xl font-bold mb-6">V-GEN Privacy Policy</h1>
+        <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
 
       <div className="space-y-6 text-sm leading-relaxed">
         <p>

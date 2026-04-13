@@ -20,6 +20,12 @@ const ebGaramond = EB_Garamond({
 });
 
 export const metadata: Metadata = {
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "V-GEN",
+  },
   title: "V-GEN TRIDENT — VSATW Career Fair 2026",
   description:
     "Ngày Hội Việc Làm VSATW 2026 — The Vietnamese Generation: Versatile in Talent, Value in Action. June 6, 2026 at NTUT (Taipei Tech).",
