@@ -65,10 +65,27 @@ export default async function AdminPage() {
     .from(allowedDomains)
     .orderBy(allowedDomains.company);
 
+  const bookingList = await db
+    .select({
+      id: bookings.id,
+      position: bookings.position,
+      applicantName: bookings.applicantName,
+      applicantEmail: bookings.applicantEmail,
+      cvLink: bookings.cvLink,
+      status: bookings.status,
+      requestedTime: bookings.requestedTime,
+      createdAt: bookings.createdAt,
+      company: recruiters.company,
+    })
+    .from(bookings)
+    .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
+    .orderBy(bookings.createdAt);
+
   return (
     <AdminDashboard
       recruiters={recruiterList}
       applicants={applicantList}
+      bookings={bookingList}
       domains={domains}
       stats={{
         totalRecruiters: recruiterList.length,

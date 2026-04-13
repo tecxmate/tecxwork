@@ -50,6 +50,18 @@ type Applicant = {
   createdAt: Date | string;
 };
 
+type AdminBooking = {
+  id: number;
+  position: string | null;
+  applicantName: string;
+  applicantEmail: string;
+  cvLink: string;
+  status: string;
+  requestedTime: Date | string | null;
+  createdAt: Date | string | null;
+  company: string;
+};
+
 type Domain = {
   id: number;
   domain: string;
@@ -86,6 +98,7 @@ const MODES = [
 export function AdminDashboard({
   recruiters: initialRecruiters,
   applicants: initialApplicants,
+  bookings: initialBookings,
   domains: initialDomains,
   stats,
   currentMode,
@@ -94,6 +107,7 @@ export function AdminDashboard({
 }: {
   recruiters: Recruiter[];
   applicants: Applicant[];
+  bookings: AdminBooking[];
   domains: Domain[];
   stats: Stats;
   currentMode: string;
@@ -107,6 +121,7 @@ export function AdminDashboard({
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
   const [recruiters, setRecruiters] = useState<Recruiter[]>(initialRecruiters);
   const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants);
+  const [adminBookings, setAdminBookings] = useState<AdminBooking[]>(initialBookings);
   const [tf, setTf] = useState(initialTimeFrame);
   const [tfSaving, setTfSaving] = useState(false);
   const [tfSaved, setTfSaved] = useState(false);
@@ -209,6 +224,15 @@ export function AdminDashboard({
     });
     if (res.ok) {
       setRecruiters(recruiters.filter((x) => x.id !== r.id));
+      router.refresh();
+    }
+  }
+
+  async function handleCancelBooking(b: AdminBooking) {
+    if (!confirm(`Cancel booking for ${b.applicantName} at ${b.company}? Slot will be released.`)) return;
+    const res = await fetch(`/api/bookings/${b.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setAdminBookings(adminBookings.map((x) => (x.id === b.id ? { ...x, status: "cancelled" } : x)));
       router.refresh();
     }
   }
@@ -591,8 +615,10 @@ export function AdminDashboard({
           <PeopleSection
             recruiters={recruiters}
             applicants={applicants}
+            bookings={adminBookings}
             onDeleteRecruiter={handleDeleteRecruiter}
             onDeleteApplicant={handleDeleteApplicant}
+            onCancelBooking={handleCancelBooking}
           />
         </div>
       </main>
@@ -612,15 +638,19 @@ type SortDir = "asc" | "desc";
 function PeopleSection({
   recruiters,
   applicants,
+  bookings,
   onDeleteRecruiter,
   onDeleteApplicant,
+  onCancelBooking,
 }: {
   recruiters: Recruiter[];
   applicants: Applicant[];
+  bookings: AdminBooking[];
   onDeleteRecruiter: (r: Recruiter) => void;
   onDeleteApplicant: (a: Applicant) => void;
+  onCancelBooking: (b: AdminBooking) => void;
 }) {
-  const [tab, setTab] = useState<"recruiters" | "applicants">("recruiters");
+  const [tab, setTab] = useState<"recruiters" | "applicants" | "bookings">("recruiters");
   const [query, setQuery] = useState("");
 
   const [recSort, setRecSort] = useState<{
@@ -719,6 +749,20 @@ function PeopleSection({
           Students
           <Badge variant="secondary" className="ml-1 text-xs">
             {applicants.length}
+          </Badge>
+        </button>
+        <button
+          onClick={() => setTab("bookings")}
+          className={cn(
+            "flex cursor-pointer items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+            tab === "bookings"
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Bookings
+          <Badge variant="secondary" className="ml-1 text-xs">
+            {bookings.filter((b) => b.status !== "cancelled" && b.status !== "rejected").length}
           </Badge>
         </button>
       </div>
@@ -831,80 +875,30 @@ function PeopleSection({
             </tbody>
           </table>
         </div>
-      ) : (
+      ) : tab === "applicants" ? (
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
               <tr>
-                <SortHeader
-                  label="Name"
-                  active={appSort.key === "name"}
-                  dir={appSort.dir}
-                  onClick={() => toggleAppSort("name")}
-                />
-                <SortHeader
-                  label="Email"
-                  active={appSort.key === "email"}
-                  dir={appSort.dir}
-                  onClick={() => toggleAppSort("email")}
-                />
-                <SortHeader
-                  label="Major"
-                  active={appSort.key === "major"}
-                  dir={appSort.dir}
-                  onClick={() => toggleAppSort("major")}
-                  className="hidden sm:table-cell"
-                />
-                <SortHeader
-                  label="Joined"
-                  active={appSort.key === "createdAt"}
-                  dir={appSort.dir}
-                  onClick={() => toggleAppSort("createdAt")}
-                  className="hidden md:table-cell"
-                />
+                <SortHeader label="Name" active={appSort.key === "name"} dir={appSort.dir} onClick={() => toggleAppSort("name")} />
+                <SortHeader label="Email" active={appSort.key === "email"} dir={appSort.dir} onClick={() => toggleAppSort("email")} />
+                <SortHeader label="Major" active={appSort.key === "major"} dir={appSort.dir} onClick={() => toggleAppSort("major")} className="hidden sm:table-cell" />
+                <SortHeader label="Joined" active={appSort.key === "createdAt"} dir={appSort.dir} onClick={() => toggleAppSort("createdAt")} className="hidden md:table-cell" />
                 <th className="w-10"></th>
               </tr>
             </thead>
             <tbody>
               {filteredApplicants.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="py-8 text-center text-sm text-muted-foreground"
-                  >
-                    No students found.
-                  </td>
-                </tr>
+                <tr><td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">No students found.</td></tr>
               ) : (
                 filteredApplicants.map((a) => (
-                  <tr
-                    key={a.id}
-                    className="border-b last:border-b-0 hover:bg-muted/20"
-                  >
+                  <tr key={a.id} className="border-b last:border-b-0 hover:bg-muted/20">
                     <td className="px-3 py-2.5 font-medium">{a.name}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">
-                      <a
-                        href={`mailto:${a.email}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {a.email}
-                      </a>
-                    </td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">
-                      {a.major || "—"}
-                    </td>
-                    <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">
-                      {new Date(a.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground"><a href={`mailto:${a.email}`} className="hover:text-primary hover:underline">{a.email}</a></td>
+                    <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">{a.major || "—"}</td>
+                    <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">{new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</td>
                     <td className="px-3 py-2.5">
-                      <button
-                        onClick={() => onDeleteApplicant(a)}
-                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        aria-label={`Remove ${a.name}`}
-                      >
+                      <button onClick={() => onDeleteApplicant(a)} className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={`Remove ${a.name}`}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
@@ -914,7 +908,114 @@ function PeopleSection({
             </tbody>
           </table>
         </div>
+      ) : (
+        <BookingsTable bookings={bookings} query={query} onCancel={onCancelBooking} />
       )}
+    </div>
+  );
+}
+
+function BookingsTable({
+  bookings,
+  query,
+  onCancel,
+}: {
+  bookings: AdminBooking[];
+  query: string;
+  onCancel: (b: AdminBooking) => void;
+}) {
+  const statusColor: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+    accepted: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    waitlisted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+    cancelled: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  };
+
+  const filtered = bookings.filter((b) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return (
+      b.applicantName.toLowerCase().includes(q) ||
+      b.applicantEmail.toLowerCase().includes(q) ||
+      b.company.toLowerCase().includes(q) ||
+      (b.position ?? "").toLowerCase().includes(q) ||
+      b.status.includes(q)
+    );
+  });
+
+  return (
+    <div className="overflow-x-auto rounded-lg border">
+      <table className="w-full text-sm">
+        <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
+          <tr>
+            <th className="px-3 py-2 text-left font-medium">Student</th>
+            <th className="px-3 py-2 text-left font-medium">Company</th>
+            <th className="hidden px-3 py-2 text-left font-medium sm:table-cell">Position</th>
+            <th className="hidden px-3 py-2 text-left font-medium md:table-cell">Time</th>
+            <th className="px-3 py-2 text-left font-medium">Status</th>
+            <th className="w-10"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                No bookings found.
+              </td>
+            </tr>
+          ) : (
+            filtered.map((b) => {
+              const isActive = b.status === "pending" || b.status === "accepted" || b.status === "waitlisted";
+              return (
+                <tr key={b.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                  <td className="px-3 py-2.5">
+                    <p className="font-medium">{b.applicantName}</p>
+                    <p className="text-xs text-muted-foreground">{b.applicantEmail}</p>
+                  </td>
+                  <td className="px-3 py-2.5">{b.company}</td>
+                  <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">
+                    {b.position || "—"}
+                  </td>
+                  <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">
+                    {b.requestedTime
+                      ? new Date(b.requestedTime).toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                          timeZone: "Asia/Taipei",
+                        })
+                      : "—"}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <span
+                      className={cn(
+                        "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        statusColor[b.status] ?? ""
+                      )}
+                    >
+                      {b.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    {isActive && (
+                      <button
+                        onClick={() => onCancel(b)}
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        aria-label="Cancel booking"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
