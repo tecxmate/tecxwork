@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -260,9 +261,8 @@ export default function RegisterPage() {
                   <label htmlFor="reg-password" className="text-sm font-medium">
                     Password <span className="text-destructive">*</span>
                   </label>
-                  <Input
+                  <PasswordInput
                     id="reg-password"
-                    type="password"
                     required
                     minLength={6}
                     value={password}

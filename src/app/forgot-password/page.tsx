@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -215,9 +216,8 @@ export default function ForgotPasswordPage() {
                   <label htmlFor="new-password" className="text-sm font-medium">
                     New Password
                   </label>
-                  <Input
+                  <PasswordInput
                     id="new-password"
-                    type="password"
                     required
                     minLength={6}
                     value={password}
@@ -231,9 +231,8 @@ export default function ForgotPasswordPage() {
                   <label htmlFor="confirm-password" className="text-sm font-medium">
                     Confirm Password
                   </label>
-                  <Input
+                  <PasswordInput
                     id="confirm-password"
-                    type="password"
                     required
                     minLength={6}
                     value={confirmPassword}

@@ -565,25 +565,7 @@ the background on the phone?
   cost.     
 
 
-I want to make this QR code system not only for the organizers to share the event website but    
-also for each student to have a QR code that links to their CV. How difficult is that? Think carefully and logically  
-on where to implement that.                                                                                           
 
-⏺ Smart thinking. Two QR code use cases:
-
-  ┌───────────┬─────────────────────────────────────┬───────────────────────────┬─────────────────────────────────┐
-  │  QR Code  │                 For                 │          Encodes          │            Location             │
-  ├───────────┼─────────────────────────────────────┼───────────────────────────┼─────────────────────────────────┤
-  │ Event URL │ Admin prints/projects at venue      │ https://your-domain.com   │ Admin dashboard                 │
-  ├───────────┼─────────────────────────────────────┼───────────────────────────┼─────────────────────────────────┤
-  │ Student   │ Student shows phone to recruiter at │ Their Google Drive CV     │ Profile page + quick-access on  │
-  │ CV        │  booth                              │ link                      │ browse                          │
-  └───────────┴─────────────────────────────────────┴───────────────────────────┴─────────────────────────────────┘
-
-  The CV QR code is the killer feature — at an in-person fair, a student walks up to a recruiter, shows their phone,
-  recruiter scans → CV opens instantly. No email exchange needed.
-
-  Difficulty: Easy. One package (qrcode.react), renders as SVG client-side. No server work.
 
     QR Code System                                                                                                      
                                                                                                                       
@@ -609,3 +591,43 @@ on where to implement that.
   No email exchange, no typing, 3 seconds.                                                                            
                                           
   Every QR code has Fullscreen (for scanning), Save (download PNG), and Copy (copy the link).     
+
+  Password Reset                                                                                                      
+                                                                                                                      
+  Login page → "Forgot password?" link (bottom-right of password field)                                               
+                                                                                                                      
+  Step 1: Email                                                                                                       
+  ┌─ Reset Password ────────────────────┐                                                                             
+  │ Enter your email to receive a       │                                                                             
+  │ verification code.                  │                                                                             
+  │                                      │                                                                            
+  │ Email: [you@example.com]            │                                                                             
+  │ [Send Verification Code]            │
+  └──────────────────────────────────────┘                                                                            
+                                                            
+  Step 2: Code (email arrives with large purple 6-digit code)                                                         
+  ┌─ Enter Code ────────────────────────┐                                                                             
+  │ A 6-digit code was sent to          │ 
+  │ you@example.com                     │                                                                             
+  │                                      │                                                                            
+  │      [  1 2 3 4 5 6  ]             │                                                                              
+  │ Code expires in 10 minutes.         │                                                                             
+  │ [Verify Code]                       │                                                                             
+  │ Didn't receive? Send again          │     
+  └──────────────────────────────────────┘                                                                            
+                                                                                                                      
+  Step 3: New Password                                                                                                
+  ┌─ New Password ──────────────────────┐                                                                             
+  │ New Password: [••••••••]            │                                                                             
+  │ Confirm:      [••••••••]            │                   
+  │ [Reset Password]                    │                                                                             
+  └──────────────────────────────────────┘                  
+                                                                                                                      
+  Step 4: Done → "Go to Login" button
+                                                                                                                      
+  Security                                                  
+                                                                                                                      
+  - 3 attempts per email per hour (rate limited)                                                                      
+  - Code expires in 10 minutes            
+  - Single-use (can't reuse after verification)                                                                       
+  - All codes for that email deleted after successful reset

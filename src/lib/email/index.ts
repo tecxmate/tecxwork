@@ -81,7 +81,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             VSATW 2026 — V-GEN TRIDENT<br>
-            Designed & developed by <a href="https://tecxmate.com" style="color: #8C52FF;">TECXMATE.COM</a>
+            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
       `,
@@ -119,7 +119,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             VSATW 2026 — V-GEN TRIDENT<br>
-            Designed & developed by <a href="https://tecxmate.com" style="color: #8C52FF;">TECXMATE.COM</a>
+            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
       `,

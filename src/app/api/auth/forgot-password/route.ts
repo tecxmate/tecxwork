@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
               This code expires in 10 minutes. If you didn't request this, ignore this email.
             </p>
             <p style="font-size: 12px; color: #bbb; margin-top: 24px;">
-              VSATW 2026 — V-GEN TRIDENT
+              VSATW 2026 — V-GEN TRIDENT<br>
+              Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
             </p>
           </div>
         `,

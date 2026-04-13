@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -127,9 +128,8 @@ export default function LoginPage() {
                 <label htmlFor="password" className="text-sm font-medium">
                   Password
                 </label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
