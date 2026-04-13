@@ -6,7 +6,7 @@ function getResend(): Resend | null {
   return new Resend(key);
 }
 
-const FROM = process.env.EMAIL_FROM ?? "V-GEN <noreply@resend.dev>";
+const FROM = process.env.EMAIL_FROM ?? "V-GEN <onboarding@resend.dev>";
 
 type BookingEmailData = {
   applicantName: string;
@@ -52,7 +52,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
   // Email to applicant
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM,
       to: data.applicantEmail,
       subject: `Interview Confirmed — ${data.company} on ${timeStr}`,
@@ -86,13 +86,14 @@ export async function sendBookingEmails(data: BookingEmailData) {
         </div>
       `,
     });
+    console.log("Applicant email result:", JSON.stringify(result));
   } catch (err) {
     console.error("Failed to send applicant email:", err);
   }
 
   // Email to recruiter
   try {
-    await resend.emails.send({
+    const result2 = await resend.emails.send({
       from: FROM,
       to: data.recruiterEmail,
       subject: `New Interview Booking — ${data.applicantName}`,
@@ -123,6 +124,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
         </div>
       `,
     });
+    console.log("Recruiter email result:", JSON.stringify(result2));
   } catch (err) {
     console.error("Failed to send recruiter email:", err);
   }

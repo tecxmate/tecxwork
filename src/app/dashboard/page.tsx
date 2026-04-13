@@ -15,7 +15,9 @@ export default async function DashboardPage() {
       company: recruiters.company,
       industry: recruiters.industry,
       description: recruiters.description,
+      positions: recruiters.positions,
       contactEmail: recruiters.contactEmail,
+      jdLink: recruiters.jdLink,
     })
     .from(recruiters)
     .where(eq(recruiters.userId, session.userId));

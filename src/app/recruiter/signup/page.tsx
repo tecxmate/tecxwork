@@ -39,6 +39,7 @@ export default function RecruiterSignupPage() {
   const [description, setDescription] = useState("");
   const [positionInput, setPositionInput] = useState("");
   const [positions, setPositions] = useState<string[]>([]);
+  const [jdLink, setJdLink] = useState("");
 
   async function handleEmailCheck(e: React.FormEvent) {
     e.preventDefault();
@@ -90,6 +91,7 @@ export default function RecruiterSignupPage() {
           description: description.trim(),
           positions,
           contactEmail: email.trim(),
+          jdLink: jdLink.trim() || undefined,
         }),
       });
 
@@ -286,6 +288,23 @@ export default function RecruiterSignupPage() {
                         ))}
                       </div>
                     )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="jd-link" className="text-sm font-medium">
+                      Job Description Link (Google Drive)
+                    </label>
+                    <Input
+                      id="jd-link"
+                      type="url"
+                      value={jdLink}
+                      onChange={(e) => setJdLink(e.target.value)}
+                      placeholder="https://drive.google.com/file/d/..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Optional — link to your full JD document. Students will
+                      see this before booking.
+                    </p>
                   </div>
 
                   <Separator />

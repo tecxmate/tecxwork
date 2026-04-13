@@ -10,6 +10,8 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -98,6 +100,18 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
             <MapPin className="h-4 w-4 shrink-0" />
             <span>{EVENT_CONFIG.location}</span>
           </div>
+          {recruiter.jdLink && (
+            <a
+              href={recruiter.jdLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              View Job Description
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -177,6 +191,19 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
                         {EVENT_CONFIG.slotDuration} min interview
                       </p>
                     </div>
+                    {recruiter.jdLink && (
+                      <a
+                        href={recruiter.jdLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        View Job Description
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
                   </div>
                 </CardContent>
               )}

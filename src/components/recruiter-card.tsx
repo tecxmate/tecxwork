@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, ArrowRight } from "lucide-react";
+import { Building2, ArrowRight, FileText } from "lucide-react";
 
 export type RecruiterCardData = {
   id: number;
@@ -10,6 +10,7 @@ export type RecruiterCardData = {
   description: string;
   positions: string[];
   contactEmail: string;
+  jdLink: string | null;
 };
 
 export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
@@ -65,7 +66,15 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
           </div>
         </div>
 
-        {/* CTA inside the same card body — no horizontal cut */}
+        {/* JD available indicator */}
+        {recruiter.jdLink && (
+          <div className="flex items-center gap-1.5 text-xs text-primary">
+            <FileText className="h-3 w-3" />
+            <span>Job description available</span>
+          </div>
+        )}
+
+        {/* CTA */}
         <div className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors group-hover:bg-primary/80">
           View & Book
           <ArrowRight className="h-4 w-4" />

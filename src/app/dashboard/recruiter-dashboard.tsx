@@ -20,6 +20,9 @@ import {
   Loader2,
   GraduationCap,
   Trash2,
+  X,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -44,7 +47,9 @@ type Recruiter = {
   company: string;
   industry: string;
   description: string;
+  positions: string[];
   contactEmail: string;
+  jdLink: string | null;
 };
 
 type Applicant = {
@@ -57,7 +62,7 @@ type Applicant = {
   description: string;
 };
 
-type Tab = "bookings" | "applicants";
+type Tab = "bookings" | "applicants" | "company";
 
 export function RecruiterDashboard({
   recruiter,
@@ -137,6 +142,18 @@ export function RecruiterDashboard({
               Browse Applicants
             </button>
           )}
+          <button
+            onClick={() => setTab("company")}
+            className={cn(
+              "flex cursor-pointer items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
+              tab === "company"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Building2 className="h-4 w-4" />
+            My Company
+          </button>
         </div>
       </div>
 
@@ -144,8 +161,10 @@ export function RecruiterDashboard({
         <div className="mx-auto max-w-5xl">
           {tab === "bookings" ? (
             <BookingsTab bookings={bookings} />
-          ) : (
+          ) : tab === "applicants" ? (
             <ApplicantsTab recruiterId={recruiter.id} />
+          ) : (
+            <CompanyTab recruiter={recruiter} />
           )}
         </div>
       </main>
@@ -528,5 +547,164 @@ function ApplicantBookingView({
         </Card>
       </div>
     </div>
+  );
+}
+
+function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
+  const router = useRouter();
+  const [description, setDescription] = useState(recruiter.description);
+  const [positionInput, setPositionInput] = useState("");
+  const [positions, setPositions] = useState<string[]>(recruiter.positions);
+  const [jdLink, setJdLink] = useState(recruiter.jdLink ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  function addPosition() {
+    const p = positionInput.trim();
+    if (p && !positions.includes(p)) setPositions([...positions, p]);
+    setPositionInput("");
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setSaved(false);
+    setError("");
+
+    try {
+      const res = await fetch("/api/me/recruiter", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: description.trim(),
+          positions,
+          jdLink: jdLink.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Save failed");
+      }
+
+      setSaved(true);
+      router.refresh();
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="font-heading text-lg font-semibold">
+          {recruiter.company}
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          {recruiter.industry} · {recruiter.contactEmail}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSave} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="desc" className="text-sm font-medium">
+              Company Description
+            </label>
+            <textarea
+              id="desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What does your company do? What are you looking for?"
+              rows={4}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Open Positions</label>
+            <div className="flex gap-2">
+              <Input
+                value={positionInput}
+                onChange={(e) => setPositionInput(e.target.value)}
+                placeholder="e.g. Software Engineer"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addPosition();
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={addPosition}>
+                Add
+              </Button>
+            </div>
+            {positions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {positions.map((p) => (
+                  <Badge
+                    key={p}
+                    variant="secondary"
+                    className="cursor-pointer gap-1"
+                    onClick={() =>
+                      setPositions(positions.filter((x) => x !== p))
+                    }
+                  >
+                    {p}
+                    <X className="h-3 w-3" />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="jd-link" className="text-sm font-medium">
+              Job Description Link (Google Drive)
+            </label>
+            <Input
+              id="jd-link"
+              type="url"
+              value={jdLink}
+              onChange={(e) => setJdLink(e.target.value)}
+              placeholder="https://drive.google.com/file/d/..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Students will see this link on your company page before booking.
+            </p>
+          </div>
+
+          <Separator />
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          {saved && (
+            <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Changes saved!
+            </div>
+          )}
+
+          <Button type="submit" disabled={saving} className="w-full">
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
