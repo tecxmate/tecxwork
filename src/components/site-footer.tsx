@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t px-4 py-8 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-3">
+    <footer className="border-t px-4 py-4 sm:py-8 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2 sm:gap-3">
       <p>
         Designed by Nikolas Doan. Developed by{" "}
         <a
@@ -14,20 +14,20 @@ export function SiteFooter() {
           TECXMATE.COM
         </a>
       </p>
-      <div className="flex items-center justify-center gap-3 mt-2">
-        <Link href="/terms-of-service" className="hover:text-primary hover:underline transition-colors">
+      <div className="flex items-center justify-center gap-3 mt-1 sm:mt-2">
+        <Link href="/terms-of-service" className="underline underline-offset-2 hover:text-primary transition-colors">
           Terms of Service
         </Link>
         <span className="opacity-50">&middot;</span>
-        <Link href="/privacy-policy" className="hover:text-primary hover:underline transition-colors">
+        <Link href="/privacy-policy" className="underline underline-offset-2 hover:text-primary transition-colors">
           Privacy Policy
         </Link>
         <span className="opacity-50">&middot;</span>
-        <Link href="/tutorial" className="hover:text-primary hover:underline transition-colors">
+        <Link href="/tutorial" className="underline underline-offset-2 hover:text-primary transition-colors">
           Tutorial
         </Link>
       </div>
-      <p className="mt-2">&copy; 2026 V-GEN TRIDENT &middot; PIPA compliant</p>
+      <p className="mt-1 sm:mt-2">&copy; 2026 V-GEN TRIDENT &middot; PIPA compliant</p>
     </footer>
   );
 }
