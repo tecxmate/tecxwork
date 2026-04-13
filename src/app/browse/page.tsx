@@ -7,6 +7,7 @@ import { Countdown } from "@/components/countdown";
 import { Directory } from "@/components/directory";
 import { LogoutButton } from "@/components/logout-button";
 import { SiteFooter } from "@/components/site-footer";
+import { CvQrButton } from "@/components/cv-qr-button";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 
@@ -102,6 +103,7 @@ export default async function BrowsePage() {
       </div>
 
       <SiteFooter />
+      <CvQrButton />
     </div>
   );
 }

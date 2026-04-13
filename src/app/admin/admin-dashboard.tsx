@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
+import { QRCard } from "@/components/qr-code";
 
 type Recruiter = {
   id: number;
@@ -271,15 +272,23 @@ export function AdminDashboard({
             ))}
           </div>
 
-          {/* Export */}
-          <div className="flex justify-end">
-            <a
-              href="/api/admin/export"
-              className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
-            >
-              <Download className="h-4 w-4" />
-              Export Bookings (CSV)
-            </a>
+          {/* Tools: QR + Export */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <QRCard
+              value={typeof window !== "undefined" ? window.location.origin : ""}
+              title="Event QR Code"
+              subtitle="Share this at the venue for attendees to access the platform"
+              size={140}
+            />
+            <div className="flex sm:self-end">
+              <a
+                href="/api/admin/export"
+                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
+              >
+                <Download className="h-4 w-4" />
+                Export Bookings (CSV)
+              </a>
+            </div>
           </div>
 
           <Separator />

@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+import { QRCard } from "@/components/qr-code";
 
 type Profile = {
   name: string;
@@ -258,6 +259,18 @@ export default function ProfilePage() {
               </form>
             </CardContent>
           </Card>
+
+          {/* CV QR Code */}
+          {cvLink && (
+            <div className="mt-4">
+              <QRCard
+                value={cvLink}
+                title="My CV QR Code"
+                subtitle="Show this to recruiters at the event — they scan to view your CV"
+                size={160}
+              />
+            </div>
+          )}
         </div>
       </main>
       <SiteFooter />

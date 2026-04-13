@@ -430,3 +430,136 @@ the background on the phone?
 
   Want me to add email notifications via Resend? It's the fastest path to production-ready. I can add Web Push later if you want the real-time recruiter
   alerts too.
+
+
+  Anything else we should polish?                                                                                                                                                         
+                                                                                                                                                                                          
+⏺ Here's what I'd prioritize for a real event with 1,000 users:                                                                                                                           
+                                                                                                                                                                                          
+  Should do (high impact)                                                                                                                                                                 
+                                                                                                                                                                                          
+  ┌─────┬────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────┐                                
+  │  #  │                                   Issue                                    │                          Risk if skipped                          │                                
+  ├─────┼────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤                                
+  │ 1   │ Cancel booking — students/recruiters can't undo a booking                  │ Slot is permanently locked. Admin has to manually fix in DB.      │                                
+  ├─────┼────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤                                
+  │ 2   │ Time conflict check — a student can book TSMC at 10:00 AND Google at 10:00 │ Student double-books themselves and misses one interview.         │                                
+  ├─────┼────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ 3   │ Admin CSV export — no way to export booking data                           │ After the event, admin can't share results with VSATW leadership. │
+  ├─────┼────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤                                
+  │ 4   │ Profile editing — students can't update CV link or skills after signup     │ Stuck with whatever they entered at registration.                 │                                
+  ├─────┼────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤                                
+  │ 5   │ Favicon + OG image — still shows default Next.js icon                      │ Looks unfinished when shared on social/LINE/Zalo.                 │                                
+  └─────┴────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────┘
+                                                                                                                                                                                          
+  Nice to have                                              
+                                                                                                                                                                                          
+  ┌─────┬──────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────┐
+  │  #  │                           Feature                            │                          Notes                          │                                                        
+  ├─────┼──────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┤
+  │ 6   │ QR code on admin page for sharing the event URL at the venue │ Easy to add                                             │                                                        
+  ├─────┼──────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┤
+  │ 7   │ Vietnamese UI option                                         │ Big effort — students likely read English, skip for now │                                                        
+  ├─────┼──────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┤
+  │ 8   │ Error monitoring (Sentry)                                    │ Useful but not critical for 1-day event                 │
+  ├─────┼──────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┤                                                        
+  │ 9   │ Rate limiting                                                │ Low risk at this scale                                  │                                                        
+  ├─────┼──────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────┤                                                        
+  │ 10  │ Password reset                                               │ Admin can delete + user re-registers                    │                                                        
+  └─────┴──────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────┘
+                                                                                                                                                                                          
+  Already solid                                             
+                                                                                                                                                                                          
+  - Auth + role protection                                  
+  - Security (session-based, atomic locking)
+  - Email notifications                       
+  - Mobile optimization                                                                                                                                                                   
+  - Mode toggle + lock
+  - Admin people management                                                                                                                                                               
+  - PIPA compliance
+  
+  All 5 items done and deployed. Here's the summary:
+                                                                                                                                  
+  What's now production-ready                                                                                                                     
+                                                                                                                                                  
+  ┌────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐   
+  │    Feature     │                                                       How it works                                                       │   
+  ├────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤   
+  │ Cancel booking │ Trash icon on recruiter dashboard → confirms → releases slot back to available. API checks auth (only owner or admin can │   
+  │                │  cancel)                                                                                                                 │   
+  ├────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤   
+  │ Time conflict  │ Booking API checks if student has another interview at the exact same time → rejects with "Choose a different slot"      │
+  ├────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤   
+  │ CSV export     │ Admin dashboard → "Export Bookings (CSV)" button → downloads all bookings with candidate name, email, company, time, CV  │   
+  │                │ link, status                                                                                                             │
+  ├────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤   
+  │ Profile        │ Browse page header → "My Profile" → edit name, major, skills, CV link, description → save                                │
+  │ editing        │                                                                                                                          │   
+  ├────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Favicon        │ Purple "V" icon (SVG) — shows in browser tab                                                                             │   
+  ├────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤   
+  │ OG image       │ Dynamic image for social sharing (LINE, Zalo, Facebook) — shows event name, tagline, date, location, TECXMATE footer     │
+  └────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘   
+                                                                                                                                                  
+  The app is production-ready for a 1,000-person single-day career fair.
+                                                                                                                                                  
+✻ Sautéed for 11m 44s                                       
+                                                                                                                                                  
+❯ How does the neon database work with this? How much is the free tier and do I need to upgrade?                                                  
+                                                                                                                                                  
+⏺ How Neon Works With V-GEN                                                                                                                       
+                                                                                                                                                  
+  Your app connects to Neon via a single DATABASE_URL. Every API route (slots, bookings, auth) queries Neon directly using Drizzle ORM. Neon runs 
+  serverless Postgres — it auto-scales connections and sleeps when idle (no fixed server running 24/7).                                           
+                                                                                                                                                  
+  Student's browser → Vercel Function → Neon Postgres → response                                                                                  
+                      (auto-scales)     (auto-scales)                                                                                             
+                                                                                                                                                  
+  Neon Free Tier                                                                                                                                  
+                                                                                                                                                  
+  ┌─────────────────┬─────────────────┬─────────────────────────────────────────────────────────────────────────────────────┐                     
+  │      Limit      │    Free Tier    │                                     Your Usage                                      │                     
+  ├─────────────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤                     
+  │ Storage         │ 0.5 GB          │ ~5 MB (tiny — text data only, no files)                                             │                     
+  ├─────────────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ Compute hours   │ 191 hrs/month   │ Event day: ~8 hrs active. Rest of month: near zero (auto-suspends after 5 min idle) │                     
+  ├─────────────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ Branches        │ 10              │ Using 1                                                                             │
+  ├─────────────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤                     
+  │ Projects        │ 1               │ Using 1                                                                             │                     
+  ├─────────────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤                     
+  │ Max connections │ ~100 concurrent │ See below                                                                           │                     
+  └─────────────────┴─────────────────┴─────────────────────────────────────────────────────────────────────────────────────┘
+                                                                                                                                                  
+  Will 1,000 Concurrent Users Hit the Limit?                
+                                                                                                                                                  
+  The connection limit is the only real concern. Here's the math:
+                                                                                                                                                  
+  - Neon free tier: 100 concurrent connections              
+  - Each Vercel serverless function holds a connection for ~50ms per query                                                                        
+  - 1,000 users don't all query at the same second — they browse, read, click
+  - Realistic peak: ~50-100 simultaneous DB queries at the "9 AM thundering herd" moment                                                          
+                                                            
+  For the slot-browsing flow: each page load = 1 query, takes ~50ms. Even at 100 users/second, that's only ~5 concurrent connections.             
+                                                                                                                                                  
+  For the booking rush: this is where it could spike. If 200 students all click "Confirm Booking" within 10 seconds, that's ~20 concurrent        
+  connections. Fine.                                                                                                                              
+                                                                                                                                                  
+  Verdict: Free tier handles 1,000 users comfortably. You'd only hit issues at 5,000+ concurrent users.                                           
+                                                            
+  When You'd Need to Upgrade                                                                                                                      
+                                                                                                                                                  
+  ┌────────────────────────────────────────────┬───────────────┬─────────────────────────────────────────────────────────────┐
+  │                  Scenario                  │ Need Upgrade? │                            Plan                             │                    
+  ├────────────────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+  │ 1,000 students, 50 recruiters, 1-day event │ No            │ Free                                                        │                    
+  ├────────────────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+  │ Multiple events per month                  │ Maybe         │ Launch ($19/mo) — more compute hours                        │                    
+  ├────────────────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+  │ 5,000+ concurrent users                    │ Yes           │ Scale ($69/mo) — 500 connections, more compute              │
+  ├────────────────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤                    
+  │ Storing files/images in DB                 │ Yes           │ But you shouldn't — use Google Drive (which you already do) │                    
+  └────────────────────────────────────────────┴───────────────┴─────────────────────────────────────────────────────────────┘                    
+                                                                                                                                                  
+  Bottom line: Stay on free tier. Your data is text-only (~5 MB total), the event is one day, and Neon auto-suspends when nobody's using it. Zero
+  cost.     
