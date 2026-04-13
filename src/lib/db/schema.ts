@@ -190,6 +190,19 @@ export const allowedDomains = pgTable("allowed_domains", {
     .defaultNow(),
 });
 
+// ---- Password reset codes ----
+
+export const passwordResetCodes = pgTable("password_reset_codes", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  used: boolean("used").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ---- Event config (single-row table for global settings) ----
 
 export const eventConfig = pgTable("event_config", {

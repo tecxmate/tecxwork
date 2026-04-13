@@ -135,6 +135,12 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                 />
+                <Link
+                  href="/forgot-password"
+                  className="block text-right text-xs text-muted-foreground hover:text-primary"
+                >
+                  Forgot password?
+                </Link>
               </div>
 
               {errorState.code === "INVALID_PASSWORD" && (
