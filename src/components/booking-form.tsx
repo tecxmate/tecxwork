@@ -289,7 +289,7 @@ export function BookingForm({
                   Booking...
                 </>
               ) : (
-                "Confirm Booking"
+                "Request Booking"
               )}
             </Button>
           </div>

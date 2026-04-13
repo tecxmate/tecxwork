@@ -260,7 +260,7 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
                                   </span>
                                 )}
                               </div>
-                              {pos.jdLink && (
+                              {pos.jdLink ? (
                                 <a
                                   href={pos.jdLink}
                                   target="_blank"
@@ -271,6 +271,10 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
                                   View Job Description
                                   <ExternalLink className="h-3 w-3" />
                                 </a>
+                              ) : (
+                                <p className="mt-1 text-xs text-muted-foreground/60">
+                                  No job description uploaded yet
+                                </p>
                               )}
                             </div>
                             {!alreadyApplied ? (
