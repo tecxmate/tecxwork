@@ -49,7 +49,14 @@ export default async function AdminPage() {
     .from(slots)
     .where(eq(slots.status, "available"));
   const [config] = await db
-    .select({ mode: eventConfig.mode, locked: eventConfig.modeLocked })
+    .select({
+      mode: eventConfig.mode,
+      locked: eventConfig.modeLocked,
+      startHour: eventConfig.startHour,
+      endHour: eventConfig.endHour,
+      endMinute: eventConfig.endMinute,
+      slotDuration: eventConfig.slotDurationMinutes,
+    })
     .from(eventConfig)
     .limit(1);
 
@@ -72,6 +79,12 @@ export default async function AdminPage() {
       }}
       currentMode={config?.mode ?? "both"}
       initialLocked={config?.locked ?? false}
+      timeFrame={{
+        startHour: config?.startHour ?? 10,
+        endHour: config?.endHour ?? 17,
+        endMinute: config?.endMinute ?? 30,
+        slotDuration: config?.slotDuration ?? 15,
+      }}
     />
   );
 }

@@ -33,13 +33,14 @@ import { SiteFooter } from "@/components/site-footer";
 type Booking = {
   id: number;
   direction: string;
+  position: string | null;
   applicantName: string;
   applicantEmail: string;
   cvLink: string;
   status: string;
   createdAt: Date | null;
-  slotStart: Date;
-  slotEnd: Date;
+  requestedTime: Date | null;
+  slotId: number | null;
 };
 
 type Recruiter = {
@@ -176,86 +177,198 @@ export function RecruiterDashboard({
 
 function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const [items, setItems] = useState(initialBookings);
+  const [acting, setActing] = useState<number | null>(null);
   const router = useRouter();
 
-  async function handleCancel(id: number) {
-    if (!confirm("Cancel this interview? The slot will be released.")) return;
-    const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+  async function handleReview(id: number, action: "accept" | "reject" | "waitlist") {
+    setActing(id);
+    const res = await fetch("/api/bookings/review", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: id, action }),
+    });
     if (res.ok) {
-      setItems(items.filter((b) => b.id !== id));
+      const newStatus = action === "accept" ? "accepted" : action === "reject" ? "rejected" : "waitlisted";
+      setItems(items.map((b) => (b.id === id ? { ...b, status: newStatus } : b)));
       router.refresh();
     }
+    setActing(null);
   }
 
-  if (items.length === 0) {
+  async function handleCancel(id: number) {
+    if (!confirm("Cancel this? The slot will be released and a waitlisted applicant may be promoted.")) return;
+    setActing(id);
+    const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setItems(items.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
+      router.refresh();
+    }
+    setActing(null);
+  }
+
+  const pending = items.filter((b) => b.status === "pending");
+  const accepted = items.filter((b) => b.status === "accepted");
+  const waitlisted = items.filter((b) => b.status === "waitlisted");
+  const other = items.filter((b) => b.status === "rejected" || b.status === "cancelled");
+
+  const statusColor: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+    accepted: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    waitlisted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+    cancelled: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  };
+
+  function renderBooking(b: Booking) {
+    const isPending = b.status === "pending";
+    const isWaitlisted = b.status === "waitlisted";
+    const isAccepted = b.status === "accepted";
+    const isActing = acting === b.id;
+
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">
-            No bookings yet.
-          </p>
+      <Card key={b.id} className={isPending ? "border-yellow-300/50" : ""}>
+        <CardContent className="py-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium">{b.applicantName}</p>
+                  <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold", statusColor[b.status] ?? "")}>
+                    {b.status}
+                  </span>
+                  {b.position && (
+                    <Badge variant="outline" className="text-xs font-normal">
+                      {b.position}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    {b.applicantEmail}
+                  </span>
+                  {b.requestedTime && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {format(new Date(b.requestedTime), "MMM d, HH:mm")}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <a
+                href={b.cvLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <FileText className="h-3 w-3" />
+                CV
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+
+            {/* Actions */}
+            {(isPending || isWaitlisted) && (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  disabled={isActing}
+                  onClick={() => handleReview(b.id, "accept")}
+                  className="h-8 bg-green-600 text-white hover:bg-green-700"
+                >
+                  {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
+                  Accept
+                </Button>
+                {isPending && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isActing}
+                    onClick={() => handleReview(b.id, "waitlist")}
+                    className="h-8"
+                  >
+                    Waitlist
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isActing}
+                  onClick={() => handleReview(b.id, "reject")}
+                  className="h-8 text-destructive hover:bg-destructive/10"
+                >
+                  Reject
+                </Button>
+              </div>
+            )}
+            {isAccepted && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleCancel(b.id)}
+                  className="cursor-pointer text-xs text-muted-foreground hover:text-destructive hover:underline"
+                >
+                  Cancel interview
+                </button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {items.map((b) => (
-        <Card key={b.id}>
-          <CardContent className="py-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">{b.applicantName}</p>
-                  <Badge variant="outline" className="text-xs">
-                    {b.direction === "recruiter_books_applicant"
-                      ? "You booked"
-                      : "They booked"}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Mail className="h-3 w-3" />
-                    {b.applicantEmail}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {format(new Date(b.slotStart), "MMM d, HH:mm")} –{" "}
-                    {format(new Date(b.slotEnd), "HH:mm")}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href={b.cvLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  <FileText className="h-3 w-3" />
-                  CV
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-                <button
-                  onClick={() => handleCancel(b.id)}
-                  className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  aria-label="Cancel booking"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-                <Badge
-                  variant={
-                    b.status === "confirmed" ? "default" : "secondary"
-                  }
-                >
-                  {b.status}
-                </Badge>
-              </div>
-            </div>
+    <div className="space-y-6">
+      {/* Pending — most urgent */}
+      {pending.length > 0 && (
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 text-[10px] font-bold text-yellow-700">
+              {pending.length}
+            </span>
+            Pending Review
+          </h3>
+          <div className="space-y-2">{pending.map(renderBooking)}</div>
+        </div>
+      )}
+
+      {/* Accepted */}
+      {accepted.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-green-700 dark:text-green-400">
+            Accepted ({accepted.length})
+          </h3>
+          <div className="space-y-2">{accepted.map(renderBooking)}</div>
+        </div>
+      )}
+
+      {/* Waitlisted */}
+      {waitlisted.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
+            Waitlisted ({waitlisted.length})
+          </h3>
+          <div className="space-y-2">{waitlisted.map(renderBooking)}</div>
+        </div>
+      )}
+
+      {/* Rejected/Cancelled */}
+      {other.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
+            Past ({other.length})
+          </h3>
+          <div className="space-y-2">{other.map(renderBooking)}</div>
+        </div>
+      )}
+
+      {items.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground">No applications yet.</p>
           </CardContent>
         </Card>
-      ))}
+      )}
     </div>
   );
 }

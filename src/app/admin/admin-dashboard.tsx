@@ -20,6 +20,7 @@ import {
   Lock,
   LockOpen,
   Download,
+  Loader2,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -89,6 +90,7 @@ export function AdminDashboard({
   stats,
   currentMode,
   initialLocked,
+  timeFrame: initialTimeFrame,
 }: {
   recruiters: Recruiter[];
   applicants: Applicant[];
@@ -96,6 +98,7 @@ export function AdminDashboard({
   stats: Stats;
   currentMode: string;
   initialLocked: boolean;
+  timeFrame: { startHour: number; endHour: number; endMinute: number; slotDuration: number };
 }) {
   const router = useRouter();
   const [mode, setMode] = useState(currentMode);
@@ -104,6 +107,9 @@ export function AdminDashboard({
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
   const [recruiters, setRecruiters] = useState<Recruiter[]>(initialRecruiters);
   const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants);
+  const [tf, setTf] = useState(initialTimeFrame);
+  const [tfSaving, setTfSaving] = useState(false);
+  const [tfSaved, setTfSaved] = useState(false);
 
   // Domain form
   const [newDomain, setNewDomain] = useState("");
@@ -362,6 +368,94 @@ export function AdminDashboard({
                 </button>
               ))}
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Time Frame */}
+          <div>
+            <div className="mb-4 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-muted-foreground" />
+              <h2 className="font-heading text-lg font-semibold">
+                Event Time Frame
+              </h2>
+            </div>
+            <Card>
+              <CardContent className="py-4">
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setTfSaving(true);
+                    setTfSaved(false);
+                    await fetch("/api/admin/timeframe", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(tf),
+                    });
+                    setTfSaving(false);
+                    setTfSaved(true);
+                    router.refresh();
+                    setTimeout(() => setTfSaved(false), 3000);
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Start Hour</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={23}
+                        value={tf.startHour}
+                        onChange={(e) => setTf({ ...tf, startHour: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">End Hour</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={24}
+                        value={tf.endHour}
+                        onChange={(e) => setTf({ ...tf, endHour: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">End Minute</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={59}
+                        value={tf.endMinute}
+                        onChange={(e) => setTf({ ...tf, endMinute: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Slot Duration (min)</label>
+                      <Input
+                        type="number"
+                        min={5}
+                        max={120}
+                        value={tf.slotDuration}
+                        onChange={(e) => setTf({ ...tf, slotDuration: parseInt(e.target.value) || 15 })}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Event runs {String(tf.startHour).padStart(2, "0")}:00 – {String(tf.endHour).padStart(2, "0")}:{String(tf.endMinute).padStart(2, "0")} with {tf.slotDuration}-minute slots.
+                    Saving will regenerate all unbooked slots for every recruiter.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Button type="submit" disabled={tfSaving} size="sm">
+                      {tfSaving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Saving...</> : "Save & Regenerate Slots"}
+                    </Button>
+                    {tfSaved && (
+                      <span className="text-xs text-green-600">Saved!</span>
+                    )}
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
           </div>
 
           <Separator />

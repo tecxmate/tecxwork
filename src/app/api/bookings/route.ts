@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, slots, bookings, applicantProfiles, recruiters, users } from "@/lib/db";
-import { eq, and, sql } from "drizzle-orm";
+import { db, bookings, applicantProfiles, recruiters } from "@/lib/db";
+import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { sendBookingEmails } from "@/lib/email";
 
 /**
- * POST — Applicant books a recruiter at a specific time (Mode A).
+ * POST — Student applies for an interview (Mode A).
+ * Creates a PENDING application. Recruiter must accept to confirm.
  *
  * Body: { recruiterId, startTime (ISO), position, cvLink?, pipaConsent }
- *
- * The system randomly assigns an available interviewer slot at that time.
- * This prevents interviewer selection bias.
  */
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -19,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
   if (session.role !== "applicant") {
     return NextResponse.json(
-      { error: "Only applicants can book recruiter slots" },
+      { error: "Only applicants can apply" },
       { status: 403 }
     );
   }
@@ -51,7 +48,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fetch applicant profile from session
+  // Fetch applicant profile
   const [profile] = await db
     .select({
       id: applicantProfiles.id,
@@ -71,23 +68,35 @@ export async function POST(req: NextRequest) {
 
   const requestedTime = new Date(body.startTime);
 
-  // Check: same student + same time (any recruiter) = conflict
+  // Check: same student + same time + accepted/pending booking = conflict
   const timeConflict = await db
     .select({ id: bookings.id })
     .from(bookings)
-    .innerJoin(slots, eq(bookings.slotId, slots.id))
     .where(
       and(
         eq(bookings.applicantEmail, profile.email),
-        eq(slots.startTime, requestedTime)
+        eq(bookings.requestedTime, requestedTime),
+        // Only block if pending or accepted (not rejected/cancelled)
       )
     );
 
-  if (timeConflict.length > 0) {
+  // Filter to non-cancelled/rejected
+  const activeConflicts = [];
+  for (const b of timeConflict) {
+    const [full] = await db
+      .select({ status: bookings.status })
+      .from(bookings)
+      .where(eq(bookings.id, b.id));
+    if (full && (full.status === "pending" || full.status === "accepted")) {
+      activeConflicts.push(b);
+    }
+  }
+
+  if (activeConflicts.length > 0) {
     return NextResponse.json(
       {
         error:
-          "You already have an interview at this time. Choose a different slot.",
+          "You already have a pending or confirmed interview at this time.",
       },
       { status: 409 }
     );
@@ -95,7 +104,7 @@ export async function POST(req: NextRequest) {
 
   // Check: same student + same recruiter + same position = already applied
   const positionConflict = await db
-    .select({ id: bookings.id })
+    .select({ id: bookings.id, status: bookings.status })
     .from(bookings)
     .where(
       and(
@@ -105,108 +114,38 @@ export async function POST(req: NextRequest) {
       )
     );
 
-  if (positionConflict.length > 0) {
+  const activePosConflicts = positionConflict.filter(
+    (b) => b.status === "pending" || b.status === "accepted"
+  );
+
+  if (activePosConflicts.length > 0) {
     return NextResponse.json(
       {
-        error: `You have already applied for "${body.position}" at this company. Choose a different position.`,
+        error: `You already applied for "${body.position}" at this company.`,
       },
       { status: 409 }
     );
   }
 
-  // Randomly pick one available slot at this time for this recruiter
-  // ORDER BY random() LIMIT 1 — server-side randomness, ungameable
-  const [randomSlot] = await db
-    .select({
-      id: slots.id,
-      recruiterId: slots.recruiterId,
-      startTime: slots.startTime,
-      endTime: slots.endTime,
+  // Create pending application — NO slot lock yet
+  const [application] = await db
+    .insert(bookings)
+    .values({
+      direction: "applicant_books_recruiter",
+      recruiterId: body.recruiterId,
+      applicantId: profile.id,
+      position: body.position,
+      requestedTime,
+      applicantName: profile.name,
+      applicantEmail: profile.email,
+      cvLink: body.cvLink?.trim() || profile.cvLink,
+      pipaConsent: true,
+      status: "pending",
     })
-    .from(slots)
-    .where(
-      and(
-        eq(slots.recruiterId, body.recruiterId),
-        eq(slots.startTime, requestedTime),
-        eq(slots.status, "available")
-      )
-    )
-    .orderBy(sql`random()`)
-    .limit(1);
+    .returning();
 
-  if (!randomSlot) {
-    return NextResponse.json(
-      { error: "No available slots at this time. Please choose another." },
-      { status: 409 }
-    );
-  }
-
-  // Atomic lock
-  const updated = await db
-    .update(slots)
-    .set({ status: "booked" })
-    .where(and(eq(slots.id, randomSlot.id), eq(slots.status, "available")))
-    .returning({ id: slots.id });
-
-  if (!updated.length) {
-    return NextResponse.json(
-      { error: "Slot was just taken. Please try again." },
-      { status: 409 }
-    );
-  }
-
-  try {
-    const [booking] = await db
-      .insert(bookings)
-      .values({
-        direction: "applicant_books_recruiter",
-        slotId: randomSlot.id,
-        recruiterId: body.recruiterId,
-        applicantId: profile.id,
-        position: body.position,
-        applicantName: profile.name,
-        applicantEmail: profile.email,
-        cvLink: body.cvLink?.trim() || profile.cvLink,
-        pipaConsent: true,
-      })
-      .returning();
-
-    // Send emails (non-blocking)
-    const [rec] = await db
-      .select({
-        company: recruiters.company,
-        contactEmail: recruiters.contactEmail,
-        name: users.name,
-      })
-      .from(recruiters)
-      .innerJoin(users, eq(recruiters.userId, users.id))
-      .where(eq(recruiters.id, body.recruiterId));
-
-    if (rec) {
-      sendBookingEmails({
-        applicantName: profile.name,
-        applicantEmail: profile.email,
-        recruiterName: rec.name,
-        recruiterEmail: rec.contactEmail,
-        company: rec.company,
-        slotStart: randomSlot.startTime,
-        slotEnd: randomSlot.endTime,
-        cvLink: body.cvLink?.trim() || profile.cvLink,
-        direction: "applicant_books_recruiter",
-      }).catch(() => {});
-    }
-
-    return NextResponse.json({ booking });
-  } catch {
-    // Roll back
-    await db
-      .update(slots)
-      .set({ status: "available" })
-      .where(eq(slots.id, randomSlot.id));
-
-    return NextResponse.json(
-      { error: "Failed to create booking. Please try again." },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    booking: application,
+    message: "Application submitted! The recruiter will review your CV and confirm.",
+  });
 }

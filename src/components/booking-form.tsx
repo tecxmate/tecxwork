@@ -114,20 +114,19 @@ export function BookingForm({
           </div>
           <div>
             <h3 className="font-heading text-xl font-semibold">
-              Interview Booked!
+              Application Submitted!
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your interview with {company} for <span className="font-medium text-foreground">{position}</span> is
-              confirmed for {formattedTime}.
+              Your application to {company} for{" "}
+              <span className="font-medium text-foreground">{position}</span>{" "}
+              at {formattedTime} is now <span className="font-semibold text-yellow-700 dark:text-yellow-300">pending review</span>.
             </p>
           </div>
           <Separator />
           <div className="space-y-1 text-sm text-muted-foreground">
             <p>
-              Confirmation sent to{" "}
-              <span className="font-medium text-foreground">
-                {profile?.email}
-              </span>
+              The recruiter will review your CV and confirm your interview.
+              You&apos;ll receive an email when accepted.
             </p>
             <p>
               Share your CV with{" "}

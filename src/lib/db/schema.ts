@@ -22,7 +22,10 @@ export const slotStatusEnum = pgEnum("slot_status", [
   "blocked",
 ]);
 export const bookingStatusEnum = pgEnum("booking_status", [
-  "confirmed",
+  "pending",
+  "accepted",
+  "rejected",
+  "waitlisted",
   "cancelled",
 ]);
 export const bookingDirectionEnum = pgEnum("booking_direction", [
@@ -148,11 +151,13 @@ export const bookings = pgTable("bookings", {
   applicantId: integer("applicant_id").references(() => applicantProfiles.id),
   /** Denormalized for Mode A where applicant has no profile */
   position: text("position"),
+  /** The time the student requested — slot assigned on acceptance */
+  requestedTime: timestamp("requested_time", { withTimezone: true }),
   applicantName: text("applicant_name").notNull(),
   applicantEmail: text("applicant_email").notNull(),
   cvLink: text("cv_link").notNull(),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
-  status: bookingStatusEnum("status").notNull().default("confirmed"),
+  status: bookingStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -180,6 +185,9 @@ export const eventConfig = pgTable("event_config", {
     .notNull()
     .default("National Taiwan University, Taipei"),
   slotDurationMinutes: integer("slot_duration_minutes").notNull().default(15),
+  startHour: integer("start_hour").notNull().default(10),
+  endHour: integer("end_hour").notNull().default(17),
+  endMinute: integer("end_minute").notNull().default(30),
   mode: eventModeEnum("mode").notNull().default("both"),
   modeLocked: boolean("mode_locked").notNull().default(false),
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
