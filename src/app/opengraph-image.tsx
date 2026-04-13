@@ -112,7 +112,7 @@ export default function OGImage() {
             color: "#999",
           }}
         >
-          Designed & developed by TECXMATE.COM
+          Designed by Nikolas Doan 段皇方. Developed by TECXMATE.COM
         </div>
       </div>
     ),

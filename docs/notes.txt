@@ -563,3 +563,49 @@ the background on the phone?
                                                                                                                                                   
   Bottom line: Stay on free tier. Your data is text-only (~5 MB total), the event is one day, and Neon auto-suspends when nobody's using it. Zero
   cost.     
+
+
+I want to make this QR code system not only for the organizers to share the event website but    
+also for each student to have a QR code that links to their CV. How difficult is that? Think carefully and logically  
+on where to implement that.                                                                                           
+
+⏺ Smart thinking. Two QR code use cases:
+
+  ┌───────────┬─────────────────────────────────────┬───────────────────────────┬─────────────────────────────────┐
+  │  QR Code  │                 For                 │          Encodes          │            Location             │
+  ├───────────┼─────────────────────────────────────┼───────────────────────────┼─────────────────────────────────┤
+  │ Event URL │ Admin prints/projects at venue      │ https://your-domain.com   │ Admin dashboard                 │
+  ├───────────┼─────────────────────────────────────┼───────────────────────────┼─────────────────────────────────┤
+  │ Student   │ Student shows phone to recruiter at │ Their Google Drive CV     │ Profile page + quick-access on  │
+  │ CV        │  booth                              │ link                      │ browse                          │
+  └───────────┴─────────────────────────────────────┴───────────────────────────┴─────────────────────────────────┘
+
+  The CV QR code is the killer feature — at an in-person fair, a student walks up to a recruiter, shows their phone,
+  recruiter scans → CV opens instantly. No email exchange needed.
+
+  Difficulty: Easy. One package (qrcode.react), renders as SVG client-side. No server work.
+
+    QR Code System                                                                                                      
+                                                                                                                      
+  ┌─────────────────┬────────────────────────────────────┬───────────────────────────────────────────────────────┐    
+  │      Where      │                What                │                       Use Case                        │    
+  ├─────────────────┼────────────────────────────────────┼───────────────────────────────────────────────────────┤    
+  │ Admin dashboard │ Event URL QR code                  │ Print/project at venue entrance for attendees to join │    
+  ├─────────────────┼────────────────────────────────────┼───────────────────────────────────────────────────────┤    
+  │ Student         │ CV QR code below edit form         │ Save to phone, show to recruiters                     │    
+  │ /profile        │                                    │                                                       │    
+  ├─────────────────┼────────────────────────────────────┼───────────────────────────────────────────────────────┤    
+  │ Student /browse │ Purple floating button             │ Tap → fullscreen CV QR. Fastest way to share CV at a  │    
+  │                 │ (bottom-right)                     │ booth                                                 │
+  └─────────────────┴────────────────────────────────────┴───────────────────────────────────────────────────────┘    
+                                                                                                                      
+  At the event (in-person flow)               
+                                                                                                                      
+  1. Student walks up to a recruiter booth                  
+  2. Taps the purple QR button on their phone                                                                         
+  3. Fullscreen QR appears — recruiter scans with their phone camera
+  4. Recruiter's phone opens the student's CV directly on Google Drive                                                
+                                                            
+  No email exchange, no typing, 3 seconds.                                                                            
+                                          
+  Every QR code has Fullscreen (for scanning), Save (download PNG), and Copy (copy the link).     

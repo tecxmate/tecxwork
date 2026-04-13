@@ -2,7 +2,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
       <p>
-        Designed & developed by{" "}
+        Designed by Nikolas Doan. Developed by{" "}
         <a
           href="https://tecxmate.com"
           target="_blank"

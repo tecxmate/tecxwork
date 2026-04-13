@@ -3,6 +3,7 @@
 ## Overview
 
 As a recruiter, you can:
+
 - **View** all interview bookings made by students
 - **Browse** registered student profiles (skills, major, CV)
 - **Book** interviews directly with promising candidates
@@ -33,9 +34,10 @@ Before you can sign up, the event admin must add your company's email domain to 
    - **Open Positions** (type and press Enter to add each one)
 8. Click **"Create Account"**
 
-### 3. You're In!
+### 3. You're In
 
 After registration:
+
 - Your account is created with 30 interview slots (10:00 AM – 5:30 PM, 15-min each)
 - You'll be redirected to your **Dashboard**
 
@@ -46,10 +48,12 @@ After registration:
 ### My Bookings Tab
 
 Shows all interview bookings — both:
+
 - **"They booked"** — students who booked your slots
 - **"You booked"** — students you booked directly (if enabled)
 
 Each booking shows:
+
 - Student name and email
 - Interview time
 - Link to their CV (Google Drive)
