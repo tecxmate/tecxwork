@@ -22,6 +22,10 @@ export function SiteFooter() {
         <Link href="/privacy-policy" className="hover:text-primary hover:underline transition-colors">
           Privacy Policy
         </Link>
+        <span className="opacity-50">&middot;</span>
+        <Link href="/tutorial" className="hover:text-primary hover:underline transition-colors">
+          Tutorial
+        </Link>
       </div>
       <p className="mt-2">&copy; 2026 V-GEN TRIDENT &middot; PIPA compliant</p>
     </footer>

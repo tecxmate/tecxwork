@@ -105,6 +105,8 @@ export default function PrivacyPolicyPage() {
           <li><strong>Local Partner:</strong> Vietnamese Student Association in Taiwan (VSATW)</li>
         </ul>
       </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }
