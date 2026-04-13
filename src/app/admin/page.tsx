@@ -43,6 +43,9 @@ export default async function AdminPage() {
     .orderBy(applicantProfiles.name);
 
   const [bookingCount] = await db.select({ count: count() }).from(bookings);
+  const activeBookingCount = bookingList.filter(
+    (b) => b.status === "pending" || b.status === "accepted" || b.status === "waitlisted"
+  ).length;
   const [slotCount] = await db.select({ count: count() }).from(slots);
   const [availableCount] = await db
     .select({ count: count() })
@@ -90,6 +93,7 @@ export default async function AdminPage() {
       stats={{
         totalRecruiters: recruiterList.length,
         totalBookings: bookingCount.count,
+        activeBookings: activeBookingCount,
         totalSlots: slotCount.count,
         availableSlots: availableCount.count,
         totalApplicants: applicantList.length,
