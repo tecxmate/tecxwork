@@ -38,6 +38,7 @@ export function BookingForm({
   positions,
   slot,
   onBack,
+  onDone,
 }: {
   recruiterId: number;
   company: string;
@@ -45,6 +46,7 @@ export function BookingForm({
   positions: string[];
   slot: SelectedSlot;
   onBack: () => void;
+  onDone?: () => void;
 }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState("");
@@ -136,8 +138,8 @@ export function BookingForm({
               on Google Drive.
             </p>
           </div>
-          <Button variant="outline" onClick={onBack} className="mt-2">
-            Back to Directory
+          <Button variant="outline" onClick={onDone ?? onBack} className="mt-2">
+            View Other Positions
           </Button>
         </CardContent>
       </Card>
