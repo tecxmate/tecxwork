@@ -71,6 +71,21 @@ export const recruiters = pgTable("recruiters", {
     .defaultNow(),
 });
 
+// ---- Job openings (each position has its own JD link) ----
+
+export const jobOpenings = pgTable("job_openings", {
+  id: serial("id").primaryKey(),
+  recruiterId: integer("recruiter_id")
+    .notNull()
+    .references(() => recruiters.id),
+  title: text("title").notNull(),
+  jdLink: text("jd_link"),
+  description: text("description").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ---- Applicant profiles (linked to a user account) ----
 
 export const applicantProfiles = pgTable("applicant_profiles", {

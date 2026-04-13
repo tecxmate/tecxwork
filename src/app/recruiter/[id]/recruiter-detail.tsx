@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -36,10 +36,20 @@ type SelectedSlot = {
   endTime: string;
 };
 
+type JobOpening = { id: number; title: string; jdLink: string | null };
+
 export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
   const [step, setStep] = useState<"pick-slot" | "booking-form">("pick-slot");
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [infoExpanded, setInfoExpanded] = useState(false);
+  const [jobs, setJobs] = useState<JobOpening[]>([]);
+
+  // Fetch job openings
+  useEffect(() => {
+    fetch(`/api/jobs?recruiterId=${recruiter.id}`)
+      .then((r) => r.json())
+      .then((d) => setJobs(d.jobs ?? []));
+  }, [recruiter.id]);
 
   const handleSlotSelect = (slot: SelectedSlot) => {
     setSelectedSlot(slot);
@@ -75,13 +85,35 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Open Positions
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {recruiter.positions.map((pos) => (
-              <Badge key={pos} variant="outline" className="text-xs font-normal">
-                {pos}
-              </Badge>
-            ))}
-          </div>
+          {jobs.length > 0 ? (
+            <div className="space-y-2">
+              {jobs.map((job) => (
+                <div key={job.id} className="flex items-center justify-between gap-2">
+                  <span className="text-sm">{job.title}</span>
+                  {job.jdLink && (
+                    <a
+                      href={job.jdLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex shrink-0 items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <FileText className="h-3 w-3" />
+                      JD
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {recruiter.positions.map((pos) => (
+                <Badge key={pos} variant="outline" className="text-xs font-normal">
+                  {pos}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         <Separator />
         <div className="space-y-2 text-sm text-muted-foreground">
@@ -99,18 +131,6 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
             <MapPin className="h-4 w-4 shrink-0" />
             <span>{EVENT_CONFIG.location}</span>
           </div>
-          {recruiter.jdLink && (
-            <a
-              href={recruiter.jdLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              View Job Description
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -190,18 +210,25 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
                         {EVENT_CONFIG.slotDuration} min interview
                       </p>
                     </div>
-                    {recruiter.jdLink && (
-                      <a
-                        href={recruiter.jdLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                        View Job Description
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
+                    {jobs.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {jobs.map((job) => (
+                          <div key={job.id} className="flex items-center justify-between text-xs">
+                            <span>{job.title}</span>
+                            {job.jdLink && (
+                              <a
+                                href={job.jdLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                JD
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -240,7 +267,7 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
                   recruiterId={recruiter.id}
                   company={recruiter.company}
                   contactEmail={recruiter.contactEmail}
-                  positions={recruiter.positions}
+                  positions={jobs.length > 0 ? jobs.map((j) => j.title) : recruiter.positions}
                   slot={selectedSlot}
                   onBack={handleBack}
                 />

@@ -23,6 +23,8 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
+  Plus,
+  Briefcase,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -664,184 +666,257 @@ function ApplicantBookingView({
   );
 }
 
+type JobOpening = {
+  id: number;
+  title: string;
+  jdLink: string | null;
+  description: string;
+};
+
 function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
   const router = useRouter();
+
+  // Company info
   const [description, setDescription] = useState(recruiter.description);
-  const [positionInput, setPositionInput] = useState("");
-  const [positions, setPositions] = useState<string[]>(recruiter.positions);
-  const [jdLink, setJdLink] = useState(recruiter.jdLink ?? "");
   const [interviewerCount, setInterviewerCount] = useState(recruiter.interviewerCount);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
-  function addPosition() {
-    const p = positionInput.trim();
-    if (p && !positions.includes(p)) setPositions([...positions, p]);
-    setPositionInput("");
-  }
+  // Job openings
+  const [jobs, setJobs] = useState<JobOpening[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [newTitle, setNewTitle] = useState("");
+  const [newJdLink, setNewJdLink] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editJdLink, setEditJdLink] = useState("");
 
-  async function handleSave(e: React.FormEvent) {
+  useEffect(() => {
+    fetch("/api/me/jobs")
+      .then((r) => r.json())
+      .then((d) => setJobs(d.jobs ?? []))
+      .finally(() => setLoadingJobs(false));
+  }, []);
+
+  async function handleSaveCompany(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setSaved(false);
     setError("");
-
     try {
       const res = await fetch("/api/me/recruiter", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: description.trim(),
-          positions,
-          jdLink: jdLink.trim() || null,
-          interviewerCount,
-        }),
+        body: JSON.stringify({ description: description.trim(), interviewerCount }),
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Save failed");
-      }
-
+      if (!res.ok) throw new Error("Save failed");
       setSaved(true);
       router.refresh();
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setSaving(false);
     }
   }
 
-  return (
-    <Card>
-      <CardHeader>
-        <h2 className="font-heading text-lg font-semibold">
-          {recruiter.company}
-        </h2>
-        <p className="text-xs text-muted-foreground">
-          {recruiter.industry} · {recruiter.contactEmail}
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSave} className="space-y-4">
-          <div className="space-y-1.5">
-            <label htmlFor="desc" className="text-sm font-medium">
-              Company Description
-            </label>
-            <textarea
-              id="desc"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What does your company do? What are you looking for?"
-              rows={4}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
+  async function handleAddJob(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    const res = await fetch("/api/me/jobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle.trim(), jdLink: newJdLink.trim() || null }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setJobs([...jobs, d.job]);
+      setNewTitle("");
+      setNewJdLink("");
+    }
+  }
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Open Positions</label>
-            <div className="flex gap-2">
-              <Input
-                value={positionInput}
-                onChange={(e) => setPositionInput(e.target.value)}
-                placeholder="e.g. Software Engineer"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addPosition();
-                  }
-                }}
+  async function handleUpdateJob(id: number) {
+    const res = await fetch(`/api/me/jobs/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: editTitle.trim(), jdLink: editJdLink.trim() || null }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setJobs(jobs.map((j) => (j.id === id ? d.job : j)));
+      setEditingId(null);
+    }
+  }
+
+  async function handleDeleteJob(id: number) {
+    if (!confirm("Remove this position?")) return;
+    await fetch(`/api/me/jobs/${id}`, { method: "DELETE" });
+    setJobs(jobs.filter((j) => j.id !== id));
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Company info */}
+      <Card>
+        <CardHeader>
+          <h2 className="font-heading text-lg font-semibold">{recruiter.company}</h2>
+          <p className="text-xs text-muted-foreground">{recruiter.industry} · {recruiter.contactEmail}</p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSaveCompany} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="desc" className="text-sm font-medium">Company Description</label>
+              <textarea
+                id="desc"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What does your company do?"
+                rows={3}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               />
-              <Button type="button" variant="outline" onClick={addPosition}>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="ic" className="text-sm font-medium">Number of Interviewers</label>
+              <Input
+                id="ic"
+                type="number"
+                min={1}
+                max={10}
+                value={interviewerCount}
+                onChange={(e) => setInterviewerCount(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
+              />
+              <p className="text-xs text-muted-foreground">
+                {interviewerCount} interviewer{interviewerCount > 1 ? "s" : ""} = {interviewerCount}x slots per time. Assigned randomly.
+              </p>
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            {saved && <p className="text-xs text-green-600">Saved!</p>}
+            <Button type="submit" disabled={saving} size="sm">
+              {saving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Saving...</> : "Save Company Info"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Job Openings CRUD */}
+      <Card>
+        <CardHeader>
+          <h2 className="font-heading text-lg font-semibold">Job Openings</h2>
+          <p className="text-xs text-muted-foreground">
+            Each position has its own JD link. Students select a position when applying.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Add new job */}
+          <form onSubmit={handleAddJob} className="space-y-2 rounded-lg border bg-muted/20 p-3">
+            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+              <Input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Position title"
+                required
+              />
+              <Input
+                value={newJdLink}
+                onChange={(e) => setNewJdLink(e.target.value)}
+                placeholder="JD link (optional)"
+                type="url"
+              />
+              <Button type="submit" size="sm" disabled={!newTitle.trim()}>
+                <Plus className="mr-1 h-3.5 w-3.5" />
                 Add
               </Button>
             </div>
-            {positions.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {positions.map((p) => (
-                  <Badge
-                    key={p}
-                    variant="secondary"
-                    className="cursor-pointer gap-1"
-                    onClick={() =>
-                      setPositions(positions.filter((x) => x !== p))
-                    }
+          </form>
+
+          {/* Job list */}
+          {loadingJobs ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : jobs.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              No positions added yet.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {jobs.map((job) =>
+                editingId === job.id ? (
+                  <div key={job.id} className="rounded-lg border border-primary/30 p-3">
+                    <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
+                      <Input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        placeholder="Title"
+                      />
+                      <Input
+                        value={editJdLink}
+                        onChange={(e) => setEditJdLink(e.target.value)}
+                        placeholder="JD link"
+                        type="url"
+                      />
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <Button size="sm" onClick={() => handleUpdateJob(job.id)}>
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    key={job.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
                   >
-                    {p}
-                    <X className="h-3 w-3" />
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="jd-link" className="text-sm font-medium">
-              Job Description Link (Google Drive)
-            </label>
-            <Input
-              id="jd-link"
-              type="url"
-              value={jdLink}
-              onChange={(e) => setJdLink(e.target.value)}
-              placeholder="https://drive.google.com/file/d/..."
-            />
-            <p className="text-xs text-muted-foreground">
-              Students will see this link on your company page before booking.
-            </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="interviewer-count" className="text-sm font-medium">
-              Number of Interviewers
-            </label>
-            <Input
-              id="interviewer-count"
-              type="number"
-              min={1}
-              max={10}
-              value={interviewerCount}
-              onChange={(e) =>
-                setInterviewerCount(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))
-              }
-            />
-            <p className="text-xs text-muted-foreground">
-              If you have {interviewerCount} interviewer{interviewerCount > 1 ? "s" : ""}, students
-              will see {interviewerCount}x slots per time (e.g., {interviewerCount} students can book 10:00 simultaneously).
-              Interviewers are assigned randomly — students cannot choose.
-            </p>
-          </div>
-
-          <Separator />
-
-          {error && (
-            <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{job.title}</p>
+                      {job.jdLink && (
+                        <a
+                          href={job.jdLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          <FileText className="h-3 w-3" />
+                          View JD
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      {!job.jdLink && (
+                        <p className="text-xs text-muted-foreground">No JD link</p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        onClick={() => {
+                          setEditingId(job.id);
+                          setEditTitle(job.title);
+                          setEditJdLink(job.jdLink ?? "");
+                        }}
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
+                        aria-label="Edit"
+                      >
+                        <Briefcase className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteJob(job.id)}
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           )}
-
-          {saved && (
-            <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              Changes saved!
-            </div>
-          )}
-
-          <Button type="submit" disabled={saving} className="w-full">
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
