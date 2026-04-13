@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const now = new Date();
 
   const [match] = await db
-    .select({ id: passwordResetCodes.id })
+    .select({ id: passwordResetCodes.id, code: passwordResetCodes.code })
     .from(passwordResetCodes)
     .where(
       and(
@@ -46,6 +46,6 @@ export async function POST(req: NextRequest) {
     .set({ used: true })
     .where(eq(passwordResetCodes.id, match.id));
 
-  // Return a short-lived token (the code ID) for the reset step
-  return NextResponse.json({ ok: true, resetToken: match.id });
+  // Return a compound token (id + code) so reset-password can verify both
+  return NextResponse.json({ ok: true, resetToken: `${match.id}_${match.code}` });
 }

@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
         applicantEmail: applicant.email,
         cvLink: applicant.cvLink,
         pipaConsent: true,
+        status: "accepted",
       })
       .returning();
 

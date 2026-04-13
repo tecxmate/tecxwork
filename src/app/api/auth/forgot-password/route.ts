@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, passwordResetCodes } from "@/lib/db";
 import { eq, and, gte } from "drizzle-orm";
-import { Resend } from "resend";
-
-function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
-}
-
-const FROM = process.env.EMAIL_FROM ?? "V-GEN <onboarding@resend.dev>";
+import { getResend, EMAIL_FROM } from "@/lib/email";
 
 /**
  * POST /api/auth/forgot-password
@@ -69,7 +61,7 @@ export async function POST(req: NextRequest) {
   if (resend) {
     try {
       await resend.emails.send({
-        from: FROM,
+        from: EMAIL_FROM,
         to: email,
         subject: `V-GEN Password Reset Code: ${code}`,
         html: `

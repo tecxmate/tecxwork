@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, users, recruiters, bookings, slots } from "@/lib/db";
+import { db, users, recruiters, bookings, slots, jobOpenings } from "@/lib/db";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
@@ -75,9 +75,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
   }
 
-  // Cascade delete: bookings → slots → recruiter → user
+  // Cascade delete: bookings → slots → jobOpenings → recruiter → user
   await db.delete(bookings).where(eq(bookings.recruiterId, recruiterId));
   await db.delete(slots).where(eq(slots.recruiterId, recruiterId));
+  await db.delete(jobOpenings).where(eq(jobOpenings.recruiterId, recruiterId));
   await db.delete(recruiters).where(eq(recruiters.id, recruiterId));
   await db.delete(users).where(eq(users.id, rec.userId));
 

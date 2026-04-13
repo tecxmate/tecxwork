@@ -4,7 +4,13 @@ import { cookies } from "next/headers";
 import { db, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
-const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable must be set in production");
+  }
+  return secret ?? "dev-secret-change-me";
+}
 const COOKIE_NAME = "vgen_session";
 
 export type UserRole = "admin" | "recruiter" | "applicant";
@@ -27,12 +33,12 @@ export async function verifyPassword(
 }
 
 export function createToken(payload: SessionPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: "24h" });
 }
 
 export function verifyToken(token: string): SessionPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as SessionPayload;
+    return jwt.verify(token, getJwtSecret()) as SessionPayload;
   } catch {
     return null;
   }

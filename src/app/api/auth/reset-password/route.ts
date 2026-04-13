@@ -28,13 +28,31 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify the reset token belongs to this email and was used (verified)
-  const [codeRecord] = await db
-    .select({ id: passwordResetCodes.id, email: passwordResetCodes.email })
-    .from(passwordResetCodes)
-    .where(eq(passwordResetCodes.id, resetToken));
+  // Parse compound token: "id_code"
+  const separatorIdx = resetToken.indexOf("_");
+  if (separatorIdx === -1) {
+    return NextResponse.json(
+      { error: "Invalid reset token. Please start over." },
+      { status: 400 }
+    );
+  }
+  const tokenId = parseInt(resetToken.slice(0, separatorIdx));
+  const tokenCode = resetToken.slice(separatorIdx + 1);
 
-  if (!codeRecord || codeRecord.email !== email) {
+  if (isNaN(tokenId) || !tokenCode) {
+    return NextResponse.json(
+      { error: "Invalid reset token. Please start over." },
+      { status: 400 }
+    );
+  }
+
+  // Verify the reset token belongs to this email, was used (verified), and code matches
+  const [codeRecord] = await db
+    .select({ id: passwordResetCodes.id, email: passwordResetCodes.email, code: passwordResetCodes.code })
+    .from(passwordResetCodes)
+    .where(eq(passwordResetCodes.id, tokenId));
+
+  if (!codeRecord || codeRecord.email !== email || codeRecord.code !== tokenCode) {
     return NextResponse.json(
       { error: "Invalid reset token. Please start over." },
       { status: 400 }

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RecruiterCard, type RecruiterCardData } from "./recruiter-card";
-import { IndustryFilter } from "./industry-filter";
+// import { IndustryFilter } from "./industry-filter"; // temporarily disabled
 
 export function Directory() {
   const [query, setQuery] = useState("");

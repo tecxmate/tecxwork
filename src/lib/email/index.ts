@@ -1,12 +1,12 @@
 import { Resend } from "resend";
 
-function getResend(): Resend | null {
+export function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
   return new Resend(key);
 }
 
-const FROM = process.env.EMAIL_FROM ?? "V-GEN <onboarding@resend.dev>";
+export const EMAIL_FROM = process.env.EMAIL_FROM ?? "V-GEN <onboarding@resend.dev>";
 
 type BookingEmailData = {
   applicantName: string;
@@ -53,7 +53,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
   // Email to applicant
   try {
     const result = await resend.emails.send({
-      from: FROM,
+      from: EMAIL_FROM,
       to: data.applicantEmail,
       subject: `Interview Confirmed — ${data.company} on ${timeStr}`,
       html: `
@@ -94,7 +94,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
   // Email to recruiter
   try {
     const result2 = await resend.emails.send({
-      from: FROM,
+      from: EMAIL_FROM,
       to: data.recruiterEmail,
       subject: `New Interview Booking — ${data.applicantName}`,
       html: `

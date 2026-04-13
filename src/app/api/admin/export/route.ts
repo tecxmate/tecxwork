@@ -26,9 +26,9 @@ export async function GET() {
       contactEmail: recruiters.contactEmail,
     })
     .from(bookings)
-    .innerJoin(slots, eq(bookings.slotId, slots.id))
+    .leftJoin(slots, eq(bookings.slotId, slots.id))
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
-    .orderBy(slots.startTime);
+    .orderBy(bookings.createdAt);
 
   // Mode B bookings
   const modeB = await db
@@ -46,13 +46,14 @@ export async function GET() {
       contactEmail: recruiters.contactEmail,
     })
     .from(bookings)
-    .innerJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
+    .leftJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
-    .orderBy(applicantSlots.startTime);
+    .orderBy(bookings.createdAt);
 
   const all = [...modeA, ...modeB].sort(
     (a, b) =>
-      new Date(a.slotStart).getTime() - new Date(b.slotStart).getTime()
+      (a.slotStart ? new Date(a.slotStart).getTime() : 0) -
+      (b.slotStart ? new Date(b.slotStart).getTime() : 0)
   );
 
   // Build CSV
@@ -80,8 +81,8 @@ export async function GET() {
     escape(b.applicantEmail),
     escape(b.company),
     escape(b.contactEmail),
-    new Date(b.slotStart).toISOString(),
-    new Date(b.slotEnd).toISOString(),
+    b.slotStart ? new Date(b.slotStart).toISOString() : "",
+    b.slotEnd ? new Date(b.slotEnd).toISOString() : "",
     escape(b.cvLink),
     b.status,
     b.createdAt ? new Date(b.createdAt).toISOString() : "",

@@ -211,7 +211,7 @@ export const eventConfig = pgTable("event_config", {
   eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
   location: text("location")
     .notNull()
-    .default("National Taiwan University, Taipei"),
+    .default("NTUT (Taipei Tech), Taipei"),
   slotDurationMinutes: integer("slot_duration_minutes").notNull().default(15),
   startHour: integer("start_hour").notNull().default(10),
   endHour: integer("end_hour").notNull().default(17),

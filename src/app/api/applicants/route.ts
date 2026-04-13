@@ -41,6 +41,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (password.length < 6) {
+    return NextResponse.json(
+      { error: "Password must be at least 6 characters" },
+      { status: 400 }
+    );
+  }
+
   if (!pipaConsent) {
     return NextResponse.json(
       { error: "PIPA consent is required" },

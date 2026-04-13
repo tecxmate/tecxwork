@@ -244,3 +244,54 @@
   The Bottom Line: You become a legal data broker by acting as a secure middleman. You hold the data safely in Neon,
   you force recruiters to pay for the privilege of searching it, and you give the students a button to turn it off at
   any time.
+
+
+  I have drafted the Terms of Service and Privacy Policy specifically tailored for your complex cross-border setup
+  (Company in Vietnam, Server in Tokyo, Users/Event in Taiwan). 
+
+  I have saved them directly into your project repository for easy integration:
+   1. docs/legal/privacy-policy.md
+   2. docs/legal/terms-of-service.md
+
+  (Note: Search for [YOUR VIETNAMESE COMPANY NAME] and [Insert Date] in those files to fill in your exact corporate
+  details).
+
+  Here is a breakdown of the critical legal engineering I implemented to protect you and enable your future SaaS
+  monetization:
+
+  1. Solving the Cross-Border Data Transfer (The "Tri-Jurisdiction" Problem)
+  Your setup involves three jurisdictions:
+   * Data Origin: Taiwan (Taiwan PDPA applies).
+   * Data Storage: Japan (Japan APPI applies to the servers).
+   * Data Processing/Access: Vietnam (Vietnam PDPD applies to your engineers).
+
+  How it's solved: Taiwan’s PDPA operates on a "negative list" approach—cross-border transfers are allowed unless
+  explicitly banned by the government. Japan is highly trusted. To ensure absolute compliance with both Taiwan and
+  Vietnam laws, I added Section 4 (Cross-Border Data Transfer) to the Privacy Policy. This forces the student to
+  explicitly consent to the exact routing of their data (Taiwan ➔ Japan ➔ Vietnam).
+
+  2. Legalizing the "Talent Passport" (Retention)
+  If you want to monetize the data in the future, you cannot legally promise to delete it all after 2 days. 
+  How it's solved: I structured Section 5 (Data Retention) to introduce the "Talent Passport" concept. It states that
+  if a user opts-in to the Talent Passport, their data is retained persistently. If they don't, it falls back to the
+  single-event deletion rule. This gives you the legal runway to build a persistent database without violating
+  Taiwan's strict rules on data hoarding.
+
+  3. Binding the Recruiters (ToS Section 5)
+  If a student complains that a company is spamming them, the university will blame you. 
+  How it's solved: I added strict prohibitions in the ToS that legally forbid Recruiters from selling, scraping, or
+  using the student data for anything other than recruitment for this specific event. If a recruiter violates this,
+  they are breaking the contract, which legally shields you and VSATW from liability.
+
+  4. Governing Law (ToS Section 10)
+  Even though your tech company is in Vietnam, I set the governing law to Taiwan (R.O.C.) and the jurisdiction to
+  courts in Taipei. 
+  Why? Because you are selling B2B software to Taiwanese universities and recruiters. If your ToS says disputes must
+  be settled in Hanoi under Vietnamese law, Taiwanese universities will refuse to sign it. Subjecting the ToS to
+  Taiwanese law builds immediate trust and removes friction for your sales team.
+
+  Next Steps for Implementation
+  Before the event goes live, you should:
+   1. Fill in the bracketed [...] company details in both Markdown files.
+   2. Add a mandatory checkbox to your student signup form: "I agree to the Terms of Service and have read the Privacy
+      Policy." (Do not pre-check this box; the user must click it themselves to constitute legal consent).

@@ -57,7 +57,7 @@ async function seed() {
 
       if (rec) {
         // Generate slots for event day: 9am-5pm, 15-min intervals
-        const eventDate = "2026-06-10";
+        const eventDate = "2026-06-06";
         const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] = [];
         for (let h = 9; h < 17; h++) {
           for (let m = 0; m < 60; m += 15) {
@@ -77,7 +77,7 @@ async function seed() {
     .insert(schema.eventConfig)
     .values({
       eventName: "V-GEN TRIDENT 2026",
-      eventDate: new Date("2026-06-10T09:00:00+08:00"),
+      eventDate: new Date("2026-06-06T09:00:00+08:00"),
       location: "National Taiwan University, Taipei",
       slotDurationMinutes: 15,
     })

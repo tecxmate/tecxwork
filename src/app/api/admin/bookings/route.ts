@@ -26,9 +26,9 @@ export async function GET(req: NextRequest) {
       company: recruiters.company,
     })
     .from(bookings)
-    .innerJoin(slots, eq(bookings.slotId, slots.id))
+    .leftJoin(slots, eq(bookings.slotId, slots.id))
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
-    .orderBy(slots.startTime)
+    .orderBy(bookings.createdAt)
     .$dynamic();
 
   if (recruiterId) {

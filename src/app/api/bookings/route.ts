@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, applicantProfiles, recruiters } from "@/lib/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 
 /**
@@ -69,28 +69,16 @@ export async function POST(req: NextRequest) {
   const requestedTime = new Date(body.startTime);
 
   // Check: same student + same time + accepted/pending booking = conflict
-  const timeConflict = await db
+  const activeConflicts = await db
     .select({ id: bookings.id })
     .from(bookings)
     .where(
       and(
         eq(bookings.applicantEmail, profile.email),
         eq(bookings.requestedTime, requestedTime),
-        // Only block if pending or accepted (not rejected/cancelled)
+        inArray(bookings.status, ["pending", "accepted"])
       )
     );
-
-  // Filter to non-cancelled/rejected
-  const activeConflicts = [];
-  for (const b of timeConflict) {
-    const [full] = await db
-      .select({ status: bookings.status })
-      .from(bookings)
-      .where(eq(bookings.id, b.id));
-    if (full && (full.status === "pending" || full.status === "accepted")) {
-      activeConflicts.push(b);
-    }
-  }
 
   if (activeConflicts.length > 0) {
     return NextResponse.json(
