@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { eq, and, sql } from "drizzle-orm";
 
 /** PUT /api/me/recruiter — recruiter updates their own company profile */
+import { EVENT_CONFIG } from "@/lib/data";
+
 export async function PUT(req: NextRequest) {
   const session = await getSession();
   if (!session || session.role !== "recruiter") {
@@ -75,7 +77,8 @@ export async function PUT(req: NextRequest) {
     );
 
     // Regenerate slots for all interviewer numbers
-    const eventDate = "2026-06-06";
+    const dateObj = EVENT_CONFIG.date;
+    const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
     const newSlots: {
       recruiterId: number;
       startTime: Date;
@@ -83,13 +86,13 @@ export async function PUT(req: NextRequest) {
       interviewerNumber: number;
     }[] = [];
 
-    for (let h = 10; h <= 17; h++) {
-      for (let m = 0; m < 60; m += 15) {
-        if (h === 17 && m >= 30) break;
+    for (let h = EVENT_CONFIG.startHour; h <= EVENT_CONFIG.endHour; h++) {
+      for (let m = 0; m < 60; m += EVENT_CONFIG.slotDuration) {
+        if (h === EVENT_CONFIG.endHour && m >= EVENT_CONFIG.endMinutes) break;
         const start = new Date(
           `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
         );
-        const end = new Date(start.getTime() + 15 * 60 * 1000);
+        const end = new Date(start.getTime() + EVENT_CONFIG.slotDuration * 60 * 1000);
 
         for (let i = 1; i <= newCount; i++) {
           const key = `${start.toISOString()}_${i}`;

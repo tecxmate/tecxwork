@@ -7,6 +7,8 @@ export const EVENT_CONFIG = {
   hostedAt: "NTUT (Taipei Tech)",
   hostedAtFull: "National Taipei University of Science and Technology",
   date: new Date("2026-06-06T10:00:00+08:00"),
+  displayDate: "June 6, 2026",
+  displayYear: "2026",
   endDate: new Date("2026-06-06T17:30:00+08:00"),
   location: "NTUT (Taipei Tech), Taipei",
   timezone: "Asia/Taipei",

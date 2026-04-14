@@ -38,6 +38,7 @@ export function Countdown({ target }: { target: Date }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     setTimeLeft(calcTimeLeft(target));
     const id = setInterval(() => setTimeLeft(calcTimeLeft(target)), 1000);

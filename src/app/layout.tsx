@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { InstallPrompt } from "@/components/install-prompt";
+import { EVENT_CONFIG } from "@/lib/data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,22 +28,22 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "V-GEN",
   },
-  title: "V-GEN TRIDENT — VSATW Career Fair 2026",
+  title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
   description:
-    "Ngày Hội Việc Làm VSATW 2026 — The Vietnamese Generation: Versatile in Talent, Value in Action. June 6, 2026 at NTUT (Taipei Tech).",
+    `Ngày Hội Việc Làm ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} — ${EVENT_CONFIG.tagline}. ${EVENT_CONFIG.displayDate} at ${EVENT_CONFIG.hostedAt}.`,
   openGraph: {
-    title: "V-GEN TRIDENT — VSATW Career Fair 2026",
+    title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
     description:
-      "Ngày Hội Việc Làm VSATW 2026 — The Vietnamese Generation: Versatile in Talent, Value in Action. Book your interview slot now.",
+      `Ngày Hội Việc Làm ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} — ${EVENT_CONFIG.tagline}. Book your interview slot now.`,
     type: "website",
     locale: "en_US",
     siteName: "V-GEN TRIDENT",
   },
   twitter: {
     card: "summary_large_image",
-    title: "V-GEN TRIDENT — VSATW Career Fair 2026",
+    title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
     description:
-      "Career fair for Vietnamese students in Taiwan. June 6, 2026 at NTUT (Taipei Tech).",
+      `Career fair for Vietnamese students in Taiwan. ${EVENT_CONFIG.displayDate} at ${EVENT_CONFIG.hostedAt}.`,
   },
 };
 

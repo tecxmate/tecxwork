@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
+import { EVENT_CONFIG } from "@/lib/data";
 
 export const runtime = "edge";
-export const alt = "V-GEN TRIDENT — VSATW Career Fair 2026";
+export const alt = `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -62,7 +63,7 @@ export default function OGImage() {
             marginBottom: 8,
           }}
         >
-          Vietnamese Student Association in Taiwan
+          {EVENT_CONFIG.organizer}
         </div>
 
         {/* Event name */}
@@ -74,7 +75,7 @@ export default function OGImage() {
             marginBottom: 12,
           }}
         >
-          V-GEN TRIDENT 2026
+          V-GEN TRIDENT {EVENT_CONFIG.displayYear}
         </div>
 
         {/* Tagline */}
@@ -86,7 +87,7 @@ export default function OGImage() {
             marginBottom: 24,
           }}
         >
-          &ldquo;Versatile in Talent, Value in Action&rdquo;
+          &ldquo;{EVENT_CONFIG.tagline}&rdquo;
         </div>
 
         {/* Details */}
@@ -98,9 +99,9 @@ export default function OGImage() {
             color: "#444",
           }}
         >
-          <span>Saturday, June 6, 2026</span>
+          <span>{EVENT_CONFIG.displayDate}</span>
           <span>10:00 – 17:30</span>
-          <span>NTUT (Taipei Tech)</span>
+          <span>{EVENT_CONFIG.hostedAt}</span>
         </div>
 
         {/* Footer */}

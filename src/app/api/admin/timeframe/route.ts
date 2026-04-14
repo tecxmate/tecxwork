@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig, slots, recruiters, bookings } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and, count } from "drizzle-orm";
+import { EVENT_CONFIG } from "@/lib/data";
 
 /**
  * PUT /api/admin/timeframe
@@ -86,7 +87,9 @@ export async function PUT(req: NextRequest) {
     .select({ id: recruiters.id, interviewerCount: recruiters.interviewerCount })
     .from(recruiters);
 
-  const eventDate = "2026-06-06";
+  // Format date correctly handling local timezone offset
+  const dateObj = EVENT_CONFIG.date;
+  const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
   let totalCreated = 0;
 
   for (const rec of allRecruiters) {

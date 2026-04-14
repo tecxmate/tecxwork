@@ -9,6 +9,7 @@ import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { EVENT_CONFIG } from "@/lib/data";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -160,7 +161,7 @@ export default function RegisterPage() {
               Set Your Availability
             </h2>
             <p className="text-sm text-muted-foreground">
-              This creates 15-minute interview slots on event day (June 6, 2026)
+              This creates 15-minute interview slots on event day ({EVENT_CONFIG.displayDate})
               from 10:00 AM to 5:30 PM for recruiters to book.
             </p>
           </CardHeader>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, recruiters, allowedDomains, slots } from "@/lib/db";
-import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
+import { hashPassword, createToken, setSessionCookie } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { EVENT_CONFIG } from "@/lib/data";
 
 /** POST — Recruiter self-signup with allowed-domain check */
 export async function POST(req: NextRequest) {
@@ -75,20 +76,22 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Generate default slots for event day (10:00–17:30, 15-min intervals)
-    const eventDate = "2026-06-06";
-    const startHour = 10;
-    const endHour = 17;
-    const endMinutes = 30; // 17:30
+    // Generate default slots for event day using EVENT_CONFIG
+    const dateObj = EVENT_CONFIG.date;
+    const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+    const startHour = EVENT_CONFIG.startHour;
+    const endHour = EVENT_CONFIG.endHour;
+    const endMinutes = EVENT_CONFIG.endMinutes;
+    const slotDuration = EVENT_CONFIG.slotDuration;
     const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] = [];
     for (let h = startHour; h < endHour + 1; h++) {
-      for (let m = 0; m < 60; m += 15) {
+      for (let m = 0; m < 60; m += slotDuration) {
         if (h === endHour && m >= endMinutes) break;
         if (h > endHour) break;
         const start = new Date(
           `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
         );
-        const end = new Date(start.getTime() + 15 * 60 * 1000);
+        const end = new Date(start.getTime() + slotDuration * 60 * 1000);
         slotValues.push({ recruiterId: recruiter.id, startTime: start, endTime: end });
       }
     }

@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { EVENT_CONFIG } from "@/lib/data";
 
 export function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -28,7 +29,7 @@ function formatTime(date: Date): string {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Asia/Taipei",
+    timeZone: EVENT_CONFIG.timezone,
     hour12: false,
   });
 }
@@ -59,13 +60,13 @@ export async function sendBookingEmails(data: BookingEmailData) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Confirmed</h2>
-          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">Your interview has been scheduled for the VSATW 2026 Career Fair.</p>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">Your interview has been scheduled for the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair.</p>
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
               <tr><td style="padding: 6px 0; color: #666; width: 100px;">Company</td><td style="padding: 6px 0; font-weight: 600;">${data.company}</td></tr>
               <tr><td style="padding: 6px 0; color: #666;">When</td><td style="padding: 6px 0; font-weight: 600;">${timeStr}</td></tr>
-              <tr><td style="padding: 6px 0; color: #666;">Where</td><td style="padding: 6px 0;">NTUT (Taipei Tech), Taipei</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Where</td><td style="padding: 6px 0;">${EVENT_CONFIG.location}</td></tr>
               <tr><td style="padding: 6px 0; color: #666;">Duration</td><td style="padding: 6px 0;">15 minutes</td></tr>
             </table>
           </div>
@@ -80,7 +81,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
           </div>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            VSATW 2026 — V-GEN TRIDENT<br>
+            ${EVENT_CONFIG.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
@@ -100,7 +101,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">New Interview Booking</h2>
-          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">A candidate has been booked for an interview at the VSATW 2026 Career Fair.</p>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">A candidate has been booked for an interview at the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair.</p>
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
@@ -118,7 +119,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
           </div>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            VSATW 2026 — V-GEN TRIDENT<br>
+            ${EVENT_CONFIG.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { EVENT_CONFIG } from "@/lib/data";
 
 type Slot = {
   startTime: string;
@@ -29,7 +30,7 @@ export function SlotPicker({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedDate(startOfDay(new Date("2026-06-06T00:00:00+08:00")));
+    setSelectedDate(startOfDay(EVENT_CONFIG.date));
     setMounted(true);
   }, []);
 

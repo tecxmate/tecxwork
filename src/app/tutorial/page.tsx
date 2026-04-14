@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
+import { EVENT_CONFIG } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Tutorial | V-GEN TRIDENT",
@@ -89,7 +90,7 @@ export default function TutorialPage() {
                 <ol className="list-decimal pl-5 space-y-1 mb-4">
                   <li>Click <strong>&quot;View &amp; Book&quot;</strong> on any company card</li>
                   <li>You&apos;ll see the company details and a <strong>slot picker</strong></li>
-                  <li>Use the <strong>left/right arrows</strong> to navigate dates (event day: June 6, 2026)</li>
+                  <li>Use the <strong>left/right arrows</strong> to navigate dates (event day: {EVENT_CONFIG.displayDate})</li>
                   <li>Click an available time slot (green = available)</li>
                   <li>Review your profile info (auto-filled from your account)</li>
                   <li>Optionally update the <strong>CV Link</strong> for this specific interview</li>
