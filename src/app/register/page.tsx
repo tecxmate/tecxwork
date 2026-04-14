@@ -18,6 +18,7 @@ import {
   AlertCircle,
   UserPlus,
   X,
+  Mail,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -39,6 +40,7 @@ export default function RegisterPage() {
   const [cvLink, setCvLink] = useState("");
   const [description, setDescription] = useState("");
   const [pipaConsent, setPipaConsent] = useState(false);
+  const [wantsNewsletter, setWantsNewsletter] = useState(false);
 
   // Created profile
   const [profileId, setProfileId] = useState<number | null>(null);
@@ -81,6 +83,7 @@ export default function RegisterPage() {
           cvLink: cvLink.trim(),
           description: description.trim(),
           pipaConsent: true,
+          wantsNewsletter,
         }),
       });
 
@@ -374,6 +377,27 @@ export default function RegisterPage() {
                     Taiwan&apos;s Personal Data Protection Act.
                   </label>
                 </div>
+
+                {EVENT_CONFIG.enableNewsletterOptIn && (
+                  <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                    <input
+                      id="newsletter"
+                      type="checkbox"
+                      checked={wantsNewsletter}
+                      onChange={(e) => setWantsNewsletter(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                    />
+                    <label
+                      htmlFor="newsletter"
+                      className="cursor-pointer text-xs leading-relaxed text-muted-foreground"
+                    >
+                      <Mail className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-muted-foreground" />
+                      (Optional) Subscribe to the V-GEN Talent Network to
+                      receive updates on future career fairs and exclusive job
+                      opportunities.
+                    </label>
+                  </div>
+                )}
 
                 {error && (
                   <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">

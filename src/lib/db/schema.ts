@@ -98,6 +98,7 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   cvLink: text("cv_link").notNull(),
   description: text("description").notNull().default(""),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
+  wantsNewsletter: boolean("wants_newsletter").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

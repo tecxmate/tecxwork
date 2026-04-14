@@ -16,6 +16,8 @@ export const EVENT_CONFIG = {
   startHour: 10,
   endHour: 17,
   endMinutes: 30,
+  /** Feature flag: show newsletter opt-in on student registration */
+  enableNewsletterOptIn: false,
 } as const;
 
 export const INDUSTRIES = [

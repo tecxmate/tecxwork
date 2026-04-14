@@ -731,5 +731,8 @@ the background on the phone?
   - recruiters/signup/route.ts imports setSessionCookie from auth instead of COOKIE_NAME. This suggests another change was made to auth.ts to     
   export a setSessionCookie helper — which is actually a good pattern (avoids repeating cookie settings everywhere). As long as the build passes, 
   this is fine.
+⏺ Fixed and deployed. Gemini's centralization was the right idea but had two issues:
 
-  
+  1. as const literal types — EVENT_CONFIG.startHour is type 10 (not number), so comparing h === EVENT_CONFIG.endHour where h starts at 10 and
+  endHour is 17 fails TypeScript's strict checks. Fixed by casting to number.
+  2. Non-existent setSessionCookie export — Gemini imported a function that doesn't exist in auth.ts. Reverted to COOKIE_NAME.

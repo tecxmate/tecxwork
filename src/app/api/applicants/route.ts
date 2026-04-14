@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     cvLink,
     description,
     pipaConsent,
+    wantsNewsletter,
   } = body;
 
   if (!name || !email || !password || !cvLink) {
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
         cvLink,
         description: description ?? "",
         pipaConsent,
+        wantsNewsletter: !!wantsNewsletter,
       })
       .returning();
 
