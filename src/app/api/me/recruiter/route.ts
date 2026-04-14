@@ -86,9 +86,14 @@ export async function PUT(req: NextRequest) {
       interviewerNumber: number;
     }[] = [];
 
-    for (let h = EVENT_CONFIG.startHour; h <= EVENT_CONFIG.endHour; h++) {
-      for (let m = 0; m < 60; m += EVENT_CONFIG.slotDuration) {
-        if (h === EVENT_CONFIG.endHour && m >= EVENT_CONFIG.endMinutes) break;
+    const sH = EVENT_CONFIG.startHour as number;
+    const eH = EVENT_CONFIG.endHour as number;
+    const eM = EVENT_CONFIG.endMinutes as number;
+    const dur = EVENT_CONFIG.slotDuration as number;
+
+    for (let h = sH; h <= eH; h++) {
+      for (let m = 0; m < 60; m += dur) {
+        if (h === eH && m >= eM) break;
         const start = new Date(
           `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
         );

@@ -706,3 +706,30 @@ the background on the phone?
                                                                                                                       
   I also noticed you added Terms of Service, Privacy Policy pages, and updated the site footer with legal links. Those
    look good.   
+
+  Gemini's Commit: "Centralize event config and remove hardcoded dates/locations"                                                                 
+                                                                                                                                                  
+  What it did (correctly):                    
+                                                                                                                                                  
+  1. Added displayDate, displayYear, endMinutes to EVENT_CONFIG in data.ts                                                                        
+  2. Replaced all hardcoded dates ("2026-06-06") with EVENT_CONFIG.date derived values in:                                                        
+    - recruiters/signup/route.ts — slot generation                                                                                                
+    - me/recruiter/route.ts — slot regeneration                                                                                                   
+    - admin/timeframe/route.ts — timeframe regeneration     
+  3. Replaced hardcoded slot times (10, 17, 30, 15) with EVENT_CONFIG.startHour, endHour, endMinutes, slotDuration in recruiter signup + profile  
+  update                                                                                                                                          
+  4. Centralized email strings — replaced hardcoded "VSATW 2026", "NTUT (Taipei Tech)", timezone with EVENT_CONFIG references                     
+  5. Centralized metadata — layout.tsx, OG image, tutorial page all use EVENT_CONFIG now                                                          
+  6. Slot pickers — use EVENT_CONFIG.date instead of hardcoded date string                                                                        
+  7. Added eslint-disable for legitimate setState in useEffect in countdown                                                                       
+                                                                                                                                                  
+  Verdict: Good commit. This was exactly one of the medium-priority audit items (#11, #12) — hardcoded dates in 6+ files. Now if you change the   
+  event date or time, you only edit data.ts.                                                                                                      
+                                                                                                                                                  
+  One minor issue:                                                                                                                                
+                                                                                                                                                  
+  - recruiters/signup/route.ts imports setSessionCookie from auth instead of COOKIE_NAME. This suggests another change was made to auth.ts to     
+  export a setSessionCookie helper — which is actually a good pattern (avoids repeating cookie settings everywhere). As long as the build passes, 
+  this is fine.
+
+  
