@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Building2,
@@ -15,6 +16,7 @@ import {
   Briefcase,
   CheckCircle2,
   ArrowRight,
+  LogIn,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -45,23 +47,24 @@ type JobOpening = { id: number; title: string; jdLink: string | null; descriptio
 
 type Step = "positions" | "pick-slot" | "booking-form";
 
-export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
+type Props = {
+  recruiter: Recruiter;
+  jobs: JobOpening[];
+  isAuthenticated: boolean;
+};
+
+export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated }: Props) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("positions");
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [infoExpanded, setInfoExpanded] = useState(false);
-  const [jobs, setJobs] = useState<JobOpening[]>([]);
+  const [jobs] = useState<JobOpening[]>(initialJobs);
   const [appliedPositions, setAppliedPositions] = useState<string[]>([]);
 
-  // Fetch job openings
+  // Fetch which positions the student already applied to (only if authenticated)
   useEffect(() => {
-    fetch(`/api/jobs?recruiterId=${recruiter.id}`)
-      .then((r) => r.json())
-      .then((d) => setJobs(d.jobs ?? []));
-  }, [recruiter.id]);
-
-  // Fetch which positions the student already applied to
-  useEffect(() => {
+    if (!isAuthenticated) return;
     fetch(`/api/bookings/mine?recruiterId=${recruiter.id}`)
       .then((r) => r.json())
       .then((d) => {
@@ -71,9 +74,13 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
         setAppliedPositions(positions);
       })
       .catch(() => {});
-  }, [recruiter.id]);
+  }, [recruiter.id, isAuthenticated]);
 
   const handleSelectPosition = (title: string) => {
+    if (!isAuthenticated) {
+      router.push("/get-started");
+      return;
+    }
     setSelectedPosition(title);
     setStep("pick-slot");
   };
@@ -117,7 +124,7 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
           {step === "positions" ? (
             <Link
-              href="/browse"
+              href={isAuthenticated ? "/browse" : "/"}
               className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -283,8 +290,17 @@ export function RecruiterDetail({ recruiter }: { recruiter: Recruiter }) {
                                 onClick={() => handleSelectPosition(pos.title)}
                                 className="shrink-0"
                               >
-                                Apply
-                                <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                {isAuthenticated ? (
+                                  <>
+                                    Apply
+                                    <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <LogIn className="mr-1 h-3.5 w-3.5" />
+                                    Log in to Apply
+                                  </>
+                                )}
                               </Button>
                             ) : (
                               <span className="shrink-0 text-xs text-muted-foreground">

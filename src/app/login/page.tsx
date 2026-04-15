@@ -213,7 +213,7 @@ export default function LoginPage() {
 
             <p className="text-center text-xs text-muted-foreground">
               New to V-GEN?{" "}
-              <Link href="/" className="text-primary hover:underline">
+              <Link href="/get-started" className="text-primary hover:underline">
                 Choose your role
               </Link>
             </p>

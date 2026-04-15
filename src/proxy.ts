@@ -38,17 +38,15 @@ export function proxy(req: NextRequest) {
     }
   }
 
-  // Applicant-only: /browse and /recruiter/[id] (but not /recruiter/signup)
-  if (
-    pathname.startsWith("/browse") ||
-    pathname.startsWith("/profile") ||
-    (pathname.startsWith("/recruiter/") && pathname !== "/recruiter/signup")
-  ) {
+  // Applicant-only: /browse and /profile (recruiter detail pages are public for browsing)
+  if (pathname.startsWith("/browse") || pathname.startsWith("/profile")) {
     if (!session) return NextResponse.redirect(new URL("/login", req.url));
     if (session.role !== "applicant") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
   }
+
+  // /recruiter/[id] pages are public for viewing - booking requires auth handled in-page
 
   return NextResponse.next();
 }

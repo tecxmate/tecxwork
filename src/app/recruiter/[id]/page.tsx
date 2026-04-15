@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { db, recruiters } from "@/lib/db";
+import { db, recruiters, jobOpenings } from "@/lib/db";
 import { eq } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 import { RecruiterDetail } from "./recruiter-detail";
 
 export default async function RecruiterPage({
@@ -12,20 +13,39 @@ export default async function RecruiterPage({
   const recruiterId = parseInt(id);
   if (isNaN(recruiterId)) notFound();
 
-  const [recruiter] = await db
-    .select({
-      id: recruiters.id,
-      company: recruiters.company,
-      industry: recruiters.industry,
-      description: recruiters.description,
-      positions: recruiters.positions,
-      contactEmail: recruiters.contactEmail,
-      jdLink: recruiters.jdLink,
-    })
-    .from(recruiters)
-    .where(eq(recruiters.id, recruiterId));
+  const session = await getSession();
+
+  const [[recruiter], jobs] = await Promise.all([
+    db
+      .select({
+        id: recruiters.id,
+        company: recruiters.company,
+        industry: recruiters.industry,
+        description: recruiters.description,
+        positions: recruiters.positions,
+        contactEmail: recruiters.contactEmail,
+        jdLink: recruiters.jdLink,
+      })
+      .from(recruiters)
+      .where(eq(recruiters.id, recruiterId)),
+    db
+      .select({
+        id: jobOpenings.id,
+        title: jobOpenings.title,
+        jdLink: jobOpenings.jdLink,
+        description: jobOpenings.description,
+      })
+      .from(jobOpenings)
+      .where(eq(jobOpenings.recruiterId, recruiterId)),
+  ]);
 
   if (!recruiter) notFound();
 
-  return <RecruiterDetail recruiter={recruiter} />;
+  return (
+    <RecruiterDetail
+      recruiter={recruiter}
+      jobs={jobs}
+      isAuthenticated={!!session}
+    />
+  );
 }
