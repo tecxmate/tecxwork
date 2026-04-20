@@ -49,7 +49,7 @@ export default function OGImage() {
             marginBottom: 24,
           }}
         >
-          V
+          T
         </div>
 
         {/* Organizer */}
@@ -113,7 +113,7 @@ export default function OGImage() {
             color: "#999",
           }}
         >
-          Designed by Nikolas Doan 段皇方. Developed by TECXMATE.COM
+          TECXWORK. Designed by Nikolas Doan 段皇方.. Developed by TECXMATE.COM
         </div>
       </div>
     ),

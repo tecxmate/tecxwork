@@ -4,7 +4,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t px-4 py-4 sm:py-8 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2 sm:gap-3">
       <p>
-        Designed by Nikolas Doan. Developed by{" "}
+        TECXWORK. Designed by Nikolas Doan 段皇方. Developed by{" "}
         <a
           href="https://tecxmate.com"
           target="_blank"
@@ -27,7 +27,7 @@ export function SiteFooter() {
           Tutorial
         </Link>
       </div>
-      <p className="mt-1 sm:mt-2">&copy; 2026 V-GEN TRIDENT &middot; PIPA compliant</p>
+      <p className="mt-1 sm:mt-2">&copy; 2026 TECXWORK &middot; PIPA compliant</p>
     </footer>
   );
 }

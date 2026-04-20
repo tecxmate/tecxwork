@@ -8,6 +8,7 @@ import {
   Briefcase,
   ChevronRight,
   Calendar,
+  ExternalLink,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +16,8 @@ import { Countdown } from "@/components/countdown";
 import { SiteFooter } from "@/components/site-footer";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
-import { db, recruiters, jobOpenings, users } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { db, recruiters, jobOpenings, users, externalJobs } from "@/lib/db";
+import { eq, desc } from "drizzle-orm";
 
 // Placeholder event photos - replace with actual photos
 const EVENT_PHOTOS = [
@@ -59,6 +60,25 @@ async function getPublicJobs() {
   return result;
 }
 
+async function getExternalJobsPreview() {
+  const result = await db
+    .select({
+      id: externalJobs.id,
+      source: externalJobs.source,
+      title: externalJobs.title,
+      company: externalJobs.company,
+      location: externalJobs.location,
+      jobType: externalJobs.jobType,
+      externalUrl: externalJobs.externalUrl,
+    })
+    .from(externalJobs)
+    .where(eq(externalJobs.isVietnameseJob, true))
+    .orderBy(desc(externalJobs.lastSeenAt))
+    .limit(8);
+
+  return result;
+}
+
 export default async function LandingPage() {
   const session = await getSession();
 
@@ -71,9 +91,10 @@ export default async function LandingPage() {
         : "/browse"
     : null;
 
-  const [publicRecruiters, publicJobs] = await Promise.all([
+  const [publicRecruiters, publicJobs, externalJobsPreview] = await Promise.all([
     getPublicRecruiters(),
     getPublicJobs(),
+    getExternalJobsPreview(),
   ]);
 
   const formattedDate = EVENT_CONFIG.date.toLocaleDateString("en-US", {
@@ -93,7 +114,7 @@ export default async function LandingPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Users className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold">V-GEN</span>
+            <span className="font-heading text-lg font-bold">TECXWORK</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             {session ? (
@@ -179,6 +200,20 @@ export default async function LandingPage() {
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
               >
                 Browse Companies
+              </Link>
+              <Link
+                href="#jobs"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
+              >
+                <Briefcase className="h-4 w-4" />
+                Find Jobs
+              </Link>
+              <Link
+                href="/jobs"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Browse External Jobs
               </Link>
             </div>
           </div>
@@ -316,7 +351,7 @@ export default async function LandingPage() {
         </section>
 
         {/* Jobs Section */}
-        <section className="border-b px-4 py-12 sm:px-6 sm:py-16">
+        <section id="jobs" className="border-b px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-6xl">
             <div className="mb-8 flex items-end justify-between">
               <div>
@@ -373,6 +408,85 @@ export default async function LandingPage() {
               className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
             >
               View all positions
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+
+        {/* External Jobs Section */}
+        <section className="border-b px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-8 flex items-end justify-between">
+              <div>
+                <h2 className="font-heading text-2xl font-bold sm:text-3xl">
+                  External Job Opportunities
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                  More opportunities from Taiwan job banks
+                </p>
+              </div>
+              <Link
+                href="/jobs"
+                className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline sm:flex"
+              >
+                Browse all
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {externalJobsPreview.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {externalJobsPreview.map((job) => (
+                  <a
+                    key={job.id}
+                    href={job.externalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block"
+                  >
+                    <Card className="flex h-full flex-col gap-2 p-4 transition-shadow duration-200 group-hover:shadow-md">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="line-clamp-2 text-sm font-semibold group-hover:text-primary">
+                          {job.title}
+                        </h3>
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-[10px]"
+                        >
+                          {job.source}
+                        </Badge>
+                      </div>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {job.company}
+                      </p>
+                      <div className="mt-auto flex items-center justify-between pt-1">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          {job.location}
+                        </span>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
+                      </div>
+                    </Card>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <Card className="flex flex-col items-center justify-center py-12 text-center">
+                <ExternalLink className="h-10 w-10 text-muted-foreground/50" />
+                <p className="mt-4 text-lg font-medium text-muted-foreground">
+                  External jobs loading
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Job listings from Taiwan job banks will appear here
+                </p>
+              </Card>
+            )}
+
+            <Link
+              href="/jobs"
+              className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
+            >
+              Browse all external jobs
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>

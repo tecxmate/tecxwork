@@ -3,8 +3,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { EVENT_CONFIG } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Tutorial | V-GEN TRIDENT",
-  description: "Guides for Students, Recruiters, and Admins on V-GEN TRIDENT",
+  title: "Tutorials | TECXWORK",
+  description: "Guides for Students, Recruiters, and Admins on the TECXWORK platform.",
 };
 
 export default function TutorialPage() {
@@ -12,7 +12,7 @@ export default function TutorialPage() {
     <div className="flex min-h-full flex-1 flex-col">
       <main className="flex-1 max-w-4xl mx-auto px-4 py-12 w-full">
         <h1 className="text-3xl font-bold mb-2">Platform Tutorials</h1>
-        <p className="text-muted-foreground mb-8">Guides on how to use V-GEN as a Student, Recruiter, or Admin.</p>
+        <p className="text-muted-foreground mb-8">Guides on how to use TECXWORK as a Student, Recruiter, or Admin.</p>
 
         <div className="flex gap-4 mb-12 border-b pb-4 overflow-x-auto">
           <a href="#student-guide" className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 font-medium whitespace-nowrap">Student Guide</a>
@@ -38,7 +38,7 @@ export default function TutorialPage() {
                 <h3 className="text-xl font-semibold mb-2">Getting Started</h3>
                 <h4 className="font-semibold mt-4 mb-2">1. Create Your Account</h4>
                 <ol className="list-decimal pl-5 space-y-1 mb-4">
-                  <li>Go to the V-GEN website</li>
+                  <li>Go to the TECXWORK website</li>
                   <li>Click <strong>&quot;I&apos;m a Student&quot;</strong></li>
                   <li>Click <strong>&quot;Sign Up&quot;</strong></li>
                   <li>Fill in the registration form:
@@ -167,7 +167,7 @@ export default function TutorialPage() {
 
                 <h4 className="font-semibold mt-4 mb-2">2. Create Your Account</h4>
                 <ol className="list-decimal pl-5 space-y-1 mb-4">
-                  <li>Go to the V-GEN website</li>
+                  <li>Go to the TECXWORK website</li>
                   <li>Click <strong>&quot;I&apos;m a Recruiter&quot;</strong></li>
                   <li>Click <strong>&quot;Sign Up&quot;</strong></li>
                   <li>Enter your <strong>work email</strong> (e.g., <code>jane@tsmc.com</code>)</li>
@@ -224,7 +224,7 @@ export default function TutorialPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Logging In (Returning Users)</h3>
                 <ol className="list-decimal pl-5 space-y-1 mb-4">
-                  <li>Go to the V-GEN website</li>
+                  <li>Go to the TECXWORK website</li>
                   <li>Click <strong>&quot;I&apos;m a Recruiter&quot;</strong> → <strong>&quot;Log In&quot;</strong></li>
                   <li>Enter your work email and password</li>
                   <li>You&apos;ll be redirected to your dashboard</li>
@@ -274,7 +274,7 @@ export default function TutorialPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Logging In</h3>
                 <ol className="list-decimal pl-5 space-y-1 mb-4">
-                  <li>Go to the V-GEN website</li>
+                  <li>Go to the TECXWORK website</li>
                   <li>Click <strong>&quot;I&apos;m an Admin&quot;</strong> → <strong>&quot;Log In&quot;</strong></li>
                   <li>Enter your admin credentials:
                     <ul className="list-disc pl-5 mt-1">

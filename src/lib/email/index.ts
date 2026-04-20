@@ -7,7 +7,7 @@ export function getResend(): Resend | null {
   return new Resend(key);
 }
 
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? "V-GEN <onboarding@resend.dev>";
+export const EMAIL_FROM = process.env.EMAIL_FROM ?? "TECXWORK <onboarding@resend.dev>";
 
 type BookingEmailData = {
   applicantName: string;

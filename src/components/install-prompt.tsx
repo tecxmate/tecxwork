@@ -60,7 +60,7 @@ export function InstallPrompt() {
                 V
               </div>
               <div>
-                <p className="text-sm font-semibold">Add V-GEN to Home Screen</p>
+                <p className="text-sm font-semibold">Add TECXWORK to Home Screen</p>
                 <p className="text-xs text-muted-foreground">
                   Quick access to interviews & CV QR
                 </p>

@@ -10,12 +10,11 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <main className="flex-1 max-w-3xl mx-auto px-4 py-12 w-full">
-        <h1 className="text-3xl font-bold mb-6">V-GEN Privacy Policy</h1>
-        <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
+        <h1 className="text-3xl font-bold mb-6">TECXWORK Privacy Policy</h1>        <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
 
       <div className="space-y-6 text-sm leading-relaxed">
         <p>
-          This Privacy Policy explains how <strong>TECXMATE COMPANY LIMITED</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), headquartered at Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam, and our event partner, the <strong>Vietnamese Student Association in Taiwan (VSATW)</strong>, collect, process, store, and transfer your personal data when you use the V-GEN platform (&quot;Platform&quot;).
+          This Privacy Policy explains how <strong>TECXMATE COMPANY LIMITED</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), headquartered at Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam, and our event partner, the <strong>Vietnamese Student Association in Taiwan (VSATW)</strong>, collect, process, store, and transfer your personal data when you use the TECXWORK platform (&quot;Platform&quot;).
         </p>
 
         <p>
@@ -48,7 +47,7 @@ export default function PrivacyPolicyPage() {
         <h2 className="text-xl font-semibold mt-8 mb-4">2. Purpose of Data Collection</h2>
         <p>We collect your personal data strictly for the following purposes:</p>
         <ol className="list-decimal pl-5 space-y-1 mb-4">
-          <li>To operate the V-GEN platform and facilitate the V-GEN TRIDENT Career Fair.</li>
+          <li>To operate the TECXWORK platform and facilitate the V-GEN TRIDENT Career Fair.</li>
           <li>To allow students to book interview slots with participating recruiters.</li>
           <li>To allow verified recruiters to view the profiles and CVs of students who have explicitly consented to share their data.</li>
           <li>To send transactional communications (e.g., booking confirmations, password resets).</li>

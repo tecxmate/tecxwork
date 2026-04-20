@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "V-GEN",
+    title: "TECXWORK",
   },
   title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
   description:
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
       `Ngày Hội Việc Làm ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} — ${EVENT_CONFIG.tagline}. Book your interview slot now.`,
     type: "website",
     locale: "en_US",
-    siteName: "V-GEN TRIDENT",
+    siteName: "TECXWORK",
   },
   twitter: {
     card: "summary_large_image",

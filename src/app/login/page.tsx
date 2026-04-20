@@ -103,7 +103,7 @@ export default function LoginPage() {
               <Users className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="font-heading text-xl font-bold">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">Log in to V-GEN</p>
+            <p className="text-sm text-muted-foreground">Log in to TECXWORK</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -212,7 +212,7 @@ export default function LoginPage() {
             <Separator className="my-6" />
 
             <p className="text-center text-xs text-muted-foreground">
-              New to V-GEN?{" "}
+              New to TECXWORK?{" "}
               <Link href="/get-started" className="text-primary hover:underline">
                 Choose your role
               </Link>

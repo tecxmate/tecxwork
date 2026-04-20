@@ -10,12 +10,11 @@ export default function TermsOfServicePage() {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <main className="flex-1 max-w-3xl mx-auto px-4 py-12 w-full">
-        <h1 className="text-3xl font-bold mb-6">V-GEN Terms of Service</h1>
-        <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
+        <h1 className="text-3xl font-bold mb-6">TECXWORK Terms of Service</h1>        <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
 
       <div className="space-y-6 text-sm leading-relaxed">
         <p>
-          Welcome to V-GEN. These Terms of Service (&quot;Terms&quot;) govern your access to and use of the V-GEN platform (&quot;Platform&quot;), operated by <strong>TECXMATE COMPANY LIMITED</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) in partnership with the <strong>Vietnamese Student Association in Taiwan (VSATW)</strong>.
+          Welcome to TECXWORK. These Terms of Service (&quot;Terms&quot;) govern your access to and use of the TECXWORK platform (&quot;Platform&quot;), operated by <strong>TECXMATE COMPANY LIMITED</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) in partnership with the <strong>Vietnamese Student Association in Taiwan (VSATW)</strong>.
         </p>
 
         <p>
@@ -26,7 +25,7 @@ export default function TermsOfServicePage() {
 
         <h2 className="text-xl font-semibold mt-8 mb-4">1. Platform Description</h2>
         <p>
-          V-GEN is a digital recruitment and scheduling platform designed to facilitate connections between university students (&quot;Applicants&quot;) and verified corporate recruiters (&quot;Recruiters&quot;) during physical or virtual career fair events in Taiwan.
+          TECXWORK is a digital recruitment and scheduling platform designed to facilitate connections between university students (&quot;Applicants&quot;) and verified corporate recruiters (&quot;Recruiters&quot;) during physical or virtual career fair events in Taiwan.
         </p>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">2. Eligibility</h2>
