@@ -246,9 +246,10 @@ type FilterLanguage = "all" | "english";
 const JOBS_PER_PAGE = 24;
 
 function isEnglishTitle(title: string): boolean {
-  const asciiChars = title.replace(/[^a-zA-Z]/g, "").length;
-  const totalChars = title.replace(/[\s\d\W]/g, "").length;
-  return totalChars > 0 && asciiChars / totalChars > 0.7;
+  const asciiLetters = (title.match(/[a-zA-Z]/g) || []).length;
+  const chineseChars = (title.match(/[\u4e00-\u9fff]/g) || []).length;
+  if (asciiLetters + chineseChars === 0) return false;
+  return asciiLetters > chineseChars;
 }
 
 export function JobDirectory() {
