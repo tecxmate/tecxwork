@@ -19,7 +19,7 @@ export default function JobsPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <Users className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold">TECXWORK</span>
+            <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
