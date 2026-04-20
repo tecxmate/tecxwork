@@ -19,7 +19,7 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
       href={`/recruiter/${recruiter.id}`}
       className="group block h-full focus-visible:outline-none"
     >
-      <Card className="flex h-full cursor-pointer flex-col gap-4 p-4 transition-shadow duration-200 group-hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring sm:p-5">
+      <Card className="flex h-full cursor-pointer flex-col gap-4 p-4 transition-all duration-200 ease-out group-hover:border-primary/30 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.1)] group-hover:-translate-y-0.5 group-focus-visible:ring-2 group-focus-visible:ring-ring sm:p-5">
         {/* Top row: logo + industry */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary sm:h-12 sm:w-12">
@@ -75,9 +75,9 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
         )}
 
         {/* CTA */}
-        <div className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors group-hover:bg-primary/80">
+        <div className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-all duration-200 group-hover:bg-primary/90 group-hover:gap-2">
           View & Book
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
         </div>
       </Card>
     </Link>

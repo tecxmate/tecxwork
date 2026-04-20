@@ -75,7 +75,7 @@ export function Directory() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="stagger-fade-in grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((r) => (
             <RecruiterCard key={r.id} recruiter={r} />
           ))}
