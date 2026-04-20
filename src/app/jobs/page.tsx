@@ -32,9 +32,15 @@ export default function JobsPage() {
             </Link>
             <Link
               href="/login"
+              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
+            >
+              Log In
+            </Link>
+            <Link
+              href="/get-started"
               className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
             >
-              Sign In
+              Sign Up
             </Link>
           </div>
         </div>

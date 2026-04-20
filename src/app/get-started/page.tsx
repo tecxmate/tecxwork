@@ -81,10 +81,10 @@ export default async function GetStartedPage() {
               <Users className="h-6 w-6 text-primary-foreground" />
             </div>
             <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
-              Get Started with TECXWORK
+              Sign Up for TECXWORK
             </h1>
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              Choose your role to continue
+              Choose your role to get started
             </p>
           </div>
 
