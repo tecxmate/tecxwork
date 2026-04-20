@@ -1,10 +1,10 @@
 {
-  "name": "V-GEN TRIDENT — VSATW Career Fair",
-  "short_name": "V-GEN",
+  "name": "tecxwork — VSATW Career Fair",
+  "short_name": "tecxwork",
   "description": "VSATW 2026 Career Fair — Book interviews, browse companies",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F6F3F1",
+  "background_color": "#FAFAFA",
   "theme_color": "#8C52FF",
   "icons": [
     {
