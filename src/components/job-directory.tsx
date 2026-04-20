@@ -47,7 +47,7 @@ const JOB_TYPE_ORDER: Record<string, number> = {
 
 function JobCardSkeleton() {
   return (
-    <div className="relative flex w-full flex-col rounded-xl border bg-card p-4">
+    <div className="relative flex w-full flex-col border bg-card p-4">
       <div className="flex items-start justify-between gap-2">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-5 w-10 rounded-full" />
@@ -76,7 +76,7 @@ function JobCard({
   return (
     <button
       onClick={onClick}
-      className="relative flex w-full flex-col rounded-xl border bg-card p-4 text-left transition-all hover:shadow-md hover:border-primary/30 active:scale-[0.99]"
+      className="relative flex w-full flex-col border bg-card p-4 text-left transition-all duration-300 hover:border-primary/60 hover:shadow-[0_0_30px_rgba(140,82,255,0.15)] active:scale-[0.99]"
     >
       <h3 className="line-clamp-2 text-base font-semibold leading-tight">
         {job.title}

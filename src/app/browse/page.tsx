@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MapPin, Clock, Users, ShieldCheck } from "lucide-react";
+import { MapPin, Clock, Briefcase, ShieldCheck } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/countdown";
@@ -27,11 +27,11 @@ export default async function BrowsePage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-card">
+      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <Link href="/browse" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Users className="h-4 w-4 text-primary-foreground" />
+              <Briefcase className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
           </Link>
