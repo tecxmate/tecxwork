@@ -213,7 +213,7 @@ export default async function LandingPage() {
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
               >
                 <ExternalLink className="h-4 w-4" />
-                Browse External Jobs
+                External Jobs
               </Link>
             </div>
           </div>
@@ -282,7 +282,7 @@ export default async function LandingPage() {
                     href={`/recruiter/${recruiter.id}`}
                     className="group block"
                   >
-                    <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-300 rounded-none border group-hover:border-primary/50 group-hover:shadow-[0_0_30px_rgba(140,82,255,0.12)] sm:p-5">
+                    <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] sm:p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary sm:h-12 sm:w-12">
                           <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
@@ -374,7 +374,7 @@ export default async function LandingPage() {
             {publicJobs.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {publicJobs.map((job) => (
-                  <Card key={job.id} className="p-4 rounded-none transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(140,82,255,0.12)]">
+                  <Card key={job.id} className="p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]">
                     <div className="flex items-start gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary">
                         <Briefcase className="h-4 w-4 text-primary" />
@@ -444,7 +444,7 @@ export default async function LandingPage() {
                     rel="noopener noreferrer"
                     className="group block"
                   >
-                    <Card className="flex h-full flex-col gap-2 p-4 rounded-none transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-[0_0_30px_rgba(140,82,255,0.12)]">
+                    <Card className="flex h-full flex-col gap-2 p-4 transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="line-clamp-2 text-sm font-semibold group-hover:text-primary">
                           {job.title}
