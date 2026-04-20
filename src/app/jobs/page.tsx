@@ -25,7 +25,7 @@ export default function JobsPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
             <Link
-              href="/browse"
+              href="/"
               className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
             >
               Career Fair
