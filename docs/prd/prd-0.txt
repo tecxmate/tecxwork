@@ -5,7 +5,7 @@ Technical Handoff & PRD: University Recruitment Booking System
 This document outlines the architecture, deployment strategy, and configuration for a single-day, high-concurrency recruitment booking platform.
 
 The Constraint: The system will experience an immediate traffic spike (approx. 1,000 concurrent users) when the event opens.
-The Solution: Instead of building a custom booking engine, we are deploying a self-hosted instance of Cal.com to handle the scheduling logic, supported by a static frontend directory. File storage (CVs/JDs) is completely offloaded to Google Drive to save bandwidth and storage costs, utilizing strict permission controls to ensure data privacy.
+The Solution: Instead of building a custom booking engine, we are deploying a custom-built scheduling engine powered by Next.js and Neon Postgres to handle the scheduling logic. File storage (CVs/JDs) is completely offloaded to Google Drive to save bandwidth and storage costs, utilizing strict permission controls to ensure data privacy.
 
 2. System Architecture & Tech Stack
 
@@ -13,9 +13,9 @@ The Solution: Instead of building a custom booking engine, we are deploying a se
 
 Provider: DigitalOcean, AWS (EC2), or Google Cloud (Compute Engine).
 
-App Server Specs (Minimum): 8 vCPU, 16 GB RAM, 50GB NVMe SSD. (Cal.com relies on Next.js Server-Side Rendering, which is highly CPU-intensive under concurrent load).
+App Server Specs (Minimum): 4 vCPU, 8 GB RAM (Serverless scaling via Neon and Vercel reduces the need for large fixed VM specs).
 
-Deployment Method: Docker Compose (for self-contained network routing).
+Deployment Method: Vercel (Frontend/API) + Neon (Serverless Postgres).
 
 Timezone: Must be strictly configured to Asia/Taipei (UTC+8) across the OS, Database, and App configurations to avoid scheduling drift.
 
@@ -29,51 +29,49 @@ SSL: Let's Encrypt (Automated via Traefik or Nginx proxy in Docker).
 
 2.3 Database & State
 
-Primary DB: PostgreSQL v15+.
+Primary DB: Neon Serverless PostgreSQL (utilizing Drizzle ORM).
 
-Connection Pooling (CRITICAL): PgBouncer MUST be utilized. 1,000 concurrent Node.js clients will immediately exhaust PostgreSQL's default max_connections. Configure PgBouncer in transaction mode.
+Connection Pooling (CRITICAL): Neon's built-in connection pooling handles concurrent Node.js clients efficiently.
 
-Cache/Queue: Redis v7. Essential for Cal.com session management and background cron jobs.
+Cache/Queue: Lucide-react for iconography and Resend for transactional emails. (Redis not strictly required for this custom implementation).
 
 2.4 Third-Party Integrations
 
-Authentication: Google OAuth 2.0 (Google Cloud Console).
+Authentication: Custom JWT + bcrypt implementation (self-contained).
 
-Transactional Email: Amazon SES, Resend, or SendGrid.
+Transactional Email: Resend (Modern developer-first email API).
 
 Warning: Do not use a standard SMTP server. You must authenticate the sending domain (e.g., @event.university.edu.tw) with SPF, DKIM, and DMARC to ensure booking confirmations bypass spam filters.
 
 3. Frontend Architecture: The Directory
 
-Cal.com does not have a native "Gallery" for multiple independent users. The engineering team must build a lightweight frontend "Front Door."
+Cal.com was previously considered but the platform now uses a custom integrated directory and booking flow built directly into the Next.js app.
 
-Stack: Next.js (Static Export), Astro, or basic HTML/CSS. Hosted freely on Vercel or Cloudflare Pages.
+Stack: Next.js (App Router), Tailwind CSS, Shadcn UI. Hosted on Vercel.
 
-Functionality: A simple grid listing all participating recruiters/companies.
+Functionality: A unified dashboard for students to browse and book interviews directly.
 
-Routing: Clicking a company routes the user directly to that recruiter's specific Cal.com booking link (e.g., cal.event.edu.tw/company-a/15min-interview).
+Routing: Clicking a company opens the internal booking modal/page (e.g., /recruiter/[id]).
 
-4. Cal.com Specific Configurations (App Logic & Data Privacy)
+4. Data Privacy & PIPA Compliance
 
 To comply with Taiwan's Personal Data Protection Act (PDPA/PIPA) and prevent unauthorized access to CVs, the system utilizes "Explicit Targeted Sharing" via Google Drive.
 
 4.1 Recruiter Setup (Data In)
 
-Admin provisions Cal.com accounts for Recruiters.
+Admin creates recruiter accounts via the internal Admin Dashboard.
 
-Recruiter authenticates via Google.
+Recruiter sets their event day availability and profile details.
 
-Recruiter sets their event day availability (e.g., 09:00 - 17:00).
-
-Job Description (JD) & Authorized Email (CRITICAL): Recruiter pastes the Google Drive link to their JD directly into the Description field of their Cal.com event type. Crucially, the recruiter MUST clearly state their official corporate email address in this description (e.g., "Please grant CV file access to: hr@company.com").
+Job Description (JD) & Authorized Email (CRITICAL): Recruiter pastes the Google Drive link to their JD directly into their profile. Crucially, the recruiter MUST clearly state their official corporate email address in this description (e.g., "Please grant CV file access to: hr@company.com").
 
 4.2 Jobseeker Flow (Data Out)
 
-User clicks recruiter link from the Static Directory.
+User clicks recruiter from the Directory.
 
-User selects an available time slot.
+User selects an available time slot from the custom slot picker.
 
-The Secure CV Link (CRITICAL CONFIG): The engineering team must configure a Required Custom Field in the Cal.com booking form:
+The Secure CV Link (CRITICAL CONFIG): The system enforces a required CV field during sign-up or booking:
 
 Label: "Link to your CV (Google Drive)"
 
@@ -95,7 +93,7 @@ Target Metrics:
 
 Simulate 1,000 Virtual Users (VUs) ramping up over 60 seconds.
 
-Target endpoint: The Cal.com availability API (/api/trpc/public/slots.getSchedule).
+Target endpoint: The internal booking API (/api/bookings/mine) and slot availability API (/api/slots).
 
 Acceptable Error Rate: < 0.1%.
 
@@ -107,19 +105,17 @@ Monitoring: Monitor htop (CPU usage) and PostgreSQL active connections during th
 
 T-Minus 14 Days (Infrastructure):
 
-Provision Cloud VM.
+Provision Neon Project and Vercel Project.
 
-Set up Cloudflare DNS and Tunnels.
+Set up Custom Domain and SSL.
 
-Deploy Docker Compose stack (Postgres + PgBouncer + Redis + Cal.com).
+Verify Resend sender domain.
 
-Verify Google OAuth and SMTP (SES) domain verification.
+T-Minus 10 Days (Configuration & Testing):
 
-T-Minus 10 Days (Configuration & Static Site):
+Configure Event Modes and PIPA consent logic.
 
-Configure Cal.com Event Types, Custom Fields, and PIPA checkbox.
-
-Deploy static frontend directory.
+Deploy Next.js application to Vercel.
 
 T-Minus 7 Days (Load Test):
 
@@ -133,27 +129,21 @@ Event Day:
 
 DevOps on standby monitoring Cloudflare analytics and server CPU.
 
-Event Day + 2 (Teardown & Data Purge):
+Export PostgreSQL database from Neon (for university records/metrics).
 
-Export PostgreSQL database (for university records/metrics).
-
-Destroy Cloud VM and Database to halt billing and permanently purge all personal data (CV links/emails), ensuring strict privacy compliance.
+Purge all personal data (CV links/emails) from the database to ensure strict privacy compliance.
 
 7. Cost Estimation (Fact-Checked for 2026)
 
 This model leverages open-source software and existing university infrastructure to keep software licensing costs at $0, shifting the budget entirely to temporary cloud compute and labor.
 
-7.1 Infrastructure & SaaS Costs (Estimated for 1 Month)
+Cloud Infrastructure (Vercel + Neon): $0 - $19 USD
 
-Cloud VM (e.g., DigitalOcean): ~$96.00 USD
+Neon Free tier and Vercel Free tier are sufficient for the expected load, but a small upgrade to the "Launch" plan may be used for peace of mind.
 
-Based on current 2026 pricing for an 8 vCPU / 16 GB RAM Basic Droplet. This covers the setup phase, internal QA, load testing, and the event day. Because billing is hourly/per-second, destroying the VM immediately after exporting event data will further reduce this cost.
+Transactional Email (Resend): $0
 
-Transactional Email (Amazon SES): < $1.00 USD
-
-SES charges $0.10 per 1,000 emails. Assuming 1,000 users trigger ~10,000 automated emails (confirmations, reschedules, recruiter calendar invites), the raw compute cost is exactly $1.00.
-
-(Optional: $24.95/mo for a Dedicated IP to guarantee bypassing strict spam filters, though usually unnecessary if authenticating an official university .edu.tw domain).
+Resend free tier allows 3,000 emails/month, which covers the event comfortably.
 
 Edge Caching & DNS (Cloudflare): $0
 

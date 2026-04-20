@@ -5,35 +5,33 @@ Technical Handoff & PRD: University Recruitment Booking System
 This document outlines the architecture, deployment strategy, and configuration for a single-day, high-concurrency recruitment booking platform.
 
 The Constraint: The system will experience an immediate traffic spike (approx. 1,000 concurrent users) when the event opens.
-The Solution: Instead of building custom booking logic or self-hosting complex server infrastructure, we are leveraging the managed Cal.com SaaS platform to handle all scheduling and traffic load. This is supported by a simple static frontend directory. File storage (CVs/JDs) is completely offloaded to Google Drive to save bandwidth and ensure strict data privacy.
+The Solution: Instead of building custom booking logic or self-hosting complex server infrastructure, we have built a custom recruitment platform using Next.js, Neon Postgres, and Resend. This platform handles authentication, directory listing, slot management, and automated notifications in a unified experience. File storage (CVs/JDs) is completely offloaded to Google Drive to ensure strict data privacy.
 
 2. System Architecture & Tech Stack
 
-By utilizing Cal.com's managed enterprise infrastructure, the technical footprint of this event is drastically reduced.
+2.1 Core Engineering Stack
 
-2.1 Core Booking Engine (Managed SaaS)
+Provider: Vercel (Frontend & API), Neon (Serverless Postgres).
 
-Provider: Cal.com (Cloud/SaaS).
+Auth: Custom JWT + bcrypt system.
 
-Tier: Teams Plan ($15/user/month).
+Slot Logic: Atomic slot reservation system implemented in Next.js API routes with Drizzle ORM.
 
-Why Teams instead of Free? The Teams tier allows the University Admin to create a standardized "Event Type" (with the mandatory PIPA compliance and CV link fields) and enforce it across all 50+ recruiter accounts. Relying on the Free tier would require trusting 50 individual recruiters to perfectly configure their own complex custom fields, creating an unacceptable risk of human error.
+Email Infrastructure: Handled by Resend API (custom templates for student and recruiter notifications).
 
-Email Infrastructure: Handled natively by Cal.com (no custom SMTP/Amazon SES required).
-
-Timezone: Must be strictly configured to Asia/Taipei (UTC+8) at the organizational level.
+Timezone: Strictly Asia/Taipei (UTC+8) configuration in the database and date-handling logic.
 
 2.2 Frontend Architecture: The Directory
 
-Cal.com does not have a native "Gallery" for multiple independent companies. The engineering team must build a lightweight frontend "Front Door."
+The platform integrates a dynamic directory and booking system into a single Next.js App Router application.
 
-Stack: Next.js (Static Export), Astro, or basic HTML/CSS.
+Stack: Next.js, Tailwind CSS, Shadcn UI.
 
-Hosting: Vercel, Cloudflare Pages, or GitHub Pages.
+Hosting: Vercel.
 
-Functionality: A simple grid listing all participating recruiters/companies.
+Functionality: A real-time grid of recruiters with live status (available/busy) and direct booking modals.
 
-Routing: Clicking a company routes the user directly to that recruiter's specific Cal.com booking link (e.g., cal.com/university-event/company-a-interview).
+Routing: Internal Next.js routing (e.g., /recruiter/[id]).
 
 3. Configuration & Data Privacy Protocol
 
@@ -41,21 +39,21 @@ To comply with Taiwan's Personal Data Protection Act (PDPA/PIPA) and prevent una
 
 3.1 Recruiter Setup (Data In)
 
-Admin creates a Cal.com Team for the event and invites the Recruiters.
+Admin creates recruiter accounts and job listings in the internal dashboard.
 
-Recruiters authenticate via Google/Microsoft and connect their calendars.
+Recruiters log in with their corporate email to set their profile and JD links.
 
-Recruiters set their event day availability (e.g., 09:00 - 17:00).
+Recruiters set their event day availability (integrated in the recruiter dashboard).
 
 Job Description (JD) & Authorized Email (CRITICAL): The recruiter pastes the Google Drive link to their JD directly into their profile description. Crucially, the recruiter MUST clearly state their official corporate email address in this description (e.g., "Please grant CV file access to: hr@company.com").
 
 3.2 Jobseeker Flow (Data Out)
 
-User clicks the recruiter link from the Static Directory.
+User clicks the recruiter from the Directory.
 
-User selects an available time slot on Cal.com.
+User selects an available time slot from the custom slot picker.
 
-The Secure CV Link (CRITICAL CONFIG): The Admin must configure a Required Custom Field in the Cal.com Team Event Type:
+The Secure CV Link (PIPA Compliance): The platform enforces a required CV field:
 
 Label: "Link to your CV (Google Drive)"
 
@@ -69,104 +67,75 @@ Label: "I consent to the collection of my CV link for this recruitment event in 
 
 4. Load Testing & QA Protocol
 
-Because we are using Cal.com's managed SaaS, we do not need to (and should not) load test the booking engine. Spiking Cal.com's API with simulated traffic may trigger their automated DDoS protection and flag the university's account.
+Load Testing is performed against the Next.js API endpoints on Vercel and the Neon Postgres database.
 
-Target of QA: The static Frontend Directory.
+Target of QA: The Booking API (/api/bookings) and Slot Discovery API (/api/slots).
 
-Tooling: Use k6 or Loader.io to hit the Vercel/Cloudflare hosted directory with 1,000 concurrent Virtual Users (VUs).
+Tooling: Use k6 to hit the Vercel-hosted API with 1,000 concurrent Virtual Users (VUs).
 
-Internal Logic Test: Have 5 internal team members attempt to book the exact same time slot for a single recruiter simultaneously to verify Cal.com's race-condition handling and ensure double-bookings do not occur.
+Internal Logic Test: Atomic database updates are verified to handle simultaneous "Confirm" clicks, ensuring that the same slot cannot be booked by two users (race-condition handling).
 
 5. Execution & Deployment Timeline
 
-T-Minus 14 Days (Configuration):
+Provision Neon DB and Vercel Project.
 
-Create Cal.com Organization/Team account.
+Design and build the custom internal booking logic and Directory UI.
 
-Build and deploy the static frontend directory.
-
-Configure the global Event Type (15-min slots, custom CV fields, PIPA checkbox).
+Implement PIPA consent flow and Resend email templates.
 
 T-Minus 10 Days (Recruiter Onboarding):
 
-Invite recruiters to the Cal.com Team.
+Recruiters log in to set availability and JD links.
 
-Recruiters connect calendars, set availability, and paste JD links.
+T-Minus 3 Days (Final QA):
 
-T-Minus 5 Days (Link Finalization):
-
-Admin extracts all final recruiter Cal.com URLs and maps them to the "Book Now" buttons on the static directory.
+Verify all recruiter status displays and internal slot logic.
 
 Event Day:
 
-Support team on standby for user error (e.g., jobseekers pasting broken Drive links).
+DevOps monitoring Vercel Analytics and Neon metrics.
 
 Event Day + 2 (Teardown & Data Purge):
 
 Export all booking data/CSV logs for university metrics.
 
-Delete the Cal.com Team account to halt monthly billing and permanently purge all centralized booking data, ensuring strict privacy compliance.
+Purge personal data from Neon to ensure PIPA compliance.
 
 6. Cost Estimation (Fact-Checked for 2026)
 
-By utilizing Cal.com's SaaS, server infrastructure costs drop to $0, replaced by predictable per-user SaaS licensing.
+By building a custom platform on serverless architecture, infrastructure costs are minimized while maintaining high scalability.
 
-6.1 SaaS Costs (Estimated for 1 Month)
+6.1 Estimated Costs (1 Month)
 
-Cal.com Teams Plan: ~$750 USD (Approx. $24,000 NTD)
+Vercel / Neon (Production tiers): $19 - $30 USD
 
-Calculation: $15 per user/month (monthly billing tier) × 50 recruiters.
+Includes Pro Vercel features and Neon "Launch" resources for event day.
 
-Note: You only pay for the single month the event is active. The account is deleted afterward.
+Resend (Email API): $0
 
-Hosting (Cloudflare Pages / Vercel): $0
+Free tier handles 3,000 emails/month.
 
-Static directories easily fit within generous free tiers.
+Total Software Costs: ~$30 USD (Approx. $1,000 NTD)
 
-Storage (Google Drive): $0
+6.2 Labor Costs (Full Stack Engineering)
 
-Jobseekers and Recruiters utilize their own quotas.
+Building the custom engine (Auth, Slots, Admin) requires a senior Next.js developer:
 
-Total Software Costs: ~$750 USD (Approx. $24,000 NTD)
-
-6.2 Labor Costs (Frontend / Implementation)
-
-To build the static HTML front-door directory and act as the Cal.com administrator to set up the Team workflows:
-
-Freelance / Contract Rate in Taiwan: $10,000 – $20,000 NTD ($300 – $650 USD).
-
-(Note: This is lower than the self-hosted labor estimate because the developer does not need DevOps/Docker/Postgres experience).
+Taiwan Rate: $20,000 – $40,000 NTD ($650 – $1,300 USD).
 
 6.3 Total Estimated Budget
 
-Estimated Ceiling: ~$44,000 NTD
-(This provides a highly stable, enterprise-grade experience for a fraction of the cost of custom development).
+Estimated Ceiling: ~$41,000 NTD
+(This provides a fully owned, customized asset for the university with significantly lower recurring SaaS overhead).
 
 7. Contingency Plan (Disaster Recovery)
 
-Even enterprise SaaS platforms experience outages. If Cal.com goes down during the event, a low-tech fallback must be ready.
+If the primary platform (Vercel/Neon) experiences critical downtime, a low-tech fallback is ready.
 
-7.1 The Fallback Mechanism: Pre-Built Form
+7.1 The Fallback Mechanism
 
-Tool: Google Forms.
+Tool: Google Forms with Emergency Slot management.
 
-Preparation: Prior to the event, create a master Google Form titled "Emergency Interview Waitlist."
+All recruiter URLs are batch-replaced with the Emergency Form link via a manual environment variable "EMERGENCY_MODE" in the Next.js app.
 
-Fields: 1. Student Name
-2. Student Email
-3. Dropdown: "Which Company are you trying to book?"
-4. Short Answer: "Link to your CV (Google Drive)"
-
-7.2 The "Switch" Protocol
-
-If Cal.com experiences downtime exceeding 15 minutes:
-
-The admin team updates the Frontend Static Directory codebase.
-
-All recruiter-specific Cal.com links behind the "Book Now" buttons are batch-replaced with the single Google Form URL.
-
-The Static Directory is redeployed (takes < 1 minute).
-remove
-7.3 Post-Event Resolution
-
-After the event, the university admin exports the Google Sheet attached to the form and emails the data to the respective recruiters to manually follow up with interested students.
+Students fill the form, and data is manually distributed post-event.
