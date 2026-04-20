@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { externalJobs, crawlLogs } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, not, ilike, or } from "drizzle-orm";
 import { crawl104 } from "./crawler-104";
 import { crawl1111 } from "./crawler-1111";
 import type { ExternalJob, CrawlResult, CrawlerConfig } from "./types";
@@ -170,6 +170,19 @@ export async function getExternalJobs(options?: {
   if (options?.jobType) {
     conditions.push(eq(externalJobs.jobType, options.jobType));
   }
+
+  const excludeOtherNationalities = and(
+    not(ilike(externalJobs.title, "%英語%")),
+    not(ilike(externalJobs.title, "%english%")),
+    not(ilike(externalJobs.title, "%印尼%")),
+    not(ilike(externalJobs.title, "%indonesia%")),
+    not(ilike(externalJobs.snippet, "%英語母語%")),
+    not(ilike(externalJobs.snippet, "%native english%")),
+    not(ilike(externalJobs.snippet, "%印尼%")),
+    not(ilike(externalJobs.snippet, "%indonesia%"))
+  );
+
+  conditions.push(excludeOtherNationalities!);
 
   const results = await query
     .where(and(...conditions))

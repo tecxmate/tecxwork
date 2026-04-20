@@ -20,16 +20,16 @@ export function SiteFooter() {
           </a>
         </span>
         <span className="opacity-40">&middot;</span>
-        <Link href="/terms-of-service" className="hover:text-primary hover:underline">
+        <Link href="/terms-of-service" className="underline hover:text-primary">
           Terms
         </Link>
         <span className="opacity-40">&middot;</span>
-        <Link href="/privacy-policy" className="hover:text-primary hover:underline">
+        <Link href="/privacy-policy" className="underline hover:text-primary">
           Privacy
         </Link>
         <span className="opacity-40">&middot;</span>
-        <Link href="/tutorial" className="hover:text-primary hover:underline">
-          Help
+        <Link href="/tutorial" className="underline hover:text-primary">
+          Tutorial
         </Link>
         <span className="opacity-40">&middot;</span>
         <span>PIPA compliant</span>

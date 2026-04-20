@@ -18,7 +18,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 import { db, recruiters, jobOpenings, users, externalJobs } from "@/lib/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, or, and, ilike, not } from "drizzle-orm";
 
 // Placeholder event photos - replace with actual photos
 const EVENT_PHOTOS = [
@@ -62,6 +62,26 @@ async function getPublicJobs() {
 }
 
 async function getExternalJobsPreview() {
+  const vietnamKeywords = or(
+    ilike(externalJobs.title, "%越南%"),
+    ilike(externalJobs.title, "%vietnam%"),
+    ilike(externalJobs.company, "%越南%"),
+    ilike(externalJobs.company, "%vietnam%"),
+    ilike(externalJobs.snippet, "%越南%"),
+    ilike(externalJobs.snippet, "%vietnam%")
+  );
+
+  const excludeOtherNationalities = and(
+    not(ilike(externalJobs.title, "%英語%")),
+    not(ilike(externalJobs.title, "%english%")),
+    not(ilike(externalJobs.title, "%印尼%")),
+    not(ilike(externalJobs.title, "%indonesia%")),
+    not(ilike(externalJobs.snippet, "%英語母語%")),
+    not(ilike(externalJobs.snippet, "%native english%")),
+    not(ilike(externalJobs.snippet, "%印尼%")),
+    not(ilike(externalJobs.snippet, "%indonesia%"))
+  );
+
   const result = await db
     .select({
       id: externalJobs.id,
@@ -73,7 +93,7 @@ async function getExternalJobsPreview() {
       externalUrl: externalJobs.externalUrl,
     })
     .from(externalJobs)
-    .where(eq(externalJobs.isVietnameseJob, true))
+    .where(and(vietnamKeywords, excludeOtherNationalities))
     .orderBy(desc(externalJobs.lastSeenAt))
     .limit(8);
 

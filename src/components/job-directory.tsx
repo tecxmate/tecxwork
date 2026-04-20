@@ -11,6 +11,7 @@ import {
   DollarSign,
   X,
   ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -240,11 +241,20 @@ type FilterJobType =
   | "internship"
   | "contract";
 
+type FilterLanguage = "all" | "english";
+
 const JOBS_PER_PAGE = 24;
+
+function isEnglishTitle(title: string): boolean {
+  const asciiChars = title.replace(/[^a-zA-Z]/g, "").length;
+  const totalChars = title.replace(/[\s\d\W]/g, "").length;
+  return totalChars > 0 && asciiChars / totalChars > 0.7;
+}
 
 export function JobDirectory() {
   const [query, setQuery] = useState("");
   const [jobTypeFilter, setJobTypeFilter] = useState<FilterJobType>("all");
+  const [languageFilter, setLanguageFilter] = useState<FilterLanguage>("all");
   const [jobs, setJobs] = useState<ExternalJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -289,6 +299,10 @@ export function JobDirectory() {
       );
     }
 
+    if (languageFilter === "english") {
+      result = result.filter((job) => isEnglishTitle(job.title));
+    }
+
     result = [...result].sort((a, b) => {
       const orderA = a.jobType ? JOB_TYPE_ORDER[a.jobType] ?? 99 : 99;
       const orderB = b.jobType ? JOB_TYPE_ORDER[b.jobType] ?? 99 : 99;
@@ -296,7 +310,7 @@ export function JobDirectory() {
     });
 
     return result;
-  }, [query, jobs]);
+  }, [query, jobs, languageFilter]);
 
   const totalPages = Math.ceil(filtered.length / JOBS_PER_PAGE);
   const paginatedJobs = useMemo(() => {
@@ -306,7 +320,7 @@ export function JobDirectory() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [query, jobTypeFilter]);
+  }, [query, jobTypeFilter, languageFilter]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -346,6 +360,18 @@ export function JobDirectory() {
               {type === "all" ? "All Types" : JOB_TYPE_LABELS[type]}
             </button>
           ))}
+          <span className="mx-1 text-border">|</span>
+          <button
+            onClick={() => setLanguageFilter(languageFilter === "english" ? "all" : "english")}
+            disabled={loading}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+              languageFilter === "english"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            English
+          </button>
         </div>
 
         <p className="text-xs text-muted-foreground sm:text-sm">
@@ -402,9 +428,10 @@ export function JobDirectory() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg border px-2 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed sm:px-3"
               >
-                Previous
+                <ChevronLeft className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Previous</span>
               </button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
@@ -436,9 +463,10 @@ export function JobDirectory() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg border px-2 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed sm:px-3"
               >
-                Next
+                <ChevronRight className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Next</span>
               </button>
             </div>
           )}
