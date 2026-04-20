@@ -130,16 +130,14 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html,
-  body {
-    overflow-x: hidden;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+    overscroll-behavior-x: none;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: clip;
   }
 }
 
