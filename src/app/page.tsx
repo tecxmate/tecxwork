@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/countdown";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 import { db, recruiters, jobOpenings, users, externalJobs } from "@/lib/db";
@@ -117,6 +118,7 @@ export default async function LandingPage() {
             <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             {session ? (
               <Link
                 href={dashboardUrl!}

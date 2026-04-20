@@ -3,6 +3,7 @@ import { Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SiteFooter } from "@/components/site-footer";
 import { JobDirectory } from "@/components/job-directory";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata = {
   title: "Job Opportunities | V-GEN TRIDENT",
@@ -22,6 +23,7 @@ export default function JobsPage() {
             <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             <Link
               href="/browse"
               className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"

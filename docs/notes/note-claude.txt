@@ -736,3 +736,69 @@ the background on the phone?
   1. as const literal types — EVENT_CONFIG.startHour is type 10 (not number), so comparing h === EVENT_CONFIG.endHour where h starts at 10 and
   endHour is 17 fails TypeScript's strict checks. Fixed by casting to number.
   2. Non-existent setSessionCookie export — Gemini imported a function that doesn't exist in auth.ts. Reverted to COOKIE_NAME.
+
+
+
+  Job Crawler System - Complete
+                                                                                                                                      
+  Database Schema (src/lib/db/schema.ts):                                                                                             
+  - externalJobs - stores crawled job listings from 104/1111                                                                          
+  - crawlLogs - tracks crawl history and statistics                                                                                   
+                                                                  
+  Crawler Library (src/lib/crawler/):                                                                                                 
+  - crawler-104.ts - 104.com.tw scraper with API + HTML fallback  
+  - crawler-1111.ts - 1111.com.tw scraper with Vietnamese job filtering                                                               
+  - utils.ts - rate limiting (2-5s jitter), off-peak detection, job type normalization
+  - Respects robots.txt, uses proper User-Agent, polite delays                                                                        
+                                                                                                                                      
+  API Routes:                                                                                                                         
+  - GET /api/external-jobs - list cached jobs with filters                                                                            
+  - POST /api/external-jobs/crawl - manual crawl (admin only)                                                                         
+  - GET /api/cron/crawl-jobs - scheduled crawl endpoint           
+                                                                                                                                      
+  UI (/jobs):                                                                                                                         
+  - Job directory page with search, source/type filters                                                                               
+  - Job cards with company, location, salary, "Apply Now" linking to original site                                                    
+  - Attribution footer crediting 104/1111                                         
+                                                                                                                                      
+  Scheduling (vercel.json):                                                                                                           
+  - Cron runs daily at 2 AM Taiwan time (off-peak)                                                                                    
+                                                                                                                                      
+  Next steps:                                                                                                                         
+  1. Run npm run db:push with DATABASE_URL set                                                                                        
+  2. Add CRON_SECRET to Vercel environment variables                                                                                  
+  3. Deploy to Vercel                               
+                                     
+  ┌─────────────────────────────────────────┬─────────┬────────────────────────────────────┐
+  │                 Element                 │ Status  │               Notes                │
+  ├─────────────────────────────────────────┼─────────┼────────────────────────────────────┤
+  │ Primary purple (#8c52ff)                │ ✅ Done │ Already in globals.css             │
+  ├─────────────────────────────────────────┼─────────┼────────────────────────────────────┤
+  │ Wordmark font (Instrument Serif Italic) │ ✅ Done │ Added to layout, applied to navbar │
+  ├─────────────────────────────────────────┼─────────┼────────────────────────────────────┤
+  │ Lowercase italic logo                   │ ✅ Done │ "tecxwork" in purple               │
+  ├─────────────────────────────────────────┼─────────┼────────────────────────────────────┤
+  │ Compact footer                          │ ✅ Done │ Single line layout                 │
+  └─────────────────────────────────────────┴─────────┴────────────────────────────────────┘
+
+  Not yet implemented:
+
+  ┌──────────────────────┬────────────────────────────────────────────────────────────┐
+  │       Element        │                        Description                         │
+  ├──────────────────────┼────────────────────────────────────────────────────────────┤
+  │ Square cards         │ Cards use rounded-xl, design system says rounded-none      │
+  ├──────────────────────┼────────────────────────────────────────────────────────────┤
+  │ Glow on hover        │ Cards should have colored border + ambient shadow on hover │
+  ├──────────────────────┼────────────────────────────────────────────────────────────┤
+  │ Typography scale     │ Specific letter-spacing (-0.02em for h1-h2)                │
+  ├──────────────────────┼────────────────────────────────────────────────────────────┤
+  │ Spacing scale        │ Apple's 4/8/12/16/24/32/48px scale                         │
+  ├──────────────────────┼────────────────────────────────────────────────────────────┤
+  │ Navbar glassmorphism │ Blur backdrop with subtle shadow                           │
+  ├──────────────────────┼────────────────────────────────────────────────────────────┤
+  │ Service card pattern │ Square with colored glow per category                      │
+  └──────────────────────┴────────────────────────────────────────────────────────────┘
+
+  Biggest visual impact to implement next:
+  1. Square cards with purple glow on hover (job cards, company cards)
+  2. Navbar glassmorphism effect

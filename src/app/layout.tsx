@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { InstallPrompt } from "@/components/install-prompt";
+import { ThemeProvider } from "@/components/theme-provider";
 import { EVENT_CONFIG } from "@/lib/data";
 
 const geistSans = Geist({
@@ -62,11 +63,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <InstallPrompt />
+        <ThemeProvider>
+          {children}
+          <InstallPrompt />
+        </ThemeProvider>
       </body>
     </html>
   );

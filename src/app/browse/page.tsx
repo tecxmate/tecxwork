@@ -8,6 +8,7 @@ import { Directory } from "@/components/directory";
 import { LogoutButton } from "@/components/logout-button";
 import { SiteFooter } from "@/components/site-footer";
 import { CvQrButton } from "@/components/cv-qr-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 
@@ -36,6 +37,7 @@ export default async function BrowsePage() {
             <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             <Link
               href="/profile"
               className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
