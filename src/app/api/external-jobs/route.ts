@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       jobs,
       count: jobs.length,
-      attribution: "Data provided by 104 Job Bank and 1111 Job Bank",
+      attribution: "Data provided by 1111 Job Bank",
     });
   } catch (error) {
     console.error("[API] Error fetching external jobs:", error);

@@ -63,15 +63,6 @@ export default function JobsPage() {
           <p className="text-center text-xs text-muted-foreground">
             Job data provided by{" "}
             <a
-              href="https://www.104.com.tw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground"
-            >
-              104 Job Bank
-            </a>{" "}
-            and{" "}
-            <a
               href="https://www.1111.com.tw"
               target="_blank"
               rel="noopener noreferrer"
