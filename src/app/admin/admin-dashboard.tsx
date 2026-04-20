@@ -256,7 +256,7 @@ export function AdminDashboard({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b bg-card">
+      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
