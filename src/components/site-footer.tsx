@@ -3,11 +3,13 @@ import Link from "next/link";
 export function SiteFooter() {
   return (
     <footer className="border-t px-4 py-3 text-center text-xs text-muted-foreground">
-      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
         <span>&copy; 2026 TECXWORK</span>
         <span className="opacity-40">&middot;</span>
+        <span>Designed by Nikolas Doan 段皇方</span>
+        <span className="opacity-40">&middot;</span>
         <span>
-          By{" "}
+          Developed by{" "}
           <a
             href="https://tecxmate.com"
             target="_blank"
@@ -29,6 +31,8 @@ export function SiteFooter() {
         <Link href="/tutorial" className="hover:text-primary hover:underline">
           Help
         </Link>
+        <span className="opacity-40">&middot;</span>
+        <span>PIPA compliant</span>
       </div>
     </footer>
   );
