@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
-import { db, recruiters, users } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { getCachedRecruiters } from "@/lib/cache";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function GET() {
-  const result = await db
-    .select({
-      id: recruiters.id,
-      company: recruiters.company,
-      industry: recruiters.industry,
-      description: recruiters.description,
-      positions: recruiters.positions,
-      contactEmail: recruiters.contactEmail,
-      jdLink: recruiters.jdLink,
-    })
-    .from(recruiters)
-    .innerJoin(users, eq(recruiters.userId, users.id))
-    .orderBy(recruiters.company);
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { success, remaining, reset } = await rateLimit(ip, "api");
 
-  return NextResponse.json({ recruiters: result });
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: rateLimitHeaders(remaining, reset) }
+    );
+  }
+
+  const result = await getCachedRecruiters();
+
+  return NextResponse.json(
+    { recruiters: result },
+    { headers: rateLimitHeaders(remaining, reset) }
+  );
 }

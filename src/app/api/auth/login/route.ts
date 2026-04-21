@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { login, COOKIE_NAME } from "@/lib/auth";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { success, remaining, reset } = await rateLimit(ip, "auth");
+
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Please try again later." },
+      { status: 429, headers: rateLimitHeaders(remaining, reset) }
+    );
+  }
+
   let body: { email: string; password: string };
 
   try {

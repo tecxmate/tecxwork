@@ -153,12 +153,16 @@ export async function crawlAll(
   };
 }
 
-export async function getExternalJobs(options?: {
+export interface GetExternalJobsOptions {
   source?: "104" | "1111";
   jobType?: "full_time" | "part_time" | "internship" | "contract";
   limit?: number;
   search?: string;
-}): Promise<typeof externalJobs.$inferSelect[]> {
+}
+
+export async function getExternalJobs(
+  options?: GetExternalJobsOptions
+): Promise<typeof externalJobs.$inferSelect[]> {
   let query = db.select().from(externalJobs);
 
   const conditions = [eq(externalJobs.isVietnameseJob, true)];
