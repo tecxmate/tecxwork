@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Users,
   ArrowLeft,
+  Briefcase,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SiteFooter } from "@/components/site-footer";
@@ -30,6 +31,15 @@ const ROLES: Role[] = [
       "Browse participating companies and book interview slots. Register to also let recruiters discover you.",
     loginHref: "/login",
     signupHref: "/register",
+  },
+  {
+    id: "professional",
+    icon: Briefcase,
+    title: "I'm a Professional",
+    description:
+      "Help Vietnamese students succeed by referring them to employers. Build your mentor network.",
+    loginHref: "/login",
+    signupHref: "/professional/signup",
   },
   {
     id: "recruiter",
@@ -57,6 +67,7 @@ export default async function GetStartedPage() {
   if (session) {
     if (session.role === "admin") redirect("/admin");
     if (session.role === "recruiter") redirect("/dashboard");
+    if (session.role === "professional") redirect("/professional/dashboard");
     if (session.role === "applicant") redirect("/browse");
   }
 
@@ -88,7 +99,7 @@ export default async function GetStartedPage() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {ROLES.map((role) => (
               <Card
                 key={role.id}

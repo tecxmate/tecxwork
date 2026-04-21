@@ -13,7 +13,7 @@ function getJwtSecret(): string {
 }
 const COOKIE_NAME = "vgen_session";
 
-export type UserRole = "admin" | "recruiter" | "applicant";
+export type UserRole = "admin" | "recruiter" | "applicant" | "professional";
 
 export type SessionPayload = {
   userId: number;

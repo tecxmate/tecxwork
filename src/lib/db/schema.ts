@@ -15,6 +15,7 @@ export const userRoleEnum = pgEnum("user_role", [
   "admin",
   "recruiter",
   "applicant",
+  "professional",
 ]);
 export const slotStatusEnum = pgEnum("slot_status", [
   "available",
@@ -221,6 +222,79 @@ export const eventConfig = pgTable("event_config", {
   modeLocked: boolean("mode_locked").notNull().default(false),
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),
+});
+
+// ---- Professional profiles (alumni/senior professionals who can refer students) ----
+
+export const professionalProfiles = pgTable("professional_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .unique(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  company: text("company").notNull(),
+  jobTitle: text("job_title").notNull(),
+  industry: text("industry").notNull(),
+  linkedinUrl: text("linkedin_url"),
+  bio: text("bio").notNull().default(""),
+  graduatedFrom: text("graduated_from"),
+  graduationYear: integer("graduation_year"),
+  isVerified: boolean("is_verified").notNull().default(false),
+  referralCount: integer("referral_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ---- Referral status enum ----
+
+export const referralStatusEnum = pgEnum("referral_status", [
+  "pending",
+  "accepted",
+  "rejected",
+]);
+
+// ---- Referrals (professional vouches for student) ----
+
+export const referrals = pgTable(
+  "referrals",
+  {
+    id: serial("id").primaryKey(),
+    professionalId: integer("professional_id")
+      .notNull()
+      .references(() => professionalProfiles.id),
+    applicantId: integer("applicant_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    relationship: text("relationship").notNull(),
+    endorsement: text("endorsement").notNull(),
+    isPublic: boolean("is_public").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_referral").on(table.professionalId, table.applicantId),
+  ]
+);
+
+// ---- Referral requests (student asks professional for referral) ----
+
+export const referralRequests = pgTable("referral_requests", {
+  id: serial("id").primaryKey(),
+  applicantId: integer("applicant_id")
+    .notNull()
+    .references(() => applicantProfiles.id),
+  professionalId: integer("professional_id")
+    .notNull()
+    .references(() => professionalProfiles.id),
+  message: text("message").notNull(),
+  status: referralStatusEnum("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  respondedAt: timestamp("responded_at", { withTimezone: true }),
 });
 
 // ---- External job listings (crawled from 104/1111) ----
