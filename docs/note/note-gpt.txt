@@ -40,3 +40,8 @@ Follow-up reminder
 
 - The legacy columns `recruiters.positions` and `recruiters.jd_link` still exist physically in schema/DB for compatibility, but the app no longer relies on them.
 - If doing future cleanup, the next optional step is to drop those legacy columns entirely after confirming no hidden dependency remains.
+
+Restore note
+
+- This explanation was re-added and preserved intentionally because it had failed to persist in a previous session.
+- If a future session finds DB behavior inconsistent with local expectations, first verify that both local and production are still pointed at the same `DATABASE_URL` target before debugging application logic.
