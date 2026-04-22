@@ -55,12 +55,19 @@ export function MobileBottomNav({
                     : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
-                <Icon
+                <span
                   className={[
-                    "h-[18px] w-[18px] transition-premium",
-                    active ? "text-primary" : "text-current",
+                    "flex h-8 w-8 items-center justify-center rounded-full transition-premium",
+                    active ? "bg-primary/10" : "bg-transparent",
                   ].join(" ")}
-                />
+                >
+                  <Icon
+                    className={[
+                      "h-[18px] w-[18px] transition-premium",
+                      active ? "text-primary" : "text-current",
+                    ].join(" ")}
+                  />
+                </span>
                 <span>{item.label}</span>
               </Link>
             );
