@@ -54,12 +54,12 @@ export function ExternalJobModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
       onClick={onClose}
     >
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-lg max-h-[calc(100vh-6rem-env(safe-area-inset-bottom))] overflow-y-auto rounded-t-2xl sm:max-h-[90vh] sm:rounded-2xl bg-card shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-card px-4 py-3 sm:px-6">

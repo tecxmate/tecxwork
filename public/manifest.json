@@ -2,8 +2,12 @@
   "name": "tecxwork — VSATW Career Fair",
   "short_name": "tecxwork",
   "description": "VSATW 2026 Career Fair — Book interviews, browse companies",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#FAFAFA",
   "theme_color": "#8C52FF",
   "icons": [
