@@ -5,8 +5,8 @@ import bcrypt from "bcryptjs";
 import * as schema from "./schema";
 
 async function resetAndSeed() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL not set");
+  const url = process.env.DB_URL || process.env.DATABASE_URL;
+  if (!url) throw new Error("DB_URL or DATABASE_URL not set");
 
   const client = neon(url);
   const db = drizzle(client, { schema });

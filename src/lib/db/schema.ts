@@ -93,9 +93,23 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   userId: integer("user_id").references(() => users.id).unique(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  phone: text("phone").notNull().default(""),
+  nationality: text("nationality").notNull().default(""),
+  schoolCode: text("school_code").notNull().default(""),
+  schoolName: text("school_name").notNull().default(""),
+  schoolNameEn: text("school_name_en").notNull().default(""),
   major: text("major").notNull().default(""),
+  studyLevel: text("study_level").notNull().default(""),
+  studyYear: text("study_year").notNull().default(""),
+  expectedGraduation: text("expected_graduation").notNull().default(""),
+  jobSeekingStatus: text("job_seeking_status").notNull().default(""),
+  workAuthorization: text("work_authorization").notNull().default(""),
   skills: text("skills").array().notNull().default([]),
+  preferredLocations: text("preferred_locations").array().notNull().default([]),
+  preferredIndustries: text("preferred_industries").array().notNull().default([]),
   cvLink: text("cv_link").notNull(),
+  linkedinUrl: text("linkedin_url").notNull().default(""),
+  portfolioUrl: text("portfolio_url").notNull().default(""),
   description: text("description").notNull().default(""),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
   wantsNewsletter: boolean("wants_newsletter").notNull().default(false),
@@ -103,6 +117,24 @@ export const applicantProfiles = pgTable("applicant_profiles", {
     .notNull()
     .defaultNow(),
 });
+
+// ---- Taiwan schools (bilingual source of truth for applicant signup) ----
+
+export const schools = pgTable(
+  "schools",
+  {
+    id: serial("id").primaryKey(),
+    code: text("code").notNull(),
+    nameZh: text("name_zh").notNull(),
+    nameEn: text("name_en").notNull().default(""),
+    city: text("city").notNull().default(""),
+    schoolType: text("school_type").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("schools_code_idx").on(table.code)]
+);
 
 // ---- Recruiter slots (interview windows offered by recruiter — Mode A) ----
 

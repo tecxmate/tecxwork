@@ -1,5 +1,30 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Notes
+
+Database access should use `DB_URL` as the primary connection string.
+
+Why:
+- Vercel can auto-assign `DATABASE_URL` for its Vercel-managed Neon integration.
+- This project uses a separate Neon database, and that Vercel-managed `DATABASE_URL` cannot be safely repointed.
+- To avoid collisions, we use `DB_URL` for the app's intended database connection.
+
+Current behavior:
+- runtime DB access prefers `DB_URL` and falls back to `DATABASE_URL`
+- Drizzle commands such as `npm run db:push` also prefer `DB_URL`
+
+Recommended setup:
+
+```bash
+DB_URL=your_neon_connection_string
+```
+
+Taiwan school data:
+- the applicant school lookup is stored in the `schools` table in Neon
+- use `npm run db:push` after schema changes
+- then run `npm run db:seed:schools` once to import the bilingual Taiwan school dataset from `public/dataset/`
+- the signup API reads from Neon, not from the local CSV files at request time
+
 ## Getting Started
 
 First, run the development server:
