@@ -69,14 +69,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <Suspense fallback={children}>
-            <AppMotionShell>{children}</AppMotionShell>
-          </Suspense>
+          <AppMotionShell>{children}</AppMotionShell>
           <Suspense fallback={null}>
             <MobileBottomNavServer sessionPromise={sessionPromise} />
           </Suspense>

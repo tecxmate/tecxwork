@@ -27,9 +27,9 @@ export function MobileBottomNav({
   return (
     <>
       <div className="h-20 md:hidden" aria-hidden="true" />
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/92 backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background md:hidden">
         <div
-          className="mx-auto grid max-w-xl px-2 pb-[calc(0.6rem+env(safe-area-inset-bottom))] pt-2"
+          className="mx-auto grid max-w-xl px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] pt-1.5"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map((item) => {
@@ -41,16 +41,16 @@ export function MobileBottomNav({
                 key={item.href}
                 href={item.href}
                 className={[
-                  "group flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-[11px] font-medium transition-premium",
+                  "group flex min-h-13 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-1.5 text-[11px] font-medium transition-premium",
                   active
-                    ? "bg-primary/10 text-primary shadow-[0_10px_30px_rgba(140,82,255,0.12)]"
-                    : "text-muted-foreground hover:bg-primary/5 hover:text-foreground",
+                    ? "border-primary/28 bg-primary/[0.11] text-primary"
+                    : "border-transparent text-muted-foreground hover:border-border hover:bg-muted/55 hover:text-foreground",
                 ].join(" ")}
               >
                 <Icon
                   className={[
                     "h-[18px] w-[18px] transition-premium",
-                    active ? "scale-105" : "group-hover:scale-105",
+                    active ? "text-primary" : "text-current",
                   ].join(" ")}
                 />
                 <span>{item.label}</span>

@@ -3,6 +3,13 @@ import { headers } from "next/headers";
 import { getCachedExternalJobs } from "@/lib/cache";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
+const JOB_TYPE_ORDER: Record<string, number> = {
+  full_time: 1,
+  part_time: 2,
+  internship: 3,
+  contract: 4,
+};
+
 function isEnglishTitle(title: string): boolean {
   const asciiLetters = (title.match(/[a-zA-Z]/g) || []).length;
   const chineseChars = (title.match(/[\u4e00-\u9fff]/g) || []).length;
@@ -69,6 +76,19 @@ export async function GET(request: Request) {
     if (language === "english") {
       filtered = filtered.filter((job) => isEnglishTitle(job.title));
     }
+
+    filtered = [...filtered].sort((a, b) => {
+      const orderA = a.jobType ? JOB_TYPE_ORDER[a.jobType] ?? 99 : 99;
+      const orderB = b.jobType ? JOB_TYPE_ORDER[b.jobType] ?? 99 : 99;
+
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+
+      const timeA = new Date(a.lastSeenAt).getTime();
+      const timeB = new Date(b.lastSeenAt).getTime();
+      return timeB - timeA;
+    });
 
     const total = filtered.length;
     const totalPages = Math.max(Math.ceil(total / limit), 1);

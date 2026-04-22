@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,22 @@ export function Directory() {
   const [query, setQuery] = useState("");
   const [recruiters, setRecruiters] = useState<RecruiterCardData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const debouncedQuery = useDebouncedValue(query);
+  const cacheRef = useRef(
+    new Map<
+      string,
+      {
+        recruiters: RecruiterCardData[];
+        total: number;
+        totalPages: number;
+      }
+    >()
+  );
 
   useEffect(() => {
     setPage(1);
@@ -37,19 +48,33 @@ export function Directory() {
     const controller = new AbortController();
 
     async function loadRecruiters() {
-      setLoading(true);
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(COMPANIES_PER_PAGE),
+      });
+
+      if (debouncedQuery.trim()) {
+        params.set("search", debouncedQuery.trim());
+      }
+
+      const cacheKey = params.toString();
+      const cached = cacheRef.current.get(cacheKey);
+
+      if (cached) {
+        setRecruiters(cached.recruiters);
+        setTotal(cached.total);
+        setTotalPages(cached.totalPages);
+        setLoading(false);
+        setIsRefreshing(true);
+      } else if (recruiters.length === 0) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
+
       setError(null);
 
       try {
-        const params = new URLSearchParams({
-          page: String(page),
-          limit: String(COMPANIES_PER_PAGE),
-        });
-
-        if (debouncedQuery.trim()) {
-          params.set("search", debouncedQuery.trim());
-        }
-
         const response = await fetch(`/api/recruiters?${params.toString()}`, {
           signal: controller.signal,
         });
@@ -59,25 +84,39 @@ export function Directory() {
         }
 
         const data = await response.json();
-        setRecruiters(Array.isArray(data.recruiters) ? data.recruiters : []);
-        setTotal(typeof data.total === "number" ? data.total : 0);
-        setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+        const nextRecruiters = Array.isArray(data.recruiters) ? data.recruiters : [];
+        const nextTotal = typeof data.total === "number" ? data.total : 0;
+        const nextTotalPages =
+          typeof data.totalPages === "number" ? data.totalPages : 1;
+
+        cacheRef.current.set(cacheKey, {
+          recruiters: nextRecruiters,
+          total: nextTotal,
+          totalPages: nextTotalPages,
+        });
+
+        setRecruiters(nextRecruiters);
+        setTotal(nextTotal);
+        setTotalPages(nextTotalPages);
       } catch (err) {
         if (controller.signal.aborted) return;
-        setRecruiters([]);
-        setTotal(0);
-        setTotalPages(1);
+        if (recruiters.length === 0) {
+          setRecruiters([]);
+          setTotal(0);
+          setTotalPages(1);
+        }
         setError(err instanceof Error ? err.message : "Failed to load companies");
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
+          setIsRefreshing(false);
         }
       }
     }
 
     loadRecruiters();
     return () => controller.abort();
-  }, [debouncedQuery, page]);
+  }, [debouncedQuery, page, recruiters.length]);
 
   const resultLabel = useMemo(() => {
     if (loading) {
@@ -89,8 +128,17 @@ export function Directory() {
       );
     }
 
+    if (isRefreshing) {
+      return (
+        <span className="flex items-center gap-1.5">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Updating...
+        </span>
+      );
+    }
+
     return `${total} ${total === 1 ? "company" : "companies"}${totalPages > 1 ? ` · Page ${page} of ${totalPages}` : ""}`;
-  }, [loading, total, totalPages, page]);
+  }, [isRefreshing, loading, total, totalPages, page]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -131,10 +179,20 @@ export function Directory() {
         </div>
       ) : (
         <>
-          <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {recruiters.map((recruiter) => (
-              <RecruiterCard key={recruiter.id} recruiter={recruiter} />
-            ))}
+          <div className="relative">
+            <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {recruiters.map((recruiter) => (
+                <RecruiterCard key={recruiter.id} recruiter={recruiter} />
+              ))}
+            </div>
+            {isRefreshing && (
+              <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
+                <div className="inline-flex items-center gap-2 rounded-full border bg-background/96 px-3 py-1 text-xs text-muted-foreground shadow-sm">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Updating companies...
+                </div>
+              </div>
+            )}
           </div>
 
           {totalPages > 1 && (

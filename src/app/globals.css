@@ -59,9 +59,9 @@
  */
 :root {
   --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --duration-fast: 160ms;
-  --duration-base: 260ms;
+  --ease-snappy: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 160ms;
   --duration-slow: 420ms;
   --background: #FAFAFA;
   --foreground: #1D1D1F;
@@ -146,18 +146,6 @@
     text-rendering: optimizeLegibility;
   }
 
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    background:
-      radial-gradient(circle at top center, rgba(140, 82, 255, 0.07), transparent 38%),
-      radial-gradient(circle at bottom right, rgba(140, 82, 255, 0.05), transparent 32%);
-    opacity: 0.9;
-  }
-
   a,
   button,
   [role="button"],
@@ -183,20 +171,6 @@
   ::selection {
     background: color-mix(in srgb, var(--primary) 24%, transparent);
     color: var(--foreground);
-  }
-}
-
-/* Premium animations */
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.996);
-    filter: blur(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -251,19 +225,19 @@
 
 @keyframes route-progress {
   0% {
-    transform: scaleX(0.08);
-    opacity: 0;
+    transform: scaleX(0.12);
+    opacity: 0.25;
   }
-  15% {
+  12% {
     opacity: 1;
   }
-  65% {
-    transform: scaleX(0.72);
+  72% {
+    transform: scaleX(0.82);
     opacity: 1;
   }
   100% {
     transform: scaleX(1);
-    opacity: 1;
+    opacity: 0.95;
   }
 }
 
@@ -293,14 +267,6 @@
   min-height: 100%;
 }
 
-.animate-page-enter {
-  animation: page-enter var(--duration-slow) var(--ease-fluid) both;
-}
-
-.route-transition-active {
-  isolation: isolate;
-}
-
 header.sticky {
   position: sticky;
 }
@@ -311,22 +277,21 @@ header.sticky::after {
   left: 0;
   right: 0;
   bottom: -1px;
-  height: 2px;
+  height: 1px;
   transform: scaleX(0);
   transform-origin: left center;
   opacity: 0;
   pointer-events: none;
   background: linear-gradient(
     90deg,
-    rgba(140, 82, 255, 0.18),
-    rgba(140, 82, 255, 0.95),
-    rgba(169, 120, 255, 0.85)
+    rgba(140, 82, 255, 0.16),
+    rgba(140, 82, 255, 0.88),
+    rgba(169, 120, 255, 0.52)
   );
-  box-shadow: 0 0 18px rgba(140, 82, 255, 0.28);
 }
 
 .route-loading header.sticky::after {
-  animation: route-progress 520ms var(--ease-fluid) forwards;
+  animation: route-progress 240ms linear forwards;
 }
 
 /* Staggered animations for lists */
@@ -348,7 +313,13 @@ header.sticky::after {
 /* Smooth transitions for interactive elements */
 @layer utilities {
   .transition-premium {
-    transition: all var(--duration-base) var(--ease-fluid);
+    transition:
+      color var(--duration-fast) var(--ease-fluid),
+      background-color var(--duration-fast) var(--ease-fluid),
+      border-color var(--duration-fast) var(--ease-fluid),
+      box-shadow var(--duration-base) var(--ease-fluid),
+      transform var(--duration-fast) var(--ease-fluid),
+      opacity var(--duration-fast) var(--ease-fluid);
   }
 
   .hover-lift {

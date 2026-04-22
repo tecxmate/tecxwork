@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Loader2,
@@ -24,13 +24,6 @@ interface ExternalJobWithMeta extends ExternalJob {
   externalId: string;
   lastSeenAt: string;
 }
-
-const JOB_TYPE_ORDER: Record<string, number> = {
-  full_time: 1,
-  part_time: 2,
-  internship: 3,
-  contract: 4,
-};
 
 function JobCardSkeleton() {
   return (
@@ -138,25 +131,29 @@ function useDebouncedValue<T>(value: T, delay = 250) {
   return debounced;
 }
 
-function isEnglishTitle(title: string): boolean {
-  const asciiLetters = (title.match(/[a-zA-Z]/g) || []).length;
-  const chineseChars = (title.match(/[\u4e00-\u9fff]/g) || []).length;
-  if (asciiLetters + chineseChars === 0) return false;
-  return asciiLetters > chineseChars;
-}
-
 export function JobDirectory() {
   const [query, setQuery] = useState("");
   const [jobTypeFilter, setJobTypeFilter] = useState<FilterJobType>("all");
   const [languageFilter, setLanguageFilter] = useState<FilterLanguage>("all");
   const [jobs, setJobs] = useState<ExternalJobWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<ExternalJobWithMeta | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const debouncedQuery = useDebouncedValue(query);
+  const cacheRef = useRef(
+    new Map<
+      string,
+      {
+        jobs: ExternalJobWithMeta[];
+        total: number;
+        totalPages: number;
+      }
+    >()
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -166,50 +163,92 @@ export function JobDirectory() {
     const controller = new AbortController();
 
     async function fetchJobs() {
-      setLoading(true);
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(JOBS_PER_PAGE),
+      });
+
+      if (jobTypeFilter !== "all") params.set("jobType", jobTypeFilter);
+      if (debouncedQuery.trim()) params.set("search", debouncedQuery.trim());
+      if (languageFilter !== "all") params.set("language", languageFilter);
+
+      const cacheKey = params.toString();
+      const cached = cacheRef.current.get(cacheKey);
+
+      if (cached) {
+        setJobs(cached.jobs);
+        setTotal(cached.total);
+        setTotalPages(cached.totalPages);
+        setLoading(false);
+        setIsRefreshing(true);
+      } else if (jobs.length === 0) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
+
       try {
-        const params = new URLSearchParams({
-          page: String(currentPage),
-          limit: String(JOBS_PER_PAGE),
-        });
-
-        if (jobTypeFilter !== "all") params.set("jobType", jobTypeFilter);
-        if (debouncedQuery.trim()) params.set("search", debouncedQuery.trim());
-        if (languageFilter !== "all") params.set("language", languageFilter);
-
         const response = await fetch(`/api/external-jobs?${params.toString()}`, {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error("Failed to fetch jobs");
         const data = await response.json();
-        setJobs(Array.isArray(data.jobs) ? data.jobs : []);
-        setTotal(typeof data.total === "number" ? data.total : 0);
-        setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+        const nextJobs = Array.isArray(data.jobs) ? data.jobs : [];
+        const nextTotal = typeof data.total === "number" ? data.total : 0;
+        const nextTotalPages =
+          typeof data.totalPages === "number" ? data.totalPages : 1;
+
+        cacheRef.current.set(cacheKey, {
+          jobs: nextJobs,
+          total: nextTotal,
+          totalPages: nextTotalPages,
+        });
+
+        setJobs(nextJobs);
+        setTotal(nextTotal);
+        setTotalPages(nextTotalPages);
         setError(null);
       } catch (e) {
         if (controller.signal.aborted) return;
         setError(e instanceof Error ? e.message : "Unknown error");
-        setJobs([]);
-        setTotal(0);
-        setTotalPages(1);
+        if (jobs.length === 0) {
+          setJobs([]);
+          setTotal(0);
+          setTotalPages(1);
+        }
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
+          setIsRefreshing(false);
         }
       }
     }
 
     fetchJobs();
     return () => controller.abort();
-  }, [currentPage, debouncedQuery, jobTypeFilter, languageFilter]);
+  }, [currentPage, debouncedQuery, jobTypeFilter, jobs.length, languageFilter]);
 
-  const sortedJobs = useMemo(() => {
-    return [...jobs].sort((a, b) => {
-      const orderA = a.jobType ? JOB_TYPE_ORDER[a.jobType] ?? 99 : 99;
-      const orderB = b.jobType ? JOB_TYPE_ORDER[b.jobType] ?? 99 : 99;
-      return orderA - orderB;
-    });
-  }, [jobs]);
+  const resultLabel = useMemo(() => {
+    if (loading) {
+      return (
+        <span className="flex items-center gap-1.5">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Loading...
+        </span>
+      );
+    }
+
+    if (isRefreshing) {
+      return (
+        <span className="flex items-center gap-1.5">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Updating...
+        </span>
+      );
+    }
+
+    return `${total} ${total === 1 ? "job" : "jobs"} found${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}`;
+  }, [currentPage, isRefreshing, loading, total, totalPages]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -264,14 +303,7 @@ export function JobDirectory() {
         </div>
 
         <p className="text-xs text-muted-foreground sm:text-sm">
-          {loading ? (
-            <span className="flex items-center gap-1.5">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Loading...
-            </span>
-          ) : (
-            `${total} ${total === 1 ? "job" : "jobs"} found${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}`
-          )}
+          {resultLabel}
         </p>
       </div>
 
@@ -302,14 +334,24 @@ export function JobDirectory() {
         </div>
       ) : (
         <>
-          <div className="stagger-fade-in grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedJobs.map((job) => (
-              <JobCard
-                key={`${job.source}-${job.externalId}`}
-                job={job}
-                onClick={() => setSelectedJob(job)}
-              />
-            ))}
+          <div className="relative">
+            <div className="stagger-fade-in grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {jobs.map((job) => (
+                <JobCard
+                  key={`${job.source}-${job.externalId}`}
+                  job={job}
+                  onClick={() => setSelectedJob(job)}
+                />
+              ))}
+            </div>
+            {isRefreshing && (
+              <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
+                <div className="inline-flex items-center gap-2 rounded-full border bg-background/96 px-3 py-1 text-xs text-muted-foreground shadow-sm">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Updating jobs...
+                </div>
+              </div>
+            )}
           </div>
 
           {totalPages > 1 && (

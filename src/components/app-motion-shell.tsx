@@ -1,15 +1,7 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-
-function buildRouteKey(
-  pathname: string,
-  searchParams: ReturnType<typeof useSearchParams>
-) {
-  const query = searchParams.toString();
-  return query ? `${pathname}?${query}` : pathname;
-}
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 export function AppMotionShell({
   children,
@@ -17,14 +9,7 @@ export function AppMotionShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const routeKey = useMemo(
-    () => buildRouteKey(pathname, searchParams),
-    [pathname, searchParams]
-  );
   const isFirstRoute = useRef(true);
-  const [transitionKey, setTransitionKey] = useState(0);
-  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     if (isFirstRoute.current) {
@@ -32,34 +17,16 @@ export function AppMotionShell({
       return;
     }
 
-    const activateFrame = window.requestAnimationFrame(() => {
-      setTransitionKey((value) => value + 1);
-      setIsNavigating(true);
-      document.documentElement.classList.add("route-loading");
-    });
+    document.documentElement.classList.add("route-loading");
     const completeTimer = window.setTimeout(() => {
-      setIsNavigating(false);
       document.documentElement.classList.remove("route-loading");
-    }, 520);
+    }, 260);
 
     return () => {
-      window.cancelAnimationFrame(activateFrame);
       window.clearTimeout(completeTimer);
       document.documentElement.classList.remove("route-loading");
     };
-  }, [routeKey]);
+  }, [pathname]);
 
-  return (
-    <>
-      <div
-        key={`${routeKey}-${transitionKey}`}
-        className={[
-          "page-shell motion-safe:animate-page-enter",
-          isNavigating ? "route-transition-active" : "",
-        ].join(" ")}
-      >
-        {children}
-      </div>
-    </>
-  );
+  return <div className="page-shell">{children}</div>;
 }
