@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db, recruiters, jobOpenings } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { RecruiterDetail } from "./recruiter-detail";
 
@@ -22,9 +22,7 @@ export default async function RecruiterPage({
         company: recruiters.company,
         industry: recruiters.industry,
         description: recruiters.description,
-        positions: recruiters.positions,
         contactEmail: recruiters.contactEmail,
-        jdLink: recruiters.jdLink,
       })
       .from(recruiters)
       .where(eq(recruiters.id, recruiterId)),
@@ -36,7 +34,12 @@ export default async function RecruiterPage({
         description: jobOpenings.description,
       })
       .from(jobOpenings)
-      .where(eq(jobOpenings.recruiterId, recruiterId)),
+      .where(
+        and(
+          eq(jobOpenings.recruiterId, recruiterId),
+          eq(jobOpenings.moderationStatus, "approved")
+        )
+      ),
   ]);
 
   if (!recruiter) notFound();

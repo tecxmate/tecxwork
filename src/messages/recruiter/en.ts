@@ -97,18 +97,30 @@ export const recruiterEnMessages = {
       jobOpenings: "Job Openings",
       jobOpeningsHint:
         "Each position has its own JD link. Students select a position when applying.",
+      moderationHint:
+        "Jobs stay private until an admin approves them. Edit a job, then submit it for review.",
       positionTitle: "Position title",
       jdLinkOptional: "JD link (optional)",
+      descriptionPlaceholder:
+        "Short role summary, responsibilities, and key hiring requirements",
       add: "Add",
       noPositions: "No positions added yet.",
       title: "Title",
       jdLinkShort: "JD link",
       viewJd: "View JD",
       noJdLink: "No JD link",
+      submitForReview: "Submit for review",
+      adminNotePrefix: "Admin note:",
       edit: "Edit",
       delete: "Delete",
       removePositionConfirm: "Remove this position?",
       whatDoesCompanyDo: "What does your company do?",
+      moderationStatus: {
+        draft: "Draft",
+        pendingReview: "Pending review",
+        approved: "Approved",
+        rejected: "Rejected",
+      },
     },
     status: {
       pending: "pending",

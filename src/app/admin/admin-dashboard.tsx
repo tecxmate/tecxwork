@@ -69,6 +69,20 @@ type Domain = {
   industry: string;
 };
 
+type JobOpening = {
+  id: number;
+  recruiterId: number;
+  company: string;
+  title: string;
+  jdLink: string | null;
+  description: string;
+  moderationStatus: string;
+  moderationNotes: string;
+  submittedAt: Date | string | null;
+  reviewedAt: Date | string | null;
+  createdAt: Date | string;
+};
+
 type Stats = {
   totalRecruiters: number;
   totalBookings: number;
@@ -96,33 +110,54 @@ const MODES = [
   },
 ] as const;
 
+const ONBOARDING_MODES = [
+  {
+    value: "minimal",
+    label: "Minimal intake",
+    desc: "Collect only name, email, password, and a Google Drive CV link.",
+  },
+  {
+    value: "full",
+    label: "Full questionnaire",
+    desc: "Collect the extended student profile, education, preferences, and work experience.",
+  },
+] as const;
+
+type OnboardingMode = (typeof ONBOARDING_MODES)[number]["value"];
+
 export function AdminDashboard({
   recruiters: initialRecruiters,
   applicants: initialApplicants,
   bookings: initialBookings,
+  jobs: initialJobs,
   domains: initialDomains,
   stats,
   currentMode,
+  initialOnboardingMode,
   initialLocked,
   timeFrame: initialTimeFrame,
 }: {
   recruiters: Recruiter[];
   applicants: Applicant[];
   bookings: AdminBooking[];
+  jobs: JobOpening[];
   domains: Domain[];
   stats: Stats;
   currentMode: string;
+  initialOnboardingMode: OnboardingMode;
   initialLocked: boolean;
   timeFrame: { startHour: number; endHour: number; endMinute: number; slotDuration: number };
 }) {
   const router = useRouter();
   const [mode, setMode] = useState(currentMode);
+  const [onboardingMode, setOnboardingMode] = useState<OnboardingMode>(initialOnboardingMode);
   const [locked, setLocked] = useState(initialLocked);
   const [saving, setSaving] = useState(false);
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
   const [recruiters, setRecruiters] = useState<Recruiter[]>(initialRecruiters);
   const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants);
   const [adminBookings, setAdminBookings] = useState<AdminBooking[]>(initialBookings);
+  const [jobs, setJobs] = useState<JobOpening[]>(initialJobs);
   const [tf, setTf] = useState(initialTimeFrame);
   const [tfSaving, setTfSaving] = useState(false);
   const [tfSaved, setTfSaved] = useState(false);
@@ -174,6 +209,21 @@ export function AdminDashboard({
       body: JSON.stringify({ lock: !locked }),
     });
     setLocked(!locked);
+    setSaving(false);
+    router.refresh();
+  }
+
+  async function handleOnboardingModeChange(nextMode: OnboardingMode) {
+    setSaving(true);
+    setOnboardingMode(nextMode);
+    const res = await fetch("/api/admin/mode", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ onboardingMode: nextMode }),
+    });
+    if (!res.ok) {
+      setOnboardingMode(initialOnboardingMode);
+    }
     setSaving(false);
     router.refresh();
   }
@@ -252,6 +302,22 @@ export function AdminDashboard({
       setApplicants(applicants.filter((x) => x.id !== a.id));
       router.refresh();
     }
+  }
+
+  async function handleJobModeration(
+    jobId: number,
+    action: "approve" | "reject" | "reset",
+    moderationNotes: string
+  ) {
+    const res = await fetch(`/api/admin/jobs/${jobId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, moderationNotes }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    setJobs(jobs.map((job) => (job.id === jobId ? data.job : job)));
+    router.refresh();
   }
 
   return (
@@ -391,6 +457,48 @@ export function AdminDashboard({
                 >
                   <p className="text-sm font-medium">{m.label}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{m.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <div className="mb-4 flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-muted-foreground" />
+              <h2 className="font-heading text-lg font-semibold">
+                Student Onboarding
+              </h2>
+              {saving && (
+                <span className="text-xs text-muted-foreground">
+                  Saving...
+                </span>
+              )}
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Control how much student data the public signup flow requires.
+              Minimal mode keeps intake light. Full mode asks for the extended
+              questionnaire.
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {ONBOARDING_MODES.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleOnboardingModeChange(option.value)}
+                  className={cn(
+                    "rounded-lg border p-4 text-left transition-colors",
+                    onboardingMode === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <p className="text-sm font-medium">{option.label}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {option.desc}
+                  </p>
                 </button>
               ))}
             </div>
@@ -612,6 +720,10 @@ export function AdminDashboard({
 
           <Separator />
 
+          <JobModerationSection jobs={jobs} onModerate={handleJobModeration} />
+
+          <Separator />
+
           {/* People: Recruiters + Applicants */}
           <PeopleSection
             recruiters={recruiters}
@@ -624,6 +736,181 @@ export function AdminDashboard({
         </div>
       </main>
       <SiteFooter />
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// Job Moderation Section
+// ------------------------------------------------------------------
+
+function JobModerationSection({
+  jobs,
+  onModerate,
+}: {
+  jobs: JobOpening[];
+  onModerate: (
+    jobId: number,
+    action: "approve" | "reject" | "reset",
+    moderationNotes: string
+  ) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [notesById, setNotesById] = useState<Record<number, string>>(
+    Object.fromEntries(jobs.map((job) => [job.id, job.moderationNotes ?? ""]))
+  );
+
+  const filteredJobs = jobs
+    .filter((job) => {
+      if (!query.trim()) return true;
+      const q = query.toLowerCase();
+      return (
+        job.company.toLowerCase().includes(q) ||
+        job.title.toLowerCase().includes(q) ||
+        job.description.toLowerCase().includes(q) ||
+        job.moderationStatus.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      const score = (job: JobOpening) => {
+        if (job.moderationStatus === "pending_review") return 0;
+        if (job.moderationStatus === "rejected") return 1;
+        if (job.moderationStatus === "draft") return 2;
+        return 3;
+      };
+
+      return score(a) - score(b);
+    });
+
+  const statusStyles: Record<string, string> = {
+    draft: "bg-slate-100 text-slate-700",
+    pending_review: "bg-amber-100 text-amber-800",
+    approved: "bg-green-100 text-green-700",
+    rejected: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center gap-2">
+        <BookOpen className="h-5 w-5 text-muted-foreground" />
+        <h2 className="font-heading text-lg font-semibold">Job Moderation</h2>
+      </div>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Review recruiter-created job openings before they appear publicly. Only
+        approved jobs are visible on public pages.
+      </p>
+
+      <div className="relative mb-4 max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search company, title, or status..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      <div className="space-y-3">
+        {filteredJobs.length === 0 ? (
+          <Card>
+            <CardContent className="py-6 text-sm text-muted-foreground">
+              No job openings found.
+            </CardContent>
+          </Card>
+        ) : (
+          filteredJobs.map((job) => (
+            <Card key={job.id}>
+              <CardContent className="space-y-4 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{job.title}</p>
+                      <span
+                        className={cn(
+                          "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                          statusStyles[job.moderationStatus] ?? "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {job.moderationStatus.replace("_", " ")}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{job.company}</p>
+                    {job.description && (
+                      <p className="max-w-3xl text-xs text-muted-foreground">
+                        {job.description}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Created {new Date(job.createdAt).toLocaleDateString("en-US")}
+                      {job.submittedAt
+                        ? ` · Submitted ${new Date(job.submittedAt).toLocaleDateString("en-US")}`
+                        : ""}
+                    </p>
+                    {job.jdLink && (
+                      <a
+                        href={job.jdLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        View JD
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Admin notes
+                  </label>
+                  <textarea
+                    value={notesById[job.id] ?? job.moderationNotes ?? ""}
+                    onChange={(e) =>
+                      setNotesById((current) => ({
+                        ...current,
+                        [job.id]: e.target.value,
+                      }))
+                    }
+                    rows={2}
+                    placeholder="Add review guidance or rejection reason..."
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      onModerate(job.id, "approve", notesById[job.id] ?? "")
+                    }
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      onModerate(job.id, "reject", notesById[job.id] ?? "")
+                    }
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      onModerate(job.id, "reset", notesById[job.id] ?? "")
+                    }
+                  >
+                    Reset to Draft
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 }

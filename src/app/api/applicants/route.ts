@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, applicantProfiles, users } from "@/lib/db";
+import { db, applicantProfiles, eventConfig, users } from "@/lib/db";
 import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
 import { MAX_STUDENT_WORK_EXPERIENCES, type StudentWorkExperience } from "@/lib/student-profile";
 
@@ -105,9 +105,28 @@ export async function POST(req: NextRequest) {
     wantsNewsletter,
   } = body;
 
-  if (!name || !email || !password || !cvLink || !schoolName || !major || !studyLevel || !expectedGraduation) {
+  const [config] = await db
+    .select({ onboardingMode: eventConfig.onboardingMode })
+    .from(eventConfig)
+    .limit(1);
+  const onboardingMode = config?.onboardingMode === "minimal" ? "minimal" : "full";
+
+  if (!name || !email || !password || !cvLink) {
     return NextResponse.json(
-      { error: "Name, email, password, school, major, study level, graduation date, and CV link are required" },
+      { error: "Name, email, password, and CV link are required" },
+      { status: 400 }
+    );
+  }
+
+  if (
+    onboardingMode === "full" &&
+    (!schoolName || !major || !studyLevel || !expectedGraduation)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "School, major, study level, graduation date, and CV link are required in full onboarding mode",
+      },
       { status: 400 }
     );
   }

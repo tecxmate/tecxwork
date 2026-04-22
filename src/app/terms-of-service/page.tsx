@@ -27,6 +27,9 @@ export default function TermsOfServicePage() {
         <p>
           TECXWORK is a digital recruitment and scheduling platform designed to facilitate connections between university students (&quot;Applicants&quot;) and verified corporate recruiters (&quot;Recruiters&quot;) during physical or virtual career fair events in Taiwan.
         </p>
+        <p>
+          The Platform is intended to support lawful recruiting and networking only. We do not provide immigration advice, work-permit approvals, or legal authorization to work in Taiwan.
+        </p>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">2. Eligibility</h2>
         <p>
@@ -45,6 +48,9 @@ export default function TermsOfServicePage() {
           <li><strong>Accuracy:</strong> You agree to provide accurate information regarding your education, skills, and professional experience.</li>
           <li><strong>Content:</strong> You retain ownership of your CV and profile data. By uploading or linking your CV, you grant us the necessary licenses to display this content to Recruiters via the Platform.</li>
           <li><strong>Prohibited Conduct:</strong> You agree not to upload malicious files, impersonate others, or use the Platform for any purpose other than seeking employment or networking.</li>
+          <li><strong>Work Authorization:</strong> If you are an overseas Chinese student, international student, or other foreign national in Taiwan, you are responsible for obtaining and maintaining any work permit or other authorization required by Taiwanese law before engaging in work.</li>
+          <li><strong>Working Time Limits:</strong> During academic semesters, eligible foreign students are generally subject to Taiwan&apos;s working-time restrictions for part-time work unless a legal exception applies. You are responsible for ensuring that your work activity complies with those limits.</li>
+          <li><strong>No Placement Fee:</strong> We do not charge students or applicants a placement fee for being introduced to employers through the Platform.</li>
         </ul>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">5. Obligations for Recruiters (Employers)</h2>
@@ -58,14 +64,25 @@ export default function TermsOfServicePage() {
             </ol>
           </li>
           <li><strong>Compliance:</strong> Recruiters agree to comply with the Taiwan Personal Data Protection Act (PDPA) when handling any Applicant data acquired through the Platform.</li>
+          <li><strong>Employment Eligibility:</strong> Recruiters are solely responsible for verifying that each applicant is legally eligible to work in Taiwan for the relevant role, including any required work permit, visa, residence status, or working-hours limitation.</li>
+          <li><strong>Non-Discrimination:</strong> Recruiters must not publish or communicate job criteria that unlawfully discriminate on the basis of nationality, race, place of origin, or other protected grounds, except where permitted by applicable law.</li>
+          <li><strong>Lawful Job Content:</strong> Recruiters must not use the Platform to advertise unlawful work, misleading opportunities, or roles that would cause an applicant to violate Taiwanese employment, immigration, or labor laws.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">6. Intellectual Property</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">6. Regulatory and Compliance Notices</h2>
+        <ul className="list-disc pl-5 space-y-1 mb-4">
+          <li>The Platform may store applicant profiles, CV links, education data, work experience, and scheduling information for job-matching purposes.</li>
+          <li>Users remain solely responsible for their own compliance with the Employment Services Act, the Personal Data Protection Act, immigration rules, work-permit rules, and other applicable Taiwan laws.</li>
+          <li>We may remove job postings, suspend accounts, reject recruiter participation, or restrict Platform use where we believe content or conduct may be unlawful, discriminatory, deceptive, or inconsistent with the lawful employment of students in Taiwan.</li>
+          <li>Nothing on the Platform constitutes legal advice, visa advice, or a guarantee that a user may lawfully accept or offer employment.</li>
+        </ul>
+
+        <h2 className="text-xl font-semibold mt-8 mb-4">7. Intellectual Property</h2>
         <p>
           The Platform, including its underlying codebase, design, logos, and features, is the exclusive intellectual property of <strong>TECXMATE COMPANY LIMITED</strong>. You may not copy, modify, distribute, sell, or lease any part of our services or included software without explicit written permission.
         </p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">7. Disclaimer of Warranties</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">8. Disclaimer of Warranties</h2>
         <p>The Platform is provided on an &quot;AS-IS&quot; and &quot;AS-AVAILABLE&quot; basis.</p>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li>We do not guarantee that the Platform will be error-free, uninterrupted, or perfectly secure.</li>
@@ -73,17 +90,17 @@ export default function TermsOfServicePage() {
           <li>We are not responsible for the content of external links (e.g., Google Drive links) provided by users.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">8. Limitation of Liability</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">9. Limitation of Liability</h2>
         <p>
           To the maximum extent permitted by applicable law, neither <strong>TECXMATE COMPANY LIMITED</strong> nor VSATW shall be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits, data, or goodwill, arising out of your use of or inability to use the Platform.
         </p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">9. Modifications to the Service and Terms</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">10. Modifications to the Service and Terms</h2>
         <p>
           We reserve the right to modify or discontinue the Platform (or any part thereof) at any time. We also reserve the right to update these Terms. If changes are significant, we will provide notice via the Platform or email. Continued use of the Platform after changes take effect constitutes your acceptance of the revised Terms.
         </p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">10. Governing Law and Dispute Resolution</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">11. Governing Law and Dispute Resolution</h2>
         <p>
           These Terms shall be governed by and construed in accordance with the laws of <strong>Taiwan (R.O.C.)</strong>, without regard to its conflict of law principles.
         </p>
@@ -91,7 +108,7 @@ export default function TermsOfServicePage() {
           Any dispute arising out of or in connection with these Terms, including any question regarding its existence, validity, or termination, shall be referred to and finally resolved by the competent courts in <strong>Taipei, Taiwan</strong> as the court of first instance.
         </p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">11. Contact Us</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">12. Contact Us</h2>
         <p>If you have any questions about these Terms, please contact us at:</p>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Email:</strong> ceo@tecxmate.com</li>

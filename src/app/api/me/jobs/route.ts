@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 
 /** GET — list my job openings */
 export async function GET() {
@@ -51,6 +52,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
+  const flaggedTerm = findFlaggedJobLanguage([title, description, jdLink]);
+  if (flaggedTerm) {
+    return NextResponse.json(
+      {
+        error: `Please remove potentially discriminatory or risky wording before saving this job: "${flaggedTerm}"`,
+      },
+      { status: 400 }
+    );
+  }
+
   const [job] = await db
     .insert(jobOpenings)
     .values({
@@ -58,6 +69,8 @@ export async function POST(req: NextRequest) {
       title: title.trim(),
       jdLink: jdLink?.trim() || null,
       description: description?.trim() ?? "",
+      moderationStatus: "draft",
+      moderationNotes: "",
     })
     .returning();
 

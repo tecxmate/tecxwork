@@ -155,49 +155,59 @@ const SCHOOL_NAME_EN_BY_CODE: Record<string, string> = {
   "3A01": "Open University of Kaohsiung",
 };
 
-function parseCsvLine(line: string) {
-  const result: string[] = [];
-  let current = "";
+function parseCsvRecords(raw: string) {
+  const rows: string[][] = [];
+  let currentField = "";
+  let currentRow: string[] = [];
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
+  const text = raw.replace(/^\uFEFF/, "");
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const nextChar = text[i + 1];
 
     if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentField += '"';
+        i += 1;
+        continue;
+      }
+
       inQuotes = !inQuotes;
       continue;
     }
 
     if (char === "," && !inQuotes) {
-      result.push(current);
-      current = "";
+      currentRow.push(currentField.trim());
+      currentField = "";
       continue;
     }
 
-    current += char;
-  }
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && nextChar === "\n") {
+        i += 1;
+      }
 
-  result.push(current);
-  return result.map((value) => value.trim());
-}
+      currentRow.push(currentField.trim());
+      currentField = "";
 
-function parseSchoolRows(raw: string) {
-  const lines = raw.replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
-  const rows: string[] = [];
-  let buffer = "";
+      if (currentRow.some((value) => value.length > 0)) {
+        rows.push(currentRow);
+      }
 
-  for (const line of lines.slice(1)) {
-    buffer = buffer ? `${buffer}${line}` : line;
-    const parsed = parseCsvLine(buffer);
-
-    if (parsed.length >= 9) {
-      rows.push(buffer);
-      buffer = "";
+      currentRow = [];
+      continue;
     }
+
+    currentField += char;
   }
 
-  if (buffer) {
-    rows.push(buffer);
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some((value) => value.length > 0)) {
+      rows.push(currentRow);
+    }
   }
 
   return rows;
@@ -218,25 +228,31 @@ function normalizeEnglishName(code: string, nameZh: string) {
 export async function loadTaiwanSchoolDataset(): Promise<TaiwanSchoolOption[]> {
   const filePath = path.join(process.cwd(), "public/dataset/u1_new.csv");
   const raw = await readFile(filePath, "utf8");
-  const rows = parseSchoolRows(raw);
+  const rows = parseCsvRecords(raw).slice(1);
+  const schoolsByCode = new Map<string, TaiwanSchoolOption>();
 
-  return rows.flatMap((line) => {
-    const [, code, nameZh, , city, , , , schoolType] = parseCsvLine(line);
-    if (!code || !nameZh) {
-      return [];
+  for (const row of rows) {
+    const [, code, nameZh, , city, , , , schoolType] = row;
+
+    if (!code || !/^[0-9A-Z]+$/i.test(code) || !nameZh) {
+      continue;
+    }
+
+    if (schoolsByCode.has(code)) {
+      continue;
     }
 
     const nameEn = normalizeEnglishName(code, nameZh);
 
-    return [
-      {
-        code,
-        nameZh,
-        nameEn,
-        label: `${nameZh} / ${nameEn}`,
-        city: cleanCity(city),
-        schoolType: cleanSchoolType(schoolType),
-      },
-    ];
-  });
+    schoolsByCode.set(code, {
+      code,
+      nameZh,
+      nameEn,
+      label: `${nameZh} / ${nameEn}`,
+      city: cleanCity(city),
+      schoolType: cleanSchoolType(schoolType),
+    });
+  }
+
+  return [...schoolsByCode.values()].sort((a, b) => a.code.localeCompare(b.code));
 }

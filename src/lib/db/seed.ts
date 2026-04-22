@@ -4,8 +4,8 @@ import bcrypt from "bcryptjs";
 import * as schema from "./schema";
 
 async function seed() {
-  const url = process.env.DB_URL || process.env.DATABASE_URL;
-  if (!url) throw new Error("DB_URL or DATABASE_URL not set");
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL not set");
 
   const sql = neon(url);
   const db = drizzle(sql, { schema });
@@ -24,12 +24,12 @@ async function seed() {
 
   // Sample recruiters
   const companies = [
-    { name: "TSMC Recruiter", email: "tsmc@vgen.tw", company: "TSMC", industry: "Semiconductor", description: "The world's largest dedicated independent semiconductor foundry.", positions: ["Process Engineer", "Equipment Engineer", "R&D Researcher"], contactEmail: "campus@tsmc.com" },
-    { name: "Google TW Recruiter", email: "google@vgen.tw", company: "Google Taiwan", industry: "Technology", description: "Taipei engineering office focusing on hardware and cloud.", positions: ["Software Engineer", "Hardware Engineer", "UX Designer"], contactEmail: "tw-campus@google.com" },
-    { name: "MediaTek Recruiter", email: "mediatek@vgen.tw", company: "MediaTek", industry: "Semiconductor", description: "Global fabless semiconductor company for mobile and IoT.", positions: ["IC Design Engineer", "Firmware Engineer", "AI Researcher"], contactEmail: "hr@mediatek.com" },
-    { name: "Cathay Recruiter", email: "cathay@vgen.tw", company: "Cathay Financial", industry: "Finance", description: "Taiwan's largest financial holding company.", positions: ["Data Analyst", "Risk Manager", "Fintech Developer"], contactEmail: "recruit@cathayholdings.com.tw" },
-    { name: "Appier Recruiter", email: "appier@vgen.tw", company: "Appier", industry: "Technology", description: "AI-driven SaaS company helping businesses solve marketing challenges.", positions: ["ML Engineer", "Backend Engineer", "Solutions Architect"], contactEmail: "jobs@appier.com" },
-    { name: "Deloitte Recruiter", email: "deloitte@vgen.tw", company: "Deloitte Taiwan", industry: "Consulting", description: "Professional services firm specializing in audit, tax, and consulting.", positions: ["Consultant", "Auditor", "Tax Associate"], contactEmail: "tw-campus@deloitte.com" },
+    { name: "TSMC Recruiter", email: "tsmc@vgen.tw", company: "TSMC", industry: "Semiconductor", description: "The world's largest dedicated independent semiconductor foundry.", jobTitles: ["Process Engineer", "Equipment Engineer", "R&D Researcher"], contactEmail: "campus@tsmc.com" },
+    { name: "Google TW Recruiter", email: "google@vgen.tw", company: "Google Taiwan", industry: "Technology", description: "Taipei engineering office focusing on hardware and cloud.", jobTitles: ["Software Engineer", "Hardware Engineer", "UX Designer"], contactEmail: "tw-campus@google.com" },
+    { name: "MediaTek Recruiter", email: "mediatek@vgen.tw", company: "MediaTek", industry: "Semiconductor", description: "Global fabless semiconductor company for mobile and IoT.", jobTitles: ["IC Design Engineer", "Firmware Engineer", "AI Researcher"], contactEmail: "hr@mediatek.com" },
+    { name: "Cathay Recruiter", email: "cathay@vgen.tw", company: "Cathay Financial", industry: "Finance", description: "Taiwan's largest financial holding company.", jobTitles: ["Data Analyst", "Risk Manager", "Fintech Developer"], contactEmail: "recruit@cathayholdings.com.tw" },
+    { name: "Appier Recruiter", email: "appier@vgen.tw", company: "Appier", industry: "Technology", description: "AI-driven SaaS company helping businesses solve marketing challenges.", jobTitles: ["ML Engineer", "Backend Engineer", "Solutions Architect"], contactEmail: "jobs@appier.com" },
+    { name: "Deloitte Recruiter", email: "deloitte@vgen.tw", company: "Deloitte Taiwan", industry: "Consulting", description: "Professional services firm specializing in audit, tax, and consulting.", jobTitles: ["Consultant", "Auditor", "Tax Associate"], contactEmail: "tw-campus@deloitte.com" },
   ];
 
   const recruiterPassword = await bcrypt.hash("recruiter123", 12);
@@ -49,13 +49,25 @@ async function seed() {
           company: c.company,
           industry: c.industry,
           description: c.description,
-          positions: c.positions,
           contactEmail: c.contactEmail,
         })
         .onConflictDoNothing()
         .returning();
 
       if (rec) {
+        await db
+          .insert(schema.jobOpenings)
+          .values(
+            c.jobTitles.map((title) => ({
+              recruiterId: rec.id,
+              title,
+              description: `${title} role at ${c.company}.`,
+              moderationStatus: "approved" as const,
+              reviewedAt: new Date(),
+            }))
+          )
+          .onConflictDoNothing();
+
         // Generate slots for event day: 9am-5pm, 15-min intervals
         const eventDate = "2026-06-06";
         const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] = [];

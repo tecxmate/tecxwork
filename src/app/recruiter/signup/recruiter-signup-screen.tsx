@@ -9,7 +9,6 @@ import {
   Building2,
   AlertCircle,
   CheckCircle2,
-  X,
 } from "lucide-react";
 
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
@@ -18,8 +17,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { SiteFooter } from "@/components/site-footer";
 
 type Step = "email" | "profile";
@@ -37,9 +34,10 @@ export function RecruiterSignupScreen() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [positionInput, setPositionInput] = useState("");
-  const [positions, setPositions] = useState<string[]>([]);
-  const [jdLink, setJdLink] = useState("");
+  const [confirmsLawfulHiring, setConfirmsLawfulHiring] = useState(false);
+  const [confirmsNoDiscrimination, setConfirmsNoDiscrimination] = useState(false);
+  const [confirmsWorkAuthorizationChecks, setConfirmsWorkAuthorizationChecks] =
+    useState(false);
 
   async function handleEmailCheck(e: React.FormEvent) {
     e.preventDefault();
@@ -65,18 +63,6 @@ export function RecruiterSignupScreen() {
     }
   }
 
-  function addPosition() {
-    const position = positionInput.trim();
-    if (position && !positions.includes(position)) {
-      setPositions([...positions, position]);
-    }
-    setPositionInput("");
-  }
-
-  function removePosition(position: string) {
-    setPositions(positions.filter((item) => item !== position));
-  }
-
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -93,9 +79,10 @@ export function RecruiterSignupScreen() {
           company,
           industry,
           description: description.trim(),
-          positions,
           contactEmail: email.trim(),
-          jdLink: jdLink.trim() || undefined,
+          confirmsLawfulHiring,
+          confirmsNoDiscrimination,
+          confirmsWorkAuthorizationChecks,
         }),
       });
 
@@ -250,68 +237,57 @@ export function RecruiterSignupScreen() {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">
-                      {messages.signup.openPositions}
-                    </label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={positionInput}
-                        onChange={(e) => setPositionInput(e.target.value)}
-                        placeholder={messages.signup.placeholders.position}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addPosition();
-                          }
-                        }}
+                  <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+                    <p className="font-medium text-foreground">
+                      Recruiter compliance checklist
+                    </p>
+                    <p>
+                      Recruiters must verify work-permit eligibility where applicable, keep
+                      student hiring within Taiwan law, and avoid discriminatory job criteria.
+                    </p>
+
+                    <label className="flex cursor-pointer items-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={confirmsLawfulHiring}
+                        onChange={(e) => setConfirmsLawfulHiring(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={addPosition}
-                        disabled={!positionInput.trim()}
-                      >
-                        {messages.signup.addPosition}
-                      </Button>
-                    </div>
-                    {positions.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {positions.map((position) => (
-                          <Badge
-                            key={position}
-                            variant="secondary"
-                            className="cursor-pointer gap-1"
-                          >
-                            {position}
-                            <button
-                              type="button"
-                              onClick={() => removePosition(position)}
-                              aria-label={messages.dashboard.company.delete}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="jd-link" className="text-sm font-medium">
-                      {messages.signup.jdLink}
+                      <span>
+                        We will use this platform only for lawful hiring and recruitment-related
+                        outreach.
+                      </span>
                     </label>
-                    <Input
-                      id="jd-link"
-                      type="url"
-                      value={jdLink}
-                      onChange={(e) => setJdLink(e.target.value)}
-                      placeholder={messages.signup.placeholders.jdLink}
-                    />
-                  </div>
 
+                    <label className="flex cursor-pointer items-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={confirmsNoDiscrimination}
+                        onChange={(e) => setConfirmsNoDiscrimination(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                      />
+                      <span>
+                        We will not post or request discriminatory criteria based on nationality,
+                        race, place of origin, or other prohibited categories unless legally
+                        justified.
+                      </span>
+                    </label>
+
+                    <label className="flex cursor-pointer items-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={confirmsWorkAuthorizationChecks}
+                        onChange={(e) =>
+                          setConfirmsWorkAuthorizationChecks(e.target.checked)
+                        }
+                        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                      />
+                      <span>
+                        We understand students may need valid Taiwan work authorization and
+                        semester hour limits may apply. We will verify eligibility before hiring.
+                      </span>
+                    </label>
+                  </div>
                   {error && (
                     <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -321,7 +297,14 @@ export function RecruiterSignupScreen() {
 
                   <Button
                     type="submit"
-                    disabled={!name.trim() || !password.trim() || loading}
+                    disabled={
+                      !name.trim() ||
+                      !password.trim() ||
+                      !confirmsLawfulHiring ||
+                      !confirmsNoDiscrimination ||
+                      !confirmsWorkAuthorizationChecks ||
+                      loading
+                    }
                     className="w-full"
                   >
                     {loading ? (

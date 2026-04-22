@@ -25,9 +25,7 @@ export default async function DashboardPage() {
       company: recruiters.company,
       industry: recruiters.industry,
       description: recruiters.description,
-      positions: recruiters.positions,
       contactEmail: recruiters.contactEmail,
-      jdLink: recruiters.jdLink,
       interviewerCount: recruiters.interviewerCount,
     })
     .from(recruiters)

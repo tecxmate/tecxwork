@@ -33,9 +33,7 @@ type Recruiter = {
   company: string;
   industry: string;
   description: string;
-  positions: string[];
   contactEmail: string;
-  jdLink: string | null;
 };
 
 type SelectedSlot = {
@@ -113,10 +111,10 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
   };
 
   // Determine which positions to show
-  const positionList: { title: string; jdLink: string | null }[] =
-    jobs.length > 0
-      ? jobs.map((j) => ({ title: j.title, jdLink: j.jdLink }))
-      : recruiter.positions.map((p) => ({ title: p, jdLink: null }));
+  const positionList: { title: string; jdLink: string | null }[] = jobs.map((j) => ({
+    title: j.title,
+    jdLink: j.jdLink,
+  }));
 
   return (
     <div className="flex min-h-full flex-1 flex-col">

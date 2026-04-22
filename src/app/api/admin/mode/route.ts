@@ -5,12 +5,17 @@ import { eq } from "drizzle-orm";
 
 export async function GET() {
   const [config] = await db
-    .select({ mode: eventConfig.mode, locked: eventConfig.modeLocked })
+    .select({
+      mode: eventConfig.mode,
+      onboardingMode: eventConfig.onboardingMode,
+      locked: eventConfig.modeLocked,
+    })
     .from(eventConfig)
     .limit(1);
 
   return NextResponse.json({
     mode: config?.mode ?? "both",
+    onboardingMode: config?.onboardingMode ?? "full",
     locked: config?.locked ?? false,
   });
 }
@@ -23,7 +28,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { mode, lock } = body;
+  const { mode, onboardingMode, lock } = body;
 
   const [config] = await db
     .select({ id: eventConfig.id, locked: eventConfig.modeLocked })
@@ -63,6 +68,19 @@ export async function PUT(req: NextRequest) {
       .set({ mode })
       .where(eq(eventConfig.id, config.id));
     return NextResponse.json({ mode });
+  }
+
+  if (onboardingMode) {
+    if (!["minimal", "full"].includes(onboardingMode)) {
+      return NextResponse.json({ error: "Invalid onboarding mode" }, { status: 400 });
+    }
+
+    await db
+      .update(eventConfig)
+      .set({ onboardingMode })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ onboardingMode });
   }
 
   return NextResponse.json({ error: "No changes provided" }, { status: 400 });

@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { description, positions, jdLink, interviewerCount } = body;
+  const { description, interviewerCount } = body;
 
   // Fetch current recruiter
   const [current] = await db
@@ -30,8 +30,6 @@ export async function PUT(req: NextRequest) {
 
   const updates: Record<string, unknown> = {};
   if (typeof description === "string") updates.description = description.trim();
-  if (Array.isArray(positions)) updates.positions = positions;
-  if (typeof jdLink === "string") updates.jdLink = jdLink.trim() || null;
 
   const newCount =
     typeof interviewerCount === "number"

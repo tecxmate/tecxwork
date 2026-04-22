@@ -30,20 +30,37 @@ const EVENT_PHOTOS = [
 ];
 
 async function getPublicRecruiters() {
-  const result = await db
+  const recruiterList = await db
     .select({
       id: recruiters.id,
       company: recruiters.company,
       industry: recruiters.industry,
       description: recruiters.description,
-      positions: recruiters.positions,
     })
     .from(recruiters)
     .innerJoin(users, eq(recruiters.userId, users.id))
     .orderBy(recruiters.company)
     .limit(6);
 
-  return result;
+  const approvedJobs = await db
+    .select({
+      recruiterId: jobOpenings.recruiterId,
+      title: jobOpenings.title,
+    })
+    .from(jobOpenings)
+    .where(eq(jobOpenings.moderationStatus, "approved"));
+
+  const jobsByRecruiter = new Map<number, string[]>();
+  for (const job of approvedJobs) {
+    const titles = jobsByRecruiter.get(job.recruiterId) ?? [];
+    titles.push(job.title);
+    jobsByRecruiter.set(job.recruiterId, titles);
+  }
+
+  return recruiterList.map((recruiter) => ({
+    ...recruiter,
+    positions: jobsByRecruiter.get(recruiter.id) ?? [],
+  }));
 }
 
 async function getPublicJobs() {
@@ -57,6 +74,7 @@ async function getPublicJobs() {
     })
     .from(jobOpenings)
     .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .where(eq(jobOpenings.moderationStatus, "approved"))
     .limit(8);
 
   return result;

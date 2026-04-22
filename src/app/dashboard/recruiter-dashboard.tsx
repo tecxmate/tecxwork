@@ -52,9 +52,7 @@ type Recruiter = {
   company: string;
   industry: string;
   description: string;
-  positions: string[];
   contactEmail: string;
-  jdLink: string | null;
   interviewerCount: number;
 };
 
@@ -419,6 +417,12 @@ function ApplicantsTab({ recruiterId }: { recruiterId: number }) {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+        Review applicant data only for recruitment purposes. Before hiring, confirm the
+        student&apos;s legal work eligibility in Taiwan, respect any applicable work-permit
+        and hour-limit rules, and avoid discriminatory screening criteria.
+      </div>
+
       <div className="relative w-full max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -679,6 +683,8 @@ type JobOpening = {
   title: string;
   jdLink: string | null;
   description: string;
+  moderationStatus: string;
+  moderationNotes: string;
 };
 
 function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
@@ -697,9 +703,12 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [newTitle, setNewTitle] = useState("");
   const [newJdLink, setNewJdLink] = useState("");
+  const [newDescription, setNewDescription] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editJdLink, setEditJdLink] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [jobError, setJobError] = useState("");
 
   useEffect(() => {
     fetch("/api/me/jobs")
@@ -733,29 +742,46 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
   async function handleAddJob(e: React.FormEvent) {
     e.preventDefault();
     if (!newTitle.trim()) return;
+    setJobError("");
     const res = await fetch("/api/me/jobs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle.trim(), jdLink: newJdLink.trim() || null }),
+      body: JSON.stringify({
+        title: newTitle.trim(),
+        jdLink: newJdLink.trim() || null,
+        description: newDescription.trim(),
+      }),
     });
     if (res.ok) {
       const d = await res.json();
       setJobs([...jobs, d.job]);
       setNewTitle("");
       setNewJdLink("");
+      setNewDescription("");
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setJobError(d.error || "Failed to create job");
     }
   }
 
   async function handleUpdateJob(id: number) {
+    setJobError("");
     const res = await fetch(`/api/me/jobs/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: editTitle.trim(), jdLink: editJdLink.trim() || null }),
+      body: JSON.stringify({
+        title: editTitle.trim(),
+        jdLink: editJdLink.trim() || null,
+        description: editDescription.trim(),
+      }),
     });
     if (res.ok) {
       const d = await res.json();
       setJobs(jobs.map((j) => (j.id === id ? d.job : j)));
       setEditingId(null);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setJobError(d.error || "Failed to update job");
     }
   }
 
@@ -764,6 +790,36 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
     await fetch(`/api/me/jobs/${id}`, { method: "DELETE" });
     setJobs(jobs.filter((j) => j.id !== id));
   }
+
+  async function handleSubmitJob(id: number) {
+    setJobError("");
+    const res = await fetch(`/api/me/jobs/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "submit" }),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setJobs(jobs.map((j) => (j.id === id ? d.job : j)));
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setJobError(d.error || "Failed to submit job");
+    }
+  }
+
+  const statusLabel: Record<string, string> = {
+    draft: messages.dashboard.company.moderationStatus.draft,
+    pending_review: messages.dashboard.company.moderationStatus.pendingReview,
+    approved: messages.dashboard.company.moderationStatus.approved,
+    rejected: messages.dashboard.company.moderationStatus.rejected,
+  };
+
+  const statusClassName: Record<string, string> = {
+    draft: "bg-slate-100 text-slate-700",
+    pending_review: "bg-amber-100 text-amber-800",
+    approved: "bg-green-100 text-green-700",
+    rejected: "bg-red-100 text-red-700",
+  };
 
   return (
     <div className="space-y-6">
@@ -822,11 +878,14 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
           <p className="text-xs text-muted-foreground">
             {messages.dashboard.company.jobOpeningsHint}
           </p>
+          <p className="text-xs text-muted-foreground">
+            {messages.dashboard.company.moderationHint}
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Add new job */}
           <form onSubmit={handleAddJob} className="space-y-2 rounded-lg border bg-muted/20 p-3">
-            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
               <Input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
@@ -839,12 +898,20 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                 placeholder={messages.dashboard.company.jdLinkOptional}
                 type="url"
               />
+              <textarea
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder={messages.dashboard.company.descriptionPlaceholder}
+                rows={3}
+                className="sm:col-span-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+              />
               <Button type="submit" size="sm" disabled={!newTitle.trim()}>
                 <Plus className="mr-1 h-3.5 w-3.5" />
                 {messages.dashboard.company.add}
               </Button>
             </div>
           </form>
+          {jobError && <p className="text-xs text-destructive">{jobError}</p>}
 
           {/* Job list */}
           {loadingJobs ? (
@@ -872,6 +939,13 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                         placeholder={messages.dashboard.company.jdLinkShort}
                         type="url"
                       />
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        placeholder={messages.dashboard.company.descriptionPlaceholder}
+                        rows={3}
+                        className="sm:col-span-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                      />
                     </div>
                     <div className="mt-2 flex gap-2">
                       <Button size="sm" onClick={() => handleUpdateJob(job.id)}>
@@ -888,7 +962,22 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                     className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{job.title}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium">{job.title}</p>
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                            statusClassName[job.moderationStatus] ?? "bg-muted text-muted-foreground"
+                          )}
+                        >
+                          {statusLabel[job.moderationStatus] ?? job.moderationStatus}
+                        </span>
+                      </div>
+                      {job.description && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {job.description}
+                        </p>
+                      )}
                       {job.jdLink && (
                         <a
                           href={job.jdLink}
@@ -904,13 +993,28 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                       {!job.jdLink && (
                         <p className="text-xs text-muted-foreground">{messages.dashboard.company.noJdLink}</p>
                       )}
+                      {job.moderationNotes && (
+                        <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                          {messages.dashboard.company.adminNotePrefix} {job.moderationNotes}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex shrink-0 gap-1">
+                    <div className="flex shrink-0 flex-wrap gap-1">
+                      {job.moderationStatus !== "pending_review" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSubmitJob(job.id)}
+                        >
+                          {messages.dashboard.company.submitForReview}
+                        </Button>
+                      )}
                       <button
                         onClick={() => {
                           setEditingId(job.id);
                           setEditTitle(job.title);
                           setEditJdLink(job.jdLink ?? "");
+                          setEditDescription(job.description ?? "");
                         }}
                         className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
                         aria-label={messages.dashboard.company.edit}

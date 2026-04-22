@@ -9,6 +9,7 @@ import {
   eventConfig,
   allowedDomains,
   users,
+  jobOpenings,
 } from "@/lib/db";
 import { count, eq } from "drizzle-orm";
 import { AdminDashboard } from "./admin-dashboard";
@@ -51,6 +52,7 @@ export default async function AdminPage() {
   const [config] = await db
     .select({
       mode: eventConfig.mode,
+      onboardingMode: eventConfig.onboardingMode,
       locked: eventConfig.modeLocked,
       startHour: eventConfig.startHour,
       endHour: eventConfig.endHour,
@@ -81,15 +83,35 @@ export default async function AdminPage() {
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
     .orderBy(bookings.createdAt);
 
+  const jobList = await db
+    .select({
+      id: jobOpenings.id,
+      recruiterId: recruiters.id,
+      company: recruiters.company,
+      title: jobOpenings.title,
+      jdLink: jobOpenings.jdLink,
+      description: jobOpenings.description,
+      moderationStatus: jobOpenings.moderationStatus,
+      moderationNotes: jobOpenings.moderationNotes,
+      submittedAt: jobOpenings.submittedAt,
+      reviewedAt: jobOpenings.reviewedAt,
+      createdAt: jobOpenings.createdAt,
+    })
+    .from(jobOpenings)
+    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .orderBy(jobOpenings.createdAt);
+
   const activeBookingCount = bookingList.filter(
     (b) => b.status === "pending" || b.status === "accepted" || b.status === "waitlisted"
   ).length;
+  const onboardingMode = config?.onboardingMode === "minimal" ? "minimal" : "full";
 
   return (
     <AdminDashboard
       recruiters={recruiterList}
       applicants={applicantList}
       bookings={bookingList}
+      jobs={jobList}
       domains={domains}
       stats={{
         totalRecruiters: recruiterList.length,
@@ -100,6 +122,7 @@ export default async function AdminPage() {
         totalApplicants: applicantList.length,
       }}
       currentMode={config?.mode ?? "both"}
+      initialOnboardingMode={onboardingMode}
       initialLocked={config?.locked ?? false}
       timeFrame={{
         startHour: config?.startHour ?? 10,

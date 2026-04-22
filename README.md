@@ -2,21 +2,16 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Environment Notes
 
-Database access should use `DB_URL` as the primary connection string.
-
-Why:
-- Vercel can auto-assign `DATABASE_URL` for its Vercel-managed Neon integration.
-- This project uses a separate Neon database, and that Vercel-managed `DATABASE_URL` cannot be safely repointed.
-- To avoid collisions, we use `DB_URL` for the app's intended database connection.
+Database access uses `DATABASE_URL`.
 
 Current behavior:
-- runtime DB access prefers `DB_URL` and falls back to `DATABASE_URL`
-- Drizzle commands such as `npm run db:push` also prefer `DB_URL`
+- runtime DB access uses `DATABASE_URL`
+- Drizzle commands and DB maintenance scripts use `DATABASE_URL`
 
 Recommended setup:
 
 ```bash
-DB_URL=your_neon_connection_string
+DATABASE_URL=your_neon_connection_string
 ```
 
 Taiwan school data:

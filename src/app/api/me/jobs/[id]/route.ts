@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 
 /** PUT — update a job opening */
 export async function PUT(
@@ -26,10 +27,48 @@ export async function PUT(
   }
 
   const body = await req.json();
+  if (body.action === "submit") {
+    const [submitted] = await db
+      .update(jobOpenings)
+      .set({
+        moderationStatus: "pending_review",
+        submittedAt: new Date(),
+        moderationNotes: "",
+      })
+      .where(and(eq(jobOpenings.id, jobId), eq(jobOpenings.recruiterId, rec.id)))
+      .returning();
+
+    if (!submitted) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ job: submitted });
+  }
+
+  const flaggedTerm = findFlaggedJobLanguage([
+    body.title,
+    body.description,
+    body.jdLink,
+  ]);
+  if (flaggedTerm) {
+    return NextResponse.json(
+      {
+        error: `Please remove potentially discriminatory or risky wording before saving this job: "${flaggedTerm}"`,
+      },
+      { status: 400 }
+    );
+  }
+
   const updates: Record<string, unknown> = {};
   if (typeof body.title === "string" && body.title.trim()) updates.title = body.title.trim();
   if (typeof body.jdLink === "string") updates.jdLink = body.jdLink.trim() || null;
   if (typeof body.description === "string") updates.description = body.description.trim();
+  if (Object.keys(updates).length > 0) {
+    updates.moderationStatus = "draft";
+    updates.moderationNotes = "";
+    updates.submittedAt = null;
+    updates.reviewedAt = null;
+  }
 
   const [updated] = await db
     .update(jobOpenings)

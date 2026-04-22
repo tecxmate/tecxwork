@@ -10,7 +10,7 @@ export type RecruiterCardData = {
   description: string;
   positions: string[];
   contactEmail: string;
-  jdLink: string | null;
+  jdAvailable: boolean;
 };
 
 export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
@@ -67,7 +67,7 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
         </div>
 
         {/* JD available indicator */}
-        {recruiter.jdLink && (
+        {recruiter.jdAvailable && (
           <div className="flex items-center gap-1.5 text-xs text-primary">
             <FileText className="h-3 w-3" />
             <span>Job description available</span>

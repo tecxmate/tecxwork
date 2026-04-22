@@ -18,9 +18,7 @@ export async function POST(req: NextRequest) {
     company,
     industry,
     description,
-    positions,
     contactEmail,
-    jdLink,
   } = body;
 
   if (!email || !password || !name || !company || !industry || !contactEmail) {
@@ -41,9 +39,7 @@ export async function POST(req: NextRequest) {
       company,
       industry,
       description: description ?? "",
-      positions: positions ?? [],
       contactEmail,
-      jdLink: jdLink ?? null,
     })
     .returning();
 

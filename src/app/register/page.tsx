@@ -50,6 +50,7 @@ type Step = "form" | "availability" | "done";
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("form");
+  const [onboardingMode, setOnboardingMode] = useState<"minimal" | "full">("full");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
@@ -85,6 +86,23 @@ export default function RegisterPage() {
       JSON.stringify(draft)
     );
   }, [draft]);
+
+  useEffect(() => {
+    fetch("/api/admin/mode")
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load onboarding mode");
+        }
+
+        return response.json();
+      })
+      .then((data) => {
+        setOnboardingMode(data.onboardingMode === "minimal" ? "minimal" : "full");
+      })
+      .catch(() => {
+        setOnboardingMode("full");
+      });
+  }, []);
 
   useEffect(() => {
     fetch("/api/taiwan-schools")
@@ -139,15 +157,18 @@ export default function RegisterPage() {
       .slice(0, 8);
   }, [draft.schoolQuery, schools]);
 
+  const isMinimalOnboarding = onboardingMode === "minimal";
+
   const canSubmit =
     draft.name.trim() &&
     draft.email.trim() &&
     password.length >= 6 &&
-    draft.schoolName.trim() &&
-    draft.major.trim() &&
-    draft.studyLevel &&
-    draft.expectedGraduation &&
     draft.cvLink.trim() &&
+    (isMinimalOnboarding ||
+      (draft.schoolName.trim() &&
+        draft.major.trim() &&
+        draft.studyLevel &&
+        draft.expectedGraduation)) &&
     draft.pipaConsent;
 
   function setField<K extends keyof StudentRegistrationDraft>(
@@ -437,8 +458,9 @@ export default function RegisterPage() {
                 Applicant Registration
               </h1>
               <p className="text-sm text-muted-foreground">
-                Create a fuller student profile so recruiters can evaluate your education background,
-                graduation timeline, and job preferences before reaching out.
+                {isMinimalOnboarding
+                  ? "Create the minimum student profile needed for recruiters to review your CV and contact you."
+                  : "Create a fuller student profile so recruiters can evaluate your education background, graduation timeline, and job preferences before reaching out."}
               </p>
             </CardHeader>
             <CardContent>
@@ -472,19 +494,6 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label htmlFor="phone" className="text-sm font-medium">
-                        Phone / WhatsApp
-                      </label>
-                      <Input
-                        id="phone"
-                        value={draft.phone}
-                        onChange={(e) => setField("phone", e.target.value)}
-                        placeholder="+886..."
-                        autoComplete="tel"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
                       <label htmlFor="reg-email" className="text-sm font-medium">
                         Email <span className="text-destructive">*</span>
                       </label>
@@ -514,23 +523,65 @@ export default function RegisterPage() {
                       />
                     </div>
 
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <label htmlFor="nationality" className="text-sm font-medium">
-                        Nationality
-                      </label>
-                      <Input
-                        id="nationality"
-                        value={draft.nationality}
-                        onChange={(e) => setField("nationality", e.target.value)}
-                        placeholder="e.g. Vietnamese"
-                      />
-                    </div>
+                    {!isMinimalOnboarding && (
+                      <>
+                        <div className="space-y-1.5">
+                          <label htmlFor="phone" className="text-sm font-medium">
+                            Phone / WhatsApp
+                          </label>
+                          <Input
+                            id="phone"
+                            value={draft.phone}
+                            onChange={(e) => setField("phone", e.target.value)}
+                            placeholder="+886..."
+                            autoComplete="tel"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label htmlFor="nationality" className="text-sm font-medium">
+                            Nationality
+                          </label>
+                          <Input
+                            id="nationality"
+                            value={draft.nationality}
+                            onChange={(e) => setField("nationality", e.target.value)}
+                            placeholder="e.g. Vietnamese"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </section>
 
                 <Separator />
 
                 <section className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label htmlFor="cv-link" className="text-sm font-medium">
+                        CV Link (Google Drive) <span className="text-destructive">*</span>
+                      </label>
+                      <Input
+                        id="cv-link"
+                        type="url"
+                        required
+                        value={draft.cvLink}
+                        onChange={(e) => setField("cvLink", e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Share a public or recruiter-accessible Google Drive CV link so companies can review it.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {!isMinimalOnboarding && (
+                  <>
+                    <Separator />
+
+                    <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4 text-primary" />
                     <h2 className="font-heading text-lg font-semibold">Education</h2>
@@ -993,20 +1044,6 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label htmlFor="cv-link" className="text-sm font-medium">
-                        CV Link (Google Drive) <span className="text-destructive">*</span>
-                      </label>
-                      <Input
-                        id="cv-link"
-                        type="url"
-                        required
-                        value={draft.cvLink}
-                        onChange={(e) => setField("cvLink", e.target.value)}
-                        placeholder="https://drive.google.com/file/d/..."
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
                       <label htmlFor="linkedin" className="text-sm font-medium">
                         LinkedIn
                       </label>
@@ -1047,6 +1084,8 @@ export default function RegisterPage() {
                     </div>
                   </div>
                 </section>
+                  </>
+                )}
 
                 <Separator />
 
@@ -1068,6 +1107,13 @@ export default function RegisterPage() {
                     recruiters for this recruitment event in accordance with Taiwan&apos;s Personal
                     Data Protection Act.
                   </label>
+                </div>
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+                  Students are responsible for confirming they are legally allowed to work in Taiwan
+                  before accepting any job, internship, or part-time role. If you are an
+                  international student, overseas Chinese student, or other foreign national, you
+                  may need a valid work permit and may be subject to working-hour limits during the
+                  academic semester.
                 </div>
 
                 {EVENT_CONFIG.enableNewsletterOptIn && (

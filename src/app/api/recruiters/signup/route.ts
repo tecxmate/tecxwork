@@ -14,9 +14,10 @@ export async function POST(req: NextRequest) {
     company,
     industry,
     description,
-    positions,
     contactEmail,
-    jdLink,
+    confirmsLawfulHiring,
+    confirmsNoDiscrimination,
+    confirmsWorkAuthorizationChecks,
   } = body;
 
   if (!email || !password || !name || !company || !industry) {
@@ -29,6 +30,20 @@ export async function POST(req: NextRequest) {
   if (password.length < 6) {
     return NextResponse.json(
       { error: "Password must be at least 6 characters" },
+      { status: 400 }
+    );
+  }
+
+  if (
+    !confirmsLawfulHiring ||
+    !confirmsNoDiscrimination ||
+    !confirmsWorkAuthorizationChecks
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "You must confirm lawful hiring, non-discrimination, and work-authorization checks before creating a recruiter account.",
+      },
       { status: 400 }
     );
   }
@@ -70,9 +85,7 @@ export async function POST(req: NextRequest) {
         company: company ?? allowed.company,
         industry: industry ?? allowed.industry,
         description: description ?? "",
-        positions: positions ?? [],
         contactEmail: contactEmail ?? email,
-        jdLink: jdLink ?? null,
       })
       .returning();
 

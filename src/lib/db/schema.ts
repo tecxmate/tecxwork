@@ -82,6 +82,10 @@ export const jobOpenings = pgTable("job_openings", {
   title: text("title").notNull(),
   jdLink: text("jd_link"),
   description: text("description").notNull().default(""),
+  moderationStatus: text("moderation_status").notNull().default("draft"),
+  moderationNotes: text("moderation_notes").notNull().default(""),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -252,6 +256,7 @@ export const eventConfig = pgTable("event_config", {
   endHour: integer("end_hour").notNull().default(17),
   endMinute: integer("end_minute").notNull().default(30),
   mode: eventModeEnum("mode").notNull().default("both"),
+  onboardingMode: text("onboarding_mode").notNull().default("full"),
   modeLocked: boolean("mode_locked").notNull().default(false),
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),

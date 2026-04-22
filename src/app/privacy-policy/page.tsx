@@ -29,7 +29,8 @@ export default function PrivacyPolicyPage() {
         <h3 className="font-semibold mt-4 mb-2">A. For Students/Applicants:</h3>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Account Data:</strong> Full name, email address, and password (hashed).</li>
-          <li><strong>Professional Data:</strong> University, major/department, skills, and links to your CV/Resume (e.g., Google Drive links) or uploaded resume files.</li>
+          <li><strong>Professional Data:</strong> University, degree/study level, expected graduation date, work experience, skills, career preferences, and links to your CV/Resume (e.g., Google Drive links) or uploaded resume files.</li>
+          <li><strong>Eligibility and Matching Data:</strong> Nationality, work-authorization information, and related profile information that you voluntarily provide for job-matching purposes.</li>
           <li><strong>Interaction Data:</strong> The interviews you book, time slots selected, and your interactions with recruiters on the Platform.</li>
         </ul>
 
@@ -50,6 +51,7 @@ export default function PrivacyPolicyPage() {
           <li>To operate the TECXWORK platform and facilitate the V-GEN TRIDENT Career Fair.</li>
           <li>To allow students to book interview slots with participating recruiters.</li>
           <li>To allow verified recruiters to view the profiles and CVs of students who have explicitly consented to share their data.</li>
+          <li>To help recruiters assess whether an applicant may be suitable for a role based on profile information voluntarily provided by the applicant.</li>
           <li>To send transactional communications (e.g., booking confirmations, password resets).</li>
           <li>To comply with legal obligations and resolve disputes.</li>
         </ol>
@@ -59,11 +61,19 @@ export default function PrivacyPolicyPage() {
         <p className="mt-4">Your data is only shared under the following conditions:</p>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>With Recruiters (Students Only):</strong> When you book an interview with a recruiter, or if you set your profile visibility to &quot;Public&quot; (allowing recruiters to find you via Talent Search), your profile and CV link will be shared with verified recruiters on the Platform.</li>
+          <li><strong>Visibility Is Consent-Based:</strong> We only expose applicant profile data to recruiters for recruitment-related purposes within the Platform workflow and based on the applicant&apos;s submission and consent choices.</li>
           <li><strong>With Service Providers:</strong> We use third-party infrastructure providers to operate the Platform (e.g., Vercel for hosting, Neon for database services in Tokyo, Japan, and email delivery services). These processors are contractually bound to protect your data.</li>
           <li><strong>Legal Requirements:</strong> If required by Taiwanese or Vietnamese law, we may disclose data to law enforcement or regulatory authorities.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">4. Cross-Border Data Transfer (Important)</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">4. Employment and Student-Status Notices</h2>
+        <ul className="list-disc pl-5 space-y-1 mb-4">
+          <li>The Platform is not a substitute for a work permit, visa, ARC, or any other legal authorization to work in Taiwan.</li>
+          <li>If you are an overseas Chinese student, international student, or other foreign national in Taiwan, you are responsible for ensuring that any job application or employment you pursue complies with Taiwanese law, including any permit and working-hour limitations that apply to your status.</li>
+          <li>Recruiters are responsible for independently verifying employment eligibility and legal hiring requirements before any offer or engagement is made.</li>
+        </ul>
+
+        <h2 className="text-xl font-semibold mt-8 mb-4">5. Cross-Border Data Transfer (Important)</h2>
         <p>Due to the international nature of our operations, your personal data will be subject to cross-border transfer. By using the Platform, you explicitly consent to the following data routing:</p>
         <ol className="list-decimal pl-5 space-y-1 mb-4">
           <li><strong>Collection in Taiwan:</strong> Your data is collected while you use the Platform in Taiwan.</li>
@@ -72,13 +82,13 @@ export default function PrivacyPolicyPage() {
         </ol>
         <p>We implement stringent technical safeguards and strict access controls to ensure your data remains protected during these international transfers, in full compliance with Taiwan PDPA Article 21 and Vietnam PDPD.</p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">5. Data Retention</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">6. Data Retention</h2>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Single-Event Model:</strong> If the Platform is utilized strictly for a single event, your personal data (including profile and booking records) will be permanently deleted from our active databases within <strong>30 days</strong> after the conclusion of the event, unless you explicitly opt-in to keep your account active for future events (&quot;Talent Passport&quot;).</li>
           <li><strong>Talent Passport:</strong> If you opt-in to persistent storage, we will retain your account and profile data until you manually delete your account.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">6. Your Rights (Taiwan PDPA Article 3)</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">7. Your Rights (Taiwan PDPA Article 3)</h2>
         <p>Under the Taiwan PDPA, you possess the following rights regarding your personal data:</p>
         <ol className="list-decimal pl-5 space-y-1 mb-4">
           <li><strong>Inquiry and Review:</strong> You may request to review your personal data.</li>
@@ -89,13 +99,13 @@ export default function PrivacyPolicyPage() {
         </ol>
         <p>To exercise any of these rights, please contact us at: <strong>ceo@tecxmate.com</strong>.</p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">7. Security Measures</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">8. Security Measures</h2>
         <p>We utilize industry-standard security measures, including encrypted connections (HTTPS), hashed passwords (bcrypt), and parameterized database queries to protect against unauthorized access, alteration, disclosure, or destruction of your personal data.</p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">8. Changes to this Policy</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">9. Changes to this Policy</h2>
         <p>We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on the Platform and updating the &quot;Effective Date.&quot;</p>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">9. Contact Us</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">10. Contact Us</h2>
         <p>If you have any questions or concerns about this Privacy Policy, please contact:</p>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Data Controller:</strong> TECXMATE COMPANY LIMITED</li>
