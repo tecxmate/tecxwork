@@ -297,25 +297,35 @@
   animation: page-enter var(--duration-slow) var(--ease-fluid) both;
 }
 
-.route-progress {
-  position: fixed;
-  top: 0;
+.route-transition-active {
+  isolation: isolate;
+}
+
+header.sticky {
+  position: sticky;
+}
+
+header.sticky::after {
+  content: "";
+  position: absolute;
   left: 0;
   right: 0;
-  z-index: 90;
+  bottom: -1px;
   height: 2px;
-  transform-origin: left center;
-  background: linear-gradient(90deg, rgba(140, 82, 255, 0.2), rgba(140, 82, 255, 0.95), rgba(169, 120, 255, 0.85));
-  box-shadow: 0 0 24px rgba(140, 82, 255, 0.35);
-  will-change: transform, opacity;
-}
-
-.route-progress-idle {
   transform: scaleX(0);
+  transform-origin: left center;
   opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(140, 82, 255, 0.18),
+    rgba(140, 82, 255, 0.95),
+    rgba(169, 120, 255, 0.85)
+  );
+  box-shadow: 0 0 18px rgba(140, 82, 255, 0.28);
 }
 
-.route-progress-active {
+.route-loading header.sticky::after {
   animation: route-progress 520ms var(--ease-fluid) forwards;
 }
 

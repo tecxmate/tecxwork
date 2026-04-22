@@ -35,29 +35,28 @@ export function AppMotionShell({
     const activateFrame = window.requestAnimationFrame(() => {
       setTransitionKey((value) => value + 1);
       setIsNavigating(true);
+      document.documentElement.classList.add("route-loading");
     });
     const completeTimer = window.setTimeout(() => {
       setIsNavigating(false);
+      document.documentElement.classList.remove("route-loading");
     }, 520);
 
     return () => {
       window.cancelAnimationFrame(activateFrame);
       window.clearTimeout(completeTimer);
+      document.documentElement.classList.remove("route-loading");
     };
   }, [routeKey]);
 
   return (
     <>
       <div
-        aria-hidden="true"
-        className={[
-          "route-progress",
-          isNavigating ? "route-progress-active" : "route-progress-idle",
-        ].join(" ")}
-      />
-      <div
         key={`${routeKey}-${transitionKey}`}
-        className="page-shell motion-safe:animate-page-enter"
+        className={[
+          "page-shell motion-safe:animate-page-enter",
+          isNavigating ? "route-transition-active" : "",
+        ].join(" ")}
       >
         {children}
       </div>
