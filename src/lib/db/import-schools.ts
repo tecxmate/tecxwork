@@ -9,8 +9,8 @@ async function importSchools() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL not set");
 
-  const sql = neon(url);
-  const db = drizzle(sql, { schema });
+  const client = neon(url);
+  const db = drizzle(client, { schema });
 
   const schools = await loadTaiwanSchoolDataset();
 
