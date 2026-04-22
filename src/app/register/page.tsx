@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -47,6 +47,108 @@ import { SiteFooter } from "@/components/site-footer";
 
 type Step = "form" | "availability" | "done";
 
+const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor({
+  experience,
+  index,
+  onRemove,
+  onUpdate,
+}: {
+  experience: StudentWorkExperience;
+  index: number;
+  onRemove: (index: number) => void;
+  onUpdate: <K extends keyof StudentWorkExperience>(
+    index: number,
+    field: K,
+    value: StudentWorkExperience[K]
+  ) => void;
+}) {
+  return (
+    <div className="space-y-4 rounded-xl border border-border/60 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">Experience {index + 1}</h3>
+        <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(index)}>
+          Remove
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Company</label>
+          <Input
+            value={experience.company}
+            onChange={(e) => onUpdate(index, "company", e.target.value)}
+            placeholder="e.g. TSMC"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Job Title</label>
+          <Input
+            value={experience.title}
+            onChange={(e) => onUpdate(index, "title", e.target.value)}
+            placeholder="e.g. Data Analyst Intern"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Employment Type</label>
+          <Input
+            value={experience.employmentType}
+            onChange={(e) => onUpdate(index, "employmentType", e.target.value)}
+            placeholder="Internship, Part-time, Full-time"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2.5">
+          <input
+            id={`current-role-${index}`}
+            type="checkbox"
+            checked={experience.isCurrent}
+            onChange={(e) => onUpdate(index, "isCurrent", e.target.checked)}
+            className="h-4 w-4 cursor-pointer rounded border-border accent-primary"
+          />
+          <label
+            htmlFor={`current-role-${index}`}
+            className="cursor-pointer text-sm text-muted-foreground"
+          >
+            I currently work here
+          </label>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Start Date</label>
+          <Input
+            type="month"
+            value={experience.startDate}
+            onChange={(e) => onUpdate(index, "startDate", e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">End Date</label>
+          <Input
+            type="month"
+            value={experience.endDate}
+            onChange={(e) => onUpdate(index, "endDate", e.target.value)}
+            disabled={experience.isCurrent}
+          />
+        </div>
+
+        <div className="space-y-1.5 sm:col-span-2">
+          <label className="text-sm font-medium">Summary</label>
+          <textarea
+            value={experience.description}
+            onChange={(e) => onUpdate(index, "description", e.target.value)}
+            rows={3}
+            placeholder="Briefly describe your responsibilities, projects, or impact."
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("form");
@@ -63,6 +165,7 @@ export default function RegisterPage() {
     EMPTY_STUDENT_REGISTRATION_DRAFT
   );
   const [draftRestored, setDraftRestored] = useState(false);
+  const deferredSchoolQuery = useDeferredValue(draft.schoolQuery);
 
   useEffect(() => {
     try {
@@ -81,10 +184,14 @@ export default function RegisterPage() {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(
-      STUDENT_REGISTRATION_DRAFT_KEY,
-      JSON.stringify(draft)
-    );
+    const timeout = window.setTimeout(() => {
+      window.localStorage.setItem(
+        STUDENT_REGISTRATION_DRAFT_KEY,
+        JSON.stringify(draft)
+      );
+    }, 180);
+
+    return () => window.clearTimeout(timeout);
   }, [draft]);
 
   useEffect(() => {
@@ -136,7 +243,7 @@ export default function RegisterPage() {
   }, [schools]);
 
   const filteredSchools = useMemo(() => {
-    const query = draft.schoolQuery.trim().toLowerCase();
+    const query = deferredSchoolQuery.trim().toLowerCase();
     if (!query) {
       return schools.slice(0, 8);
     }
@@ -155,7 +262,7 @@ export default function RegisterPage() {
         return haystacks.some((value) => value.toLowerCase().includes(query));
       })
       .slice(0, 8);
-  }, [draft.schoolQuery, schools]);
+  }, [deferredSchoolQuery, schools]);
 
   const isMinimalOnboarding = onboardingMode === "minimal";
 
@@ -258,25 +365,27 @@ export default function RegisterPage() {
     ]);
   }
 
-  function removeWorkExperience(index: number) {
-    setField(
-      "workExperiences",
-      draft.workExperiences.filter((_, itemIndex) => itemIndex !== index)
-    );
-  }
+  const removeWorkExperience = useCallback((index: number) => {
+    setDraft((current) => ({
+      ...current,
+      workExperiences: current.workExperiences.filter(
+        (_, itemIndex) => itemIndex !== index
+      ),
+    }));
+  }, []);
 
-  function updateWorkExperience<K extends keyof StudentWorkExperience>(
+  const updateWorkExperience = useCallback(<K extends keyof StudentWorkExperience>(
     index: number,
     field: K,
     value: StudentWorkExperience[K]
-  ) {
-    setField(
-      "workExperiences",
-      draft.workExperiences.map((experience, itemIndex) =>
+  ) => {
+    setDraft((current) => ({
+      ...current,
+      workExperiences: current.workExperiences.map((experience, itemIndex) =>
         itemIndex === index ? { ...experience, [field]: value } : experience
-      )
-    );
-  }
+      ),
+    }));
+  }, []);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -864,129 +973,13 @@ export default function RegisterPage() {
                   {draft.workExperiences.length > 0 ? (
                     <div className="space-y-4">
                       {draft.workExperiences.map((experience, index) => (
-                        <div
+                        <RegisterWorkExperienceEditor
                           key={`${index}-${experience.company}-${experience.title}`}
-                          className="space-y-4 rounded-xl border border-border/60 p-4"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <h3 className="text-sm font-semibold">
-                              Experience {index + 1}
-                            </h3>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeWorkExperience(index)}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-1.5">
-                              <label className="text-sm font-medium">Company</label>
-                              <Input
-                                value={experience.company}
-                                onChange={(e) =>
-                                  updateWorkExperience(index, "company", e.target.value)
-                                }
-                                placeholder="e.g. TSMC"
-                              />
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-sm font-medium">Job Title</label>
-                              <Input
-                                value={experience.title}
-                                onChange={(e) =>
-                                  updateWorkExperience(index, "title", e.target.value)
-                                }
-                                placeholder="e.g. Data Analyst Intern"
-                              />
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-sm font-medium">
-                                Employment Type
-                              </label>
-                              <Input
-                                value={experience.employmentType}
-                                onChange={(e) =>
-                                  updateWorkExperience(
-                                    index,
-                                    "employmentType",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Internship, Part-time, Full-time"
-                              />
-                            </div>
-
-                            <div className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2.5">
-                              <input
-                                id={`current-role-${index}`}
-                                type="checkbox"
-                                checked={experience.isCurrent}
-                                onChange={(e) =>
-                                  updateWorkExperience(
-                                    index,
-                                    "isCurrent",
-                                    e.target.checked
-                                  )
-                                }
-                                className="h-4 w-4 cursor-pointer rounded border-border accent-primary"
-                              />
-                              <label
-                                htmlFor={`current-role-${index}`}
-                                className="cursor-pointer text-sm text-muted-foreground"
-                              >
-                                I currently work here
-                              </label>
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-sm font-medium">Start Date</label>
-                              <Input
-                                type="month"
-                                value={experience.startDate}
-                                onChange={(e) =>
-                                  updateWorkExperience(index, "startDate", e.target.value)
-                                }
-                              />
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-sm font-medium">End Date</label>
-                              <Input
-                                type="month"
-                                value={experience.endDate}
-                                onChange={(e) =>
-                                  updateWorkExperience(index, "endDate", e.target.value)
-                                }
-                                disabled={experience.isCurrent}
-                              />
-                            </div>
-
-                            <div className="space-y-1.5 sm:col-span-2">
-                              <label className="text-sm font-medium">
-                                Summary
-                              </label>
-                              <textarea
-                                value={experience.description}
-                                onChange={(e) =>
-                                  updateWorkExperience(
-                                    index,
-                                    "description",
-                                    e.target.value
-                                  )
-                                }
-                                rows={3}
-                                placeholder="Briefly describe your responsibilities, projects, or impact."
-                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                              />
-                            </div>
-                          </div>
-                        </div>
+                          index={index}
+                          experience={experience}
+                          onRemove={removeWorkExperience}
+                          onUpdate={updateWorkExperience}
+                        />
                       ))}
                     </div>
                   ) : (

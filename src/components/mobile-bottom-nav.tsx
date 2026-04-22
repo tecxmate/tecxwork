@@ -26,10 +26,10 @@ export function MobileBottomNav({
 
   return (
     <>
-      <div className="h-20 md:hidden" aria-hidden="true" />
+      <div className="h-[5.5rem] md:hidden" aria-hidden="true" />
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background md:hidden">
         <div
-          className="mx-auto grid max-w-xl px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] pt-1.5"
+          className="mx-auto grid max-w-xl px-2 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-1.5"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map((item) => {
