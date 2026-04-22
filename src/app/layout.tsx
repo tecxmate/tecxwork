@@ -3,8 +3,6 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
-import { AppMotionShell } from "@/components/app-motion-shell";
-import { InstallPrompt } from "@/components/install-prompt";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getSession } from "@/lib/auth";
@@ -75,11 +73,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <AppMotionShell>{children}</AppMotionShell>
+          {children}
           <Suspense fallback={null}>
             <MobileBottomNavServer sessionPromise={sessionPromise} />
           </Suspense>
-          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>

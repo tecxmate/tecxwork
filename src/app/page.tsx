@@ -13,6 +13,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/countdown";
+import { InstallPrompt } from "@/components/install-prompt";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import { ExternalJobsPreview } from "@/components/external-jobs-preview";
@@ -503,6 +504,7 @@ export default async function LandingPage() {
         )}
       </main>
 
+      <InstallPrompt />
       <SiteFooter />
     </div>
   );

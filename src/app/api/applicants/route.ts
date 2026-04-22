@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles, eventConfig, users } from "@/lib/db";
 import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
 import { MAX_STUDENT_WORK_EXPERIENCES, type StudentWorkExperience } from "@/lib/student-profile";
+import { asc, count, desc, ilike, or, sql } from "drizzle-orm";
 
 function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
   if (!Array.isArray(value)) return [];
@@ -45,34 +46,70 @@ function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
 }
 
 // GET — public listing of applicant profiles (for recruiter browsing)
-export async function GET() {
-  const result = await db
-    .select({
-      id: applicantProfiles.id,
-      name: applicantProfiles.name,
-      email: applicantProfiles.email,
-      phone: applicantProfiles.phone,
-      nationality: applicantProfiles.nationality,
-      schoolName: applicantProfiles.schoolName,
-      schoolNameEn: applicantProfiles.schoolNameEn,
-      major: applicantProfiles.major,
-      studyLevel: applicantProfiles.studyLevel,
-      studyYear: applicantProfiles.studyYear,
-      expectedGraduation: applicantProfiles.expectedGraduation,
-      skills: applicantProfiles.skills,
-      preferredLocations: applicantProfiles.preferredLocations,
-      preferredIndustries: applicantProfiles.preferredIndustries,
-      workExperiences: applicantProfiles.workExperiences,
-      workAuthorization: applicantProfiles.workAuthorization,
-      cvLink: applicantProfiles.cvLink,
-      linkedinUrl: applicantProfiles.linkedinUrl,
-      portfolioUrl: applicantProfiles.portfolioUrl,
-      description: applicantProfiles.description,
-    })
-    .from(applicantProfiles)
-    .orderBy(applicantProfiles.name);
+export async function GET(req: NextRequest) {
+  const query = req.nextUrl.searchParams.get("query")?.trim() ?? "";
+  const page = Math.max(1, Number(req.nextUrl.searchParams.get("page") ?? "1") || 1);
+  const limit = Math.min(
+    24,
+    Math.max(1, Number(req.nextUrl.searchParams.get("limit") ?? "12") || 12)
+  );
+  const offset = (page - 1) * limit;
 
-  return NextResponse.json({ applicants: result });
+  const where = query
+    ? or(
+        ilike(applicantProfiles.name, `%${query}%`),
+        ilike(applicantProfiles.major, `%${query}%`),
+        sql`EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements_text(${applicantProfiles.skills}) AS skill
+          WHERE skill ILIKE ${`%${query}%`}
+        )`
+      )
+    : undefined;
+
+  const [result, totalResult] = await Promise.all([
+    db
+      .select({
+        id: applicantProfiles.id,
+        name: applicantProfiles.name,
+        email: applicantProfiles.email,
+        phone: applicantProfiles.phone,
+        nationality: applicantProfiles.nationality,
+        schoolName: applicantProfiles.schoolName,
+        schoolNameEn: applicantProfiles.schoolNameEn,
+        major: applicantProfiles.major,
+        studyLevel: applicantProfiles.studyLevel,
+        studyYear: applicantProfiles.studyYear,
+        expectedGraduation: applicantProfiles.expectedGraduation,
+        skills: applicantProfiles.skills,
+        preferredLocations: applicantProfiles.preferredLocations,
+        preferredIndustries: applicantProfiles.preferredIndustries,
+        workExperiences: applicantProfiles.workExperiences,
+        workAuthorization: applicantProfiles.workAuthorization,
+        cvLink: applicantProfiles.cvLink,
+        linkedinUrl: applicantProfiles.linkedinUrl,
+        portfolioUrl: applicantProfiles.portfolioUrl,
+        description: applicantProfiles.description,
+      })
+      .from(applicantProfiles)
+      .where(where)
+      .orderBy(asc(applicantProfiles.name), desc(applicantProfiles.id))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: count() })
+      .from(applicantProfiles)
+      .where(where),
+  ]);
+  const total = totalResult[0]?.total ?? 0;
+
+  return NextResponse.json({
+    applicants: result,
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  });
 }
 
 // POST — applicant self-signup (creates user + profile, logs in automatically)

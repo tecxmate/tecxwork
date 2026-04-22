@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import {
   Search,
@@ -38,29 +38,48 @@ export function RecruiterApplicantsTab({
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
-  const deferredQuery = useDeferredValue(query);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetch("/api/applicants")
-      .then((r) => r.json())
-      .then((data) => setApplicants(data.applicants ?? []))
-      .catch(() => setApplicants([]))
-      .finally(() => setLoading(false));
-  }, []);
+    const timer = window.setTimeout(() => {
+      setDebouncedQuery(query.trim());
+      setCurrentPage(1);
+    }, 180);
 
-  const filtered = useMemo(() => {
-    const q = deferredQuery.toLowerCase();
-    if (!q) return applicants;
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
-    return applicants.filter((a) => {
-      return (
-        a.name.toLowerCase().includes(q) ||
-        a.major.toLowerCase().includes(q) ||
-        a.skills.some((s) => s.toLowerCase().includes(q))
-      );
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+
+    const params = new URLSearchParams({
+      query: debouncedQuery,
+      page: String(currentPage),
+      limit: "12",
     });
-  }, [applicants, deferredQuery]);
+
+    fetch(`/api/applicants?${params.toString()}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        setApplicants(data.applicants ?? []);
+        setTotal(data.total ?? 0);
+        setTotalPages(data.totalPages ?? 1);
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setApplicants([]);
+        setTotal(0);
+        setTotalPages(1);
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [debouncedQuery, currentPage]);
 
   if (selectedApplicant) {
     return (
@@ -98,57 +117,85 @@ export function RecruiterApplicantsTab({
             {messages.dashboard.applicants.loading}
           </span>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : applicants.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             {messages.dashboard.applicants.empty}
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map((a) => (
-            <Card
-              key={a.id}
-              className="cursor-pointer"
-              onClick={() => setSelectedApplicant(a)}
-            >
-              <CardContent className="py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="font-medium">{a.name}</p>
-                    {a.major && (
-                      <p className="text-xs text-muted-foreground">{a.major}</p>
-                    )}
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {total} applicants found
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {applicants.map((a) => (
+              <Card
+                key={a.id}
+                className="cursor-pointer"
+                onClick={() => setSelectedApplicant(a)}
+              >
+                <CardContent className="py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="font-medium">{a.name}</p>
+                      {a.major && (
+                        <p className="text-xs text-muted-foreground">{a.major}</p>
+                      )}
+                    </div>
+                    <a
+                      href={a.cvLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FileText className="h-3 w-3" />
+                      {messages.dashboard.applicants.cv}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
                   </div>
-                  <a
-                    href={a.cvLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FileText className="h-3 w-3" />
-                    {messages.dashboard.applicants.cv}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-                {a.skills.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {a.skills.map((s) => (
-                      <Badge key={s} variant="outline" className="text-xs font-normal">
-                        {s}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                {a.description && (
-                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
-                    {a.description}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  {a.skills.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {a.skills.map((s) => (
+                        <Badge key={s} variant="outline" className="text-xs font-normal">
+                          {s}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {a.description && (
+                    <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+                      {a.description}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {totalPages > 1 ? (
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              >
+                Previous
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
