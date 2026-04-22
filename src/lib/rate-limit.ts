@@ -16,10 +16,11 @@ const DEFAULTS: Record<string, RateLimitConfig> = {
  */
 export async function rateLimit(
   ip: string,
-  type: "api" | "auth" = "api"
+  type: "api" | "auth" = "api",
+  scope = "global"
 ): Promise<{ success: boolean; remaining: number; reset: number }> {
   const config = DEFAULTS[type];
-  const key = `ratelimit:${type}:${ip}`;
+  const key = `ratelimit:${type}:${scope}:${ip}`;
   const now = Math.floor(Date.now() / 1000);
   const windowStart = now - (now % config.window);
   const reset = windowStart + config.window;

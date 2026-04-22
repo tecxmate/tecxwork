@@ -1,37 +1,96 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { RecruiterCard, type RecruiterCardData } from "./recruiter-card";
-// import { IndustryFilter } from "./industry-filter"; // temporarily disabled
+
+const COMPANIES_PER_PAGE = 12;
+
+function useDebouncedValue<T>(value: T, delay = 250) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(timeout);
+  }, [value, delay]);
+
+  return debounced;
+}
 
 export function Directory() {
   const [query, setQuery] = useState("");
-  const [industry, setIndustry] = useState("All");
   const [recruiters, setRecruiters] = useState<RecruiterCardData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const debouncedQuery = useDebouncedValue(query);
 
   useEffect(() => {
-    fetch("/api/recruiters")
-      .then((r) => r.json())
-      .then((data) => setRecruiters(data.recruiters ?? []))
-      .catch(() => setRecruiters([]))
-      .finally(() => setLoading(false));
-  }, []);
+    setPage(1);
+  }, [debouncedQuery]);
 
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    return recruiters.filter((r) => {
-      const matchesIndustry = industry === "All" || r.industry === industry;
-      const matchesQuery =
-        !q ||
-        r.company.toLowerCase().includes(q) ||
-        r.industry.toLowerCase().includes(q) ||
-        r.positions.some((p) => p.toLowerCase().includes(q));
-      return matchesIndustry && matchesQuery;
-    });
-  }, [query, industry, recruiters]);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadRecruiters() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: String(COMPANIES_PER_PAGE),
+        });
+
+        if (debouncedQuery.trim()) {
+          params.set("search", debouncedQuery.trim());
+        }
+
+        const response = await fetch(`/api/recruiters?${params.toString()}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load companies");
+        }
+
+        const data = await response.json();
+        setRecruiters(Array.isArray(data.recruiters) ? data.recruiters : []);
+        setTotal(typeof data.total === "number" ? data.total : 0);
+        setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setRecruiters([]);
+        setTotal(0);
+        setTotalPages(1);
+        setError(err instanceof Error ? err.message : "Failed to load companies");
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadRecruiters();
+    return () => controller.abort();
+  }, [debouncedQuery, page]);
+
+  const resultLabel = useMemo(() => {
+    if (loading) {
+      return (
+        <span className="flex items-center gap-1.5">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Loading...
+        </span>
+      );
+    }
+
+    return `${total} ${total === 1 ? "company" : "companies"}${totalPages > 1 ? ` · Page ${page} of ${totalPages}` : ""}`;
+  }, [loading, total, totalPages, page]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -48,14 +107,7 @@ export function Directory() {
           />
         </div>
 
-        {/* Industry filter chips — temporarily disabled */}
-        {/* <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <IndustryFilter selected={industry} onSelect={setIndustry} />
-        </div> */}
-
-        <p className="text-xs text-muted-foreground sm:text-sm">
-          {filtered.length} {filtered.length === 1 ? "company" : "companies"}
-        </p>
+        <p className="text-xs text-muted-foreground sm:text-sm">{resultLabel}</p>
       </div>
 
       {loading ? (
@@ -65,21 +117,77 @@ export function Directory() {
             Loading companies...
           </span>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/50 bg-destructive/5 py-16 text-center">
+          <p className="text-lg font-medium text-destructive">Failed to load companies</p>
+          <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+        </div>
+      ) : recruiters.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
-          <p className="text-lg font-medium text-muted-foreground">
-            No companies found
-          </p>
+          <p className="text-lg font-medium text-muted-foreground">No companies found</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Try adjusting your search or filter.
+            Try adjusting your search.
           </p>
         </div>
       ) : (
-        <div className="stagger-fade-in grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((r) => (
-            <RecruiterCard key={r.id} recruiter={r} />
-          ))}
-        </div>
+        <>
+          <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {recruiters.map((recruiter) => (
+              <RecruiterCard key={recruiter.id} recruiter={recruiter} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <button
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                disabled={page === 1}
+                className="rounded-lg border px-2 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+              >
+                <ChevronLeft className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Previous</span>
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, index) => {
+                  let pageNumber: number;
+                  if (totalPages <= 7) {
+                    pageNumber = index + 1;
+                  } else if (page <= 4) {
+                    pageNumber = index + 1;
+                  } else if (page >= totalPages - 3) {
+                    pageNumber = totalPages - 6 + index;
+                  } else {
+                    pageNumber = page - 3 + index;
+                  }
+
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => setPage(pageNumber)}
+                      className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
+                        page === pageNumber
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() =>
+                  setPage((current) => Math.min(totalPages, current + 1))
+                }
+                disabled={page === totalPages}
+                className="rounded-lg border px-2 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+              >
+                <ChevronRight className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Next</span>
+              </button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );

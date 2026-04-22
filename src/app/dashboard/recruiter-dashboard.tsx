@@ -14,11 +14,9 @@ import {
   FileText,
   ExternalLink,
   Search,
-  Users,
-  BookOpen,
   Calendar,
   Loader2,
-  GraduationCap,
+  Users,
   Trash2,
   X,
   AlertCircle,
@@ -26,13 +24,14 @@ import {
   Plus,
   Briefcase,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SlotPicker } from "@/components/slot-picker-applicant";
 import { SiteFooter } from "@/components/site-footer";
+import { isNavItemActive, navItemsByRole } from "@/lib/navigation";
 
 type Booking = {
   id: number;
@@ -71,17 +70,15 @@ type Tab = "bookings" | "applicants" | "company";
 export function RecruiterDashboard({
   recruiter,
   bookings,
-  eventMode,
+  initialTab,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
-  eventMode: string;
+  initialTab: Tab;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
-  const [tab, setTab] = useState<Tab>("bookings");
-  const showApplicants =
-    eventMode === "recruiter_books_applicant" || eventMode === "both";
+  const tab = initialTab;
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -90,92 +87,118 @@ export function RecruiterDashboard({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Building2 className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-heading text-lg font-bold">
+      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-screen md:w-72 md:flex-col md:border-r md:bg-card/95 md:px-5 md:py-6 md:backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_28px_rgba(140,82,255,0.22)]">
+            <Building2 className="h-4.5 w-4.5" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-heading text-lg font-semibold leading-tight">
               {recruiter.company}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <RecruiterLanguageSwitcher />
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              {messages.common.viewSite}
-            </Link>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-1.5 h-3.5 w-3.5" />
-              {messages.common.logout}
-            </Button>
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {recruiter.contactEmail}
+            </p>
           </div>
         </div>
-      </header>
 
-      {/* Tabs */}
-      <div className="border-b bg-card">
-        <div className="mx-auto flex max-w-5xl gap-0 px-4 sm:px-6">
-          <button
-            onClick={() => setTab("bookings")}
-            className={cn(
-              "flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
-              tab === "bookings"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
+        <RecruiterSidebarNav />
+
+        <div className="mt-auto space-y-3 border-t pt-5">
+          <RecruiterLanguageSwitcher />
+          <Link
+            href="/"
+            className="flex h-11 items-center justify-center rounded-xl border border-border bg-background text-sm font-medium text-muted-foreground transition-premium hover:border-primary/30 hover:bg-primary/5 hover:text-foreground"
           >
-            <BookOpen className="h-4 w-4" />
-            {messages.dashboard.tabs.bookings}
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {bookings.length}
-            </Badge>
-          </button>
-          {showApplicants && (
-            <button
-              onClick={() => setTab("applicants")}
-              className={cn(
-                "flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
-                tab === "applicants"
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <GraduationCap className="h-4 w-4" />
-              {messages.dashboard.tabs.applicants}
-            </button>
-          )}
-          <button
-            onClick={() => setTab("company")}
-            className={cn(
-              "flex cursor-pointer items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
-              tab === "company"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Building2 className="h-4 w-4" />
-            {messages.dashboard.tabs.company}
-          </button>
+            {messages.common.viewSite}
+          </Link>
+          <Button variant="outline" className="h-11 w-full" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            {messages.common.logout}
+          </Button>
         </div>
+      </aside>
+
+      <div className="flex min-h-full min-w-0 flex-1 flex-col md:min-h-screen md:pl-72">
+        <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] md:hidden dark:bg-card/80">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
+                <Building2 className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="max-w-[160px] truncate font-heading text-lg font-bold">
+                {recruiter.company}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <RecruiterLanguageSwitcher />
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="mr-1.5 h-3.5 w-3.5" />
+                {messages.common.logout}
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
+          <div className="mx-auto max-w-5xl md:max-w-none">
+            <div className="mb-6 hidden items-center justify-between gap-4 md:flex">
+              <div>
+                <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                  {recruiter.company}
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {recruiter.industry}
+                </p>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {recruiter.contactEmail}
+              </div>
+            </div>
+
+            {tab === "bookings" ? (
+              <BookingsTab bookings={bookings} />
+            ) : tab === "applicants" ? (
+              <ApplicantsTab recruiterId={recruiter.id} />
+            ) : (
+              <CompanyTab recruiter={recruiter} />
+            )}
+          </div>
+        </main>
+        <SiteFooter />
       </div>
-
-      <main className="flex-1 px-4 py-8 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          {tab === "bookings" ? (
-            <BookingsTab bookings={bookings} />
-          ) : tab === "applicants" ? (
-            <ApplicantsTab recruiterId={recruiter.id} />
-          ) : (
-            <CompanyTab recruiter={recruiter} />
-          )}
-        </div>
-      </main>
-      <SiteFooter />
     </div>
+  );
+}
+
+function RecruiterSidebarNav() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams.toString();
+
+  return (
+    <nav className="mt-8 space-y-2">
+      {navItemsByRole.recruiter.map((item) => {
+        const active = isNavItemActive(pathname, search, item);
+        const Icon = item.icon;
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-premium",
+              active
+                ? "bg-primary/10 text-primary shadow-[0_14px_34px_rgba(140,82,255,0.12)]"
+                : "text-muted-foreground hover:bg-primary/5 hover:text-foreground"
+            )}
+          >
+            <Icon className={cn("h-4.5 w-4.5", active && "scale-105")} />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 

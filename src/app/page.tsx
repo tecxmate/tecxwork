@@ -324,7 +324,7 @@ export default async function LandingPage() {
                     href={`/recruiter/${recruiter.id}`}
                     className="group block"
                   >
-                    <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] sm:p-5">
+                    <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-200 ease-out group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] group-hover:-translate-y-0.5 sm:p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary sm:h-12 sm:w-12">
                           <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />

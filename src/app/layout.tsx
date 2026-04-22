@@ -5,7 +5,9 @@ import { Suspense } from "react";
 import "./globals.css";
 import { AppMotionShell } from "@/components/app-motion-shell";
 import { InstallPrompt } from "@/components/install-prompt";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ThemeProvider } from "@/components/theme-provider";
+import { getSession } from "@/lib/auth";
 import { EVENT_CONFIG } from "@/lib/data";
 
 const geistSans = Geist({
@@ -62,6 +64,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const sessionPromise = getSession();
+
   return (
     <html
       lang="en"
@@ -73,9 +77,21 @@ export default function RootLayout({
           <Suspense fallback={children}>
             <AppMotionShell>{children}</AppMotionShell>
           </Suspense>
+          <Suspense fallback={null}>
+            <MobileBottomNavServer sessionPromise={sessionPromise} />
+          </Suspense>
           <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>
   );
+}
+
+async function MobileBottomNavServer({
+  sessionPromise,
+}: {
+  sessionPromise: ReturnType<typeof getSession>;
+}) {
+  const session = await sessionPromise;
+  return <MobileBottomNav role={session?.role ?? "guest"} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Loader2,
@@ -127,6 +127,17 @@ type FilterLanguage = "all" | "english";
 
 const JOBS_PER_PAGE = 24;
 
+function useDebouncedValue<T>(value: T, delay = 250) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(timeout);
+  }, [value, delay]);
+
+  return debounced;
+}
+
 function isEnglishTitle(title: string): boolean {
   const asciiLetters = (title.match(/[a-zA-Z]/g) || []).length;
   const chineseChars = (title.match(/[\u4e00-\u9fff]/g) || []).length;
@@ -143,67 +154,62 @@ export function JobDirectory() {
   const [error, setError] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<ExternalJobWithMeta | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const fetchJobs = useCallback(async (jobType: FilterJobType) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (jobType !== "all") params.set("jobType", jobType);
-      params.set("limit", "500");
-
-      const response = await fetch(`/api/external-jobs?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch jobs");
-      const data = await response.json();
-      setJobs(data.jobs ?? []);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
-      setJobs([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const debouncedQuery = useDebouncedValue(query);
 
   useEffect(() => {
-    fetchJobs(jobTypeFilter);
-  }, [jobTypeFilter, fetchJobs]);
+    setCurrentPage(1);
+  }, [debouncedQuery, jobTypeFilter, languageFilter]);
 
-  const filtered = useMemo(() => {
-    let result = jobs;
+  useEffect(() => {
+    const controller = new AbortController();
 
-    const q = query.toLowerCase().trim();
-    if (q) {
-      result = result.filter(
-        (job) =>
-          job.title.toLowerCase().includes(q) ||
-          job.company.toLowerCase().includes(q) ||
-          job.snippet.toLowerCase().includes(q) ||
-          job.location.toLowerCase().includes(q)
-      );
+    async function fetchJobs() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: String(currentPage),
+          limit: String(JOBS_PER_PAGE),
+        });
+
+        if (jobTypeFilter !== "all") params.set("jobType", jobTypeFilter);
+        if (debouncedQuery.trim()) params.set("search", debouncedQuery.trim());
+        if (languageFilter !== "all") params.set("language", languageFilter);
+
+        const response = await fetch(`/api/external-jobs?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Failed to fetch jobs");
+        const data = await response.json();
+        setJobs(Array.isArray(data.jobs) ? data.jobs : []);
+        setTotal(typeof data.total === "number" ? data.total : 0);
+        setTotalPages(typeof data.totalPages === "number" ? data.totalPages : 1);
+        setError(null);
+      } catch (e) {
+        if (controller.signal.aborted) return;
+        setError(e instanceof Error ? e.message : "Unknown error");
+        setJobs([]);
+        setTotal(0);
+        setTotalPages(1);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
     }
 
-    if (languageFilter === "english") {
-      result = result.filter((job) => isEnglishTitle(job.title));
-    }
+    fetchJobs();
+    return () => controller.abort();
+  }, [currentPage, debouncedQuery, jobTypeFilter, languageFilter]);
 
-    result = [...result].sort((a, b) => {
+  const sortedJobs = useMemo(() => {
+    return [...jobs].sort((a, b) => {
       const orderA = a.jobType ? JOB_TYPE_ORDER[a.jobType] ?? 99 : 99;
       const orderB = b.jobType ? JOB_TYPE_ORDER[b.jobType] ?? 99 : 99;
       return orderA - orderB;
     });
-
-    return result;
-  }, [query, jobs, languageFilter]);
-
-  const totalPages = Math.ceil(filtered.length / JOBS_PER_PAGE);
-  const paginatedJobs = useMemo(() => {
-    const start = (currentPage - 1) * JOBS_PER_PAGE;
-    return filtered.slice(start, start + JOBS_PER_PAGE);
-  }, [filtered, currentPage]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query, jobTypeFilter, languageFilter]);
+  }, [jobs]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -264,7 +270,7 @@ export function JobDirectory() {
               Loading...
             </span>
           ) : (
-            `${filtered.length} ${filtered.length === 1 ? "job" : "jobs"} found${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}`
+            `${total} ${total === 1 ? "job" : "jobs"} found${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}`
           )}
         </p>
       </div>
@@ -282,7 +288,7 @@ export function JobDirectory() {
           </p>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : total === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
           <Briefcase className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <p className="text-lg font-medium text-muted-foreground">
@@ -297,7 +303,7 @@ export function JobDirectory() {
       ) : (
         <>
           <div className="stagger-fade-in grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {paginatedJobs.map((job) => (
+            {sortedJobs.map((job) => (
               <JobCard
                 key={`${job.source}-${job.externalId}`}
                 job={job}

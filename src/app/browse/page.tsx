@@ -1,15 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MapPin, Clock, Briefcase, ShieldCheck } from "lucide-react";
+import { Briefcase, ShieldCheck } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Countdown } from "@/components/countdown";
 import { Directory } from "@/components/directory";
 import { LogoutButton } from "@/components/logout-button";
 import { SiteFooter } from "@/components/site-footer";
-import { CvQrButton } from "@/components/cv-qr-button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 
 export default async function BrowsePage() {
@@ -17,14 +13,6 @@ export default async function BrowsePage() {
   if (!session) redirect("/login");
   if (session.role === "admin") redirect("/admin");
   if (session.role === "recruiter") redirect("/dashboard");
-
-  const formattedDate = EVENT_CONFIG.date.toLocaleDateString("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    timeZone: EVENT_CONFIG.timezone,
-  });
 
   return (
     <div className="flex flex-1 flex-col">
@@ -48,36 +36,6 @@ export default async function BrowsePage() {
           </div>
         </div>
       </header>
-
-      {/* Compact hero on mobile, bigger on desktop */}
-      <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12 lg:py-16">
-        <div className="mx-auto max-w-7xl text-center">
-          <Badge className="mb-2 sm:mb-4">{EVENT_CONFIG.organizerShort}</Badge>
-          <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            {EVENT_CONFIG.name}
-          </h1>
-          <p className="mx-auto mt-2 max-w-2xl text-xs italic text-muted-foreground sm:mt-3 sm:text-sm">
-            &ldquo;{EVENT_CONFIG.tagline}&rdquo;
-          </p>
-
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground sm:mt-6 sm:gap-x-6 sm:gap-y-3 sm:text-sm">
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {formattedDate} &middot; 10:00 – 17:30
-            </span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="max-w-[220px] truncate sm:max-w-none">
-                {EVENT_CONFIG.hostedAt}
-              </span>
-            </span>
-          </div>
-
-          <div className="mt-4 flex justify-center sm:mt-6">
-            <Countdown target={EVENT_CONFIG.date} />
-          </div>
-        </div>
-      </section>
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
@@ -105,7 +63,6 @@ export default async function BrowsePage() {
       </div>
 
       <SiteFooter />
-      <CvQrButton />
     </div>
   );
 }

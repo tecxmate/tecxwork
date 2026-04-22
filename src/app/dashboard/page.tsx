@@ -6,18 +6,27 @@ import {
   db,
   recruiters,
   bookings,
-  slots,
-  applicantSlots,
   eventConfig,
 } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { RecruiterDashboard } from "./recruiter-dashboard";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tab?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role === "admin") redirect("/admin");
   const locale = await getRecruiterLocale();
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const initialTab =
+    resolvedSearchParams?.tab === "applicants" ||
+    resolvedSearchParams?.tab === "company" ||
+    resolvedSearchParams?.tab === "bookings"
+      ? resolvedSearchParams.tab
+      : "bookings";
 
   const [recruiter] = await db
     .select({
@@ -55,13 +64,19 @@ export default async function DashboardPage() {
     .select({ mode: eventConfig.mode })
     .from(eventConfig)
     .limit(1);
+  const eventMode = config?.mode ?? "both";
+  const showApplicants =
+    eventMode === "recruiter_books_applicant" || eventMode === "both";
+  const safeInitialTab =
+    initialTab === "applicants" && !showApplicants ? "bookings" : initialTab;
 
   return (
     <RecruiterLocaleProvider initialLocale={locale}>
       <RecruiterDashboard
+        key={safeInitialTab}
         recruiter={recruiter}
         bookings={allBookings}
-        eventMode={config?.mode ?? "both"}
+        initialTab={safeInitialTab}
       />
     </RecruiterLocaleProvider>
   );
