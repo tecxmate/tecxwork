@@ -139,3 +139,220 @@ Tool: Google Forms with Emergency Slot management.
 All recruiter URLs are batch-replaced with the Emergency Form link via a manual environment variable "EMERGENCY_MODE" in the Next.js app.
 
 Students fill the form, and data is manually distributed post-event.
+
+8. Product Direction Shift: Organizer / Recruiter Tool, Not Independent Job Platform
+
+8.1 Strategic Positioning
+
+The recommended commercial direction is not to sell this product as an open public job platform. That would create avoidable legal and operational risk around employment-service regulation, public marketplace moderation, and long-term platform liability.
+
+Instead, this product should be positioned as:
+
+- Career fair operations software
+- Recruiter scheduling and candidate intake software
+- Event talent-matching workflow software
+- White-label event recruiting infrastructure for organizers, universities, associations, or agencies
+
+In this model, the product is sold to:
+
+- Job fair organizers in Taiwan
+- University career centers
+- Employer consortium organizers
+- Industry associations
+- Global event operators who need temporary recruiter-candidate matching flows
+
+The product value is operational, not marketplace-based:
+
+- Candidate intake
+- Recruiter onboarding
+- Interview slot scheduling
+- Recruiter-to-candidate browsing
+- Booking workflows
+- Event-day QR / CV exchange
+- Organizer reporting and control
+
+8.2 Current Product Readiness
+
+If the public marketplace framing is ignored and the product is evaluated as an organizer / recruiter workflow tool, the current system is already meaningfully advanced.
+
+Approximate readiness for a usable v1 organizer product:
+
+- 60% to 75%
+
+What already exists in the current app:
+
+- Organizer admin dashboard
+- Event mode controls
+- Student onboarding mode controls
+- Recruiter domain allowlisting
+- Recruiter dashboard
+- Candidate browsing and reverse booking
+- Candidate profile + QR code workflow
+- Slot generation and booking logic
+- Job opening creation and moderation workflow
+- Export and booking oversight features
+
+What the current product already is in practice:
+
+- A strong single-event recruitment operating system
+
+What it is not yet:
+
+- A polished multi-tenant SaaS product for many organizers
+
+8.3 Main Product Gaps Before It Becomes Sellable as a Tool
+
+Gap 1: Multi-tenant architecture
+
+Right now the product behaves like one app for one organizer/event context.
+
+Needed:
+
+- Organizer accounts / workspaces
+- Multiple events per organizer
+- Data isolation by organizer and event
+- Recruiters, applicants, jobs, slots, and bookings all scoped to an event or organization
+
+This is the largest gap.
+
+Gap 2: Event configuration and branding layer
+
+To be sold to organizers, the system must allow non-developers to configure:
+
+- Event name
+- Branding (logo, colors)
+- Date and venue
+- Onboarding copy
+- Recruiter instructions
+- Privacy and legal text
+- Language configuration
+
+Some configuration exists already, but not enough for a reusable commercial product.
+
+Gap 3: Role and permission model
+
+The current role set is still too simple for a productized B2B workflow.
+
+Needed roles:
+
+- Platform owner
+- Organizer admin
+- Organizer staff
+- Recruiter
+- Optional recruiter teammate / interviewer seat
+
+Without this, the product still feels like a custom deployment rather than a system that multiple customers can operate safely.
+
+Gap 4: Organizer onboarding and setup UX
+
+The workflows exist technically, but still feel builder-oriented.
+
+Needed:
+
+- Setup checklist
+- Guided organizer onboarding
+- Better empty states
+- Example data and clearer setup instructions
+- Less internal/dev-style UI language
+
+Gap 5: Operational auditability
+
+For paid organizer use, the system should provide:
+
+- Activity logs
+- Better booking history views
+- Safer deletion and recovery flows
+- Clearer support/debug surfaces
+
+Gap 6: Marketplace framing should be reduced
+
+If the product is sold as an event operations tool, features and wording that imply “public job platform” should be minimized or repositioned.
+
+Examples:
+
+- External jobs section
+- Public job marketplace language
+- Platform-style positioning copy
+
+These are not necessarily useless, but they should not define the product narrative.
+
+8.4 Recommended Product Narrative
+
+Recommended narrative:
+
+"TECXWORK is a recruiter and organizer operating system for career fairs, campus recruitment events, and talent-matching programs."
+
+Not recommended narrative:
+
+"TECXWORK is a public job platform / open employment marketplace."
+
+This distinction matters for:
+
+- Legal posture
+- Customer expectation
+- Product roadmap discipline
+- Sales conversations
+
+8.5 Recommended Next Product Phases
+
+Phase 1: Stabilize the event-operations product
+
+Goal:
+
+- Treat the current app as a strong single-event organizer tool
+
+Work:
+
+- Clean organizer UX
+- Clean recruiter UX
+- Event configuration polish
+- Better exports and audit views
+- Remove or de-emphasize public platform signals
+
+Phase 2: Make it multi-event and multi-organizer
+
+Goal:
+
+- Turn the current system into a reusable B2B product
+
+Work:
+
+- Workspaces / organizations
+- Event scoping
+- Organizer roles
+- Multi-event admin structure
+- Event-specific branding/config
+
+Phase 3: Commercial packaging
+
+Goal:
+
+- Make the product ready to sell as software
+
+Work:
+
+- White-label support
+- Billing / pricing model
+- Customer onboarding
+- Documentation for organizers
+- Contract-ready admin controls and data export tooling
+
+8.6 Final Recommendation
+
+The current product should not be treated as "far away" from the desired direction.
+
+It is already close to the correct category if positioned properly:
+
+- Not an independent job platform
+- Yes, an event recruiting operations tool
+
+Most of the remaining work is not core booking logic.
+Most of the remaining work is productization:
+
+- multi-tenancy
+- permissions
+- configuration
+- branding
+- organizer onboarding
+
+That is a good sign. It means the technical core is already strong enough to support a commercial shift in direction.
