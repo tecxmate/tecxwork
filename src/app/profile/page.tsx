@@ -274,6 +274,59 @@ export default function ProfilePage() {
     return new Map(schools.map((school) => [school.label, school]));
   }, [schools]);
 
+  const findBestSchoolMatch = useCallback(
+    (rawValue: string) => {
+      const query = rawValue.trim().toLowerCase();
+      if (!query) return null;
+
+      let bestMatch: TaiwanSchoolOption | null = null;
+      let bestScore = Number.POSITIVE_INFINITY;
+
+      for (const school of schools) {
+        const exactFields = [
+          school.label,
+          school.nameZh,
+          school.nameEn,
+          school.code,
+          ...(school.aliases ?? []),
+        ].map((value) => value.toLowerCase());
+
+        if (exactFields.includes(query)) {
+          return school;
+        }
+
+        const rankedFields = [
+          school.code,
+          ...(school.aliases ?? []),
+          school.nameEn,
+          school.nameZh,
+          school.label,
+          school.city,
+        ];
+
+        const fieldScore = rankedFields.findIndex((value) =>
+          value.toLowerCase().startsWith(query)
+        );
+        if (fieldScore !== -1 && fieldScore < bestScore) {
+          bestMatch = school;
+          bestScore = fieldScore;
+          continue;
+        }
+
+        const containsScore = rankedFields.findIndex((value) =>
+          value.toLowerCase().includes(query)
+        );
+        if (containsScore !== -1 && containsScore + 10 < bestScore) {
+          bestMatch = school;
+          bestScore = containsScore + 10;
+        }
+      }
+
+      return bestMatch;
+    },
+    [schools]
+  );
+
   const filteredSchools = useMemo(() => {
     const query = deferredSchoolQuery.trim().toLowerCase();
     if (!query) {
@@ -342,12 +395,24 @@ export default function ProfilePage() {
 
   function handleSchoolQueryChange(value: string) {
     const trimmedValue = value.trim();
-    const matched = schoolLabelToOption.get(trimmedValue);
+    setSchoolDropdownOpen(true);
+    if (!trimmedValue) {
+      setDraft((current) => ({
+        ...current,
+        schoolQuery: value,
+        schoolCode: "",
+        schoolName: "",
+        schoolNameEn: "",
+      }));
+      return;
+    }
+
+    const matched = schoolLabelToOption.get(trimmedValue) ?? findBestSchoolMatch(trimmedValue);
 
     if (matched) {
       setDraft((current) => ({
         ...current,
-        schoolQuery: trimmedValue,
+        schoolQuery: value,
         schoolCode: matched.code,
         schoolName: matched.nameZh,
         schoolNameEn: matched.nameEn,
@@ -491,6 +556,64 @@ export default function ProfilePage() {
             <CardContent>
               <form onSubmit={handleSave} className="space-y-6">
                 <section className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="cv-link" className="text-sm font-medium">
+                      CV Link (Google Drive) <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="cv-link"
+                      type="url"
+                      required
+                      value={draft.cvLink}
+                      onChange={(e) => setField("cvLink", e.target.value)}
+                      placeholder="https://drive.google.com/file/d/..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Update this link to regenerate the QR code above. Use a public or recruiter-accessible Google Drive CV link.
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
+                  {saved && (
+                    <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      Profile updated!
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={
+                      saving ||
+                      !draft.name.trim() ||
+                      !draft.cvLink.trim() ||
+                      !draft.schoolName.trim() ||
+                      !draft.major.trim() ||
+                      !draft.studyLevel ||
+                      !draft.expectedGraduation
+                    }
+                    className="w-full sm:w-auto"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </section>
+
+                <Separator />
+
+                <section className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <label htmlFor="name" className="text-sm font-medium">
@@ -527,29 +650,6 @@ export default function ProfilePage() {
                         onChange={(e) => setField("nationality", e.target.value)}
                         placeholder="e.g. Vietnamese"
                       />
-                    </div>
-                  </div>
-                </section>
-
-                <Separator />
-
-                <section className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <label htmlFor="cv-link" className="text-sm font-medium">
-                        CV Link (Google Drive) <span className="text-destructive">*</span>
-                      </label>
-                      <Input
-                        id="cv-link"
-                        type="url"
-                        required
-                        value={draft.cvLink}
-                        onChange={(e) => setField("cvLink", e.target.value)}
-                        placeholder="https://drive.google.com/file/d/..."
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Share a public or recruiter-accessible Google Drive CV link so companies can review it.
-                      </p>
                     </div>
                   </div>
                 </section>
@@ -936,42 +1036,6 @@ export default function ProfilePage() {
 
                 <Separator />
 
-                {error && (
-                  <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    {error}
-                  </div>
-                )}
-
-                {saved && (
-                  <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    Profile updated!
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={
-                    saving ||
-                    !draft.name.trim() ||
-                    !draft.cvLink.trim() ||
-                    !draft.schoolName.trim() ||
-                    !draft.major.trim() ||
-                    !draft.studyLevel ||
-                    !draft.expectedGraduation
-                  }
-                  className="w-full"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </Button>
               </form>
             </CardContent>
           </Card>

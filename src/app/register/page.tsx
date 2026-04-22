@@ -242,6 +242,59 @@ export default function RegisterPage() {
     return new Map(schools.map((school) => [school.label, school]));
   }, [schools]);
 
+  const findBestSchoolMatch = useCallback(
+    (rawValue: string) => {
+      const query = rawValue.trim().toLowerCase();
+      if (!query) return null;
+
+      let bestMatch: TaiwanSchoolOption | null = null;
+      let bestScore = Number.POSITIVE_INFINITY;
+
+      for (const school of schools) {
+        const exactFields = [
+          school.label,
+          school.nameZh,
+          school.nameEn,
+          school.code,
+          ...(school.aliases ?? []),
+        ].map((value) => value.toLowerCase());
+
+        if (exactFields.includes(query)) {
+          return school;
+        }
+
+        const rankedFields = [
+          school.code,
+          ...(school.aliases ?? []),
+          school.nameEn,
+          school.nameZh,
+          school.label,
+          school.city,
+        ];
+
+        const fieldScore = rankedFields.findIndex((value) =>
+          value.toLowerCase().startsWith(query)
+        );
+        if (fieldScore !== -1 && fieldScore < bestScore) {
+          bestMatch = school;
+          bestScore = fieldScore;
+          continue;
+        }
+
+        const containsScore = rankedFields.findIndex((value) =>
+          value.toLowerCase().includes(query)
+        );
+        if (containsScore !== -1 && containsScore + 10 < bestScore) {
+          bestMatch = school;
+          bestScore = containsScore + 10;
+        }
+      }
+
+      return bestMatch;
+    },
+    [schools]
+  );
+
   const filteredSchools = useMemo(() => {
     const query = deferredSchoolQuery.trim().toLowerCase();
     if (!query) {
@@ -323,12 +376,23 @@ export default function RegisterPage() {
     const trimmedValue = value.trim();
     setSchoolDropdownOpen(true);
     setField("schoolQuery", value);
-    const matched = schoolLabelToOption.get(trimmedValue);
+    if (!trimmedValue) {
+      setDraft((current) => ({
+        ...current,
+        schoolQuery: value,
+        schoolCode: "",
+        schoolName: "",
+        schoolNameEn: "",
+      }));
+      return;
+    }
+
+    const matched = schoolLabelToOption.get(trimmedValue) ?? findBestSchoolMatch(trimmedValue);
 
     if (matched) {
       setDraft((current) => ({
         ...current,
-        schoolQuery: trimmedValue,
+        schoolQuery: value,
         schoolCode: matched.code,
         schoolName: matched.nameZh,
         schoolNameEn: matched.nameEn,
