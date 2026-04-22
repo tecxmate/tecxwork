@@ -6,17 +6,15 @@ export function SiteFooter() {
       <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
         <span>&copy; 2026 TECXWORK</span>
         <span className="opacity-40">&middot;</span>
-        <span>Designed by Nikolas Doan 段皇方</span>
-        <span className="opacity-40">&middot;</span>
         <span>
-          Developed by{" "}
+          Designed and developed by Nikolas Doan 段皇方,{" "}
           <a
             href="https://tecxmate.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
-            TECXMATE
+            TECXMATE.COM
           </a>
         </span>
         <span className="opacity-40">&middot;</span>
