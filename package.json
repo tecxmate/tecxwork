@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:init:schools": "npx tsx src/lib/db/create-schools-table.ts",
+    "db:update:work-experiences": "npx tsx src/lib/db/add-work-experiences-column.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",
     "db:seed:schools": "npx tsx src/lib/db/import-schools.ts"
   },

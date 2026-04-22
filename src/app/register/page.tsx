@@ -17,6 +17,8 @@ import {
   Building2,
   Search,
   Check,
+  BriefcaseBusiness,
+  Plus,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -28,7 +30,9 @@ import { Separator } from "@/components/ui/separator";
 import { EVENT_CONFIG } from "@/lib/data";
 import {
   EMPTY_STUDENT_REGISTRATION_DRAFT,
+  EMPTY_STUDENT_WORK_EXPERIENCE,
   JOB_SEEKING_STATUS_OPTIONS,
+  MAX_STUDENT_WORK_EXPERIENCES,
   PREFERRED_INDUSTRY_OPTIONS,
   PREFERRED_LOCATION_OPTIONS,
   STUDENT_REGISTRATION_DRAFT_KEY,
@@ -36,6 +40,7 @@ import {
   STUDY_YEAR_OPTIONS,
   WORK_AUTHORIZATION_OPTIONS,
   type StudentRegistrationDraft,
+  type StudentWorkExperience,
   type TaiwanSchoolOption,
 } from "@/lib/student-profile";
 import { SiteFooter } from "@/components/site-footer";
@@ -223,6 +228,35 @@ export default function RegisterPage() {
     setSchoolDropdownOpen(false);
   }
 
+  function addWorkExperience() {
+    if (draft.workExperiences.length >= MAX_STUDENT_WORK_EXPERIENCES) return;
+
+    setField("workExperiences", [
+      ...draft.workExperiences,
+      { ...EMPTY_STUDENT_WORK_EXPERIENCE },
+    ]);
+  }
+
+  function removeWorkExperience(index: number) {
+    setField(
+      "workExperiences",
+      draft.workExperiences.filter((_, itemIndex) => itemIndex !== index)
+    );
+  }
+
+  function updateWorkExperience<K extends keyof StudentWorkExperience>(
+    index: number,
+    field: K,
+    value: StudentWorkExperience[K]
+  ) {
+    setField(
+      "workExperiences",
+      draft.workExperiences.map((experience, itemIndex) =>
+        itemIndex === index ? { ...experience, [field]: value } : experience
+      )
+    );
+  }
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -251,6 +285,7 @@ export default function RegisterPage() {
           skills: draft.skills,
           preferredLocations: draft.preferredLocations,
           preferredIndustries: draft.preferredIndustries,
+          workExperiences: draft.workExperiences,
           cvLink: draft.cvLink.trim(),
           linkedinUrl: draft.linkedinUrl.trim(),
           portfolioUrl: draft.portfolioUrl.trim(),
@@ -745,6 +780,169 @@ export default function RegisterPage() {
                       })}
                     </div>
                   </div>
+                </section>
+
+                <Separator />
+
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <BriefcaseBusiness className="h-4 w-4 text-primary" />
+                      <h2 className="font-heading text-lg font-semibold">
+                        Work Experience
+                      </h2>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addWorkExperience}
+                      disabled={
+                        draft.workExperiences.length >= MAX_STUDENT_WORK_EXPERIENCES
+                      }
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Add experience
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Optional. Add up to {MAX_STUDENT_WORK_EXPERIENCES} internships,
+                    part-time roles, or full-time experiences.
+                  </p>
+
+                  {draft.workExperiences.length > 0 ? (
+                    <div className="space-y-4">
+                      {draft.workExperiences.map((experience, index) => (
+                        <div
+                          key={`${index}-${experience.company}-${experience.title}`}
+                          className="space-y-4 rounded-xl border border-border/60 p-4"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <h3 className="text-sm font-semibold">
+                              Experience {index + 1}
+                            </h3>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeWorkExperience(index)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-medium">Company</label>
+                              <Input
+                                value={experience.company}
+                                onChange={(e) =>
+                                  updateWorkExperience(index, "company", e.target.value)
+                                }
+                                placeholder="e.g. TSMC"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-medium">Job Title</label>
+                              <Input
+                                value={experience.title}
+                                onChange={(e) =>
+                                  updateWorkExperience(index, "title", e.target.value)
+                                }
+                                placeholder="e.g. Data Analyst Intern"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-medium">
+                                Employment Type
+                              </label>
+                              <Input
+                                value={experience.employmentType}
+                                onChange={(e) =>
+                                  updateWorkExperience(
+                                    index,
+                                    "employmentType",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Internship, Part-time, Full-time"
+                              />
+                            </div>
+
+                            <div className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2.5">
+                              <input
+                                id={`current-role-${index}`}
+                                type="checkbox"
+                                checked={experience.isCurrent}
+                                onChange={(e) =>
+                                  updateWorkExperience(
+                                    index,
+                                    "isCurrent",
+                                    e.target.checked
+                                  )
+                                }
+                                className="h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                              />
+                              <label
+                                htmlFor={`current-role-${index}`}
+                                className="cursor-pointer text-sm text-muted-foreground"
+                              >
+                                I currently work here
+                              </label>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-medium">Start Date</label>
+                              <Input
+                                type="month"
+                                value={experience.startDate}
+                                onChange={(e) =>
+                                  updateWorkExperience(index, "startDate", e.target.value)
+                                }
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-medium">End Date</label>
+                              <Input
+                                type="month"
+                                value={experience.endDate}
+                                onChange={(e) =>
+                                  updateWorkExperience(index, "endDate", e.target.value)
+                                }
+                                disabled={experience.isCurrent}
+                              />
+                            </div>
+
+                            <div className="space-y-1.5 sm:col-span-2">
+                              <label className="text-sm font-medium">
+                                Summary
+                              </label>
+                              <textarea
+                                value={experience.description}
+                                onChange={(e) =>
+                                  updateWorkExperience(
+                                    index,
+                                    "description",
+                                    e.target.value
+                                  )
+                                }
+                                rows={3}
+                                placeholder="Briefly describe your responsibilities, projects, or impact."
+                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border/80 px-4 py-6 text-sm text-muted-foreground">
+                      No work experience added yet. This section is optional.
+                    </div>
+                  )}
                 </section>
 
                 <Separator />

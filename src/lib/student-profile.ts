@@ -8,6 +8,28 @@ export type TaiwanSchoolOption = {
   aliases?: string[];
 };
 
+export type StudentWorkExperience = {
+  company: string;
+  title: string;
+  employmentType: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  description: string;
+};
+
+export const MAX_STUDENT_WORK_EXPERIENCES = 5;
+
+export const EMPTY_STUDENT_WORK_EXPERIENCE: StudentWorkExperience = {
+  company: "",
+  title: "",
+  employmentType: "",
+  startDate: "",
+  endDate: "",
+  isCurrent: false,
+  description: "",
+};
+
 export const STUDY_LEVEL_OPTIONS = [
   { value: "bachelor", label: "Bachelor" },
   { value: "master", label: "Master" },
@@ -90,6 +112,7 @@ export type StudentRegistrationDraft = {
   preferredIndustries: string[];
   linkedinUrl: string;
   portfolioUrl: string;
+  workExperiences: StudentWorkExperience[];
 };
 
 export const STUDENT_REGISTRATION_DRAFT_KEY = "student-registration-draft-v2";
@@ -119,4 +142,5 @@ export const EMPTY_STUDENT_REGISTRATION_DRAFT: StudentRegistrationDraft = {
   preferredIndustries: [],
   linkedinUrl: "",
   portfolioUrl: "",
+  workExperiences: [],
 };

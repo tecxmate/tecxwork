@@ -5,6 +5,7 @@ import {
   timestamp,
   integer,
   boolean,
+  jsonb,
   pgEnum,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -107,6 +108,7 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   skills: text("skills").array().notNull().default([]),
   preferredLocations: text("preferred_locations").array().notNull().default([]),
   preferredIndustries: text("preferred_industries").array().notNull().default([]),
+  workExperiences: jsonb("work_experiences").notNull().default([]),
   cvLink: text("cv_link").notNull(),
   linkedinUrl: text("linkedin_url").notNull().default(""),
   portfolioUrl: text("portfolio_url").notNull().default(""),

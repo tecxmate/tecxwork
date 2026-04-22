@@ -1,6 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles, users } from "@/lib/db";
 import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
+import { MAX_STUDENT_WORK_EXPERIENCES, type StudentWorkExperience } from "@/lib/student-profile";
+
+function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .slice(0, MAX_STUDENT_WORK_EXPERIENCES)
+    .flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+
+      const record = item as Record<string, unknown>;
+      const experience: StudentWorkExperience = {
+        company: typeof record.company === "string" ? record.company.trim() : "",
+        title: typeof record.title === "string" ? record.title.trim() : "",
+        employmentType:
+          typeof record.employmentType === "string"
+            ? record.employmentType.trim()
+            : "",
+        startDate: typeof record.startDate === "string" ? record.startDate.trim() : "",
+        endDate: typeof record.endDate === "string" ? record.endDate.trim() : "",
+        isCurrent: Boolean(record.isCurrent),
+        description:
+          typeof record.description === "string"
+            ? record.description.trim()
+            : "",
+      };
+
+      if (
+        !experience.company &&
+        !experience.title &&
+        !experience.employmentType &&
+        !experience.startDate &&
+        !experience.endDate &&
+        !experience.description &&
+        !experience.isCurrent
+      ) {
+        return [];
+      }
+
+      return [experience];
+    });
+}
 
 // GET — public listing of applicant profiles (for recruiter browsing)
 export async function GET() {
@@ -20,6 +62,7 @@ export async function GET() {
       skills: applicantProfiles.skills,
       preferredLocations: applicantProfiles.preferredLocations,
       preferredIndustries: applicantProfiles.preferredIndustries,
+      workExperiences: applicantProfiles.workExperiences,
       workAuthorization: applicantProfiles.workAuthorization,
       cvLink: applicantProfiles.cvLink,
       linkedinUrl: applicantProfiles.linkedinUrl,
@@ -53,6 +96,7 @@ export async function POST(req: NextRequest) {
     skills,
     preferredLocations,
     preferredIndustries,
+    workExperiences,
     cvLink,
     linkedinUrl,
     portfolioUrl,
@@ -81,6 +125,8 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+
+  const normalizedWorkExperiences = sanitizeWorkExperiences(workExperiences);
 
   try {
     // Create user account
@@ -111,6 +157,7 @@ export async function POST(req: NextRequest) {
         skills: skills ?? [],
         preferredLocations: preferredLocations ?? [],
         preferredIndustries: preferredIndustries ?? [],
+        workExperiences: normalizedWorkExperiences,
         cvLink,
         linkedinUrl: linkedinUrl ?? "",
         portfolioUrl: portfolioUrl ?? "",
