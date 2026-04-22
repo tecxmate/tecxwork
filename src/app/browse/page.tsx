@@ -9,21 +9,37 @@ import { getSession } from "@/lib/auth";
 
 export default async function BrowsePage() {
   const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role === "admin") redirect("/admin");
-  if (session.role === "recruiter") redirect("/dashboard");
+  if (session?.role === "admin") redirect("/admin");
+  if (session?.role === "recruiter") redirect("/dashboard");
 
   return (
     <div className="flex flex-1 flex-col">
       <AppTopBar
         href="/browse"
         desktopActions={
-          <Link
-            href="/profile"
-            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
-          >
-            My Profile
-          </Link>
+          session ? (
+            <Link
+              href="/profile"
+              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
+            >
+              My Profile
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/get-started"
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
+              >
+                Sign Up
+              </Link>
+            </>
+          )
         }
       />
 
@@ -46,6 +62,11 @@ export default async function BrowsePage() {
                   Your CV link is shared only with the recruiter you book with.
                   All booking data is purged within 2 days after the event.
                 </p>
+                {!session && (
+                  <p className="text-muted-foreground">
+                    Guests can browse participating companies. Log in when you are ready to apply and book an interview.
+                  </p>
+                )}
               </div>
             </div>
           </div>
