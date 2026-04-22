@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
+import { AppMotionShell } from "@/components/app-motion-shell";
 import { InstallPrompt } from "@/components/install-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { EVENT_CONFIG } from "@/lib/data";
@@ -68,7 +70,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          {children}
+          <Suspense fallback={children}>
+            <AppMotionShell>{children}</AppMotionShell>
+          </Suspense>
           <InstallPrompt />
         </ThemeProvider>
       </body>

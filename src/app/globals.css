@@ -58,6 +58,11 @@
  * Border     #E5E5E7 — subtle
  */
 :root {
+  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 160ms;
+  --duration-base: 260ms;
+  --duration-slow: 420ms;
   --background: #FAFAFA;
   --foreground: #1D1D1F;
   --card: #FFFFFF;
@@ -138,10 +143,63 @@
   body {
     @apply bg-background text-foreground;
     overflow-x: clip;
+    text-rendering: optimizeLegibility;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(circle at top center, rgba(140, 82, 255, 0.07), transparent 38%),
+      radial-gradient(circle at bottom right, rgba(140, 82, 255, 0.05), transparent 32%);
+    opacity: 0.9;
+  }
+
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  summary {
+    transition:
+      color var(--duration-fast) var(--ease-fluid),
+      background-color var(--duration-fast) var(--ease-fluid),
+      border-color var(--duration-fast) var(--ease-fluid),
+      box-shadow var(--duration-base) var(--ease-fluid),
+      transform var(--duration-fast) var(--ease-fluid),
+      opacity var(--duration-fast) var(--ease-fluid);
+  }
+
+  button:active,
+  [role="button"]:active,
+  a:active {
+    transform: translateY(0.5px) scale(0.992);
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 24%, transparent);
+    color: var(--foreground);
   }
 }
 
 /* Premium animations */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.996);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -191,6 +249,24 @@
   }
 }
 
+@keyframes route-progress {
+  0% {
+    transform: scaleX(0.08);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  65% {
+    transform: scaleX(0.72);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.4s ease-out forwards;
 }
@@ -213,6 +289,36 @@
   animation: float 3s ease-in-out infinite;
 }
 
+.page-shell {
+  min-height: 100%;
+}
+
+.animate-page-enter {
+  animation: page-enter var(--duration-slow) var(--ease-fluid) both;
+}
+
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  height: 2px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(140, 82, 255, 0.2), rgba(140, 82, 255, 0.95), rgba(169, 120, 255, 0.85));
+  box-shadow: 0 0 24px rgba(140, 82, 255, 0.35);
+  will-change: transform, opacity;
+}
+
+.route-progress-idle {
+  transform: scaleX(0);
+  opacity: 0;
+}
+
+.route-progress-active {
+  animation: route-progress 520ms var(--ease-fluid) forwards;
+}
+
 /* Staggered animations for lists */
 .stagger-fade-in > * {
   opacity: 0;
@@ -232,18 +338,36 @@
 /* Smooth transitions for interactive elements */
 @layer utilities {
   .transition-premium {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--duration-base) var(--ease-fluid);
   }
 
   .hover-lift {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      transform var(--duration-base) var(--ease-fluid),
+      box-shadow var(--duration-base) var(--ease-fluid),
+      border-color var(--duration-fast) var(--ease-fluid);
   }
 
   .hover-lift:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
   }
 
   .hover-glow:hover {
     box-shadow: 0 0 20px rgba(140, 82, 255, 0.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
