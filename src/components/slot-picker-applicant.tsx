@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format, addDays, startOfDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ export function SlotPicker({
   applicantId: number;
   onSlotSelect: (slot: { id: number; startTime: string }) => void;
 }) {
+  const { messages } = useRecruiterI18n();
   const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -39,16 +41,16 @@ export function SlotPicker({
       const res = await fetch(
         `/api/applicant-slots?applicantId=${applicantId}&date=${dateStr}`
       );
-      if (!res.ok) throw new Error("Failed to load slots");
+      if (!res.ok) throw new Error(messages.slotPicker.failedToLoad);
       const data = await res.json();
       setSlots(data.slots ?? []);
     } catch {
-      setError("Could not load available times.");
+      setError(messages.slotPicker.couldNotLoad);
       setSlots([]);
     } finally {
       setLoading(false);
     }
-  }, [applicantId, selectedDate]);
+  }, [applicantId, messages.slotPicker.couldNotLoad, messages.slotPicker.failedToLoad, selectedDate]);
 
   useEffect(() => {
     if (mounted) fetchSlots();
@@ -84,7 +86,7 @@ export function SlotPicker({
           variant="outline"
           size="icon"
           onClick={() => navigateDay(-1)}
-          aria-label="Previous day"
+          aria-label={messages.slotPicker.previousDay}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -95,7 +97,7 @@ export function SlotPicker({
           variant="outline"
           size="icon"
           onClick={() => navigateDay(1)}
-          aria-label="Next day"
+          aria-label={messages.slotPicker.nextDay}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -104,7 +106,7 @@ export function SlotPicker({
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+          <span className="ml-2 text-sm text-muted-foreground">{messages.common.loading}</span>
         </div>
       ) : error ? (
         <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-center text-sm text-destructive">
@@ -113,7 +115,7 @@ export function SlotPicker({
       ) : availableSlots.length === 0 ? (
         <div className="rounded-lg border border-dashed py-12 text-center">
           <p className="text-sm text-muted-foreground">
-            No available slots on this day.
+            {messages.slotPicker.noSlots}
           </p>
         </div>
       ) : (

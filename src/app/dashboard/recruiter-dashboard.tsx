@@ -29,6 +29,8 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
+import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SlotPicker } from "@/components/slot-picker-applicant";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -78,6 +80,7 @@ export function RecruiterDashboard({
   eventMode: string;
 }) {
   const router = useRouter();
+  const { messages } = useRecruiterI18n();
   const [tab, setTab] = useState<Tab>("bookings");
   const showApplicants =
     eventMode === "recruiter_books_applicant" || eventMode === "both";
@@ -100,15 +103,16 @@ export function RecruiterDashboard({
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <RecruiterLanguageSwitcher />
             <Link
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              View Site
+              {messages.common.viewSite}
             </Link>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="mr-1.5 h-3.5 w-3.5" />
-              Logout
+              {messages.common.logout}
             </Button>
           </div>
         </div>
@@ -127,7 +131,7 @@ export function RecruiterDashboard({
             )}
           >
             <BookOpen className="h-4 w-4" />
-            My Bookings
+            {messages.dashboard.tabs.bookings}
             <Badge variant="secondary" className="ml-1 text-xs">
               {bookings.length}
             </Badge>
@@ -143,7 +147,7 @@ export function RecruiterDashboard({
               )}
             >
               <GraduationCap className="h-4 w-4" />
-              Browse Applicants
+              {messages.dashboard.tabs.applicants}
             </button>
           )}
           <button
@@ -156,7 +160,7 @@ export function RecruiterDashboard({
             )}
           >
             <Building2 className="h-4 w-4" />
-            My Company
+            {messages.dashboard.tabs.company}
           </button>
         </div>
       </div>
@@ -178,6 +182,7 @@ export function RecruiterDashboard({
 }
 
 function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
+  const { messages } = useRecruiterI18n();
   const [items, setItems] = useState(initialBookings);
   const [acting, setActing] = useState<number | null>(null);
   const router = useRouter();
@@ -198,7 +203,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   }
 
   async function handleCancel(id: number) {
-    if (!confirm("Cancel this? The slot will be released and a waitlisted applicant may be promoted.")) return;
+    if (!confirm(messages.dashboard.bookings.cancelConfirm)) return;
     setActing(id);
     const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
     if (res.ok) {
@@ -236,7 +241,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium">{b.applicantName}</p>
                   <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold", statusColor[b.status] ?? "")}>
-                    {b.status}
+                    {messages.dashboard.status[b.status as keyof typeof messages.dashboard.status] ?? b.status}
                   </span>
                   {b.position && (
                     <Badge variant="outline" className="text-xs font-normal">
@@ -264,7 +269,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                 className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
               >
                 <FileText className="h-3 w-3" />
-                CV
+                {messages.dashboard.bookings.cv}
                 <ExternalLink className="h-3 w-3" />
               </a>
             </div>
@@ -279,7 +284,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   className="h-8 bg-green-600 text-white hover:bg-green-700"
                 >
                   {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
-                  Accept
+                  {messages.dashboard.bookings.accept}
                 </Button>
                 {isPending && (
                   <Button
@@ -289,7 +294,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                     onClick={() => handleReview(b.id, "waitlist")}
                     className="h-8"
                   >
-                    Waitlist
+                    {messages.dashboard.bookings.waitlist}
                   </Button>
                 )}
                 <Button
@@ -299,7 +304,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   onClick={() => handleReview(b.id, "reject")}
                   className="h-8 text-destructive hover:bg-destructive/10"
                 >
-                  Reject
+                  {messages.dashboard.bookings.reject}
                 </Button>
               </div>
             )}
@@ -309,7 +314,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   onClick={() => handleCancel(b.id)}
                   className="cursor-pointer text-xs text-muted-foreground hover:text-destructive hover:underline"
                 >
-                  Cancel interview
+                  {messages.dashboard.bookings.cancelInterview}
                 </button>
               </div>
             )}
@@ -328,7 +333,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 text-[10px] font-bold text-yellow-700">
               {pending.length}
             </span>
-            Pending Review
+            {messages.dashboard.bookings.pendingReview}
           </h3>
           <div className="space-y-2">{pending.map(renderBooking)}</div>
         </div>
@@ -338,7 +343,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {accepted.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-green-700 dark:text-green-400">
-            Accepted ({accepted.length})
+            {messages.dashboard.bookings.accepted} ({accepted.length})
           </h3>
           <div className="space-y-2">{accepted.map(renderBooking)}</div>
         </div>
@@ -348,7 +353,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {waitlisted.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
-            Waitlisted ({waitlisted.length})
+            {messages.dashboard.bookings.waitlisted} ({waitlisted.length})
           </h3>
           <div className="space-y-2">{waitlisted.map(renderBooking)}</div>
         </div>
@@ -358,7 +363,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {other.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            Past ({other.length})
+            {messages.dashboard.bookings.past} ({other.length})
           </h3>
           <div className="space-y-2">{other.map(renderBooking)}</div>
         </div>
@@ -367,7 +372,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {items.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No applications yet.</p>
+            <p className="text-muted-foreground">{messages.dashboard.bookings.noApplications}</p>
           </CardContent>
         </Card>
       )}
@@ -376,6 +381,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
 }
 
 function ApplicantsTab({ recruiterId }: { recruiterId: number }) {
+  const { messages } = useRecruiterI18n();
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -417,7 +423,7 @@ function ApplicantsTab({ recruiterId }: { recruiterId: number }) {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search by name, major, or skill..."
+          placeholder={messages.dashboard.applicants.searchPlaceholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="pl-9"
@@ -428,13 +434,13 @@ function ApplicantsTab({ recruiterId }: { recruiterId: number }) {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           <span className="ml-2 text-sm text-muted-foreground">
-            Loading applicants...
+            {messages.dashboard.applicants.loading}
           </span>
         </div>
       ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            No applicants found.
+            {messages.dashboard.applicants.empty}
           </CardContent>
         </Card>
       ) : (
@@ -461,11 +467,11 @@ function ApplicantsTab({ recruiterId }: { recruiterId: number }) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                     onClick={(e) => e.stopPropagation()}
-                  >
-                    <FileText className="h-3 w-3" />
-                    CV
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                    >
+                      <FileText className="h-3 w-3" />
+                      {messages.dashboard.applicants.cv}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
                 </div>
                 {a.skills.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -503,6 +509,7 @@ function ApplicantBookingView({
   recruiterId: number;
   onBack: () => void;
 }) {
+  const { messages } = useRecruiterI18n();
   const [bookingState, setBookingState] = useState<
     "picking" | "confirming" | "success" | "error"
   >("picking");
@@ -528,7 +535,7 @@ function ApplicantBookingView({
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking failed");
+      if (!res.ok) throw new Error(data.error || messages.signup.errors.somethingWentWrong);
 
       setBookingState("success");
     } catch (err) {
@@ -547,16 +554,16 @@ function ApplicantBookingView({
             <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
           <h3 className="font-heading text-xl font-semibold">
-            Interview Booked!
+            {messages.dashboard.applicants.booked}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Interview with {applicant.name} at{" "}
+            {messages.dashboard.applicants.interviewWith} {applicant.name} at{" "}
             {selectedSlot &&
               format(new Date(selectedSlot.startTime), "MMM d, HH:mm")}
             .
           </p>
           <Button variant="outline" onClick={onBack}>
-            Back to Applicants
+            {messages.dashboard.applicants.backToApplicants}
           </Button>
         </CardContent>
       </Card>
@@ -566,7 +573,7 @@ function ApplicantBookingView({
   return (
     <div className="space-y-4">
       <Button variant="outline" size="sm" onClick={onBack}>
-        Back to Applicants
+        {messages.dashboard.applicants.backToApplicants}
       </Button>
 
       <div className="grid gap-6 lg:grid-cols-5">
@@ -612,7 +619,7 @@ function ApplicantBookingView({
               className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
             >
               <FileText className="h-4 w-4" />
-              View CV
+              {messages.dashboard.applicants.viewCv}
               <ExternalLink className="h-3 w-3" />
             </a>
           </CardContent>
@@ -622,10 +629,11 @@ function ApplicantBookingView({
         <Card className="lg:col-span-3">
           <CardHeader>
             <h3 className="font-heading text-lg font-semibold">
-              Select a Time Slot
+              {messages.dashboard.applicants.selectSlot}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Pick a time from {applicant.name}&apos;s availability.
+              {messages.dashboard.applicants.pickFromAvailability} {applicant.name}
+              {messages.dashboard.applicants.availabilitySuffix}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -636,7 +644,7 @@ function ApplicantBookingView({
 
             {selectedSlot && bookingState === "picking" && (
               <Button onClick={handleConfirm} className="w-full">
-                Confirm Booking at{" "}
+                {messages.dashboard.applicants.confirmBookingAt}{" "}
                 {format(new Date(selectedSlot.startTime), "HH:mm")}
               </Button>
             )}
@@ -644,7 +652,7 @@ function ApplicantBookingView({
             {bookingState === "confirming" && (
               <Button disabled className="w-full">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Booking...
+                {messages.dashboard.applicants.booking}
               </Button>
             )}
 
@@ -655,7 +663,7 @@ function ApplicantBookingView({
                   onClick={() => setBookingState("picking")}
                   className="mt-1 block text-xs underline"
                 >
-                  Try again
+                  {messages.common.tryAgain}
                 </button>
               </div>
             )}
@@ -674,6 +682,7 @@ type JobOpening = {
 };
 
 function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
+  const { messages } = useRecruiterI18n();
   const router = useRouter();
 
   // Company info
@@ -710,12 +719,12 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: description.trim(), interviewerCount }),
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) throw new Error(messages.dashboard.company.saveFailed);
       setSaved(true);
       router.refresh();
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(err instanceof Error ? err.message : messages.dashboard.company.errorFallback);
     } finally {
       setSaving(false);
     }
@@ -751,7 +760,7 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
   }
 
   async function handleDeleteJob(id: number) {
-    if (!confirm("Remove this position?")) return;
+    if (!confirm(messages.dashboard.company.removePositionConfirm)) return;
     await fetch(`/api/me/jobs/${id}`, { method: "DELETE" });
     setJobs(jobs.filter((j) => j.id !== id));
   }
@@ -767,18 +776,18 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
         <CardContent>
           <form onSubmit={handleSaveCompany} className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="desc" className="text-sm font-medium">Company Description</label>
+              <label htmlFor="desc" className="text-sm font-medium">{messages.dashboard.company.companyDescription}</label>
               <textarea
                 id="desc"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What does your company do?"
+                placeholder={messages.dashboard.company.whatDoesCompanyDo}
                 rows={3}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="ic" className="text-sm font-medium">Number of Interviewers</label>
+              <label htmlFor="ic" className="text-sm font-medium">{messages.dashboard.company.interviewerCount}</label>
               <Input
                 id="ic"
                 type="number"
@@ -788,13 +797,19 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                 onChange={(e) => setInterviewerCount(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
               />
               <p className="text-xs text-muted-foreground">
-                {interviewerCount} interviewer{interviewerCount > 1 ? "s" : ""} = {interviewerCount}x slots per time. Assigned randomly.
+                {messages.dashboard.company.interviewerHintPrefix}
+                {interviewerCount}
+                {messages.dashboard.company.interviewerHintMiddle}
+                {interviewerCount > 1 ? messages.dashboard.company.interviewerHintPlural : ""}
+                {messages.dashboard.company.interviewerHintSuffix}
+                {interviewerCount}
+                {messages.dashboard.company.interviewerHintTail}
               </p>
             </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
-            {saved && <p className="text-xs text-green-600">Saved!</p>}
+            {saved && <p className="text-xs text-green-600">{messages.dashboard.company.saved}</p>}
             <Button type="submit" disabled={saving} size="sm">
-              {saving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Saving...</> : "Save Company Info"}
+              {saving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />{messages.dashboard.company.saving}</> : messages.dashboard.company.saveCompanyInfo}
             </Button>
           </form>
         </CardContent>
@@ -803,9 +818,9 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
       {/* Job Openings CRUD */}
       <Card>
         <CardHeader>
-          <h2 className="font-heading text-lg font-semibold">Job Openings</h2>
+          <h2 className="font-heading text-lg font-semibold">{messages.dashboard.company.jobOpenings}</h2>
           <p className="text-xs text-muted-foreground">
-            Each position has its own JD link. Students select a position when applying.
+            {messages.dashboard.company.jobOpeningsHint}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -815,18 +830,18 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
               <Input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Position title"
+                placeholder={messages.dashboard.company.positionTitle}
                 required
               />
               <Input
                 value={newJdLink}
                 onChange={(e) => setNewJdLink(e.target.value)}
-                placeholder="JD link (optional)"
+                placeholder={messages.dashboard.company.jdLinkOptional}
                 type="url"
               />
               <Button type="submit" size="sm" disabled={!newTitle.trim()}>
                 <Plus className="mr-1 h-3.5 w-3.5" />
-                Add
+                {messages.dashboard.company.add}
               </Button>
             </div>
           </form>
@@ -838,7 +853,7 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
             </div>
           ) : jobs.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              No positions added yet.
+              {messages.dashboard.company.noPositions}
             </p>
           ) : (
             <div className="space-y-2">
@@ -849,21 +864,21 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                       <Input
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
-                        placeholder="Title"
+                        placeholder={messages.dashboard.company.title}
                       />
                       <Input
                         value={editJdLink}
                         onChange={(e) => setEditJdLink(e.target.value)}
-                        placeholder="JD link"
+                        placeholder={messages.dashboard.company.jdLinkShort}
                         type="url"
                       />
                     </div>
                     <div className="mt-2 flex gap-2">
                       <Button size="sm" onClick={() => handleUpdateJob(job.id)}>
-                        Save
+                        {messages.common.save}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                        Cancel
+                        {messages.common.cancel}
                       </Button>
                     </div>
                   </div>
@@ -882,12 +897,12 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                           className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                         >
                           <FileText className="h-3 w-3" />
-                          View JD
+                          {messages.dashboard.company.viewJd}
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                       {!job.jdLink && (
-                        <p className="text-xs text-muted-foreground">No JD link</p>
+                        <p className="text-xs text-muted-foreground">{messages.dashboard.company.noJdLink}</p>
                       )}
                     </div>
                     <div className="flex shrink-0 gap-1">
@@ -898,14 +913,14 @@ function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
                           setEditJdLink(job.jdLink ?? "");
                         }}
                         className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
-                        aria-label="Edit"
+                        aria-label={messages.dashboard.company.edit}
                       >
                         <Briefcase className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteJob(job.id)}
                         className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        aria-label="Delete"
+                        aria-label={messages.dashboard.company.delete}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

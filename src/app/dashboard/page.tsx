@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { RecruiterLocaleProvider } from "@/components/recruiter-locale-provider";
 import { getSession } from "@/lib/auth";
+import { getRecruiterLocale } from "@/lib/recruiter-locale.server";
 import {
   db,
   recruiters,
@@ -15,6 +17,7 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role === "admin") redirect("/admin");
+  const locale = await getRecruiterLocale();
 
   const [recruiter] = await db
     .select({
@@ -56,10 +59,12 @@ export default async function DashboardPage() {
     .limit(1);
 
   return (
-    <RecruiterDashboard
-      recruiter={recruiter}
-      bookings={allBookings}
-      eventMode={config?.mode ?? "both"}
-    />
+    <RecruiterLocaleProvider initialLocale={locale}>
+      <RecruiterDashboard
+        recruiter={recruiter}
+        bookings={allBookings}
+        eventMode={config?.mode ?? "both"}
+      />
+    </RecruiterLocaleProvider>
   );
 }
