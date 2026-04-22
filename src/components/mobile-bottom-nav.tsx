@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
 
@@ -11,11 +11,16 @@ export function MobileBottomNav({
 }: {
   role: NavRole;
 }) {
+  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const items = navItemsByRole[role];
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  const currentActiveHref =
+    items.find((item) => isNavItemActive(pathname, search, item))?.href ?? null;
+  const displayActiveHref = pendingHref ?? currentActiveHref;
   const shouldHide =
     pathname.startsWith("/api") ||
     pathname === "/terms-of-service" ||
@@ -39,15 +44,25 @@ export function MobileBottomNav({
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map((item) => {
-            const active =
-              pendingHref === item.href || isNavItemActive(pathname, search, item);
+            const active = displayActiveHref === item.href;
             const Icon = item.icon;
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setPendingHref(item.href)}
+                onClick={(event) => {
+                  event.preventDefault();
+
+                  if (displayActiveHref === item.href) {
+                    return;
+                  }
+
+                  setPendingHref(item.href);
+                  startTransition(() => {
+                    router.push(item.href);
+                  });
+                }}
                 className={[
                   "group flex min-h-13 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium transition-premium",
                   active
