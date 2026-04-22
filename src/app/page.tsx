@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/countdown";
 import { SiteFooter } from "@/components/site-footer";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AppTopBar } from "@/components/app-topbar";
 import { ExternalJobsPreview } from "@/components/external-jobs-preview";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
@@ -150,43 +150,34 @@ export default async function LandingPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Briefcase className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            {session ? (
+      <AppTopBar
+        desktopActions={
+          session ? (
+            <Link
+              href={dashboardUrl!}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Go to Dashboard
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <>
               <Link
-                href={dashboardUrl!}
+                href="/login"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/get-started"
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                Go to Dashboard
-                <ArrowRight className="h-4 w-4" />
+                Sign Up
               </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/get-started"
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+            </>
+          )
+        }
+      />
 
       <main className="flex-1">
         {/* Hero Section */}

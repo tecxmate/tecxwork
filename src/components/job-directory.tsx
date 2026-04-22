@@ -238,17 +238,8 @@ export function JobDirectory() {
       );
     }
 
-    if (isRefreshing) {
-      return (
-        <span className="flex items-center gap-1.5">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Updating...
-        </span>
-      );
-    }
-
     return `${total} ${total === 1 ? "job" : "jobs"} found${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}`;
-  }, [currentPage, isRefreshing, loading, total, totalPages]);
+  }, [currentPage, loading, total, totalPages]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -334,24 +325,14 @@ export function JobDirectory() {
         </div>
       ) : (
         <>
-          <div className="relative">
-            <div className="stagger-fade-in grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {jobs.map((job) => (
-                <JobCard
-                  key={`${job.source}-${job.externalId}`}
-                  job={job}
-                  onClick={() => setSelectedJob(job)}
-                />
-              ))}
-            </div>
-            {isRefreshing && (
-              <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
-                <div className="inline-flex items-center gap-2 rounded-full border bg-background/96 px-3 py-1 text-xs text-muted-foreground shadow-sm">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Updating jobs...
-                </div>
-              </div>
-            )}
+          <div className="stagger-fade-in grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((job) => (
+              <JobCard
+                key={`${job.source}-${job.externalId}`}
+                job={job}
+                onClick={() => setSelectedJob(job)}
+              />
+            ))}
           </div>
 
           {totalPages > 1 && (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -14,11 +15,16 @@ export function MobileBottomNav({
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const items = navItemsByRole[role];
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
   const shouldHide =
     pathname.startsWith("/api") ||
     pathname === "/terms-of-service" ||
     pathname === "/privacy-policy" ||
     pathname === "/tutorial";
+
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname, search]);
 
   if (shouldHide) {
     return null;
@@ -33,18 +39,20 @@ export function MobileBottomNav({
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map((item) => {
-            const active = isNavItemActive(pathname, search, item);
+            const active =
+              pendingHref === item.href || isNavItemActive(pathname, search, item);
             const Icon = item.icon;
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setPendingHref(item.href)}
                 className={[
-                  "group flex min-h-13 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-1.5 text-[11px] font-medium transition-premium",
+                  "group flex min-h-13 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium transition-premium",
                   active
-                    ? "border-primary/28 bg-primary/[0.11] text-primary"
-                    : "border-transparent text-muted-foreground hover:border-border hover:bg-muted/55 hover:text-foreground",
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
                 <Icon

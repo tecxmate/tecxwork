@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Briefcase, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { AppTopBar } from "@/components/app-topbar";
 import { Separator } from "@/components/ui/separator";
 import { Directory } from "@/components/directory";
-import { LogoutButton } from "@/components/logout-button";
 import { SiteFooter } from "@/components/site-footer";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { getSession } from "@/lib/auth";
 
 export default async function BrowsePage() {
@@ -16,26 +15,17 @@ export default async function BrowsePage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/browse" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Briefcase className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
+      <AppTopBar
+        href="/browse"
+        desktopActions={
+          <Link
+            href="/profile"
+            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
+          >
+            My Profile
           </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            <Link
-              href="/profile"
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
-            >
-              My Profile
-            </Link>
-            <LogoutButton />
-          </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">

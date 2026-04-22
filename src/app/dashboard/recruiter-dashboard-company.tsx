@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, FileText, Loader2, Plus, Briefcase, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
+import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -57,6 +59,11 @@ export function RecruiterCompanyTab({
       .then((d) => setJobs(d.jobs ?? []))
       .finally(() => setLoadingJobs(false));
   }, []);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
 
   async function handleSaveCompany(e: React.FormEvent) {
     e.preventDefault();
@@ -168,6 +175,23 @@ export function RecruiterCompanyTab({
 
   return (
     <div className="space-y-6">
+      <Card className="md:hidden">
+        <CardContent className="space-y-3 p-4">
+          <RecruiterLanguageSwitcher />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Link
+              href="/"
+              className="flex h-11 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium text-muted-foreground transition-premium hover:bg-muted/55 hover:text-foreground"
+            >
+              {messages.common.viewSite}
+            </Link>
+            <Button variant="outline" className="h-11 w-full" onClick={handleLogout}>
+              {messages.common.logout}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <h2 className="font-heading text-lg font-semibold">{recruiter.company}</h2>

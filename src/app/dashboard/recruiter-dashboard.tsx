@@ -23,6 +23,7 @@ import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switc
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { isNavItemActive, navItemsByRole } from "@/lib/navigation";
+import { AppTopBar } from "@/components/app-topbar";
 
 type Booking = {
   id: number;
@@ -127,25 +128,9 @@ export function RecruiterDashboard({
       </aside>
 
       <div className="flex min-h-full min-w-0 flex-1 flex-col md:min-h-screen md:pl-72">
-        <header className="sticky top-0 z-10 border-b bg-white md:hidden dark:bg-card">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-                <Building2 className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="max-w-[160px] truncate font-heading text-lg font-bold">
-                {recruiter.company}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <RecruiterLanguageSwitcher />
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="mr-1.5 h-3.5 w-3.5" />
-                {messages.common.logout}
-              </Button>
-            </div>
-          </div>
-        </header>
+        <div className="md:hidden">
+          <AppTopBar href="/dashboard" />
+        </div>
 
         <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
           <div className="mx-auto max-w-5xl md:max-w-none">

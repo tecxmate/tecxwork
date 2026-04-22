@@ -4,12 +4,12 @@ import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } fro
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Building2,
   Check,
   CheckCircle2,
   GraduationCap,
   Loader2,
+  LogOut,
   Plus,
   Search,
   User,
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { AppTopBar } from "@/components/app-topbar";
 import { QRCard } from "@/components/qr-code";
 import { SiteFooter } from "@/components/site-footer";
 import {
@@ -221,6 +222,11 @@ export default function ProfilePage() {
   const [schoolsError, setSchoolsError] = useState("");
   const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false);
   const deferredSchoolQuery = useDeferredValue(draft.schoolQuery);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
 
   useEffect(() => {
     fetch("/api/me/profile")
@@ -457,17 +463,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
-          <Link
-            href="/browse"
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Link>
-        </div>
-      </header>
+      <AppTopBar />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
         <div className="mx-auto max-w-5xl space-y-4">
@@ -487,6 +483,10 @@ export default function ProfilePage() {
               </div>
               <h1 className="font-heading text-xl font-bold">My Profile</h1>
               <p className="text-xs text-muted-foreground">{profileEmail}</p>
+              <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="mr-1.5 h-3.5 w-3.5" />
+                Log out
+              </Button>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSave} className="space-y-6">

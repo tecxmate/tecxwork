@@ -128,17 +128,8 @@ export function Directory() {
       );
     }
 
-    if (isRefreshing) {
-      return (
-        <span className="flex items-center gap-1.5">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Updating...
-        </span>
-      );
-    }
-
     return `${total} ${total === 1 ? "company" : "companies"}${totalPages > 1 ? ` · Page ${page} of ${totalPages}` : ""}`;
-  }, [isRefreshing, loading, total, totalPages, page]);
+  }, [loading, total, totalPages, page]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -179,20 +170,10 @@ export function Directory() {
         </div>
       ) : (
         <>
-          <div className="relative">
-            <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {recruiters.map((recruiter) => (
-                <RecruiterCard key={recruiter.id} recruiter={recruiter} />
-              ))}
-            </div>
-            {isRefreshing && (
-              <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
-                <div className="inline-flex items-center gap-2 rounded-full border bg-background/96 px-3 py-1 text-xs text-muted-foreground shadow-sm">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Updating companies...
-                </div>
-              </div>
-            )}
+          <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {recruiters.map((recruiter) => (
+              <RecruiterCard key={recruiter.id} recruiter={recruiter} />
+            ))}
           </div>
 
           {totalPages > 1 && (
