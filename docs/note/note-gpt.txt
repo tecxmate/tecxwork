@@ -1,0 +1,42 @@
+Database migration note
+
+- We temporarily introduced `DB_URL` because Vercel auto-populated `DATABASE_URL` for its managed Neon integration, while we were trying to use a separate custom Neon database.
+- That split caused the app to drift across two databases:
+  - the custom/local target had newer schema work but `external_jobs` was empty
+  - the old Vercel-managed Neon database still had the real `external_jobs` data used by production
+- We verified the old Vercel-managed branch `ep-lingering-sun-an5htstv` was the database that contained the production external job data.
+- We decided to standardize back to the old database and remove the `DB_URL` workaround entirely.
+
+What was done
+
+- Reverted the codebase to use `DATABASE_URL` only.
+- Removed `DB_URL` handling from runtime/scripts/docs.
+- Removed `DB_URL` from Vercel envs so production/preview no longer rely on that override.
+- Repointed local `.env.local` to the same old Vercel-managed Neon database so local and production match.
+- Migrated the old database forward with the missing newer schema/features:
+  - expanded applicant profile columns
+  - `work_experiences`
+  - `event_config.onboarding_mode`
+  - `job_openings` moderation fields
+  - `schools` table
+- Cleared legacy recruiter job field values (`recruiters.positions`, `recruiters.jd_link`) after moving active flows to `job_openings`.
+
+School dataset clarification
+
+- `public/dataset/u1_new.csv` looks large because it repeats schools across years.
+- The correct import target is one record per school code, not one record per CSV line.
+- After fixing the parser and deduping by school code, the synced `schools` table contains `171` valid unique schools.
+
+Verified end state
+
+- Old Neon / production-aligned DB contains:
+  - `external_jobs = 453`
+  - `schools = 171`
+  - no malformed school codes
+  - no remaining recruiter legacy job values in active use
+- App now consistently expects `DATABASE_URL` as the single source of truth.
+
+Follow-up reminder
+
+- The legacy columns `recruiters.positions` and `recruiters.jd_link` still exist physically in schema/DB for compatibility, but the app no longer relies on them.
+- If doing future cleanup, the next optional step is to drop those legacy columns entirely after confirming no hidden dependency remains.
