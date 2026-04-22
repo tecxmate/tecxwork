@@ -17,6 +17,8 @@ type Role = {
   icon: typeof GraduationCap;
   title: string;
   description: string;
+  browseHref?: string;
+  browseLabel?: string;
   loginHref: string;
   signupHref: string | null;
 };
@@ -28,6 +30,8 @@ const ROLES: Role[] = [
     title: "I'm a Student",
     description:
       "Browse participating companies and book interview slots. Register to also let recruiters discover you.",
+    browseHref: "/browse",
+    browseLabel: "Browse Companies",
     loginHref: "/login",
     signupHref: "/register",
   },
@@ -107,6 +111,14 @@ export default async function GetStartedPage() {
                 </div>
 
                 <div className="mt-auto flex flex-col gap-2">
+                  {role.browseHref ? (
+                    <Link
+                      href={role.browseHref}
+                      className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {role.browseLabel ?? "Browse"}
+                    </Link>
+                  ) : null}
                   <Link
                     href={role.loginHref}
                     className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

@@ -23,10 +23,10 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
   guest: [
     { href: "/", label: "Home", icon: Home, matches: ["/"] },
     {
-      href: "/get-started",
+      href: "/browse",
       label: "Companies",
       icon: Building2,
-      matches: ["/get-started"],
+      matches: ["/browse", "/recruiter"],
     },
     { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness, matches: ["/jobs"] },
     {

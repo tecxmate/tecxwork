@@ -4,6 +4,7 @@ import { EB_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getSession } from "@/lib/auth";
 import { EVENT_CONFIG } from "@/lib/data";
@@ -73,6 +74,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
+          <RouteLoadingSignal />
           {children}
           <Suspense fallback={null}>
             <MobileBottomNavServer sessionPromise={sessionPromise} />
