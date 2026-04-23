@@ -17,6 +17,7 @@ export type NavItem = {
   label: string;
   icon: ComponentType<{ className?: string }>;
   matches?: string[];
+  exactMatch?: boolean;
 };
 
 export const navItemsByRole: Record<NavRole, NavItem[]> = {
@@ -74,7 +75,13 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
     },
   ],
   admin: [
-    { href: "/admin", label: "Overview", icon: Shield, matches: ["/admin"] },
+    {
+      href: "/admin",
+      label: "Overview",
+      icon: Shield,
+      matches: ["/admin"],
+      exactMatch: true,
+    },
     {
       href: "/admin/recruiters",
       label: "Recruiters",
@@ -107,6 +114,10 @@ export function isNavItemActive(pathname: string, search: string, item: NavItem)
 
     if (pattern.includes("?")) {
       return fullPath === pattern;
+    }
+
+    if (item.exactMatch) {
+      return pathname === pattern && search.length === 0;
     }
 
     return (

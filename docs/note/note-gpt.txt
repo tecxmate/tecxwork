@@ -391,3 +391,39 @@ Admin-specific UI notes:
 - `/admin` remains the overview page by design
 - recruiter/applicant/jobs admin areas are separate routes now
 - avoid rebuilding a giant single-page admin tab switcher unless absolutely necessary
+
+LATEST STATUS UPDATE — APR 24, 2026 (JOB MODERATION TOGGLE)
+
+What changed:
+- Added a new admin-controlled toggle for recruiter job publishing mode:
+  - `Admin review required` (existing moderation workflow)
+  - `Instant publish` (recruiters publish/remove directly)
+
+Persistence + schema:
+- Added `event_config.job_moderation_enabled` (boolean, default `true`).
+- Added migration script:
+  - `src/lib/db/add-job-moderation-toggle-column.ts`
+- Added npm script:
+  - `db:update:job-moderation-toggle`
+
+Backend behavior:
+- `GET/PUT /api/admin/mode` now returns and updates `jobModerationEnabled`.
+- Recruiter job APIs now read this flag:
+  - `POST /api/me/jobs`
+  - `PUT /api/me/jobs/[id]`
+- Behavior by mode:
+  - when moderation is ON: create/update keeps draft/review flow
+  - when moderation is OFF: create/update/submit become `approved` immediately
+
+UI behavior:
+- Admin overview now includes a `Job Publishing` control section.
+- Recruiter jobs tab updates copy depending on mode.
+- Recruiter `Submit for review` action is hidden when instant publish is enabled.
+
+Validation:
+- Build passed after implementation (`npm run build`).
+- Migration was run successfully with env loaded:
+  - `Ensured event_config.job_moderation_enabled exists`
+
+Commit:
+- `dfa84a0` — Add admin toggle for recruiter job moderation
