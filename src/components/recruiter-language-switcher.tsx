@@ -17,14 +17,16 @@ export function RecruiterLanguageSwitcher() {
 
   return (
     <div
-      className="flex items-center gap-1 rounded-lg border border-border bg-background/80 p-1"
+      className="grid h-11 grid-cols-[auto_1fr_1fr] items-center gap-1 rounded-lg border border-border bg-background/80 p-1"
       aria-label={messages.language.switchLabel}
     >
-      <Languages className="ml-1 size-4 text-muted-foreground" />
+      <div className="flex h-full items-center justify-center px-2 text-muted-foreground">
+        <Languages className="size-4" />
+      </div>
       <Button
         type="button"
         variant={locale === "en" ? "secondary" : "ghost"}
-        size="sm"
+        className="h-9 w-full justify-center px-3"
         onClick={() => set("en")}
       >
         {messages.language.english}
@@ -32,7 +34,7 @@ export function RecruiterLanguageSwitcher() {
       <Button
         type="button"
         variant={locale === "zh-TW" ? "secondary" : "ghost"}
-        size="sm"
+        className="h-9 w-full justify-center px-3"
         onClick={() => set("zh-TW")}
       >
         {messages.language.traditionalChinese}

@@ -184,9 +184,9 @@ export default async function LandingPage() {
         {/* Hero Section */}
         <section className="border-b bg-gradient-to-b from-primary/5 to-background px-4 py-12 sm:px-6 sm:py-20 lg:py-28">
           <div className="mx-auto max-w-4xl text-center">
-            <Badge className="mb-4">{EVENT_CONFIG.organizerShort}</Badge>
+            <Badge className="mb-4">VSATW 2026</Badge>
             <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              {EVENT_CONFIG.name}
+              Job Fair - V-GEN TRIDENT
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base italic text-muted-foreground sm:text-lg">
               &ldquo;{EVENT_CONFIG.tagline}&rdquo;

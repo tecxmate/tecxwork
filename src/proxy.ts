@@ -38,8 +38,8 @@ export function proxy(req: NextRequest) {
     }
   }
 
-  // Applicant-only: /browse and /profile (recruiter detail pages are public for browsing)
-  if (pathname.startsWith("/browse") || pathname.startsWith("/profile")) {
+  // Applicant-only: /profile
+  if (pathname.startsWith("/profile")) {
     if (!session) return NextResponse.redirect(new URL("/login", req.url));
     if (session.role !== "applicant") {
       return NextResponse.redirect(new URL("/login", req.url));
@@ -53,7 +53,6 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/browse/:path*",
     "/dashboard/:path*",
     "/admin/:path*",
     "/recruiter/:path*",
