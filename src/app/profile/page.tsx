@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   GraduationCap,
   Loader2,
-  LogOut,
   Plus,
   Search,
   User,
@@ -24,6 +23,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { AppTopBar } from "@/components/app-topbar";
+import { LogoutButton } from "@/components/logout-button";
 import { QRCard } from "@/components/qr-code";
 import { SiteFooter } from "@/components/site-footer";
 import {
@@ -44,6 +44,29 @@ import {
 type ProfileResponse = {
   name: string;
   email: string;
+  phone: string;
+  nationality: string;
+  schoolCode: string;
+  schoolName: string;
+  schoolNameEn: string;
+  major: string;
+  studyLevel: string;
+  studyYear: string;
+  expectedGraduation: string;
+  jobSeekingStatus: string;
+  workAuthorization: string;
+  skills: string[];
+  preferredLocations: string[];
+  preferredIndustries: string[];
+  workExperiences: StudentWorkExperience[];
+  cvLink: string;
+  linkedinUrl: string;
+  portfolioUrl: string;
+  description: string;
+};
+
+type ProfileSavePayload = {
+  name: string;
   phone: string;
   nationality: string;
   schoolCode: string;
@@ -102,6 +125,33 @@ function profileToDraft(profile: ProfileResponse): StudentRegistrationDraft {
     linkedinUrl: profile.linkedinUrl ?? "",
     portfolioUrl: profile.portfolioUrl ?? "",
     description: profile.description ?? "",
+  };
+}
+
+function buildProfilePayload(
+  draft: StudentRegistrationDraft
+): ProfileSavePayload {
+  return {
+    name: draft.name.trim(),
+    phone: draft.phone.trim(),
+    nationality: draft.nationality.trim(),
+    schoolCode: draft.schoolCode,
+    schoolName: draft.schoolName.trim(),
+    schoolNameEn: draft.schoolNameEn.trim(),
+    major: draft.major.trim(),
+    studyLevel: draft.studyLevel,
+    studyYear: draft.studyYear,
+    expectedGraduation: draft.expectedGraduation,
+    jobSeekingStatus: draft.jobSeekingStatus,
+    workAuthorization: draft.workAuthorization,
+    skills: draft.skills,
+    preferredLocations: draft.preferredLocations,
+    preferredIndustries: draft.preferredIndustries,
+    workExperiences: draft.workExperiences,
+    cvLink: draft.cvLink.trim(),
+    linkedinUrl: draft.linkedinUrl.trim(),
+    portfolioUrl: draft.portfolioUrl.trim(),
+    description: draft.description.trim(),
   };
 }
 
@@ -222,11 +272,20 @@ export default function ProfilePage() {
   const [schoolsError, setSchoolsError] = useState("");
   const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false);
   const deferredSchoolQuery = useDeferredValue(draft.schoolQuery);
+  const [lastSavedPayload, setLastSavedPayload] = useState<string | null>(null);
 
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-  }
+  const profilePayload = useMemo(() => buildProfilePayload(draft), [draft]);
+  const serializedPayload = useMemo(
+    () => JSON.stringify(profilePayload),
+    [profilePayload]
+  );
+  const canSaveProfile =
+    !!profilePayload.name &&
+    !!profilePayload.cvLink &&
+    !!profilePayload.schoolName &&
+    !!profilePayload.major &&
+    !!profilePayload.studyLevel &&
+    !!profilePayload.expectedGraduation;
 
   useEffect(() => {
     fetch("/api/me/profile")
@@ -237,7 +296,9 @@ export default function ProfilePage() {
       .then((data) => {
         const profile = data.profile as ProfileResponse;
         setProfileEmail(profile.email ?? "");
-        setDraft(profileToDraft(profile));
+        const nextDraft = profileToDraft(profile);
+        setDraft(nextDraft);
+        setLastSavedPayload(JSON.stringify(buildProfilePayload(nextDraft)));
       })
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
@@ -470,8 +531,7 @@ export default function ProfilePage() {
     }));
   }, []);
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
+  const saveProfile = useCallback(async () => {
     setSaving(true);
     setSaved(false);
     setError("");
@@ -480,28 +540,7 @@ export default function ProfilePage() {
       const res = await fetch("/api/me/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: draft.name.trim(),
-          phone: draft.phone.trim(),
-          nationality: draft.nationality.trim(),
-          schoolCode: draft.schoolCode,
-          schoolName: draft.schoolName.trim(),
-          schoolNameEn: draft.schoolNameEn.trim(),
-          major: draft.major.trim(),
-          studyLevel: draft.studyLevel,
-          studyYear: draft.studyYear,
-          expectedGraduation: draft.expectedGraduation,
-          jobSeekingStatus: draft.jobSeekingStatus,
-          workAuthorization: draft.workAuthorization,
-          skills: draft.skills,
-          preferredLocations: draft.preferredLocations,
-          preferredIndustries: draft.preferredIndustries,
-          workExperiences: draft.workExperiences,
-          cvLink: draft.cvLink.trim(),
-          linkedinUrl: draft.linkedinUrl.trim(),
-          portfolioUrl: draft.portfolioUrl.trim(),
-          description: draft.description.trim(),
-        }),
+        body: JSON.stringify(profilePayload),
       });
 
       if (!res.ok) {
@@ -509,6 +548,7 @@ export default function ProfilePage() {
         throw new Error(data.error || "Save failed");
       }
 
+      setLastSavedPayload(serializedPayload);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -516,7 +556,30 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  }, [profilePayload, serializedPayload]);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    await saveProfile();
   }
+
+  useEffect(() => {
+    if (loading || !canSaveProfile || saving) return;
+    if (lastSavedPayload === null || serializedPayload === lastSavedPayload) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void saveProfile();
+    }, 900);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    canSaveProfile,
+    lastSavedPayload,
+    loading,
+    saveProfile,
+    saving,
+    serializedPayload,
+  ]);
 
   if (loading) {
     return (
@@ -528,90 +591,83 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <AppTopBar href="/profile" navRole="applicant" currentPath="/profile" />
+      <AppTopBar
+        href="/profile"
+        navRole="applicant"
+        currentPath="/profile"
+        desktopActions={<LogoutButton />}
+        showActionsOnMobile
+      />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
         <div className="mx-auto max-w-5xl space-y-4">
-          {draft.cvLink && (
-            <QRCard
-              value={draft.cvLink}
-              title="My CV QR Code"
-              subtitle="Show this to recruiters at the event — they scan to view your CV"
-              size={160}
-            />
-          )}
+          <QRCard
+            value={draft.cvLink}
+            title="My CV QR Code"
+            subtitle="Show this to recruiters at the event — they scan to view your CV"
+            size={160}
+          >
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="cv-link" className="text-sm font-medium">
+                  CV Link (Google Drive) <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="cv-link"
+                  type="url"
+                  required
+                  value={draft.cvLink}
+                  onChange={(e) => setField("cvLink", e.target.value)}
+                  placeholder="https://drive.google.com/file/d/..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Update this link to regenerate the QR code above. Use a public, anyone-can-view CV link.
+                </p>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              {saved && (
+                <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  Profile updated!
+                </div>
+              )}
+            </div>
+          </QRCard>
 
           <Card>
-            <CardHeader className="items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                <User className="h-5 w-5 text-primary-foreground" />
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-2 text-left">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+                  <User className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <h1 className="font-heading text-xl font-bold">My Profile</h1>
+                <p className="text-xs text-muted-foreground">{profileEmail}</p>
               </div>
-              <h1 className="font-heading text-xl font-bold">My Profile</h1>
-              <p className="text-xs text-muted-foreground">{profileEmail}</p>
-              <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="mr-1.5 h-3.5 w-3.5" />
-                Log out
+              <Button
+                type="submit"
+                form="profile-form"
+                disabled={saving}
+                className="shrink-0"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSave} className="space-y-6">
-                <section className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label htmlFor="cv-link" className="text-sm font-medium">
-                      CV Link (Google Drive) <span className="text-destructive">*</span>
-                    </label>
-                    <Input
-                      id="cv-link"
-                      type="url"
-                      required
-                      value={draft.cvLink}
-                      onChange={(e) => setField("cvLink", e.target.value)}
-                      placeholder="https://drive.google.com/file/d/..."
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Update this link to regenerate the QR code above. Use a public or recruiter-accessible Google Drive CV link.
-                    </p>
-                  </div>
-
-                  {error && (
-                    <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      {error}
-                    </div>
-                  )}
-
-                  {saved && (
-                    <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      Profile updated!
-                    </div>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={
-                      saving ||
-                      !draft.name.trim() ||
-                      !draft.cvLink.trim() ||
-                      !draft.schoolName.trim() ||
-                      !draft.major.trim() ||
-                      !draft.studyLevel ||
-                      !draft.expectedGraduation
-                    }
-                    className="w-full sm:w-auto"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </Button>
-                </section>
-
-                <Separator />
+              <form id="profile-form" onSubmit={handleSave} className="space-y-6">
 
                 <section className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">

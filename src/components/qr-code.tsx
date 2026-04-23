@@ -11,11 +11,13 @@ export function QRCard({
   title,
   subtitle,
   size = 180,
+  children,
 }: {
   value: string;
   title: string;
   subtitle?: string;
   size?: number;
+  children?: React.ReactNode;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -59,13 +61,19 @@ export function QRCard({
         onClick={() => setFullscreen(false)}
       >
         <p className="mb-4 text-lg font-semibold text-black">{title}</p>
-        <QRCodeSVG
-          value={value}
-          size={Math.min(window.innerWidth - 64, 400)}
-          level="M"
-          bgColor="#FFFFFF"
-          fgColor="#020202"
-        />
+        {value ? (
+          <QRCodeSVG
+            value={value}
+            size={Math.min(window.innerWidth - 64, 400)}
+            level="M"
+            bgColor="#FFFFFF"
+            fgColor="#020202"
+          />
+        ) : (
+          <div className="rounded-xl border border-dashed border-gray-300 px-6 py-10 text-center text-sm text-gray-500">
+            Add a CV link first to generate a QR code.
+          </div>
+        )}
         {subtitle && (
           <p className="mt-4 text-sm text-gray-500">{subtitle}</p>
         )}
@@ -82,41 +90,52 @@ export function QRCard({
           <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
         )}
       </CardHeader>
-      <CardContent className="flex flex-col items-center gap-3">
-        <div
-          id={`qr-${title}`}
-          className="rounded-lg bg-white p-3"
-        >
-          <QRCodeSVG
-            value={value}
-            size={size}
-            level="M"
-            bgColor="#FFFFFF"
-            fgColor="#020202"
-          />
+      <CardContent className="space-y-4">
+        <div className="flex flex-col items-center gap-3">
+          {value ? (
+            <>
+              <div
+                id={`qr-${title}`}
+                className="rounded-lg bg-white p-3"
+              >
+                <QRCodeSVG
+                  value={value}
+                  size={size}
+                  level="M"
+                  bgColor="#FFFFFF"
+                  fgColor="#020202"
+                />
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFullscreen(true)}
+                >
+                  <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
+                  Fullscreen
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownload}>
+                  <Download className="mr-1.5 h-3.5 w-3.5" />
+                  Save
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  {copied ? (
+                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="w-full rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+              Add your CV link below to generate a QR code for recruiters.
+            </div>
+          )}
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setFullscreen(true)}
-          >
-            <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
-            Fullscreen
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="mr-1.5 h-3.5 w-3.5" />
-            Save
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleCopy}>
-            {copied ? (
-              <Check className="mr-1.5 h-3.5 w-3.5" />
-            ) : (
-              <Copy className="mr-1.5 h-3.5 w-3.5" />
-            )}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-        </div>
+        {children ? <div className="border-t pt-4">{children}</div> : null}
       </CardContent>
     </Card>
   );

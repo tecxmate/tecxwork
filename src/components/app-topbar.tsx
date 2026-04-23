@@ -10,11 +10,13 @@ export function AppTopBar({
   navRole,
   currentPath,
   desktopActions,
+  showActionsOnMobile = false,
 }: {
   href?: string;
   navRole?: NavRole;
   currentPath?: string;
   desktopActions?: React.ReactNode;
+  showActionsOnMobile?: boolean;
 }) {
   const navItems = navRole ? navItemsByRole[navRole] : [];
 
@@ -37,7 +39,12 @@ export function AppTopBar({
         <div className="ml-auto flex items-center gap-2 whitespace-nowrap sm:gap-3">
           <ThemeToggle />
           {desktopActions ? (
-            <div className="hidden items-center gap-2 whitespace-nowrap sm:gap-3 md:flex">
+            <div
+              className={[
+                "items-center gap-2 whitespace-nowrap sm:gap-3",
+                showActionsOnMobile ? "flex" : "hidden md:flex",
+              ].join(" ")}
+            >
               {desktopActions}
             </div>
           ) : null}
