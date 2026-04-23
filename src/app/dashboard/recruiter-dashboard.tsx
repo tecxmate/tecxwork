@@ -81,7 +81,19 @@ export function RecruiterDashboard({
   const router = useRouter();
   const { messages } = useRecruiterI18n();
   const [showApplicantsComplianceNotice, setShowApplicantsComplianceNotice] =
-    useState(false);
+    useState(() => {
+      if (typeof window === "undefined") {
+        return true;
+      }
+
+      try {
+        return (
+          window.localStorage.getItem(APPLICANTS_NOTICE_DISMISSED_KEY) !== "1"
+        );
+      } catch {
+        return true;
+      }
+    });
   const currentPath =
     section === "interviews"
       ? "/dashboard/interviews"
@@ -108,16 +120,6 @@ export function RecruiterDashboard({
       router.prefetch(href);
     }
   }, [router]);
-
-  useEffect(() => {
-    try {
-      const dismissed =
-        window.localStorage.getItem(APPLICANTS_NOTICE_DISMISSED_KEY) === "1";
-      setShowApplicantsComplianceNotice(!dismissed);
-    } catch {
-      setShowApplicantsComplianceNotice(true);
-    }
-  }, []);
 
   function dismissApplicantsComplianceNotice() {
     setShowApplicantsComplianceNotice(false);

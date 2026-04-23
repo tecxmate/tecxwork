@@ -46,14 +46,6 @@ export function MobileBottomNav({
     pathname === "/tutorial";
 
   useEffect(() => {
-    if (pendingResetRef.current) {
-      window.clearTimeout(pendingResetRef.current);
-      pendingResetRef.current = null;
-    }
-    setPendingHref(null);
-  }, [pathname, search]);
-
-  useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
 
     const win = window as Window & {

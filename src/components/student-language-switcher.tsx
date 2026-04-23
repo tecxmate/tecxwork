@@ -15,14 +15,14 @@ export function StudentLanguageSwitcher() {
 
   return (
     <div
-      className="grid h-10 grid-cols-3 items-center gap-1 rounded-lg border border-border bg-background/80 p-1"
+      className="inline-flex h-10 items-center gap-1 rounded-lg border border-border bg-background/80 p-1"
       aria-label={messages.language.switchLabel}
     >
       <Button
         type="button"
         variant="ghost"
         className={[
-          "h-8 w-full justify-center px-2 text-xs",
+          "h-8 min-w-9 justify-center px-2 text-xs",
           locale === "en" ? "bg-primary/10 text-primary hover:bg-primary/10" : "",
         ].join(" ")}
         onClick={() => updateLocale("en")}
@@ -33,7 +33,7 @@ export function StudentLanguageSwitcher() {
         type="button"
         variant="ghost"
         className={[
-          "h-8 w-full justify-center px-2 text-xs",
+          "h-8 min-w-9 justify-center px-2 text-xs",
           locale === "vi" ? "bg-primary/10 text-primary hover:bg-primary/10" : "",
         ].join(" ")}
         onClick={() => updateLocale("vi")}
@@ -44,7 +44,7 @@ export function StudentLanguageSwitcher() {
         type="button"
         variant="ghost"
         className={[
-          "h-8 w-full justify-center px-2 text-xs",
+          "h-8 min-w-9 justify-center px-2 text-xs",
           locale === "zh-TW" ? "bg-primary/10 text-primary hover:bg-primary/10" : "",
         ].join(" ")}
         onClick={() => updateLocale("zh-TW")}

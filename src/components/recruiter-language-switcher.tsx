@@ -15,14 +15,14 @@ export function RecruiterLanguageSwitcher() {
 
   return (
     <div
-      className="grid h-11 grid-cols-2 items-center gap-1 rounded-lg border border-border bg-background/80 p-1"
+      className="inline-flex h-10 items-center gap-1 rounded-lg border border-border bg-background/80 p-1"
       aria-label={messages.language.switchLabel}
     >
       <Button
         type="button"
         variant="ghost"
         className={[
-          "h-9 w-full justify-center px-3",
+          "h-8 min-w-9 justify-center px-2 text-xs",
           locale === "en" ? "bg-primary/10 text-primary hover:bg-primary/10" : "",
         ].join(" ")}
         onClick={() => set("en")}
@@ -33,7 +33,7 @@ export function RecruiterLanguageSwitcher() {
         type="button"
         variant="ghost"
         className={[
-          "h-9 w-full justify-center px-3",
+          "h-8 min-w-9 justify-center px-2 text-xs",
           locale === "zh-TW"
             ? "bg-primary/10 text-primary hover:bg-primary/10"
             : "",
