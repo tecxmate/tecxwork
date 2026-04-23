@@ -36,6 +36,39 @@ export function MobileBottomNav({
   }, [pathname, search]);
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== "production") return;
+
+    const win = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+
+    let timeoutId: number | null = null;
+    let idleId: number | null = null;
+
+    const prefetchRoleTabs = () => {
+      for (const item of items) {
+        router.prefetch(item.href);
+      }
+    };
+
+    if (typeof win.requestIdleCallback === "function") {
+      idleId = win.requestIdleCallback(prefetchRoleTabs, { timeout: 1200 });
+    } else {
+      timeoutId = window.setTimeout(prefetchRoleTabs, 350);
+    }
+
+    return () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+      if (idleId !== null && typeof win.cancelIdleCallback === "function") {
+        win.cancelIdleCallback(idleId);
+      }
+    };
+  }, [items, router]);
+
+  useEffect(() => {
     return () => {
       if (pendingResetRef.current) {
         window.clearTimeout(pendingResetRef.current);

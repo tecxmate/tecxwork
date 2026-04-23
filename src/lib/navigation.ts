@@ -52,7 +52,7 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       href: "/dashboard/interviews",
       label: "Interviews",
       icon: BriefcaseBusiness,
-      matches: ["/dashboard", "/dashboard/interviews"],
+      matches: ["/dashboard/interviews"],
     },
     {
       href: "/dashboard/applicants",
