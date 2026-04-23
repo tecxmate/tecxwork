@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -17,6 +17,7 @@ export function MobileBottomNav({
   const search = searchParams.toString();
   const items = navItemsByRole[role];
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const pendingResetRef = useRef<number | null>(null);
   const currentActiveHref =
     items.find((item) => isNavItemActive(pathname, search, item))?.href ?? null;
   const displayActiveHref = pendingHref ?? currentActiveHref;
@@ -27,6 +28,10 @@ export function MobileBottomNav({
     pathname === "/tutorial";
 
   useEffect(() => {
+    if (pendingResetRef.current) {
+      window.clearTimeout(pendingResetRef.current);
+      pendingResetRef.current = null;
+    }
     setPendingHref(null);
   }, [pathname, search]);
 
@@ -35,6 +40,25 @@ export function MobileBottomNav({
       router.prefetch(item.href);
     }
   }, [items, router]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingResetRef.current) {
+        window.clearTimeout(pendingResetRef.current);
+      }
+    };
+  }, []);
+
+  function markPending(href: string) {
+    setPendingHref(href);
+    if (pendingResetRef.current) {
+      window.clearTimeout(pendingResetRef.current);
+    }
+    pendingResetRef.current = window.setTimeout(() => {
+      setPendingHref(null);
+      pendingResetRef.current = null;
+    }, 900);
+  }
 
   if (shouldHide) {
     return null;
@@ -57,16 +81,18 @@ export function MobileBottomNav({
                 key={item.href}
                 href={item.href}
                 onTouchStart={() => {
-                  if (displayActiveHref !== item.href) {
-                    setPendingHref(item.href);
-                  }
                   router.prefetch(item.href);
                 }}
                 onMouseDown={() => {
-                  if (displayActiveHref !== item.href) {
-                    setPendingHref(item.href);
-                  }
                   router.prefetch(item.href);
+                }}
+                onClick={(event) => {
+                  if (pathname === item.href && !search) {
+                    return;
+                  }
+                  event.preventDefault();
+                  markPending(item.href);
+                  router.push(item.href);
                 }}
                 className={[
                   "group flex min-h-11.5 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 text-[11px] font-medium transition-premium",

@@ -21,8 +21,6 @@ async function getRecruiterPostedJobs() {
       description: jobOpenings.description,
       jdLink: jobOpenings.jdLink,
       createdAt: jobOpenings.createdAt,
-      location: jobOpenings.location,
-      type: jobOpenings.type,
       recruiterId: recruiters.id,
       company: recruiters.company,
     })
@@ -30,7 +28,6 @@ async function getRecruiterPostedJobs() {
     .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
     .where(eq(jobOpenings.moderationStatus, "approved"))
     .orderBy(desc(jobOpenings.createdAt));
-    .orderBy(desc(jobOpenings.updatedAt));
 }
 
 export default async function JobsPage() {
@@ -104,14 +101,6 @@ export default async function JobsPage() {
                         {job.jdLink ? (
                           <Badge variant="outline" className="text-[11px]">
                             JD available
-                        {job.type ? (
-                          <Badge variant="secondary" className="text-[11px]">
-                            {job.type}
-                          </Badge>
-                        ) : null}
-                        {job.location ? (
-                          <Badge variant="outline" className="text-[11px]">
-                            {job.location}
                           </Badge>
                         ) : null}
                       </div>
