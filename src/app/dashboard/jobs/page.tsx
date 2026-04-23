@@ -1,0 +1,18 @@
+import { RecruiterLocaleProvider } from "@/components/recruiter-locale-provider";
+import { RecruiterDashboard } from "../recruiter-dashboard";
+import { getRecruiterDashboardData } from "../recruiter-data";
+
+export default async function RecruiterJobsPage() {
+  const data = await getRecruiterDashboardData();
+
+  return (
+    <RecruiterLocaleProvider initialLocale={data.locale}>
+      <RecruiterDashboard
+        recruiter={data.recruiter}
+        bookings={data.bookings}
+        section="jobs"
+        showApplicants={data.showApplicants}
+      />
+    </RecruiterLocaleProvider>
+  );
+}

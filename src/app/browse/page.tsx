@@ -16,6 +16,8 @@ export default async function BrowsePage() {
     <div className="flex flex-1 flex-col">
       <AppTopBar
         href="/browse"
+        navRole={session?.role ?? "guest"}
+        currentPath="/browse"
         desktopActions={
           session ? (
             <Link

@@ -6,6 +6,7 @@ import { AppTopBar } from "@/components/app-topbar";
 import { SiteFooter } from "@/components/site-footer";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 export const metadata = {
   title: "Job Opportunities | V-GEN TRIDENT",
@@ -31,19 +32,17 @@ async function getRecruiterPostedJobs() {
 }
 
 export default async function JobsPage() {
+  const session = await getSession();
   const jobs = await getRecruiterPostedJobs();
 
   return (
     <div className="flex flex-1 flex-col">
       <AppTopBar
+        href="/jobs"
+        navRole={session?.role ?? "guest"}
+        currentPath="/jobs"
         desktopActions={
           <>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
-            >
-              Career Fair
-            </Link>
             <Link
               href="/login"
               className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"

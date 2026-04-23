@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
 import { QRCard } from "@/components/qr-code";
+import { AppTopBar } from "@/components/app-topbar";
 
 type Recruiter = {
   id: number;
@@ -124,6 +125,7 @@ const ONBOARDING_MODES = [
 ] as const;
 
 type OnboardingMode = (typeof ONBOARDING_MODES)[number]["value"];
+type AdminSection = "overview" | "recruiters" | "applicants" | "jobs";
 
 export function AdminDashboard({
   recruiters: initialRecruiters,
@@ -136,6 +138,7 @@ export function AdminDashboard({
   initialOnboardingMode,
   initialLocked,
   timeFrame: initialTimeFrame,
+  section,
 }: {
   recruiters: Recruiter[];
   applicants: Applicant[];
@@ -147,6 +150,7 @@ export function AdminDashboard({
   initialOnboardingMode: OnboardingMode;
   initialLocked: boolean;
   timeFrame: { startHour: number; endHour: number; endMinute: number; slotDuration: number };
+  section: AdminSection;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState(currentMode);
@@ -322,15 +326,20 @@ export function AdminDashboard({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Users className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-heading text-lg font-bold">Admin</span>
-          </div>
-          <div className="flex items-center gap-3">
+      <AppTopBar
+        href="/admin"
+        navRole="admin"
+        currentPath={
+          section === "overview"
+            ? "/admin"
+            : section === "recruiters"
+              ? "/admin/recruiters"
+              : section === "applicants"
+                ? "/admin/applicants"
+                : "/admin/jobs"
+        }
+        desktopActions={
+          <>
             <Link
               href="/"
               className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
@@ -341,13 +350,14 @@ export function AdminDashboard({
               <LogOut className="mr-1.5 h-3.5 w-3.5" />
               Logout
             </Button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
         <div className="mx-auto max-w-6xl space-y-8">
-          {/* Stats */}
+          {section === "overview" ? (
+            <>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
             {[
               { label: "Recruiters", value: stats.totalRecruiters, icon: Users },
@@ -720,11 +730,6 @@ export function AdminDashboard({
 
           <Separator />
 
-          <JobModerationSection jobs={jobs} onModerate={handleJobModeration} />
-
-          <Separator />
-
-          {/* People: Recruiters + Applicants */}
           <PeopleSection
             recruiters={recruiters}
             applicants={applicants}
@@ -732,7 +737,35 @@ export function AdminDashboard({
             onDeleteRecruiter={handleDeleteRecruiter}
             onDeleteApplicant={handleDeleteApplicant}
             onCancelBooking={handleCancelBooking}
+            initialTab="bookings"
+            showTabs={false}
           />
+            </>
+          ) : section === "recruiters" ? (
+            <PeopleSection
+              recruiters={recruiters}
+              applicants={applicants}
+              bookings={adminBookings}
+              onDeleteRecruiter={handleDeleteRecruiter}
+              onDeleteApplicant={handleDeleteApplicant}
+              onCancelBooking={handleCancelBooking}
+              initialTab="recruiters"
+              showTabs={false}
+            />
+          ) : section === "applicants" ? (
+            <PeopleSection
+              recruiters={recruiters}
+              applicants={applicants}
+              bookings={adminBookings}
+              onDeleteRecruiter={handleDeleteRecruiter}
+              onDeleteApplicant={handleDeleteApplicant}
+              onCancelBooking={handleCancelBooking}
+              initialTab="applicants"
+              showTabs={false}
+            />
+          ) : (
+            <JobModerationSection jobs={jobs} onModerate={handleJobModeration} />
+          )}
         </div>
       </main>
       <SiteFooter />
@@ -930,6 +963,8 @@ function PeopleSection({
   onDeleteRecruiter,
   onDeleteApplicant,
   onCancelBooking,
+  initialTab,
+  showTabs,
 }: {
   recruiters: Recruiter[];
   applicants: Applicant[];
@@ -937,8 +972,12 @@ function PeopleSection({
   onDeleteRecruiter: (r: Recruiter) => void;
   onDeleteApplicant: (a: Applicant) => void;
   onCancelBooking: (b: AdminBooking) => void;
+  initialTab: "recruiters" | "applicants" | "bookings";
+  showTabs: boolean;
 }) {
-  const [tab, setTab] = useState<"recruiters" | "applicants" | "bookings">("recruiters");
+  const [tab, setTab] = useState<"recruiters" | "applicants" | "bookings">(
+    initialTab
+  );
   const [query, setQuery] = useState("");
 
   const [recSort, setRecSort] = useState<{
@@ -1009,51 +1048,56 @@ function PeopleSection({
         <h2 className="font-heading text-lg font-semibold">People</h2>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-3 flex gap-0 border-b">
-        <button
-          onClick={() => setTab("recruiters")}
-          className={cn(
-            "flex cursor-pointer items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-            tab === "recruiters"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Recruiters
-          <Badge variant="secondary" className="ml-1 text-xs">
-            {recruiters.length}
-          </Badge>
-        </button>
-        <button
-          onClick={() => setTab("applicants")}
-          className={cn(
-            "flex cursor-pointer items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-            tab === "applicants"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Students
-          <Badge variant="secondary" className="ml-1 text-xs">
-            {applicants.length}
-          </Badge>
-        </button>
-        <button
-          onClick={() => setTab("bookings")}
-          className={cn(
-            "flex cursor-pointer items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-            tab === "bookings"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Bookings
-          <Badge variant="secondary" className="ml-1 text-xs">
-            {bookings.filter((b) => b.status !== "cancelled" && b.status !== "rejected").length}
-          </Badge>
-        </button>
-      </div>
+      {showTabs ? (
+        <div className="mb-3 flex gap-0 border-b">
+          <button
+            onClick={() => setTab("recruiters")}
+            className={cn(
+              "flex cursor-pointer items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+              tab === "recruiters"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Recruiters
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {recruiters.length}
+            </Badge>
+          </button>
+          <button
+            onClick={() => setTab("applicants")}
+            className={cn(
+              "flex cursor-pointer items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+              tab === "applicants"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Students
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {applicants.length}
+            </Badge>
+          </button>
+          <button
+            onClick={() => setTab("bookings")}
+            className={cn(
+              "flex cursor-pointer items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+              tab === "bookings"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Bookings
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {
+                bookings.filter(
+                  (b) => b.status !== "cancelled" && b.status !== "rejected"
+                ).length
+              }
+            </Badge>
+          </button>
+        </div>
+      ) : null}
 
       {/* Search */}
       <div className="relative mb-3 max-w-sm">

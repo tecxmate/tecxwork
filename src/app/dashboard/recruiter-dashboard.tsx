@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Building2,
   LogOut,
   Mail,
   FileText,
@@ -16,13 +15,11 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
-import { isNavItemActive, navItemsByRole } from "@/lib/navigation";
 import { AppTopBar } from "@/components/app-topbar";
 
 type Booking = {
@@ -47,17 +44,7 @@ type Recruiter = {
   interviewerCount: number;
 };
 
-type Applicant = {
-  id: number;
-  name: string;
-  email: string;
-  major: string;
-  skills: string[];
-  cvLink: string;
-  description: string;
-};
-
-type Tab = "bookings" | "applicants" | "company";
+type Section = "interviews" | "applicants" | "jobs" | "company";
 
 const RecruiterApplicantsTab = dynamic(
   () =>
@@ -78,15 +65,24 @@ const RecruiterCompanyTab = dynamic(
 export function RecruiterDashboard({
   recruiter,
   bookings,
-  initialTab,
+  section,
+  showApplicants,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
-  initialTab: Tab;
+  section: Section;
+  showApplicants: boolean;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
-  const tab = initialTab;
+  const currentPath =
+    section === "interviews"
+      ? "/dashboard/interviews"
+      : section === "applicants"
+        ? "/dashboard/applicants"
+        : section === "jobs"
+          ? "/dashboard/jobs"
+          : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -95,70 +91,56 @@ export function RecruiterDashboard({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-screen md:w-72 md:flex-col md:border-r md:bg-card md:px-5 md:py-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_28px_rgba(140,82,255,0.22)]">
-            <Building2 className="h-4.5 w-4.5" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-heading text-lg font-semibold leading-tight">
-              {recruiter.company}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {recruiter.contactEmail}
-            </p>
-          </div>
-        </div>
+      <AppTopBar
+        href="/dashboard/interviews"
+        navRole="recruiter"
+        currentPath={currentPath}
+        desktopActions={
+          <>
+            <RecruiterLanguageSwitcher />
+            <button
+              onClick={handleLogout}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-muted-foreground transition-premium hover:bg-muted/55 hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              {messages.common.logout}
+            </button>
+          </>
+        }
+      />
 
-        <RecruiterSidebarNav />
-
-        <div className="mt-auto space-y-3 border-t pt-5">
-          <RecruiterLanguageSwitcher />
-          <Link
-            href="/"
-            className="flex h-11 items-center justify-center rounded-lg border border-border bg-background text-sm font-medium text-muted-foreground transition-premium hover:bg-muted/55 hover:text-foreground"
-          >
-            {messages.common.viewSite}
-          </Link>
-          <Button variant="outline" className="h-11 w-full" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            {messages.common.logout}
-          </Button>
-        </div>
-      </aside>
-
-      <div className="flex min-h-full min-w-0 flex-1 flex-col md:min-h-screen md:pl-72">
-        <div className="md:hidden">
-          <AppTopBar href="/dashboard" />
-        </div>
-
-        <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
-          <div className="mx-auto max-w-5xl md:max-w-none">
-            <div className="mb-6 hidden items-center justify-between gap-4 md:flex">
-              <div>
-                <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                  {recruiter.company}
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {recruiter.industry}
-                </p>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {recruiter.contactEmail}
-              </div>
+      <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6 hidden items-center justify-between gap-4 md:flex">
+            <div>
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                {recruiter.company}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {recruiter.industry}
+              </p>
             </div>
+            <div className="text-sm text-muted-foreground">
+              {recruiter.contactEmail}
+            </div>
+          </div>
 
-            {tab === "bookings" ? (
-              <BookingsTab bookings={bookings} />
-            ) : tab === "applicants" ? (
+          {section === "interviews" ? (
+            <BookingsTab bookings={bookings} />
+          ) : section === "applicants" ? (
+            showApplicants ? (
               <RecruiterApplicantsTab recruiterId={recruiter.id} />
             ) : (
-              <RecruiterCompanyTab recruiter={recruiter} />
-            )}
-          </div>
-        </main>
-        <SiteFooter />
-      </div>
+              <BookingsTab bookings={bookings} />
+            )
+          ) : section === "jobs" ? (
+            <RecruiterCompanyTab recruiter={recruiter} section="jobs" />
+          ) : (
+            <RecruiterCompanyTab recruiter={recruiter} section="company" />
+          )}
+        </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }
@@ -171,37 +153,6 @@ function DashboardTabLoader() {
         <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
       </CardContent>
     </Card>
-  );
-}
-
-function RecruiterSidebarNav() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const search = searchParams.toString();
-
-  return (
-    <nav className="mt-8 space-y-1.5">
-      {navItemsByRole.recruiter.map((item) => {
-        const active = isNavItemActive(pathname, search, item);
-        const Icon = item.icon;
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-premium",
-              active
-                ? "border-primary/18 bg-primary/[0.06] text-primary"
-                : "border-transparent text-muted-foreground hover:border-border hover:bg-muted/55 hover:text-foreground"
-            )}
-          >
-            <Icon className="h-4.5 w-4.5" />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
   );
 }
 

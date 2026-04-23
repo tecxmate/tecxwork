@@ -40,7 +40,7 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
     { href: "/", label: "Home", icon: Home, matches: ["/"] },
     {
       href: "/browse",
-      label: "Company",
+      label: "Companies",
       icon: Building2,
       matches: ["/browse", "/recruiter"],
     },
@@ -49,28 +49,50 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
   ],
   recruiter: [
     {
-      href: "/dashboard?tab=bookings",
-      label: "我的面談",
+      href: "/dashboard/interviews",
+      label: "Interviews",
       icon: BriefcaseBusiness,
-      matches: ["/dashboard?tab=bookings", "/dashboard"],
+      matches: ["/dashboard", "/dashboard/interviews"],
     },
     {
-      href: "/dashboard?tab=applicants",
-      label: "瀏覽候選人",
+      href: "/dashboard/applicants",
+      label: "Applicants",
       icon: Users,
-      matches: ["/dashboard?tab=applicants"],
+      matches: ["/dashboard/applicants"],
     },
     {
-      href: "/dashboard?tab=company",
-      label: "我的公司",
+      href: "/dashboard/jobs",
+      label: "Jobs",
+      icon: BriefcaseBusiness,
+      matches: ["/dashboard/jobs"],
+    },
+    {
+      href: "/dashboard/company",
+      label: "My Company",
       icon: Building2,
-      matches: ["/dashboard?tab=company"],
+      matches: ["/dashboard/company"],
     },
   ],
   admin: [
-    { href: "/admin", label: "Admin", icon: Shield, matches: ["/admin"] },
-    { href: "/browse", label: "People", icon: Users, matches: ["/browse", "/recruiter"] },
-    { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness, matches: ["/jobs"] },
+    { href: "/admin", label: "Overview", icon: Shield, matches: ["/admin"] },
+    {
+      href: "/admin/recruiters",
+      label: "Recruiters",
+      icon: Building2,
+      matches: ["/admin/recruiters"],
+    },
+    {
+      href: "/admin/applicants",
+      label: "Applicants",
+      icon: Users,
+      matches: ["/admin/applicants"],
+    },
+    {
+      href: "/admin/jobs",
+      label: "Jobs",
+      icon: BriefcaseBusiness,
+      matches: ["/admin/jobs"],
+    },
   ],
 };
 

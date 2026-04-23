@@ -152,6 +152,8 @@ export default async function LandingPage() {
     <div className="flex min-h-full flex-1 flex-col">
       {/* Header */}
       <AppTopBar
+        navRole={session?.role ?? "guest"}
+        currentPath="/"
         desktopActions={
           session ? (
             <Link
