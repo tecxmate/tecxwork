@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useStudentI18n } from "@/components/student-locale-provider";
 
 import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
 
@@ -12,10 +13,27 @@ export function MobileBottomNav({
   role: NavRole;
 }) {
   const router = useRouter();
+  const { messages } = useStudentI18n();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const items = navItemsByRole[role];
+  function getLabel(href: string, fallback: string) {
+    if (role === "guest" || role === "applicant") {
+      if (href === "/") return messages.nav.home;
+      if (href === "/browse") return messages.nav.companies;
+      if (href === "/jobs") return messages.nav.jobs;
+      if (href === "/login") return messages.nav.account;
+      if (href === "/profile") return messages.nav.profile;
+    }
+    if (role === "admin") {
+      if (href === "/admin") return messages.nav.overview;
+      if (href === "/admin/recruiters") return messages.nav.recruiters;
+      if (href === "/admin/applicants") return messages.nav.applicants;
+      if (href === "/admin/jobs") return messages.nav.jobs;
+    }
+    return fallback;
+  }
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const pendingResetRef = useRef<number | null>(null);
   const currentActiveHref =
@@ -142,7 +160,7 @@ export function MobileBottomNav({
                     ].join(" ")}
                   />
                 </span>
-                <span>{item.label}</span>
+                <span>{getLabel(item.href, item.label)}</span>
               </Link>
             );
           })}

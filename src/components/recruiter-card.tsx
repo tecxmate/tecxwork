@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, ArrowRight, FileText } from "lucide-react";
+import { useStudentI18n } from "@/components/student-locale-provider";
 
 export type RecruiterCardData = {
   id: number;
@@ -14,6 +15,8 @@ export type RecruiterCardData = {
 };
 
 export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
+  const { messages } = useStudentI18n();
+
   return (
     <Link
       href={`/recruiter/${recruiter.id}`}
@@ -43,7 +46,7 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
         {/* Positions */}
         <div className="flex-1">
           <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
-            Open Positions
+            {messages.recruiterCard.openPositions}
           </p>
           <div className="flex flex-wrap gap-1">
             {recruiter.positions.slice(0, 3).map((pos) => (
@@ -70,13 +73,13 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
         {recruiter.jdAvailable && (
           <div className="flex items-center gap-1.5 text-xs text-primary">
             <FileText className="h-3 w-3" />
-            <span>Job description available</span>
+            <span>{messages.recruiterCard.jdAvailable}</span>
           </div>
         )}
 
         {/* CTA */}
         <div className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground">
-          View & Book
+          {messages.recruiterCard.viewBook}
           <ArrowRight className="h-4 w-4" />
         </div>
       </Card>

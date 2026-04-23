@@ -32,6 +32,8 @@ import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
 import { QRCard } from "@/components/qr-code";
 import { AppTopBar } from "@/components/app-topbar";
+import { useStudentI18n } from "@/components/student-locale-provider";
+import { interpolate } from "@/lib/student-messages";
 
 type Recruiter = {
   id: number;
@@ -93,38 +95,19 @@ type Stats = {
   totalApplicants: number;
 };
 
-const MODES = [
-  {
-    value: "applicant_books_recruiter",
-    label: "Applicants book Recruiters",
-    desc: "Students browse companies and book interview slots.",
-  },
-  {
-    value: "recruiter_books_applicant",
-    label: "Recruiters book Applicants",
-    desc: "Recruiters browse student profiles and book interviews.",
-  },
-  {
-    value: "both",
-    label: "Both (Bidirectional)",
-    desc: "Both flows are active simultaneously.",
-  },
+const ONBOARDING_MODE_VALUES = ["minimal", "full"] as const;
+
+const INDUSTRY_OPTIONS = [
+  "Technology",
+  "Finance",
+  "Semiconductor",
+  "Manufacturing",
+  "Consulting",
+  "Healthcare",
+  "E-Commerce",
 ] as const;
 
-const ONBOARDING_MODES = [
-  {
-    value: "minimal",
-    label: "Minimal intake",
-    desc: "Collect only name, email, password, and a Google Drive CV link.",
-  },
-  {
-    value: "full",
-    label: "Full questionnaire",
-    desc: "Collect the extended student profile, education, preferences, and work experience.",
-  },
-] as const;
-
-type OnboardingMode = (typeof ONBOARDING_MODES)[number]["value"];
+type OnboardingMode = (typeof ONBOARDING_MODE_VALUES)[number];
 type AdminSection = "overview" | "recruiters" | "applicants" | "jobs";
 
 export function AdminDashboard({
@@ -154,6 +137,8 @@ export function AdminDashboard({
   timeFrame: { startHour: number; endHour: number; endMinute: number; slotDuration: number };
   section: AdminSection;
 }) {
+  const { messages } = useStudentI18n();
+  const admin = messages.admin;
   const router = useRouter();
   const [mode, setMode] = useState(currentMode);
   const [onboardingMode, setOnboardingMode] = useState<OnboardingMode>(initialOnboardingMode);
@@ -178,6 +163,45 @@ export function AdminDashboard({
   const [newIndustry, setNewIndustry] = useState("Technology");
   const [domainError, setDomainError] = useState("");
   const [addingDomain, setAddingDomain] = useState(false);
+
+  const modes = [
+    {
+      value: "applicant_books_recruiter",
+      label: admin.eventMode.modes.applicantBooksRecruiters.label,
+      desc: admin.eventMode.modes.applicantBooksRecruiters.desc,
+    },
+    {
+      value: "recruiter_books_applicant",
+      label: admin.eventMode.modes.recruitersBookApplicants.label,
+      desc: admin.eventMode.modes.recruitersBookApplicants.desc,
+    },
+    {
+      value: "both",
+      label: admin.eventMode.modes.both.label,
+      desc: admin.eventMode.modes.both.desc,
+    },
+  ] as const;
+
+  const onboardingModes = [
+    {
+      value: "minimal" as const,
+      label: admin.onboarding.modes.minimal.label,
+      desc: admin.onboarding.modes.minimal.desc,
+    },
+    {
+      value: "full" as const,
+      label: admin.onboarding.modes.full.label,
+      desc: admin.onboarding.modes.full.desc,
+    },
+  ];
+
+  const statsCards = [
+    { label: admin.stats.recruiters, value: stats.totalRecruiters, icon: Users },
+    { label: admin.stats.students, value: stats.totalApplicants, icon: GraduationCap },
+    { label: admin.stats.slots, value: stats.totalSlots, icon: Calendar },
+    { label: admin.stats.available, value: stats.availableSlots, icon: Clock },
+    { label: admin.stats.bookings, value: stats.totalBookings, icon: BookOpen },
+  ];
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -204,11 +228,7 @@ export function AdminDashboard({
 
   async function handleToggleLock() {
     if (!locked) {
-      if (
-        !confirm(
-          "Lock the event mode? This prevents further changes until you unlock it. Use this before the event starts to avoid accidental changes."
-        )
-      )
+      if (!confirm(admin.eventMode.lockConfirm))
         return;
     }
     setSaving(true);
@@ -270,20 +290,20 @@ export function AdminDashboard({
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to add domain");
+      if (!res.ok) throw new Error(data.error || admin.domains.failedToAdd);
 
       setDomains([...domains, data.domain]);
       setNewDomain("");
       setNewCompany("");
     } catch (err) {
-      setDomainError(err instanceof Error ? err.message : "Error");
+      setDomainError(err instanceof Error ? err.message : admin.domains.errorFallback);
     } finally {
       setAddingDomain(false);
     }
   }
 
   async function handleDeleteDomain(id: number) {
-    if (!confirm("Remove this domain from the allow-list?")) return;
+    if (!confirm(admin.domains.removeConfirm)) return;
     await fetch(`/api/admin/domains?id=${id}`, { method: "DELETE" });
     setDomains(domains.filter((d) => d.id !== id));
   }
@@ -291,7 +311,10 @@ export function AdminDashboard({
   async function handleDeleteRecruiter(r: Recruiter) {
     if (
       !confirm(
-        `Remove ${r.company} (${r.email})? This will permanently delete their account, all interview slots, and any bookings.`
+        interpolate(admin.recruiters.removeConfirm, {
+          company: r.company,
+          email: r.email,
+        })
       )
     )
       return;
@@ -305,7 +328,15 @@ export function AdminDashboard({
   }
 
   async function handleCancelBooking(b: AdminBooking) {
-    if (!confirm(`Cancel booking for ${b.applicantName} at ${b.company}? Slot will be released.`)) return;
+    if (
+      !confirm(
+        interpolate(admin.bookings.cancelConfirm, {
+          name: b.applicantName,
+          company: b.company,
+        })
+      )
+    )
+      return;
     const res = await fetch(`/api/bookings/${b.id}`, { method: "DELETE" });
     if (res.ok) {
       setAdminBookings(adminBookings.map((x) => (x.id === b.id ? { ...x, status: "cancelled" } : x)));
@@ -316,7 +347,10 @@ export function AdminDashboard({
   async function handleDeleteApplicant(a: Applicant) {
     if (
       !confirm(
-        `Remove ${a.name} (${a.email})? This will permanently delete their profile, availability, and bookings.`
+        interpolate(admin.applicants.removeConfirm, {
+          name: a.name,
+          email: a.email,
+        })
       )
     )
       return;
@@ -365,11 +399,11 @@ export function AdminDashboard({
               href="/"
               className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
             >
-              View Site
+              {messages.common.viewSite}
             </Link>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="mr-1.5 h-3.5 w-3.5" />
-              Logout
+              {messages.common.logout}
             </Button>
           </>
         }
@@ -380,13 +414,7 @@ export function AdminDashboard({
           {section === "overview" ? (
             <>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
-            {[
-              { label: "Recruiters", value: stats.totalRecruiters, icon: Users },
-              { label: "Students", value: stats.totalApplicants, icon: GraduationCap },
-              { label: "Slots", value: stats.totalSlots, icon: Calendar },
-              { label: "Available", value: stats.availableSlots, icon: Clock },
-              { label: "Bookings", value: stats.totalBookings, icon: BookOpen },
-            ].map((stat) => (
+            {statsCards.map((stat) => (
               <Card key={stat.label}>
                 <CardContent className="flex items-center gap-3 py-3 sm:gap-4 sm:py-4">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary sm:h-10 sm:w-10">
@@ -405,8 +433,8 @@ export function AdminDashboard({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <QRCard
               value={typeof window !== "undefined" ? window.location.origin : ""}
-              title="Event QR Code"
-              subtitle="Share this at the venue for attendees to access the platform"
+              title={admin.qr.title}
+              subtitle={admin.qr.subtitle}
               size={140}
             />
             <div className="flex sm:self-end">
@@ -415,7 +443,7 @@ export function AdminDashboard({
                 className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
               >
                 <Download className="h-4 w-4" />
-                Export Bookings (CSV)
+                {admin.qr.exportCsv}
               </a>
             </div>
           </div>
@@ -428,11 +456,11 @@ export function AdminDashboard({
               <div className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-muted-foreground" />
                 <h2 className="font-heading text-lg font-semibold">
-                  Event Mode
+                  {admin.eventMode.title}
                 </h2>
                 {saving && (
                   <span className="text-xs text-muted-foreground">
-                    Saving...
+                    {messages.common.saving}
                   </span>
                 )}
               </div>
@@ -445,12 +473,12 @@ export function AdminDashboard({
                 {locked ? (
                   <>
                     <Lock className="mr-1.5 h-3.5 w-3.5" />
-                    Locked
+                    {admin.eventMode.locked}
                   </>
                 ) : (
                   <>
                     <LockOpen className="mr-1.5 h-3.5 w-3.5" />
-                    Unlocked
+                    {admin.eventMode.unlocked}
                   </>
                 )}
               </Button>
@@ -461,17 +489,15 @@ export function AdminDashboard({
                 <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <p className="text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">
-                    Mode is locked.
+                    {admin.eventMode.modeLocked}
                   </span>{" "}
-                  Changes are prevented until you click &quot;Locked&quot; to
-                  unlock. This protects against accidental changes during the
-                  event.
+                  {admin.eventMode.modeLockedHint}
                 </p>
               </div>
             )}
 
             <div className="grid gap-3 sm:grid-cols-3">
-              {MODES.map((m) => (
+              {modes.map((m) => (
                 <button
                   key={m.value}
                   onClick={() => handleModeChange(m.value)}
@@ -499,22 +525,20 @@ export function AdminDashboard({
             <div className="mb-4 flex items-center gap-2">
               <GraduationCap className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-heading text-lg font-semibold">
-                Student Onboarding
+                {admin.onboarding.title}
               </h2>
               {saving && (
                 <span className="text-xs text-muted-foreground">
-                  Saving...
+                  {messages.common.saving}
                 </span>
               )}
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
-              Control how much student data the public signup flow requires.
-              Minimal mode keeps intake light. Full mode asks for the extended
-              questionnaire.
+              {admin.onboarding.description}
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {ONBOARDING_MODES.map((option) => (
+              {onboardingModes.map((option) => (
                 <button
                   key={option.value}
                   type="button"
@@ -541,17 +565,16 @@ export function AdminDashboard({
             <div className="mb-4 flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-heading text-lg font-semibold">
-                Job Publishing
+                {admin.jobPublishing.title}
               </h2>
               {saving && (
                 <span className="text-xs text-muted-foreground">
-                  Saving...
+                  {messages.common.saving}
                 </span>
               )}
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
-              Choose whether recruiter jobs must be reviewed by admin before they
-              appear publicly.
+              {admin.jobPublishing.description}
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -565,9 +588,11 @@ export function AdminDashboard({
                     : "border-border hover:border-primary/40"
                 )}
               >
-                <p className="text-sm font-medium">Admin review required</p>
+                <p className="text-sm font-medium">
+                  {admin.jobPublishing.adminReviewRequired}
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Recruiter jobs start as draft and require approval.
+                  {admin.jobPublishing.adminReviewRequiredDesc}
                 </p>
               </button>
               <button
@@ -580,9 +605,11 @@ export function AdminDashboard({
                     : "border-border hover:border-primary/40"
                 )}
               >
-                <p className="text-sm font-medium">Instant publish</p>
+                <p className="text-sm font-medium">
+                  {admin.jobPublishing.instantPublish}
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Recruiters can publish and remove jobs directly.
+                  {admin.jobPublishing.instantPublishDesc}
                 </p>
               </button>
             </div>
@@ -595,7 +622,7 @@ export function AdminDashboard({
             <div className="mb-4 flex items-center gap-2">
               <Clock className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-heading text-lg font-semibold">
-                Event Time Frame
+                {admin.timeFrame.title}
               </h2>
             </div>
             <Card>
@@ -613,7 +640,7 @@ export function AdminDashboard({
                     });
                     if (!res.ok) {
                       const d = await res.json().catch(() => ({}));
-                      setTfError(d.error || "Failed to save");
+                      setTfError(d.error || admin.timeFrame.saveFailed);
                     } else {
                       setTfSaved(true);
                       setTimeout(() => setTfSaved(false), 3000);
@@ -625,7 +652,9 @@ export function AdminDashboard({
                 >
                   <div className="grid gap-3 sm:grid-cols-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">Start Hour</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        {admin.timeFrame.startHour}
+                      </label>
                       <Input
                         type="number"
                         min={0}
@@ -635,7 +664,9 @@ export function AdminDashboard({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">End Hour</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        {admin.timeFrame.endHour}
+                      </label>
                       <Input
                         type="number"
                         min={0}
@@ -645,7 +676,9 @@ export function AdminDashboard({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">End Minute</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        {admin.timeFrame.endMinute}
+                      </label>
                       <Input
                         type="number"
                         min={0}
@@ -655,7 +688,9 @@ export function AdminDashboard({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">Slot Duration (min)</label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        {admin.timeFrame.slotDuration}
+                      </label>
                       <Input
                         type="number"
                         min={5}
@@ -666,25 +701,31 @@ export function AdminDashboard({
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Event runs {String(tf.startHour).padStart(2, "0")}:00 – {String(tf.endHour).padStart(2, "0")}:{String(tf.endMinute).padStart(2, "0")} with {tf.slotDuration}-minute slots.
+                    {interpolate(admin.timeFrame.eventRuns, {
+                      start: `${String(tf.startHour).padStart(2, "0")}:00`,
+                      end: `${String(tf.endHour).padStart(2, "0")}:${String(tf.endMinute).padStart(2, "0")}`,
+                      duration: tf.slotDuration,
+                    })}
                   </p>
 
                   {stats.activeBookings > 0 && (
                     <div className="flex items-start gap-2 rounded-lg border border-yellow-300/50 bg-yellow-50 p-3 text-xs dark:border-yellow-800/50 dark:bg-yellow-900/10">
                       <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-700 dark:text-yellow-400" />
                       <p className="text-yellow-800 dark:text-yellow-300">
-                        <span className="font-semibold">Locked.</span> {stats.activeBookings} active booking{stats.activeBookings > 1 ? "s" : ""} exist.
-                        Cancel or reject all active bookings before changing the time frame.
+                        <span className="font-semibold">{admin.eventMode.locked}</span>{" "}
+                        {interpolate(admin.timeFrame.activeBookingsLocked, {
+                          count: stats.activeBookings,
+                        })}
                       </p>
                     </div>
                   )}
 
                   <div className="flex items-center gap-3">
                     <Button type="submit" disabled={tfSaving || stats.activeBookings > 0} size="sm">
-                      {tfSaving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Saving...</> : "Save & Regenerate Slots"}
+                      {tfSaving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />{messages.common.saving}</> : admin.timeFrame.saveAndRegenerate}
                     </Button>
                     {tfSaved && (
-                      <span className="text-xs text-green-600">Saved!</span>
+                      <span className="text-xs text-green-600">{admin.timeFrame.saved}</span>
                     )}
                     {tfError && (
                       <span className="text-xs text-destructive">{tfError}</span>
@@ -702,12 +743,11 @@ export function AdminDashboard({
             <div className="mb-4 flex items-center gap-2">
               <AtSign className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-heading text-lg font-semibold">
-                Allowed Recruiter Domains
+                {admin.domains.title}
               </h2>
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
-              Only recruiters with emails from these domains can sign up. Add
-              the company name and industry to pre-fill their profile.
+              {admin.domains.description}
             </p>
 
             <Card className="mb-4">
@@ -718,7 +758,7 @@ export function AdminDashboard({
                 >
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">
-                      Domain
+                      {admin.domains.domain}
                     </label>
                     <Input
                       value={newDomain}
@@ -729,7 +769,7 @@ export function AdminDashboard({
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">
-                      Company Name
+                      {admin.domains.companyName}
                     </label>
                     <Input
                       value={newCompany}
@@ -740,20 +780,18 @@ export function AdminDashboard({
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">
-                      Industry
+                      {admin.domains.industry}
                     </label>
                     <select
                       value={newIndustry}
                       onChange={(e) => setNewIndustry(e.target.value)}
                       className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
                     >
-                      <option>Technology</option>
-                      <option>Finance</option>
-                      <option>Semiconductor</option>
-                      <option>Manufacturing</option>
-                      <option>Consulting</option>
-                      <option>Healthcare</option>
-                      <option>E-Commerce</option>
+                      {INDUSTRY_OPTIONS.map((industry) => (
+                        <option key={industry} value={industry}>
+                          {messages.options.preferredIndustries[industry]}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   {domainError && (
@@ -767,7 +805,7 @@ export function AdminDashboard({
                     className="sm:col-span-3"
                   >
                     <Plus className="mr-1.5 h-4 w-4" />
-                    Add Domain
+                    {admin.domains.addDomain}
                   </Button>
                 </form>
               </CardContent>
@@ -776,7 +814,7 @@ export function AdminDashboard({
             <div className="space-y-2">
               {domains.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
-                  No allowed domains yet. Add one above to let recruiters sign up.
+                  {admin.domains.empty}
                 </p>
               ) : (
                 domains.map((d) => (
@@ -791,7 +829,7 @@ export function AdminDashboard({
                       <button
                         onClick={() => handleDeleteDomain(d.id)}
                         className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        aria-label={`Remove ${d.domain}`}
+                        aria-label={`${messages.common.remove} ${d.domain}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -862,6 +900,9 @@ function JobModerationSection({
     moderationNotes: string
   ) => void;
 }) {
+  const { messages, locale } = useStudentI18n();
+  const admin = messages.admin;
+  const localeTag = locale === "vi" ? "vi-VN" : "en-US";
   const [query, setQuery] = useState("");
   const [notesById, setNotesById] = useState<Record<number, string>>(
     Object.fromEntries(jobs.map((job) => [job.id, job.moderationNotes ?? ""]))
@@ -895,23 +936,30 @@ function JobModerationSection({
     approved: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-700",
   };
+  const statusLabels: Record<string, string> = {
+    draft: admin.moderation.status.draft,
+    pending_review: admin.moderation.status.pendingReview,
+    approved: admin.moderation.status.approved,
+    rejected: admin.moderation.status.rejected,
+  };
 
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
         <BookOpen className="h-5 w-5 text-muted-foreground" />
-        <h2 className="font-heading text-lg font-semibold">Job Moderation</h2>
+        <h2 className="font-heading text-lg font-semibold">
+          {admin.moderation.title}
+        </h2>
       </div>
       <p className="mb-4 text-sm text-muted-foreground">
-        Review recruiter-created job openings before they appear publicly. Only
-        approved jobs are visible on public pages.
+        {admin.moderation.description}
       </p>
 
       <div className="relative mb-4 max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search company, title, or status..."
+          placeholder={admin.moderation.searchPlaceholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="pl-9"
@@ -922,7 +970,7 @@ function JobModerationSection({
         {filteredJobs.length === 0 ? (
           <Card>
             <CardContent className="py-6 text-sm text-muted-foreground">
-              No job openings found.
+              {admin.moderation.empty}
             </CardContent>
           </Card>
         ) : (
@@ -939,7 +987,8 @@ function JobModerationSection({
                           statusStyles[job.moderationStatus] ?? "bg-muted text-muted-foreground"
                         )}
                       >
-                        {job.moderationStatus.replace("_", " ")}
+                        {statusLabels[job.moderationStatus] ??
+                          job.moderationStatus.replace("_", " ")}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">{job.company}</p>
@@ -949,9 +998,13 @@ function JobModerationSection({
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Created {new Date(job.createdAt).toLocaleDateString("en-US")}
+                      {interpolate(admin.moderation.createdOn, {
+                        date: new Date(job.createdAt).toLocaleDateString(localeTag),
+                      })}
                       {job.submittedAt
-                        ? ` · Submitted ${new Date(job.submittedAt).toLocaleDateString("en-US")}`
+                        ? ` · ${interpolate(admin.moderation.submittedOn, {
+                            date: new Date(job.submittedAt).toLocaleDateString(localeTag),
+                          })}`
                         : ""}
                     </p>
                     {job.jdLink && (
@@ -961,7 +1014,7 @@ function JobModerationSection({
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                       >
-                        View JD
+                        {admin.moderation.viewJd}
                       </a>
                     )}
                   </div>
@@ -969,7 +1022,7 @@ function JobModerationSection({
 
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground">
-                    Admin notes
+                    {admin.moderation.adminNotes}
                   </label>
                   <textarea
                     value={notesById[job.id] ?? job.moderationNotes ?? ""}
@@ -980,7 +1033,7 @@ function JobModerationSection({
                       }))
                     }
                     rows={2}
-                    placeholder="Add review guidance or rejection reason..."
+                    placeholder={admin.moderation.notesPlaceholder}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   />
                 </div>
@@ -992,7 +1045,7 @@ function JobModerationSection({
                       onModerate(job.id, "approve", notesById[job.id] ?? "")
                     }
                   >
-                    Approve
+                    {admin.moderation.approve}
                   </Button>
                   <Button
                     size="sm"
@@ -1001,7 +1054,7 @@ function JobModerationSection({
                       onModerate(job.id, "reject", notesById[job.id] ?? "")
                     }
                   >
-                    Reject
+                    {admin.moderation.reject}
                   </Button>
                   <Button
                     size="sm"
@@ -1010,7 +1063,7 @@ function JobModerationSection({
                       onModerate(job.id, "reset", notesById[job.id] ?? "")
                     }
                   >
-                    Reset to Draft
+                    {admin.moderation.resetToDraft}
                   </Button>
                 </div>
               </CardContent>
@@ -1049,6 +1102,9 @@ function PeopleSection({
   initialTab: "recruiters" | "applicants" | "bookings";
   showTabs: boolean;
 }) {
+  const { messages, locale } = useStudentI18n();
+  const admin = messages.admin;
+  const localeTag = locale === "vi" ? "vi-VN" : "en-US";
   const [tab, setTab] = useState<"recruiters" | "applicants" | "bookings">(
     initialTab
   );
@@ -1119,7 +1175,7 @@ function PeopleSection({
     <div>
       <div className="mb-4 flex items-center gap-2">
         <Users className="h-5 w-5 text-muted-foreground" />
-        <h2 className="font-heading text-lg font-semibold">People</h2>
+        <h2 className="font-heading text-lg font-semibold">{admin.people.title}</h2>
       </div>
 
       {showTabs ? (
@@ -1133,7 +1189,7 @@ function PeopleSection({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            Recruiters
+            {admin.people.tabs.recruiters}
             <Badge variant="secondary" className="ml-1 text-xs">
               {recruiters.length}
             </Badge>
@@ -1147,7 +1203,7 @@ function PeopleSection({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            Students
+            {admin.people.tabs.students}
             <Badge variant="secondary" className="ml-1 text-xs">
               {applicants.length}
             </Badge>
@@ -1161,7 +1217,7 @@ function PeopleSection({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            Bookings
+            {admin.people.tabs.bookings}
             <Badge variant="secondary" className="ml-1 text-xs">
               {
                 bookings.filter(
@@ -1180,8 +1236,10 @@ function PeopleSection({
           type="search"
           placeholder={
             tab === "recruiters"
-              ? "Search name, company, email..."
-              : "Search name, email, major..."
+              ? admin.people.searchRecruitersPlaceholder
+              : tab === "applicants"
+                ? admin.people.searchApplicantsPlaceholder
+                : admin.people.searchBookingsPlaceholder
           }
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -1195,32 +1253,32 @@ function PeopleSection({
             <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
               <tr>
                 <SortHeader
-                  label="Name"
+                  label={admin.people.columns.name}
                   active={recSort.key === "name"}
                   dir={recSort.dir}
                   onClick={() => toggleRecSort("name")}
                 />
                 <SortHeader
-                  label="Company"
+                  label={admin.people.columns.company}
                   active={recSort.key === "company"}
                   dir={recSort.dir}
                   onClick={() => toggleRecSort("company")}
                 />
                 <SortHeader
-                  label="Email"
+                  label={admin.people.columns.email}
                   active={recSort.key === "email"}
                   dir={recSort.dir}
                   onClick={() => toggleRecSort("email")}
                 />
                 <SortHeader
-                  label="Industry"
+                  label={admin.people.columns.industry}
                   active={recSort.key === "industry"}
                   dir={recSort.dir}
                   onClick={() => toggleRecSort("industry")}
                   className="hidden sm:table-cell"
                 />
                 <SortHeader
-                  label="Joined"
+                  label={admin.people.columns.joined}
                   active={recSort.key === "createdAt"}
                   dir={recSort.dir}
                   onClick={() => toggleRecSort("createdAt")}
@@ -1236,7 +1294,7 @@ function PeopleSection({
                     colSpan={6}
                     className="py-8 text-center text-sm text-muted-foreground"
                   >
-                    No recruiters found.
+                    {admin.people.noRecruiters}
                   </td>
                 </tr>
               ) : (
@@ -1261,7 +1319,7 @@ function PeopleSection({
                       </Badge>
                     </td>
                     <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">
-                      {new Date(r.createdAt).toLocaleDateString("en-US", {
+                      {new Date(r.createdAt).toLocaleDateString(localeTag, {
                         month: "short",
                         day: "numeric",
                       })}
@@ -1270,7 +1328,9 @@ function PeopleSection({
                       <button
                         onClick={() => onDeleteRecruiter(r)}
                         className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        aria-label={`Remove ${r.company}`}
+                        aria-label={interpolate(admin.people.removeRecruiterAria, {
+                          company: r.company,
+                        })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1286,25 +1346,31 @@ function PeopleSection({
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
               <tr>
-                <SortHeader label="Name" active={appSort.key === "name"} dir={appSort.dir} onClick={() => toggleAppSort("name")} />
-                <SortHeader label="Email" active={appSort.key === "email"} dir={appSort.dir} onClick={() => toggleAppSort("email")} />
-                <SortHeader label="Major" active={appSort.key === "major"} dir={appSort.dir} onClick={() => toggleAppSort("major")} className="hidden sm:table-cell" />
-                <SortHeader label="Joined" active={appSort.key === "createdAt"} dir={appSort.dir} onClick={() => toggleAppSort("createdAt")} className="hidden md:table-cell" />
+                <SortHeader label={admin.people.columns.name} active={appSort.key === "name"} dir={appSort.dir} onClick={() => toggleAppSort("name")} />
+                <SortHeader label={admin.people.columns.email} active={appSort.key === "email"} dir={appSort.dir} onClick={() => toggleAppSort("email")} />
+                <SortHeader label={admin.people.columns.major} active={appSort.key === "major"} dir={appSort.dir} onClick={() => toggleAppSort("major")} className="hidden sm:table-cell" />
+                <SortHeader label={admin.people.columns.joined} active={appSort.key === "createdAt"} dir={appSort.dir} onClick={() => toggleAppSort("createdAt")} className="hidden md:table-cell" />
                 <th className="w-10"></th>
               </tr>
             </thead>
             <tbody>
               {filteredApplicants.length === 0 ? (
-                <tr><td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">No students found.</td></tr>
+                <tr><td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">{admin.people.noStudents}</td></tr>
               ) : (
                 filteredApplicants.map((a) => (
                   <tr key={a.id} className="border-b last:border-b-0 hover:bg-muted/20">
                     <td className="px-3 py-2.5 font-medium">{a.name}</td>
                     <td className="px-3 py-2.5 text-muted-foreground"><a href={`mailto:${a.email}`} className="hover:text-primary hover:underline">{a.email}</a></td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">{a.major || "—"}</td>
-                    <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">{new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</td>
+                    <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">{a.major || admin.people.emptyValue}</td>
+                    <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">{new Date(a.createdAt).toLocaleDateString(localeTag, { month: "short", day: "numeric" })}</td>
                     <td className="px-3 py-2.5">
-                      <button onClick={() => onDeleteApplicant(a)} className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={`Remove ${a.name}`}>
+                      <button
+                        onClick={() => onDeleteApplicant(a)}
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={interpolate(admin.people.removeApplicantAria, {
+                          name: a.name,
+                        })}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
@@ -1330,12 +1396,22 @@ function BookingsTable({
   query: string;
   onCancel: (b: AdminBooking) => void;
 }) {
+  const { messages, locale } = useStudentI18n();
+  const admin = messages.admin;
+  const localeTag = locale === "vi" ? "vi-VN" : "en-US";
   const statusColor: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
     accepted: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
     waitlisted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
     rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
     cancelled: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  };
+  const statusLabel: Record<string, string> = {
+    pending: admin.bookings.status.pending,
+    accepted: admin.bookings.status.accepted,
+    waitlisted: admin.bookings.status.waitlisted,
+    rejected: admin.bookings.status.rejected,
+    cancelled: admin.bookings.status.cancelled,
   };
 
   const filtered = bookings.filter((b) => {
@@ -1355,11 +1431,11 @@ function BookingsTable({
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
           <tr>
-            <th className="px-3 py-2 text-left font-medium">Student</th>
-            <th className="px-3 py-2 text-left font-medium">Company</th>
-            <th className="hidden px-3 py-2 text-left font-medium sm:table-cell">Position</th>
-            <th className="hidden px-3 py-2 text-left font-medium md:table-cell">Time</th>
-            <th className="px-3 py-2 text-left font-medium">Status</th>
+            <th className="px-3 py-2 text-left font-medium">{admin.people.columns.student}</th>
+            <th className="px-3 py-2 text-left font-medium">{admin.people.columns.company}</th>
+            <th className="hidden px-3 py-2 text-left font-medium sm:table-cell">{admin.people.columns.position}</th>
+            <th className="hidden px-3 py-2 text-left font-medium md:table-cell">{admin.people.columns.time}</th>
+            <th className="px-3 py-2 text-left font-medium">{admin.people.columns.status}</th>
             <th className="w-10"></th>
           </tr>
         </thead>
@@ -1367,7 +1443,7 @@ function BookingsTable({
           {filtered.length === 0 ? (
             <tr>
               <td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                No bookings found.
+                {admin.people.noBookings}
               </td>
             </tr>
           ) : (
@@ -1381,11 +1457,11 @@ function BookingsTable({
                   </td>
                   <td className="px-3 py-2.5">{b.company}</td>
                   <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">
-                    {b.position || "—"}
+                    {b.position || admin.people.emptyValue}
                   </td>
                   <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">
                     {b.requestedTime
-                      ? new Date(b.requestedTime).toLocaleString("en-US", {
+                      ? new Date(b.requestedTime).toLocaleString(localeTag, {
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",
@@ -1393,7 +1469,7 @@ function BookingsTable({
                           hour12: false,
                           timeZone: "Asia/Taipei",
                         })
-                      : "—"}
+                      : admin.people.emptyValue}
                   </td>
                   <td className="px-3 py-2.5">
                     <span
@@ -1402,7 +1478,7 @@ function BookingsTable({
                         statusColor[b.status] ?? ""
                       )}
                     >
-                      {b.status}
+                      {statusLabel[b.status] ?? b.status}
                     </span>
                   </td>
                   <td className="px-3 py-2.5">
@@ -1410,7 +1486,7 @@ function BookingsTable({
                       <button
                         onClick={() => onCancel(b)}
                         className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        aria-label="Cancel booking"
+                        aria-label={admin.people.cancelBookingAria}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

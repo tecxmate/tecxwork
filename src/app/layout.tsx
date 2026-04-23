@@ -5,9 +5,11 @@ import { Suspense } from "react";
 import "./globals.css";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
+import { StudentLocaleProvider } from "@/components/student-locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getSession } from "@/lib/auth";
 import { EVENT_CONFIG } from "@/lib/data";
+import { getStudentLocale } from "@/lib/student-locale.server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,12 +71,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const sessionPromise = getSession();
+  const studentLocale = await getStudentLocale();
 
   return (
     <html
@@ -85,11 +88,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <RouteLoadingSignal />
-          {children}
-          <Suspense fallback={null}>
-            <MobileBottomNavServer sessionPromise={sessionPromise} />
-          </Suspense>
+          <StudentLocaleProvider initialLocale={studentLocale}>
+            <RouteLoadingSignal />
+            {children}
+            <Suspense fallback={null}>
+              <MobileBottomNavServer sessionPromise={sessionPromise} />
+            </Suspense>
+          </StudentLocaleProvider>
         </ThemeProvider>
       </body>
     </html>

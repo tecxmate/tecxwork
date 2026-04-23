@@ -44,6 +44,9 @@ import {
   type TaiwanSchoolOption,
 } from "@/lib/student-profile";
 import { SiteFooter } from "@/components/site-footer";
+import { useStudentI18n } from "@/components/student-locale-provider";
+import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
+import { interpolate } from "@/lib/student-messages";
 
 type Step = "form" | "availability" | "done";
 
@@ -52,6 +55,7 @@ const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor(
   index,
   onRemove,
   onUpdate,
+  labels,
 }: {
   experience: StudentWorkExperience;
   index: number;
@@ -61,41 +65,58 @@ const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor(
     field: K,
     value: StudentWorkExperience[K]
   ) => void;
+  labels: {
+    workExperienceTitle: string;
+    remove: string;
+    company: string;
+    companyPlaceholder: string;
+    jobTitle: string;
+    jobTitlePlaceholder: string;
+    employmentType: string;
+    employmentTypePlaceholder: string;
+    currentlyWorking: string;
+    startDate: string;
+    endDate: string;
+    summary: string;
+    summaryPlaceholder: string;
+  };
 }) {
   return (
     <div className="space-y-4 rounded-xl border border-border/60 p-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">Experience {index + 1}</h3>
+        <h3 className="text-sm font-semibold">
+          {interpolate(labels.workExperienceTitle, { index: index + 1 })}
+        </h3>
         <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(index)}>
-          Remove
+          {labels.remove}
         </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Company</label>
+          <label className="text-sm font-medium">{labels.company}</label>
           <Input
             value={experience.company}
             onChange={(e) => onUpdate(index, "company", e.target.value)}
-            placeholder="e.g. TSMC"
+            placeholder={labels.companyPlaceholder}
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Job Title</label>
+          <label className="text-sm font-medium">{labels.jobTitle}</label>
           <Input
             value={experience.title}
             onChange={(e) => onUpdate(index, "title", e.target.value)}
-            placeholder="e.g. Data Analyst Intern"
+            placeholder={labels.jobTitlePlaceholder}
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employment Type</label>
+          <label className="text-sm font-medium">{labels.employmentType}</label>
           <Input
             value={experience.employmentType}
             onChange={(e) => onUpdate(index, "employmentType", e.target.value)}
-            placeholder="Internship, Part-time, Full-time"
+            placeholder={labels.employmentTypePlaceholder}
           />
         </div>
 
@@ -111,12 +132,12 @@ const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor(
             htmlFor={`current-role-${index}`}
             className="cursor-pointer text-sm text-muted-foreground"
           >
-            I currently work here
+            {labels.currentlyWorking}
           </label>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Start Date</label>
+          <label className="text-sm font-medium">{labels.startDate}</label>
           <Input
             type="month"
             value={experience.startDate}
@@ -125,7 +146,7 @@ const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor(
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">End Date</label>
+          <label className="text-sm font-medium">{labels.endDate}</label>
           <Input
             type="month"
             value={experience.endDate}
@@ -135,12 +156,12 @@ const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor(
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <label className="text-sm font-medium">Summary</label>
+          <label className="text-sm font-medium">{labels.summary}</label>
           <textarea
             value={experience.description}
             onChange={(e) => onUpdate(index, "description", e.target.value)}
             rows={3}
-            placeholder="Briefly describe your responsibilities, projects, or impact."
+            placeholder={labels.summaryPlaceholder}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
@@ -151,6 +172,7 @@ const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor(
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { messages } = useStudentI18n();
   const [step, setStep] = useState<Step>("form");
   const [onboardingMode, setOnboardingMode] = useState<"minimal" | "full">("full");
   const [error, setError] = useState("");
@@ -198,7 +220,7 @@ export default function RegisterPage() {
     fetch("/api/admin/mode")
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error("Failed to load onboarding mode");
+          throw new Error(messages.register.failedOnboardingMode);
         }
 
         return response.json();
@@ -209,13 +231,13 @@ export default function RegisterPage() {
       .catch(() => {
         setOnboardingMode("full");
       });
-  }, []);
+  }, [messages.register.failedOnboardingMode]);
 
   useEffect(() => {
     fetch("/api/taiwan-schools")
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error("Failed to load school list");
+          throw new Error(messages.register.failedSchoolList);
         }
 
         return response.json();
@@ -225,18 +247,22 @@ export default function RegisterPage() {
         setSchools(nextSchools);
         setSchoolsError(
           nextSchools.length === 0
-            ? "School list is empty right now. You can still type your school manually."
+            ? messages.register.schoolListEmpty
             : ""
         );
       })
       .catch(() => {
         setSchools([]);
         setSchoolsError(
-          "School list failed to load. You can still type your school manually."
+          messages.register.schoolListFailed
         );
       })
       .finally(() => setSchoolsLoading(false));
-  }, []);
+  }, [
+    messages.register.failedSchoolList,
+    messages.register.schoolListEmpty,
+    messages.register.schoolListFailed,
+  ]);
 
   const schoolLabelToOption = useMemo(() => {
     return new Map(schools.map((school) => [school.label, school]));
@@ -490,14 +516,16 @@ export default function RegisterPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Registration failed");
+      if (!res.ok) throw new Error(data.error || messages.register.registrationFailed);
 
       clearDraft();
       setPassword("");
       setProfileId(data.profile.id);
       setStep("availability");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(
+        err instanceof Error ? err.message : messages.register.somethingWentWrong
+      );
     } finally {
       setLoading(false);
     }
@@ -521,11 +549,13 @@ export default function RegisterPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create slots");
+      if (!res.ok) throw new Error(data.error || messages.register.somethingWentWrong);
 
       setStep("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(
+        err instanceof Error ? err.message : messages.register.somethingWentWrong
+      );
     } finally {
       setLoading(false);
     }
@@ -540,18 +570,17 @@ export default function RegisterPage() {
               <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <h2 className="font-heading text-xl font-semibold">
-              Registration Complete!
+              {messages.register.registrationComplete}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Your profile is now visible to recruiters. They can browse your
-              education background, skills, and preferences before booking you.
+              {messages.register.registrationDoneBody}
             </p>
             <Separator />
             <p className="text-xs text-muted-foreground">
-              You can also browse companies and book interviews yourself.
+              {messages.register.registrationDoneHint}
             </p>
             <Button onClick={() => router.push("/browse")} className="mt-2">
-              Browse Companies
+              {messages.common.browseCompanies}
             </Button>
           </CardContent>
         </Card>
@@ -565,11 +594,12 @@ export default function RegisterPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="items-center gap-2">
             <h2 className="font-heading text-xl font-semibold">
-              Set Your Availability
+              {messages.register.setAvailabilityTitle}
             </h2>
             <p className="text-sm text-muted-foreground">
-              This creates 15-minute interview slots on event day ({EVENT_CONFIG.displayDate})
-              from 10:00 AM to 5:30 PM for recruiters to book.
+              {interpolate(messages.register.setAvailabilityBody, {
+                date: EVENT_CONFIG.displayDate,
+              })}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -587,10 +617,10 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating slots...
+                  {messages.register.creatingSlots}
                 </>
               ) : (
-                "Create Availability (10 AM – 5:30 PM)"
+                messages.register.createAvailability
               )}
             </Button>
             <Button
@@ -598,7 +628,7 @@ export default function RegisterPage() {
               onClick={() => setStep("done")}
               className="w-full"
             >
-              Skip for now
+              {messages.register.skipForNow}
             </Button>
           </CardContent>
         </Card>
@@ -615,8 +645,11 @@ export default function RegisterPage() {
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {messages.common.back}
           </Link>
+          <div className="ml-auto">
+            <StudentLanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -628,12 +661,12 @@ export default function RegisterPage() {
                 <UserPlus className="h-5 w-5 text-primary-foreground" />
               </div>
               <h1 className="font-heading text-xl font-bold">
-                Applicant Registration
+                {messages.register.title}
               </h1>
               <p className="text-sm text-muted-foreground">
                 {isMinimalOnboarding
-                  ? "Create the minimum student profile needed for recruiters to review your CV and contact you."
-                  : "Create a fuller student profile so recruiters can evaluate your education background, graduation timeline, and job preferences before reaching out."}
+                  ? messages.register.minimalSubtitle
+                  : messages.register.fullSubtitle}
               </p>
             </CardHeader>
             <CardContent>
@@ -641,34 +674,38 @@ export default function RegisterPage() {
                 {draftRestored && (
                   <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
                     <Save className="h-4 w-4 shrink-0" />
-                    Draft restored from this browser. You only need to re-enter your password.
+                    {messages.register.draftRestored}
                   </div>
                 )}
 
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-primary" />
-                    <h2 className="font-heading text-lg font-semibold">Account</h2>
+                    <h2 className="font-heading text-lg font-semibold">
+                      {messages.register.accountSection}
+                    </h2>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <label htmlFor="name" className="text-sm font-medium">
-                        Full Name <span className="text-destructive">*</span>
+                        {messages.register.fullName}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <Input
                         id="name"
                         required
                         value={draft.name}
                         onChange={(e) => setField("name", e.target.value)}
-                        placeholder="Your full name"
+                        placeholder={messages.register.fullName}
                         autoComplete="name"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label htmlFor="reg-email" className="text-sm font-medium">
-                        Email <span className="text-destructive">*</span>
+                        {messages.login.email}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <Input
                         id="reg-email"
@@ -676,14 +713,15 @@ export default function RegisterPage() {
                         required
                         value={draft.email}
                         onChange={(e) => setField("email", e.target.value)}
-                        placeholder="you@university.edu.tw"
+                        placeholder="you@example.com"
                         autoComplete="email"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label htmlFor="reg-password" className="text-sm font-medium">
-                        Password <span className="text-destructive">*</span>
+                        {messages.login.password}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <PasswordInput
                         id="reg-password"
@@ -700,7 +738,7 @@ export default function RegisterPage() {
                       <>
                         <div className="space-y-1.5">
                           <label htmlFor="phone" className="text-sm font-medium">
-                            Phone / WhatsApp
+                            {messages.register.phone}
                           </label>
                           <Input
                             id="phone"
@@ -713,13 +751,13 @@ export default function RegisterPage() {
 
                         <div className="space-y-1.5 sm:col-span-2">
                           <label htmlFor="nationality" className="text-sm font-medium">
-                            Nationality
+                            {messages.register.nationality}
                           </label>
                           <Input
                             id="nationality"
                             value={draft.nationality}
                             onChange={(e) => setField("nationality", e.target.value)}
-                            placeholder="e.g. Vietnamese"
+                            placeholder={messages.register.nationality}
                           />
                         </div>
                       </>
@@ -733,7 +771,8 @@ export default function RegisterPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5 sm:col-span-2">
                       <label htmlFor="cv-link" className="text-sm font-medium">
-                        CV Link (Google Drive) <span className="text-destructive">*</span>
+                        {messages.register.cvLink}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <Input
                         id="cv-link"
@@ -744,7 +783,7 @@ export default function RegisterPage() {
                         placeholder="https://drive.google.com/file/d/..."
                       />
                       <p className="text-xs text-muted-foreground">
-                        Share a public or recruiter-accessible Google Drive CV link so companies can review it.
+                        {messages.register.cvHint}
                       </p>
                     </div>
                   </div>
@@ -757,13 +796,16 @@ export default function RegisterPage() {
                     <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4 text-primary" />
-                    <h2 className="font-heading text-lg font-semibold">Education</h2>
+                    <h2 className="font-heading text-lg font-semibold">
+                      {messages.register.educationSection}
+                    </h2>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5 sm:col-span-2">
                       <label htmlFor="school" className="text-sm font-medium">
-                        School in Taiwan <span className="text-destructive">*</span>
+                        {messages.register.schoolInTaiwan}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <div className="relative">
                         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -778,8 +820,8 @@ export default function RegisterPage() {
                           }}
                           placeholder={
                             schoolsLoading
-                              ? "Loading Taiwan schools..."
-                              : "Search by Chinese, English, city, or school code"
+                              ? messages.register.loadingSchoolPlaceholder
+                              : messages.register.searchSchoolPlaceholder
                           }
                           className="pl-11"
                         />
@@ -827,15 +869,14 @@ export default function RegisterPage() {
                               </div>
                             ) : (
                               <div className="px-3 py-3 text-sm text-muted-foreground">
-                                No matching school found. You can keep typing to use a custom school name.
+                                {messages.register.noSchoolMatch}
                               </div>
                             )}
                           </div>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Search and pick from the dropdown when available. If your
-                        school is missing, type it manually and continue.
+                        {messages.register.schoolSearchHint}
                       </p>
                       {schoolsError && (
                         <p className="text-xs text-amber-600">
@@ -844,28 +885,35 @@ export default function RegisterPage() {
                       )}
                       {draft.schoolName && (
                         <div className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                          Saved school: <span className="font-medium text-foreground">{draft.schoolName}</span>
-                          {draft.schoolNameEn ? ` / ${draft.schoolNameEn}` : " (custom entry)"}
+                          {messages.register.savedSchool}:{" "}
+                          <span className="font-medium text-foreground">
+                            {draft.schoolName}
+                          </span>
+                          {draft.schoolNameEn
+                            ? ` / ${draft.schoolNameEn}`
+                            : ` ${messages.register.customEntry}`}
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-1.5">
                       <label htmlFor="major" className="text-sm font-medium">
-                        Major / Department <span className="text-destructive">*</span>
+                        {messages.register.major}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <Input
                         id="major"
                         required
                         value={draft.major}
                         onChange={(e) => setField("major", e.target.value)}
-                        placeholder="e.g. Computer Science"
+                        placeholder={messages.register.major}
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label htmlFor="study-level" className="text-sm font-medium">
-                        Study Level <span className="text-destructive">*</span>
+                        {messages.register.studyLevel}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <select
                         id="study-level"
@@ -874,10 +922,10 @@ export default function RegisterPage() {
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                         required
                       >
-                        <option value="">Select study level</option>
+                        <option value="">{messages.register.selectStudyLevel}</option>
                         {STUDY_LEVEL_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {messages.options.studyLevel[option.value]}
                           </option>
                         ))}
                       </select>
@@ -885,7 +933,7 @@ export default function RegisterPage() {
 
                     <div className="space-y-1.5">
                       <label htmlFor="study-year" className="text-sm font-medium">
-                        Current Year / Status
+                        {messages.register.studyYear}
                       </label>
                       <select
                         id="study-year"
@@ -893,10 +941,10 @@ export default function RegisterPage() {
                         onChange={(e) => setField("studyYear", e.target.value)}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                       >
-                        <option value="">Select current year</option>
+                        <option value="">{messages.register.selectCurrentYear}</option>
                         {STUDY_YEAR_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {messages.options.studyYear[option.value]}
                           </option>
                         ))}
                       </select>
@@ -904,7 +952,8 @@ export default function RegisterPage() {
 
                     <div className="space-y-1.5">
                       <label htmlFor="graduation-date" className="text-sm font-medium">
-                        Expected Graduation Date <span className="text-destructive">*</span>
+                        {messages.register.expectedGraduation}{" "}
+                        <span className="text-destructive">*</span>
                       </label>
                       <Input
                         id="graduation-date"
@@ -922,13 +971,15 @@ export default function RegisterPage() {
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-primary" />
-                    <h2 className="font-heading text-lg font-semibold">Career Preferences</h2>
+                    <h2 className="font-heading text-lg font-semibold">
+                      {messages.register.preferencesSection}
+                    </h2>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <label htmlFor="job-seeking" className="text-sm font-medium">
-                        Job Search Status
+                        {messages.register.jobSearchStatus}
                       </label>
                       <select
                         id="job-seeking"
@@ -936,10 +987,10 @@ export default function RegisterPage() {
                         onChange={(e) => setField("jobSeekingStatus", e.target.value)}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                       >
-                        <option value="">Select status</option>
+                        <option value="">{messages.register.selectStatus}</option>
                         {JOB_SEEKING_STATUS_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {messages.options.jobSeekingStatus[option.value]}
                           </option>
                         ))}
                       </select>
@@ -947,7 +998,7 @@ export default function RegisterPage() {
 
                     <div className="space-y-1.5">
                       <label htmlFor="work-auth" className="text-sm font-medium">
-                        Work Authorization
+                        {messages.register.workAuthorization}
                       </label>
                       <select
                         id="work-auth"
@@ -955,10 +1006,12 @@ export default function RegisterPage() {
                         onChange={(e) => setField("workAuthorization", e.target.value)}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                       >
-                        <option value="">Select work authorization</option>
+                        <option value="">
+                          {messages.register.selectWorkAuthorization}
+                        </option>
                         {WORK_AUTHORIZATION_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {messages.options.workAuthorization[option.value]}
                           </option>
                         ))}
                       </select>
@@ -966,7 +1019,9 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Preferred Work Locations</label>
+                    <label className="text-sm font-medium">
+                      {messages.register.preferredLocations}
+                    </label>
                     <div className="flex flex-wrap gap-2">
                       {PREFERRED_LOCATION_OPTIONS.map((location) => {
                         const selected = draft.preferredLocations.includes(location);
@@ -978,7 +1033,7 @@ export default function RegisterPage() {
                             variant={selected ? "default" : "outline"}
                             onClick={() => toggleArrayField("preferredLocations", location)}
                           >
-                            {location}
+                            {messages.options.preferredLocations[location]}
                           </Button>
                         );
                       })}
@@ -986,7 +1041,9 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Preferred Industries</label>
+                    <label className="text-sm font-medium">
+                      {messages.register.preferredIndustries}
+                    </label>
                     <div className="flex flex-wrap gap-2">
                       {PREFERRED_INDUSTRY_OPTIONS.map((industry) => {
                         const selected = draft.preferredIndustries.includes(industry);
@@ -998,7 +1055,7 @@ export default function RegisterPage() {
                             variant={selected ? "default" : "outline"}
                             onClick={() => toggleArrayField("preferredIndustries", industry)}
                           >
-                            {industry}
+                            {messages.options.preferredIndustries[industry]}
                           </Button>
                         );
                       })}
@@ -1013,7 +1070,7 @@ export default function RegisterPage() {
                     <div className="flex items-center gap-2">
                       <BriefcaseBusiness className="h-4 w-4 text-primary" />
                       <h2 className="font-heading text-lg font-semibold">
-                        Work Experience
+                        {messages.register.workExperienceSection}
                       </h2>
                     </div>
                     <Button
@@ -1026,12 +1083,13 @@ export default function RegisterPage() {
                       }
                     >
                       <Plus className="mr-1 h-4 w-4" />
-                      Add experience
+                      {messages.register.addExperience}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Optional. Add up to {MAX_STUDENT_WORK_EXPERIENCES} internships,
-                    part-time roles, or full-time experiences.
+                    {interpolate(messages.register.addExperienceHint, {
+                      max: MAX_STUDENT_WORK_EXPERIENCES,
+                    })}
                   </p>
 
                   {draft.workExperiences.length > 0 ? (
@@ -1043,12 +1101,28 @@ export default function RegisterPage() {
                           experience={experience}
                           onRemove={removeWorkExperience}
                           onUpdate={updateWorkExperience}
+                          labels={{
+                            workExperienceTitle: messages.register.workExperienceTitle,
+                            remove: messages.common.remove,
+                            company: messages.register.company,
+                            companyPlaceholder: "e.g. TSMC",
+                            jobTitle: messages.register.jobTitle,
+                            jobTitlePlaceholder: "e.g. Data Analyst Intern",
+                            employmentType: messages.register.employmentType,
+                            employmentTypePlaceholder:
+                              "Internship, Part-time, Full-time",
+                            currentlyWorking: messages.register.currentlyWorking,
+                            startDate: messages.register.startDate,
+                            endDate: messages.register.endDate,
+                            summary: messages.register.summary,
+                            summaryPlaceholder: messages.register.summaryPlaceholder,
+                          }}
                         />
                       ))}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed border-border/80 px-4 py-6 text-sm text-muted-foreground">
-                      No work experience added yet. This section is optional.
+                      {messages.register.noExperience}
                     </div>
                   )}
                 </section>
@@ -1058,12 +1132,14 @@ export default function RegisterPage() {
                 <section className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <label className="text-sm font-medium">Skills</label>
+                      <label className="text-sm font-medium">
+                        {messages.register.skills}
+                      </label>
                       <div className="flex gap-2">
                         <Input
                           value={draft.skillInput}
                           onChange={(e) => setField("skillInput", e.target.value)}
-                          placeholder="Add a skill and press Enter"
+                          placeholder={messages.register.addSkillPlaceholder}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
@@ -1076,7 +1152,7 @@ export default function RegisterPage() {
                           variant="outline"
                           onClick={addSkill}
                         >
-                          Add
+                          {messages.common.add}
                         </Button>
                       </div>
                       {draft.skills.length > 0 && (
@@ -1102,7 +1178,7 @@ export default function RegisterPage() {
 
                     <div className="space-y-1.5">
                       <label htmlFor="linkedin" className="text-sm font-medium">
-                        LinkedIn
+                        {messages.register.linkedin}
                       </label>
                       <Input
                         id="linkedin"
@@ -1115,7 +1191,7 @@ export default function RegisterPage() {
 
                     <div className="space-y-1.5">
                       <label htmlFor="portfolio" className="text-sm font-medium">
-                        Portfolio / GitHub
+                        {messages.register.portfolio}
                       </label>
                       <Input
                         id="portfolio"
@@ -1128,13 +1204,13 @@ export default function RegisterPage() {
 
                     <div className="space-y-1.5 sm:col-span-2">
                       <label htmlFor="desc" className="text-sm font-medium">
-                        About You
+                        {messages.register.aboutYou}
                       </label>
                       <textarea
                         id="desc"
                         value={draft.description}
                         onChange={(e) => setField("description", e.target.value)}
-                        placeholder="Share your career goals, project experience, and what kind of roles you want recruiters to consider you for."
+                        placeholder={messages.register.summaryPlaceholder}
                         rows={4}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                       />
@@ -1160,17 +1236,11 @@ export default function RegisterPage() {
                     className="cursor-pointer text-xs leading-relaxed text-muted-foreground"
                   >
                     <ShieldCheck className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-primary" />
-                    I consent to making my profile, education information, and CV link visible to
-                    recruiters for this recruitment event in accordance with Taiwan&apos;s Personal
-                    Data Protection Act, and I agree to the Platform Terms and Privacy Policy.
+                    {messages.register.consentText}
                   </label>
                 </div>
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
-                  Students are responsible for confirming they are legally allowed to work in Taiwan
-                  before accepting any job, internship, or part-time role. If you are an
-                  international student, overseas Chinese student, or other foreign national, you
-                  may need a valid work permit and may be subject to working-hour limits during the
-                  academic semester.
+                  {messages.register.legalNotice}
                 </div>
 
                 {EVENT_CONFIG.enableNewsletterOptIn && (
@@ -1187,8 +1257,7 @@ export default function RegisterPage() {
                       className="cursor-pointer text-xs leading-relaxed text-muted-foreground"
                     >
                       <Mail className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-muted-foreground" />
-                      (Optional) Subscribe to the V-GEN Talent Network to receive updates on future
-                      career fairs and job opportunities.
+                      {messages.register.newsletter}
                     </label>
                   </div>
                 )}
@@ -1209,10 +1278,10 @@ export default function RegisterPage() {
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Registering...
+                        {messages.register.registering}
                       </>
                     ) : (
-                      "Sign Up"
+                      messages.common.signUp
                     )}
                   </Button>
                   <Button
@@ -1220,14 +1289,14 @@ export default function RegisterPage() {
                     variant="outline"
                     onClick={clearDraft}
                   >
-                    Clear Draft
+                    {messages.common.clearDraft}
                   </Button>
                 </div>
 
                 <p className="text-center text-xs text-muted-foreground">
-                  Already have an account?{" "}
+                  {messages.register.alreadyHaveAccount}{" "}
                   <Link href="/login" className="text-primary hover:underline">
-                    Log in
+                    {messages.common.logIn}
                   </Link>
                 </p>
               </form>

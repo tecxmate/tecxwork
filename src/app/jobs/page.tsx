@@ -8,6 +8,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { getStudentLocale } from "@/lib/student-locale.server";
+import { getStudentMessages } from "@/lib/student-messages";
 
 export const metadata = {
   title: "Job Opportunities | V-GEN TRIDENT",
@@ -34,6 +36,8 @@ async function getRecruiterPostedJobs() {
 
 export default async function JobsPage() {
   const session = await getSession();
+  const locale = await getStudentLocale();
+  const messages = getStudentMessages(locale);
   const jobs = await getRecruiterPostedJobs();
   const dashboardUrl = session
     ? session.role === "admin"
@@ -58,7 +62,7 @@ export default async function JobsPage() {
                 href={dashboardUrl!}
                 className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
               >
-                Go to Dashboard
+                {messages.common.goToDashboard}
               </Link>
             )
           ) : (
@@ -67,13 +71,13 @@ export default async function JobsPage() {
                 href="/login"
                 className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
               >
-                Log In
+                {messages.common.logIn}
               </Link>
               <Link
                 href="/get-started"
                 className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
               >
-                Sign Up
+                {messages.common.signUp}
               </Link>
             </>
           )
@@ -82,12 +86,12 @@ export default async function JobsPage() {
 
       <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-7xl text-center">
-          <Badge className="mb-2 sm:mb-4">Job Board</Badge>
+          <Badge className="mb-2 sm:mb-4">{messages.jobsPage.badge}</Badge>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            Recruiter-Posted Jobs
+            {messages.jobsPage.title}
           </h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:mt-3 sm:text-base">
-            Browse open positions published directly by participating recruiters.
+            {messages.jobsPage.subtitle}
           </p>
         </div>
       </section>
@@ -98,10 +102,10 @@ export default async function JobsPage() {
             <Card className="flex flex-col items-center justify-center py-16 text-center">
               <Briefcase className="h-10 w-10 text-muted-foreground/50" />
               <p className="mt-4 text-lg font-medium text-muted-foreground">
-                No recruiter jobs available yet
+                {messages.jobsPage.emptyTitle}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Recruiters will post openings as the event approaches.
+                {messages.jobsPage.emptySubtitle}
               </p>
             </Card>
           ) : (
@@ -116,11 +120,11 @@ export default async function JobsPage() {
                       <p className="text-sm text-muted-foreground">{job.company}</p>
                       <div className="flex flex-wrap gap-1.5">
                         <Badge variant="secondary" className="text-[11px]">
-                          Recruiter posted
+                          {messages.jobsPage.recruiterPosted}
                         </Badge>
                         {job.jdLink ? (
                           <Badge variant="outline" className="text-[11px]">
-                            JD available
+                            {messages.jobsPage.jdAvailable}
                           </Badge>
                         ) : null}
                       </div>

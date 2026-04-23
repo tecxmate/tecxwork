@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Briefcase } from "lucide-react";
 
 import { DesktopTopNav } from "@/components/desktop-top-nav";
+import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { navItemsByRole, type NavRole } from "@/lib/navigation";
 
@@ -19,6 +20,8 @@ export function AppTopBar({
   showActionsOnMobile?: boolean;
 }) {
   const navItems = navRole ? navItemsByRole[navRole] : [];
+  const showStudentLanguageSwitcher =
+    navRole === "guest" || navRole === "applicant" || navRole === "admin";
 
   return (
     <header className="sticky top-0 z-10 border-b bg-white dark:bg-card">
@@ -37,6 +40,7 @@ export function AppTopBar({
           <div className="hidden flex-1 md:block" />
         )}
         <div className="ml-auto flex items-center gap-2 whitespace-nowrap sm:gap-3">
+          {showStudentLanguageSwitcher ? <StudentLanguageSwitcher /> : null}
           <ThemeToggle />
           {desktopActions ? (
             <div

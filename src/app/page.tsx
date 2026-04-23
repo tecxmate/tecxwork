@@ -19,6 +19,8 @@ import { LogoutButton } from "@/components/logout-button";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
 import { db, recruiters, jobOpenings, users } from "@/lib/db";
+import { getStudentLocale } from "@/lib/student-locale.server";
+import { getStudentMessages } from "@/lib/student-messages";
 import { eq } from "drizzle-orm";
 
 // Placeholder event photos - replace with actual photos
@@ -82,6 +84,8 @@ async function getPublicJobs() {
 
 export default async function LandingPage() {
   const session = await getSession();
+  const locale = await getStudentLocale();
+  const messages = getStudentMessages(locale);
 
   // Determine dashboard URL for logged-in users
   const dashboardUrl = session
@@ -97,13 +101,16 @@ export default async function LandingPage() {
     getPublicJobs(),
   ]);
 
-  const formattedDate = EVENT_CONFIG.date.toLocaleDateString("en-US", {
+  const formattedDate = EVENT_CONFIG.date.toLocaleDateString(
+    locale === "vi" ? "vi-VN" : "en-US",
+    {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: EVENT_CONFIG.timezone,
-  });
+    }
+  );
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -120,7 +127,7 @@ export default async function LandingPage() {
                 href={dashboardUrl!}
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                Go to Dashboard
+                {messages.common.goToDashboard}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             )
@@ -130,13 +137,13 @@ export default async function LandingPage() {
                 href="/login"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                Log In
+                {messages.common.logIn}
               </Link>
               <Link
                 href="/get-started"
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                Sign Up
+                {messages.common.signUp}
               </Link>
             </>
           )
@@ -147,9 +154,9 @@ export default async function LandingPage() {
         {/* Hero Section */}
         <section className="border-b bg-gradient-to-b from-primary/5 to-background px-4 py-12 sm:px-6 sm:py-20 lg:py-28">
           <div className="mx-auto max-w-4xl text-center">
-            <Badge className="mb-4">VSATW 2026</Badge>
+            <Badge className="mb-4">{messages.landing.heroBadge}</Badge>
             <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Job Fair - V-GEN TRIDENT
+              {messages.landing.heroTitle}
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base italic text-muted-foreground sm:text-lg">
               &ldquo;{EVENT_CONFIG.tagline}&rdquo;
@@ -179,14 +186,14 @@ export default async function LandingPage() {
                 href="/browse"
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
               >
-                Browse Companies
+                {messages.common.browseCompanies}
               </Link>
               <Link
                 href="/jobs"
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
               >
                 <Briefcase className="h-4 w-4" />
-                Find Jobs
+                {messages.common.findJobs}
               </Link>
             </div>
           </div>
@@ -197,10 +204,10 @@ export default async function LandingPage() {
           <div className="mx-auto max-w-6xl">
             <div className="mb-8 text-center">
               <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                Event Highlights
+                {messages.landing.eventHighlightsTitle}
               </h2>
               <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                Moments from our career fair events
+                {messages.landing.eventHighlightsSubtitle}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -232,17 +239,17 @@ export default async function LandingPage() {
             <div className="mb-8 flex items-end justify-between">
               <div>
                 <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                  Participating Companies
+                  {messages.landing.companiesTitle}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                  Connect with top employers at the event
+                  {messages.landing.companiesSubtitle}
                 </p>
               </div>
               <Link
                 href="/get-started"
                 className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline sm:flex"
               >
-                View all
+                {messages.landing.viewAll}
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
@@ -269,7 +276,7 @@ export default async function LandingPage() {
                           {recruiter.company}
                         </h3>
                         <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                          {recruiter.description || "Join us at the career fair to learn more about opportunities."}
+                          {recruiter.description || messages.landing.joinMoreOpportunities}
                         </p>
                       </div>
                       {recruiter.positions.length > 0 && (
@@ -294,7 +301,7 @@ export default async function LandingPage() {
                         </div>
                       )}
                       <div className="mt-auto flex items-center gap-1 text-xs font-medium text-primary">
-                        View positions
+                        {messages.landing.viewPositions}
                         <ArrowRight className="h-3 w-3" />
                       </div>
                     </Card>
@@ -305,10 +312,10 @@ export default async function LandingPage() {
               <Card className="flex flex-col items-center justify-center py-16 text-center">
                 <Building2 className="h-10 w-10 text-muted-foreground/50" />
                 <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  Companies coming soon
+                  {messages.landing.companiesComingSoon}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Check back later for participating companies
+                  {messages.landing.checkBackLater}
                 </p>
               </Card>
             )}
@@ -317,7 +324,7 @@ export default async function LandingPage() {
               href="/get-started"
               className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
             >
-              View all companies
+              {messages.landing.viewAllCompanies}
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -329,17 +336,17 @@ export default async function LandingPage() {
             <div className="mb-8 flex items-end justify-between">
               <div>
                 <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                  Open Positions
+                  {messages.landing.jobsTitle}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                  Explore career opportunities
+                  {messages.landing.jobsSubtitle}
                 </p>
               </div>
               <Link
                 href="/get-started"
                 className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline sm:flex"
               >
-                View all
+                {messages.landing.viewAll}
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
@@ -368,10 +375,10 @@ export default async function LandingPage() {
               <Card className="flex flex-col items-center justify-center py-12 text-center">
                 <Briefcase className="h-10 w-10 text-muted-foreground/50" />
                 <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  Positions coming soon
+                  {messages.landing.positionsComingSoon}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Companies will post openings as the event approaches
+                  {messages.landing.positionsComingSoonHint}
                 </p>
               </Card>
             )}
@@ -380,7 +387,7 @@ export default async function LandingPage() {
               href="/get-started"
               className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
             >
-              View all positions
+              {messages.landing.viewAllPositions}
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -391,17 +398,17 @@ export default async function LandingPage() {
           <section className="px-4 py-16 sm:px-6 sm:py-24">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="font-heading text-2xl font-bold sm:text-4xl">
-                Ready to Join?
+                {messages.landing.readyToJoin}
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-                Register now to book interview slots with top companies and take the next step in your career.
+                {messages.landing.readyToJoinSubtitle}
               </p>
               <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <Link
                   href="/get-started"
                   className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
                 >
-                  Get Started
+                  {messages.landing.getStarted}
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </div>

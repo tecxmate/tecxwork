@@ -17,6 +17,8 @@ import {
   Building2,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+import { useStudentI18n } from "@/components/student-locale-provider";
+import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 
 type ErrorState =
   | { code: "NONE" }
@@ -26,6 +28,7 @@ type ErrorState =
 
 export default function LoginPage() {
   const router = useRouter();
+  const { messages } = useStudentI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorState, setErrorState] = useState<ErrorState>({ code: "NONE" });
@@ -52,12 +55,12 @@ export default function LoginPage() {
         } else if (data.code === "INVALID_PASSWORD") {
           setErrorState({
             code: "INVALID_PASSWORD",
-            message: data.error || "Invalid password",
+            message: data.error || messages.login.invalidPassword,
           });
         } else {
           setErrorState({
             code: "OTHER",
-            message: data.error || "Login failed",
+            message: data.error || messages.login.loginFailed,
           });
         }
         return;
@@ -75,7 +78,7 @@ export default function LoginPage() {
     } catch {
       setErrorState({
         code: "OTHER",
-        message: "Network error. Please try again.",
+        message: messages.login.networkError,
       });
     } finally {
       setLoading(false);
@@ -91,8 +94,11 @@ export default function LoginPage() {
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {messages.common.back}
           </Link>
+          <div className="ml-auto">
+            <StudentLanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -102,14 +108,16 @@ export default function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
               <Users className="h-5 w-5 text-primary-foreground" />
             </div>
-            <h1 className="font-heading text-xl font-bold">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">Log in to TECXWORK</p>
+            <h1 className="font-heading text-xl font-bold">
+              {messages.login.welcomeBack}
+            </h1>
+            <p className="text-sm text-muted-foreground">{messages.login.subtitle}</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label htmlFor="email" className="text-sm font-medium">
-                  Email
+                  {messages.login.email}
                 </label>
                 <Input
                   id="email"
@@ -126,7 +134,7 @@ export default function LoginPage() {
               </div>
               <div className="space-y-1.5">
                 <label htmlFor="password" className="text-sm font-medium">
-                  Password
+                  {messages.login.password}
                 </label>
                 <PasswordInput
                   id="password"
@@ -139,7 +147,7 @@ export default function LoginPage() {
                   href="/forgot-password"
                   className="block text-right text-xs text-muted-foreground hover:text-primary"
                 >
-                  Forgot password?
+                  {messages.login.forgotPassword}
                 </Link>
               </div>
 
@@ -163,14 +171,14 @@ export default function LoginPage() {
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <div className="space-y-1">
                       <p className="font-medium text-foreground">
-                        No account found
+                        {messages.login.noAccountFound}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        No account exists for{" "}
+                        {messages.login.noAccountFor}{" "}
                         <span className="font-medium text-foreground">
                           {errorState.email}
                         </span>
-                        . Would you like to sign up?
+                        . {messages.login.wouldLikeSignup}
                       </p>
                     </div>
                   </div>
@@ -180,14 +188,14 @@ export default function LoginPage() {
                       className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium transition-colors hover:border-primary/40"
                     >
                       <GraduationCap className="h-3.5 w-3.5" />
-                      Sign up as Student
+                      {messages.login.signUpAsStudent}
                     </Link>
                     <Link
                       href="/recruiter/signup"
                       className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium transition-colors hover:border-primary/40"
                     >
                       <Building2 className="h-3.5 w-3.5" />
-                      Sign up as Recruiter
+                      {messages.login.signUpAsRecruiter}
                     </Link>
                   </div>
                 </div>
@@ -201,10 +209,10 @@ export default function LoginPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {messages.login.signingIn}
                   </>
                 ) : (
-                  "Log In"
+                  messages.common.logIn
                 )}
               </Button>
             </form>
@@ -212,9 +220,9 @@ export default function LoginPage() {
             <Separator className="my-6" />
 
             <p className="text-center text-xs text-muted-foreground">
-              New to TECXWORK?{" "}
+              {messages.login.newToTecxwork}{" "}
               <Link href="/get-started" className="text-primary hover:underline">
-                Choose your role
+                {messages.common.chooseRole}
               </Link>
             </p>
           </CardContent>

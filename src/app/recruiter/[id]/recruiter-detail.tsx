@@ -25,7 +25,10 @@ import { Button } from "@/components/ui/button";
 import { SlotPicker } from "@/components/slot-picker";
 import { BookingForm } from "@/components/booking-form";
 import { SiteFooter } from "@/components/site-footer";
+import { useStudentI18n } from "@/components/student-locale-provider";
+import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { EVENT_CONFIG } from "@/lib/data";
+import { interpolate } from "@/lib/student-messages";
 import { cn } from "@/lib/utils";
 
 type Recruiter = {
@@ -52,6 +55,7 @@ type Props = {
 };
 
 export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated }: Props) {
+  const { messages } = useStudentI18n();
   const router = useRouter();
   const [step, setStep] = useState<Step>("positions");
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
@@ -126,7 +130,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
               className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back
+              {messages.common.back}
             </Link>
           ) : (
             <button
@@ -134,13 +138,15 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
               className="flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back
+              {messages.common.back}
             </button>
           )}
           <div className="flex-1 text-center">
             <p className="truncate text-sm font-medium">{recruiter.company}</p>
           </div>
-          <div className="w-14" />
+          <div className="w-24">
+            <StudentLanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -162,7 +168,10 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                       {recruiter.company}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {recruiter.industry} · {positionList.length} positions
+                      {recruiter.industry} ·{" "}
+                      {interpolate(messages.recruiterDetail.positionsCount, {
+                        count: positionList.length,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -182,7 +191,9 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     </p>
                     <p className="flex items-center gap-1.5">
                       <Clock className="h-3 w-3 shrink-0" />
-                      {EVENT_CONFIG.slotDuration} min interview
+                      {interpolate(messages.recruiterDetail.interviewMin, {
+                        duration: EVENT_CONFIG.slotDuration,
+                      })}
                     </p>
                   </div>
                 </CardContent>
@@ -213,7 +224,11 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 shrink-0" />
-                      <span>{EVENT_CONFIG.slotDuration} min interview</span>
+                      <span>
+                        {interpolate(messages.recruiterDetail.interviewMin, {
+                          duration: EVENT_CONFIG.slotDuration,
+                        })}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 shrink-0" />
@@ -230,16 +245,16 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                 <Card>
                   <CardHeader>
                     <h2 className="font-heading text-lg font-semibold">
-                      Open Positions
+                      {messages.recruiterDetail.openPositions}
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Review the job descriptions, then apply to a position.
+                      {messages.recruiterDetail.reviewAndApply}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {positionList.length === 0 ? (
                       <p className="py-6 text-center text-sm text-muted-foreground">
-                        No positions listed yet.
+                        {messages.recruiterDetail.noPositions}
                       </p>
                     ) : (
                       positionList.map((pos) => {
@@ -261,7 +276,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                                 {alreadyApplied && (
                                   <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                     <CheckCircle2 className="h-3 w-3" />
-                                    Applied
+                                    {messages.recruiterDetail.applied}
                                   </span>
                                 )}
                               </div>
@@ -273,12 +288,12 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                                   className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
                                 >
                                   <FileText className="h-3 w-3" />
-                                  View Job Description
+                                  {messages.recruiterDetail.viewJobDescription}
                                   <ExternalLink className="h-3 w-3" />
                                 </a>
                               ) : (
                                 <p className="mt-1 text-xs text-muted-foreground/60">
-                                  No job description uploaded yet
+                                  {messages.recruiterDetail.noJobDescription}
                                 </p>
                               )}
                             </div>
@@ -290,19 +305,19 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                               >
                                 {isAuthenticated ? (
                                   <>
-                                    Apply
+                                    {messages.recruiterDetail.apply}
                                     <ArrowRight className="ml-1 h-3.5 w-3.5" />
                                   </>
                                 ) : (
                                   <>
                                     <LogIn className="mr-1 h-3.5 w-3.5" />
-                                    Log in to Apply
+                                    {messages.recruiterDetail.loginToApply}
                                   </>
                                 )}
                               </Button>
                             ) : (
                               <span className="shrink-0 text-xs text-muted-foreground">
-                                1 per position
+                                {messages.recruiterDetail.onePerPosition}
                               </span>
                             )}
                           </div>
@@ -322,10 +337,12 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                       </Badge>
                     </div>
                     <h2 className="font-heading text-lg font-semibold">
-                      Select a Time Slot
+                      {messages.recruiterDetail.selectTimeSlot}
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Pick a time for your {EVENT_CONFIG.slotDuration} min interview.
+                      {interpolate(messages.recruiterDetail.pickTime, {
+                        duration: EVENT_CONFIG.slotDuration,
+                      })}
                     </p>
                   </CardHeader>
                   <CardContent>

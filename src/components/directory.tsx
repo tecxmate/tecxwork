@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { RecruiterCard, type RecruiterCardData } from "./recruiter-card";
+import { useStudentI18n } from "@/components/student-locale-provider";
 
 const COMPANIES_PER_PAGE = 12;
 
@@ -20,6 +21,7 @@ function useDebouncedValue<T>(value: T, delay = 250) {
 }
 
 export function Directory() {
+  const { messages } = useStudentI18n();
   const [query, setQuery] = useState("");
   const [recruiters, setRecruiters] = useState<RecruiterCardData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export function Directory() {
         });
 
         if (!response.ok) {
-          throw new Error("Failed to load companies");
+          throw new Error(messages.directory.failedToLoad);
         }
 
         const data = await response.json();
@@ -105,7 +107,9 @@ export function Directory() {
           setTotal(0);
           setTotalPages(1);
         }
-        setError(err instanceof Error ? err.message : "Failed to load companies");
+        setError(
+          err instanceof Error ? err.message : messages.directory.failedToLoad
+        );
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
@@ -123,13 +127,21 @@ export function Directory() {
       return (
         <span className="flex items-center gap-1.5">
           <Loader2 className="h-3 w-3 animate-spin" />
-          Loading...
+          {messages.common.loading}
         </span>
       );
     }
 
-    return `${total} ${total === 1 ? "company" : "companies"}${totalPages > 1 ? ` · Page ${page} of ${totalPages}` : ""}`;
-  }, [loading, total, totalPages, page]);
+    return `${total} ${
+      total === 1
+        ? messages.directory.companySingular
+        : messages.directory.companyPlural
+    }${
+      totalPages > 1
+        ? ` · ${messages.directory.page} ${page} ${messages.directory.of} ${totalPages}`
+        : ""
+    }`;
+  }, [loading, messages, total, totalPages, page]);
 
   return (
     <section className="space-y-4 sm:space-y-6">
@@ -138,11 +150,11 @@ export function Directory() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search companies or positions..."
+            placeholder={messages.directory.searchPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-9"
-            aria-label="Search companies or positions"
+            aria-label={messages.directory.searchAria}
           />
         </div>
 
@@ -151,21 +163,25 @@ export function Directory() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">
-            Loading companies...
-          </span>
-        </div>
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">
+              {messages.directory.loadingCompanies}
+            </span>
+          </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/50 bg-destructive/5 py-16 text-center">
-          <p className="text-lg font-medium text-destructive">Failed to load companies</p>
+          <p className="text-lg font-medium text-destructive">
+            {messages.directory.failedToLoad}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
         </div>
       ) : recruiters.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
-          <p className="text-lg font-medium text-muted-foreground">No companies found</p>
+          <p className="text-lg font-medium text-muted-foreground">
+            {messages.directory.noCompanies}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Try adjusting your search.
+            {messages.directory.tryAdjustingSearch}
           </p>
         </div>
       ) : (
@@ -184,7 +200,7 @@ export function Directory() {
                 className="rounded-lg border px-2 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
               >
                 <ChevronLeft className="h-4 w-4 sm:hidden" />
-                <span className="hidden sm:inline">Previous</span>
+                <span className="hidden sm:inline">{messages.common.previous}</span>
               </button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(totalPages, 7) }, (_, index) => {
@@ -222,7 +238,7 @@ export function Directory() {
                 className="rounded-lg border px-2 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
               >
                 <ChevronRight className="h-4 w-4 sm:hidden" />
-                <span className="hidden sm:inline">Next</span>
+                <span className="hidden sm:inline">{messages.common.next}</span>
               </button>
             </div>
           )}

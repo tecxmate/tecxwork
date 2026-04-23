@@ -17,11 +17,16 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+import { useStudentI18n } from "@/components/student-locale-provider";
+import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
+import { interpolate } from "@/lib/student-messages";
 
 type Step = "email" | "code" | "password" | "done";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const { messages } = useStudentI18n();
+  const forgot = messages.forgotPassword;
   const [step, setStep] = useState<Step>("email");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,11 +50,11 @@ export default function ForgotPasswordPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send code");
+      if (!res.ok) throw new Error(data.error || forgot.errors.sendCodeFailed);
 
       setStep("code");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : forgot.errors.generic);
     } finally {
       setLoading(false);
     }
@@ -68,12 +73,12 @@ export default function ForgotPasswordPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid code");
+      if (!res.ok) throw new Error(data.error || forgot.errors.invalidCode);
 
       setResetToken(data.resetToken);
       setStep("password");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : forgot.errors.generic);
     } finally {
       setLoading(false);
     }
@@ -82,11 +87,11 @@ export default function ForgotPasswordPage() {
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(forgot.errors.passwordMismatch);
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(forgot.errors.passwordTooShort);
       return;
     }
 
@@ -105,21 +110,39 @@ export default function ForgotPasswordPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Reset failed");
+      if (!res.ok) throw new Error(data.error || forgot.errors.resetFailed);
 
       setStep("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : forgot.errors.generic);
     } finally {
       setLoading(false);
     }
   }
 
   const stepConfig = {
-    email: { icon: Mail, title: "Reset Password", subtitle: "Enter your email to receive a verification code." },
-    code: { icon: KeyRound, title: "Enter Code", subtitle: `A 6-digit code was sent to ${email}. Check your inbox.` },
-    password: { icon: Lock, title: "New Password", subtitle: "Choose a new password for your account." },
-    done: { icon: CheckCircle2, title: "Password Reset!", subtitle: "Your password has been updated. You can now log in." },
+    email: {
+      icon: Mail,
+      title: forgot.steps.emailTitle,
+      subtitle: forgot.steps.emailSubtitle,
+    },
+    code: {
+      icon: KeyRound,
+      title: forgot.steps.codeTitle,
+      subtitle: interpolate(forgot.steps.codeSubtitle, {
+        email: email || forgot.emailPlaceholder,
+      }),
+    },
+    password: {
+      icon: Lock,
+      title: forgot.steps.passwordTitle,
+      subtitle: forgot.steps.passwordSubtitle,
+    },
+    done: {
+      icon: CheckCircle2,
+      title: forgot.steps.doneTitle,
+      subtitle: forgot.steps.doneSubtitle,
+    },
   };
 
   const current = stepConfig[step];
@@ -133,8 +156,11 @@ export default function ForgotPasswordPage() {
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Login
+            {forgot.backToLogin}
           </Link>
+          <div className="ml-auto">
+            <StudentLanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -154,7 +180,7 @@ export default function ForgotPasswordPage() {
               <form onSubmit={handleSendCode} className="space-y-4">
                 <div className="space-y-1.5">
                   <label htmlFor="email" className="text-sm font-medium">
-                    Email
+                    {forgot.emailLabel}
                   </label>
                   <Input
                     id="email"
@@ -162,14 +188,21 @@ export default function ForgotPasswordPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder={forgot.emailPlaceholder}
                     autoComplete="email"
                     autoFocus
                   />
                 </div>
                 {error && <ErrorMsg message={error} />}
                 <Button type="submit" disabled={loading || !email.trim()} className="w-full">
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : "Send Verification Code"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {forgot.sendingCode}
+                    </>
+                  ) : (
+                    forgot.sendCode
+                  )}
                 </Button>
               </form>
             )}
@@ -178,14 +211,14 @@ export default function ForgotPasswordPage() {
               <form onSubmit={handleVerifyCode} className="space-y-4">
                 <div className="space-y-1.5">
                   <label htmlFor="code" className="text-sm font-medium">
-                    6-Digit Code
+                    {forgot.codeLabel}
                   </label>
                   <Input
                     id="code"
                     required
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="123456"
+                    placeholder={forgot.codePlaceholder}
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     autoFocus
@@ -193,19 +226,26 @@ export default function ForgotPasswordPage() {
                     maxLength={6}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Code expires in 10 minutes.
+                    {forgot.codeExpires}
                   </p>
                 </div>
                 {error && <ErrorMsg message={error} />}
                 <Button type="submit" disabled={loading || code.length !== 6} className="w-full">
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verifying...</> : "Verify Code"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {forgot.verifyingCode}
+                    </>
+                  ) : (
+                    forgot.verifyCode
+                  )}
                 </Button>
                 <button
                   type="button"
                   onClick={() => { setStep("email"); setCode(""); setError(""); }}
                   className="block w-full cursor-pointer text-center text-xs text-muted-foreground hover:text-foreground"
                 >
-                  Didn&apos;t receive a code? Send again
+                  {forgot.resendCode}
                 </button>
               </form>
             )}
@@ -214,7 +254,7 @@ export default function ForgotPasswordPage() {
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-1.5">
                   <label htmlFor="new-password" className="text-sm font-medium">
-                    New Password
+                    {forgot.newPasswordLabel}
                   </label>
                   <PasswordInput
                     id="new-password"
@@ -222,14 +262,14 @@ export default function ForgotPasswordPage() {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 6 characters"
+                    placeholder={forgot.newPasswordPlaceholder}
                     autoComplete="new-password"
                     autoFocus
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor="confirm-password" className="text-sm font-medium">
-                    Confirm Password
+                    {forgot.confirmPasswordLabel}
                   </label>
                   <PasswordInput
                     id="confirm-password"
@@ -237,7 +277,7 @@ export default function ForgotPasswordPage() {
                     minLength={6}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Enter password again"
+                    placeholder={forgot.confirmPasswordPlaceholder}
                     autoComplete="new-password"
                   />
                 </div>
@@ -247,14 +287,21 @@ export default function ForgotPasswordPage() {
                   disabled={loading || password.length < 6 || !confirmPassword}
                   className="w-full"
                 >
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Resetting...</> : "Reset Password"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {forgot.resettingPassword}
+                    </>
+                  ) : (
+                    forgot.resetPassword
+                  )}
                 </Button>
               </form>
             )}
 
             {step === "done" && (
               <Button onClick={() => router.push("/login")} className="w-full">
-                Go to Login
+                {forgot.goToLogin}
               </Button>
             )}
           </CardContent>
