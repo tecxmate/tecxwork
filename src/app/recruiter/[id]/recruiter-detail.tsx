@@ -209,7 +209,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="flex items-start gap-2">
                       <Mail className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span className="break-all">Share CV with: {recruiter.contactEmail}</span>
+                      <span className="break-all">{recruiter.contactEmail}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 shrink-0" />

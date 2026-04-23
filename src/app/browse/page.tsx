@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { AppTopBar } from "@/components/app-topbar";
+import { LogoutButton } from "@/components/logout-button";
 import { Separator } from "@/components/ui/separator";
 import { Directory } from "@/components/directory";
 import { SiteFooter } from "@/components/site-footer";
@@ -20,12 +21,7 @@ export default async function BrowsePage() {
         currentPath="/browse"
         desktopActions={
           session ? (
-            <Link
-              href="/profile"
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
-            >
-              My Profile
-            </Link>
+            <LogoutButton />
           ) : (
             <>
               <Link

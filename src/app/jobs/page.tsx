@@ -3,6 +3,7 @@ import { Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AppTopBar } from "@/components/app-topbar";
+import { LogoutButton } from "@/components/logout-button";
 import { SiteFooter } from "@/components/site-footer";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
@@ -34,6 +35,13 @@ async function getRecruiterPostedJobs() {
 export default async function JobsPage() {
   const session = await getSession();
   const jobs = await getRecruiterPostedJobs();
+  const dashboardUrl = session
+    ? session.role === "admin"
+      ? "/admin"
+      : session.role === "recruiter"
+        ? "/dashboard/interviews"
+        : null
+    : null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -42,20 +50,33 @@ export default async function JobsPage() {
         navRole={session?.role ?? "guest"}
         currentPath="/jobs"
         desktopActions={
-          <>
-            <Link
-              href="/login"
-              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/get-started"
-              className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
-            >
-              Sign Up
-            </Link>
-          </>
+          session ? (
+            session.role === "applicant" ? (
+              <LogoutButton />
+            ) : (
+              <Link
+                href={dashboardUrl!}
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
+              >
+                Go to Dashboard
+              </Link>
+            )
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/get-started"
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
+              >
+                Sign Up
+              </Link>
+            </>
+          )
         }
       />
 

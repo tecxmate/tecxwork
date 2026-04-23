@@ -72,6 +72,8 @@ export default function TermsOfServicePage() {
         <h2 className="text-xl font-semibold mt-8 mb-4">6. Regulatory and Compliance Notices</h2>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li>The Platform may store applicant profiles, CV links, education data, work experience, and scheduling information for job-matching purposes.</li>
+          <li>Applicants and Recruiters may be required to complete onboarding attestations (for example: data-visibility consent, lawful hiring confirmations, and non-discrimination confirmations) before account activation or access to certain features.</li>
+          <li>When users submit onboarding consent checkboxes, those confirmations are treated as binding acceptance of the corresponding data-use and compliance responsibilities described in these Terms.</li>
           <li>Users remain solely responsible for their own compliance with the Employment Services Act, the Personal Data Protection Act, immigration rules, work-permit rules, and other applicable Taiwan laws.</li>
           <li>We may remove job postings, suspend accounts, reject recruiter participation, or restrict Platform use where we believe content or conduct may be unlawful, discriminatory, deceptive, or inconsistent with the lawful employment of students in Taiwan.</li>
           <li>Nothing on the Platform constitutes legal advice, visa advice, or a guarantee that a user may lawfully accept or offer employment.</li>

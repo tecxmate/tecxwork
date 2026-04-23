@@ -101,12 +101,6 @@ export function RecruiterApplicantsTab({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
-        Review applicant data only for recruitment purposes. Before hiring, confirm the
-        student&apos;s legal work eligibility in Taiwan, respect any applicable work-permit
-        and hour-limit rules, and avoid discriminatory screening criteria.
-      </div>
-
       <div className="relative w-full max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input

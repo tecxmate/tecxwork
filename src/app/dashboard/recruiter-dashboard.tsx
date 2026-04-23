@@ -14,6 +14,7 @@ import {
   Calendar,
   Loader2,
   CheckCircle2,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,8 @@ type Recruiter = {
 };
 
 type Section = "interviews" | "applicants" | "jobs" | "company";
+const APPLICANTS_NOTICE_DISMISSED_KEY =
+  "recruiter_applicants_compliance_notice_dismissed_v1";
 
 const RecruiterApplicantsTab = dynamic(
   () =>
@@ -75,6 +78,8 @@ export function RecruiterDashboard({
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
+  const [showApplicantsComplianceNotice, setShowApplicantsComplianceNotice] =
+    useState(false);
   const currentPath =
     section === "interviews"
       ? "/dashboard/interviews"
@@ -101,6 +106,25 @@ export function RecruiterDashboard({
       router.prefetch(href);
     }
   }, [router]);
+
+  useEffect(() => {
+    try {
+      const dismissed =
+        window.localStorage.getItem(APPLICANTS_NOTICE_DISMISSED_KEY) === "1";
+      setShowApplicantsComplianceNotice(!dismissed);
+    } catch {
+      setShowApplicantsComplianceNotice(true);
+    }
+  }, []);
+
+  function dismissApplicantsComplianceNotice() {
+    setShowApplicantsComplianceNotice(false);
+    try {
+      window.localStorage.setItem(APPLICANTS_NOTICE_DISMISSED_KEY, "1");
+    } catch {
+      // Ignore storage write failures.
+    }
+  }
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -153,6 +177,28 @@ export function RecruiterDashboard({
           )}
         </div>
       </main>
+      {section === "applicants" && showApplicantsComplianceNotice ? (
+        <div className="px-4 pb-4 sm:px-6 md:px-8">
+          <div className="mx-auto max-w-6xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+            <div className="flex items-start justify-between gap-3">
+              <p className="pr-2">
+                Review applicant data only for recruitment purposes. Before
+                hiring, confirm the student&apos;s legal work eligibility in
+                Taiwan, respect any applicable work-permit and hour-limit rules,
+                and avoid discriminatory screening criteria.
+              </p>
+              <button
+                type="button"
+                onClick={dismissApplicantsComplianceNotice}
+                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-amber-300/70 text-amber-700 transition-colors hover:bg-amber-100/70 dark:border-amber-800/60 dark:text-amber-300 dark:hover:bg-amber-900/40"
+                aria-label="Dismiss compliance notice"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <SiteFooter />
     </div>
   );

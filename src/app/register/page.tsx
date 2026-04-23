@@ -1162,7 +1162,7 @@ export default function RegisterPage() {
                     <ShieldCheck className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-primary" />
                     I consent to making my profile, education information, and CV link visible to
                     recruiters for this recruitment event in accordance with Taiwan&apos;s Personal
-                    Data Protection Act.
+                    Data Protection Act, and I agree to the Platform Terms and Privacy Policy.
                   </label>
                 </div>
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">

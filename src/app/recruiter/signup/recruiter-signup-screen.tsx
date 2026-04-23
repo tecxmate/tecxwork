@@ -287,6 +287,18 @@ export function RecruiterSignupScreen() {
                         semester hour limits may apply. We will verify eligibility before hiring.
                       </span>
                     </label>
+
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                      By finishing onboarding, you confirm the checklist above and agree to the{" "}
+                      <Link href="/terms-of-service" className="text-primary hover:underline">
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link href="/privacy-policy" className="text-primary hover:underline">
+                        Privacy Policy
+                      </Link>
+                      .
+                    </p>
                   </div>
                   {error && (
                     <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
