@@ -70,11 +70,13 @@ export function RecruiterDashboard({
   bookings,
   section,
   showApplicants,
+  jobModerationEnabled,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
   section: Section;
   showApplicants: boolean;
+  jobModerationEnabled: boolean;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -171,9 +173,17 @@ export function RecruiterDashboard({
               <BookingsTab bookings={bookings} />
             )
           ) : section === "jobs" ? (
-            <RecruiterCompanyTab recruiter={recruiter} section="jobs" />
+            <RecruiterCompanyTab
+              recruiter={recruiter}
+              section="jobs"
+              jobModerationEnabled={jobModerationEnabled}
+            />
           ) : (
-            <RecruiterCompanyTab recruiter={recruiter} section="company" />
+            <RecruiterCompanyTab
+              recruiter={recruiter}
+              section="company"
+              jobModerationEnabled={jobModerationEnabled}
+            />
           )}
         </div>
       </main>

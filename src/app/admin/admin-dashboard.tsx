@@ -136,6 +136,7 @@ export function AdminDashboard({
   stats,
   currentMode,
   initialOnboardingMode,
+  initialJobModerationEnabled,
   initialLocked,
   timeFrame: initialTimeFrame,
   section,
@@ -148,6 +149,7 @@ export function AdminDashboard({
   stats: Stats;
   currentMode: string;
   initialOnboardingMode: OnboardingMode;
+  initialJobModerationEnabled: boolean;
   initialLocked: boolean;
   timeFrame: { startHour: number; endHour: number; endMinute: number; slotDuration: number };
   section: AdminSection;
@@ -155,6 +157,9 @@ export function AdminDashboard({
   const router = useRouter();
   const [mode, setMode] = useState(currentMode);
   const [onboardingMode, setOnboardingMode] = useState<OnboardingMode>(initialOnboardingMode);
+  const [jobModerationEnabled, setJobModerationEnabled] = useState(
+    initialJobModerationEnabled
+  );
   const [locked, setLocked] = useState(initialLocked);
   const [saving, setSaving] = useState(false);
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
@@ -227,6 +232,22 @@ export function AdminDashboard({
     });
     if (!res.ok) {
       setOnboardingMode(initialOnboardingMode);
+    }
+    setSaving(false);
+    router.refresh();
+  }
+
+  async function handleJobModerationToggle(nextEnabled: boolean) {
+    const previous = jobModerationEnabled;
+    setSaving(true);
+    setJobModerationEnabled(nextEnabled);
+    const res = await fetch("/api/admin/mode", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobModerationEnabled: nextEnabled }),
+    });
+    if (!res.ok) {
+      setJobModerationEnabled(previous);
     }
     setSaving(false);
     router.refresh();
@@ -511,6 +532,59 @@ export function AdminDashboard({
                   </p>
                 </button>
               ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <div className="mb-4 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
+              <h2 className="font-heading text-lg font-semibold">
+                Job Publishing
+              </h2>
+              {saving && (
+                <span className="text-xs text-muted-foreground">
+                  Saving...
+                </span>
+              )}
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Choose whether recruiter jobs must be reviewed by admin before they
+              appear publicly.
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => handleJobModerationToggle(true)}
+                className={cn(
+                  "rounded-lg border p-4 text-left transition-colors",
+                  jobModerationEnabled
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/40"
+                )}
+              >
+                <p className="text-sm font-medium">Admin review required</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Recruiter jobs start as draft and require approval.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleJobModerationToggle(false)}
+                className={cn(
+                  "rounded-lg border p-4 text-left transition-colors",
+                  !jobModerationEnabled
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/40"
+                )}
+              >
+                <p className="text-sm font-medium">Instant publish</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Recruiters can publish and remove jobs directly.
+                </p>
+              </button>
             </div>
           </div>
 

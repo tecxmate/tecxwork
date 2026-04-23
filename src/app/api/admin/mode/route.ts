@@ -8,6 +8,7 @@ export async function GET() {
     .select({
       mode: eventConfig.mode,
       onboardingMode: eventConfig.onboardingMode,
+      jobModerationEnabled: eventConfig.jobModerationEnabled,
       locked: eventConfig.modeLocked,
     })
     .from(eventConfig)
@@ -16,6 +17,7 @@ export async function GET() {
   return NextResponse.json({
     mode: config?.mode ?? "both",
     onboardingMode: config?.onboardingMode ?? "full",
+    jobModerationEnabled: config?.jobModerationEnabled ?? true,
     locked: config?.locked ?? false,
   });
 }
@@ -28,7 +30,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { mode, onboardingMode, lock } = body;
+  const { mode, onboardingMode, jobModerationEnabled, lock } = body;
 
   const [config] = await db
     .select({ id: eventConfig.id, locked: eventConfig.modeLocked })
@@ -46,6 +48,15 @@ export async function PUT(req: NextRequest) {
       .set({ modeLocked: lock })
       .where(eq(eventConfig.id, config.id));
     return NextResponse.json({ locked: lock });
+  }
+
+  if (typeof jobModerationEnabled === "boolean") {
+    await db
+      .update(eventConfig)
+      .set({ jobModerationEnabled })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ jobModerationEnabled });
   }
 
   // Mode change — blocked if currently locked

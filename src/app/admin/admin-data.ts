@@ -55,6 +55,7 @@ export async function getAdminDashboardData() {
     .select({
       mode: eventConfig.mode,
       onboardingMode: eventConfig.onboardingMode,
+      jobModerationEnabled: eventConfig.jobModerationEnabled,
       locked: eventConfig.modeLocked,
       startHour: eventConfig.startHour,
       endHour: eventConfig.endHour,
@@ -128,6 +129,7 @@ export async function getAdminDashboardData() {
     },
     currentMode: config?.mode ?? "both",
     initialOnboardingMode: onboardingMode,
+    initialJobModerationEnabled: config?.jobModerationEnabled ?? true,
     initialLocked: config?.locked ?? false,
     timeFrame: {
       startHour: config?.startHour ?? 10,

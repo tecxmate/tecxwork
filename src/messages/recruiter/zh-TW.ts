@@ -99,6 +99,8 @@ export const recruiterZhTwMessages = {
         "每個職缺都可以設定自己的 JD 連結。學生申請時會先選擇職缺。",
       moderationHint:
         "職缺在管理員核准前不會公開顯示。修改後請重新送審。",
+      instantPublishHint:
+        "職缺會立即公開，招募方可直接更新或移除。",
       positionTitle: "職缺名稱",
       jdLinkOptional: "JD 連結（選填）",
       descriptionPlaceholder: "簡短說明職務內容、工作職責與基本條件",

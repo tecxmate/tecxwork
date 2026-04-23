@@ -12,6 +12,7 @@ export default async function RecruiterJobsPage() {
         bookings={data.bookings}
         section="jobs"
         showApplicants={data.showApplicants}
+        jobModerationEnabled={data.jobModerationEnabled}
       />
     </RecruiterLocaleProvider>
   );

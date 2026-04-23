@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, jobOpenings, recruiters } from "@/lib/db";
+import { db, eventConfig, jobOpenings, recruiters } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
@@ -26,13 +26,20 @@ export async function PUT(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const [config] = await db
+    .select({ jobModerationEnabled: eventConfig.jobModerationEnabled })
+    .from(eventConfig)
+    .limit(1);
+  const moderationEnabled = config?.jobModerationEnabled ?? true;
+
   const body = await req.json();
   if (body.action === "submit") {
     const [submitted] = await db
       .update(jobOpenings)
       .set({
-        moderationStatus: "pending_review",
-        submittedAt: new Date(),
+        moderationStatus: moderationEnabled ? "pending_review" : "approved",
+        submittedAt: moderationEnabled ? new Date() : null,
+        reviewedAt: moderationEnabled ? null : new Date(),
         moderationNotes: "",
       })
       .where(and(eq(jobOpenings.id, jobId), eq(jobOpenings.recruiterId, rec.id)))
@@ -64,10 +71,21 @@ export async function PUT(
   if (typeof body.jdLink === "string") updates.jdLink = body.jdLink.trim() || null;
   if (typeof body.description === "string") updates.description = body.description.trim();
   if (Object.keys(updates).length > 0) {
-    updates.moderationStatus = "draft";
+    updates.moderationStatus = moderationEnabled ? "draft" : "approved";
     updates.moderationNotes = "";
     updates.submittedAt = null;
-    updates.reviewedAt = null;
+    updates.reviewedAt = moderationEnabled ? null : new Date();
+  } else {
+    const [existing] = await db
+      .select()
+      .from(jobOpenings)
+      .where(and(eq(jobOpenings.id, jobId), eq(jobOpenings.recruiterId, rec.id)));
+
+    if (!existing) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ job: existing });
   }
 
   const [updated] = await db

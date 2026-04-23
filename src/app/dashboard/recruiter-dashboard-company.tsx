@@ -41,9 +41,11 @@ let cachedRecruiterJobs: JobOpening[] | null = null;
 export function RecruiterCompanyTab({
   recruiter,
   section = "company",
+  jobModerationEnabled = true,
 }: {
   recruiter: Recruiter;
   section?: "company" | "jobs";
+  jobModerationEnabled?: boolean;
 }) {
   const { messages } = useRecruiterI18n();
   const router = useRouter();
@@ -320,7 +322,9 @@ export function RecruiterCompanyTab({
               {messages.dashboard.company.jobOpeningsHint}
             </p>
             <p className="text-xs text-muted-foreground">
-              {messages.dashboard.company.moderationHint}
+              {jobModerationEnabled
+                ? messages.dashboard.company.moderationHint
+                : messages.dashboard.company.instantPublishHint}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -453,7 +457,8 @@ export function RecruiterCompanyTab({
                         ) : null}
                       </div>
                       <div className="flex shrink-0 flex-wrap gap-1">
-                        {job.moderationStatus !== "pending_review" ? (
+                        {jobModerationEnabled &&
+                        job.moderationStatus !== "pending_review" ? (
                           <Button
                             size="sm"
                             variant="outline"

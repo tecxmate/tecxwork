@@ -257,6 +257,9 @@ export const eventConfig = pgTable("event_config", {
   endMinute: integer("end_minute").notNull().default(30),
   mode: eventModeEnum("mode").notNull().default("both"),
   onboardingMode: text("onboarding_mode").notNull().default("full"),
+  jobModerationEnabled: boolean("job_moderation_enabled")
+    .notNull()
+    .default(true),
   modeLocked: boolean("mode_locked").notNull().default(false),
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),

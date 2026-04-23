@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, jobOpenings, recruiters } from "@/lib/db";
+import { db, eventConfig, jobOpenings, recruiters } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
@@ -45,6 +45,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
   }
 
+  const [config] = await db
+    .select({ jobModerationEnabled: eventConfig.jobModerationEnabled })
+    .from(eventConfig)
+    .limit(1);
+  const moderationEnabled = config?.jobModerationEnabled ?? true;
+
   const body = await req.json();
   const { title, jdLink, description } = body;
 
@@ -69,8 +75,10 @@ export async function POST(req: NextRequest) {
       title: title.trim(),
       jdLink: jdLink?.trim() || null,
       description: description?.trim() ?? "",
-      moderationStatus: "draft",
+      moderationStatus: moderationEnabled ? "draft" : "approved",
       moderationNotes: "",
+      submittedAt: null,
+      reviewedAt: moderationEnabled ? null : new Date(),
     })
     .returning();
 

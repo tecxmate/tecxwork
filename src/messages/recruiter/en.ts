@@ -99,6 +99,8 @@ export const recruiterEnMessages = {
         "Each position has its own JD link. Students select a position when applying.",
       moderationHint:
         "Jobs stay private until an admin approves them. Edit a job, then submit it for review.",
+      instantPublishHint:
+        "Jobs publish immediately. Recruiters can update or remove them directly.",
       positionTitle: "Position title",
       jdLinkOptional: "JD link (optional)",
       descriptionPlaceholder:

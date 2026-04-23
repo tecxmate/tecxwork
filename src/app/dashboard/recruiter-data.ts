@@ -50,7 +50,10 @@ export async function getRecruiterDashboardData() {
     .orderBy(bookings.requestedTime, bookings.createdAt);
 
   const [config] = await db
-    .select({ mode: eventConfig.mode })
+    .select({
+      mode: eventConfig.mode,
+      jobModerationEnabled: eventConfig.jobModerationEnabled,
+    })
     .from(eventConfig)
     .limit(1);
 
@@ -63,5 +66,6 @@ export async function getRecruiterDashboardData() {
     recruiter,
     bookings: allBookings,
     showApplicants,
+    jobModerationEnabled: config?.jobModerationEnabled ?? true,
   };
 }

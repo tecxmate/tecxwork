@@ -18,6 +18,7 @@ export default async function RecruiterApplicantsPage() {
         bookings={data.bookings}
         section="applicants"
         showApplicants={data.showApplicants}
+        jobModerationEnabled={data.jobModerationEnabled}
       />
     </RecruiterLocaleProvider>
   );
