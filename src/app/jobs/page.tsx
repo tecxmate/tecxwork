@@ -1,16 +1,38 @@
 import Link from "next/link";
+import { Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { AppTopBar } from "@/components/app-topbar";
 import { SiteFooter } from "@/components/site-footer";
-import { JobDirectory } from "@/components/job-directory";
+import { db, jobOpenings, recruiters } from "@/lib/db";
+import { eq, desc } from "drizzle-orm";
 
 export const metadata = {
   title: "Job Opportunities | V-GEN TRIDENT",
   description:
-    "Browse part-time and full-time job opportunities in Taiwan for Vietnamese students",
+    "Browse openings posted by participating recruiters",
 };
 
-export default function JobsPage() {
+async function getRecruiterPostedJobs() {
+  return db
+    .select({
+      id: jobOpenings.id,
+      title: jobOpenings.title,
+      description: jobOpenings.description,
+      location: jobOpenings.location,
+      type: jobOpenings.type,
+      recruiterId: recruiters.id,
+      company: recruiters.company,
+    })
+    .from(jobOpenings)
+    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .where(eq(jobOpenings.moderationStatus, "approved"))
+    .orderBy(desc(jobOpenings.updatedAt));
+}
+
+export default async function JobsPage() {
+  const jobs = await getRecruiterPostedJobs();
+
   return (
     <div className="flex flex-1 flex-col">
       <AppTopBar
@@ -42,39 +64,61 @@ export default function JobsPage() {
         <div className="mx-auto max-w-7xl text-center">
           <Badge className="mb-2 sm:mb-4">Job Board</Badge>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            Jobs for Vietnamese in Taiwan
+            Recruiter-Posted Jobs
           </h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:mt-3 sm:text-base">
-            Browse part-time and full-time opportunities from Taiwan&apos;s top
-            job platforms. Click &ldquo;Apply&rdquo; to apply directly on the
-            original site.
+            Browse open positions published directly by participating recruiters.
           </p>
         </div>
       </section>
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-7xl">
-          <JobDirectory />
+        <div className="mx-auto max-w-7xl space-y-4">
+          {jobs.length === 0 ? (
+            <Card className="flex flex-col items-center justify-center py-16 text-center">
+              <Briefcase className="h-10 w-10 text-muted-foreground/50" />
+              <p className="mt-4 text-lg font-medium text-muted-foreground">
+                No recruiter jobs available yet
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Recruiters will post openings as the event approaches.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {jobs.map((job) => (
+                <Link key={job.id} href={`/recruiter/${job.recruiterId}`}>
+                  <Card className="h-full p-4 transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] hover:-translate-y-0.5">
+                    <div className="space-y-2">
+                      <h2 className="line-clamp-2 text-base font-semibold">
+                        {job.title}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">{job.company}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {job.type ? (
+                          <Badge variant="secondary" className="text-[11px]">
+                            {job.type}
+                          </Badge>
+                        ) : null}
+                        {job.location ? (
+                          <Badge variant="outline" className="text-[11px]">
+                            {job.location}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      {job.description ? (
+                        <p className="line-clamp-3 text-xs text-muted-foreground">
+                          {job.description}
+                        </p>
+                      ) : null}
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </main>
-
-      <div className="border-t bg-muted/30 px-4 py-4 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-center text-xs text-muted-foreground">
-            Job data provided by{" "}
-            <a
-              href="https://www.1111.com.tw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground"
-            >
-              1111 Job Bank
-            </a>
-            . Click &ldquo;Apply&rdquo; to view full details and submit your
-            application on the original platform.
-          </p>
-        </div>
-      </div>
 
       <SiteFooter />
     </div>
