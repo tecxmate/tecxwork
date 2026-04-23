@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
 
@@ -11,6 +11,7 @@ export function MobileBottomNav({
 }: {
   role: NavRole;
 }) {
+  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
@@ -28,6 +29,12 @@ export function MobileBottomNav({
   useEffect(() => {
     setPendingHref(null);
   }, [pathname, search]);
+
+  useEffect(() => {
+    for (const item of items) {
+      router.prefetch(item.href);
+    }
+  }, [items, router]);
 
   if (shouldHide) {
     return null;
@@ -53,11 +60,13 @@ export function MobileBottomNav({
                   if (displayActiveHref !== item.href) {
                     setPendingHref(item.href);
                   }
+                  router.prefetch(item.href);
                 }}
                 onMouseDown={() => {
                   if (displayActiveHref !== item.href) {
                     setPendingHref(item.href);
                   }
+                  router.prefetch(item.href);
                 }}
                 className={[
                   "group flex min-h-11.5 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 text-[11px] font-medium transition-premium",
