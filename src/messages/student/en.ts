@@ -2,6 +2,7 @@ export const studentEnMessages = {
   language: {
     english: "EN",
     vietnamese: "VI",
+    chineseTraditional: "中",
     switchLabel: "App language",
   },
   nav: {

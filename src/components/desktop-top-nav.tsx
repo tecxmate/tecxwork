@@ -73,7 +73,7 @@ export function DesktopTopNav({
   }, [items, router]);
 
   return (
-    <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex">
+    <nav className="hidden items-center justify-center gap-1 md:flex">
       {items.map((item) => {
         const active = currentPath ? isNavItemActive(currentPath, "", item) : false;
         return (

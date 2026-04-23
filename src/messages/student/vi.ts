@@ -4,6 +4,7 @@ export const studentViMessages = {
   ...studentEnMessages,
   language: {
     ...studentEnMessages.language,
+    chineseTraditional: "中",
     switchLabel: "Ngôn ngữ ứng dụng",
   },
   nav: {

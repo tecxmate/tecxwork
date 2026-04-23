@@ -102,7 +102,7 @@ export default async function LandingPage() {
   ]);
 
   const formattedDate = EVENT_CONFIG.date.toLocaleDateString(
-    locale === "vi" ? "vi-VN" : "en-US",
+    locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US",
     {
     weekday: "long",
     year: "numeric",

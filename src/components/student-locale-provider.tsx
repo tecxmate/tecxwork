@@ -1,12 +1,14 @@
 "use client";
 
 import {
+  startTransition,
   createContext,
   useContext,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   STUDENT_LOCALE_COOKIE,
@@ -30,6 +32,7 @@ export function StudentLocaleProvider({
   initialLocale: StudentLocale;
   children: ReactNode;
 }) {
+  const router = useRouter();
   const [locale, setLocaleState] = useState<StudentLocale>(initialLocale);
 
   const value = useMemo<StudentLocaleContextValue>(() => {
@@ -39,13 +42,17 @@ export function StudentLocaleProvider({
       locale,
       messages,
       setLocale: (nextLocale) => {
+        if (nextLocale === locale) return;
         setLocaleState(nextLocale);
         document.cookie = `${STUDENT_LOCALE_COOKIE}=${encodeURIComponent(
           nextLocale
         )}; path=/; max-age=31536000; samesite=lax`;
+        startTransition(() => {
+          router.refresh();
+        });
       },
     };
-  }, [locale]);
+  }, [locale, router]);
 
   return (
     <StudentLocaleContext.Provider value={value}>

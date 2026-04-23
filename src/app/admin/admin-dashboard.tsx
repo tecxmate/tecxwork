@@ -902,7 +902,8 @@ function JobModerationSection({
 }) {
   const { messages, locale } = useStudentI18n();
   const admin = messages.admin;
-  const localeTag = locale === "vi" ? "vi-VN" : "en-US";
+  const localeTag =
+    locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
   const [query, setQuery] = useState("");
   const [notesById, setNotesById] = useState<Record<number, string>>(
     Object.fromEntries(jobs.map((job) => [job.id, job.moderationNotes ?? ""]))
@@ -1104,7 +1105,8 @@ function PeopleSection({
 }) {
   const { messages, locale } = useStudentI18n();
   const admin = messages.admin;
-  const localeTag = locale === "vi" ? "vi-VN" : "en-US";
+  const localeTag =
+    locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
   const [tab, setTab] = useState<"recruiters" | "applicants" | "bookings">(
     initialTab
   );
@@ -1398,7 +1400,8 @@ function BookingsTable({
 }) {
   const { messages, locale } = useStudentI18n();
   const admin = messages.admin;
-  const localeTag = locale === "vi" ? "vi-VN" : "en-US";
+  const localeTag =
+    locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
   const statusColor: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
     accepted: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
