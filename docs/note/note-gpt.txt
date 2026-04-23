@@ -227,3 +227,167 @@ api/
 
   If you want, I can next map the exact schema and route changes needed to turn the current app into a true
   multi-event organizer product. 
+
+UI REFACTOR NOTE — DESKTOP/MOBILE NAVIGATION UNIFICATION
+
+Context:
+- The app used to have mixed navigation systems:
+  - public/applicant pages had a top bar + mobile bottom nav
+  - recruiter desktop used a left sidebar
+  - recruiter mobile used bottom nav with old `?tab=` links
+  - admin was mostly a large single page with in-page section switching
+- This was getting too fragmented and hard to maintain.
+
+What changed:
+- Navigation was consolidated into:
+  - desktop: shared top bar
+  - mobile: shared bottom navigation bar
+- Recruiter desktop sidebar was removed.
+- Recruiter and admin primary sections were moved to real routes instead of relying on page-local tab state.
+- The shared nav definition now lives in:
+  - `src/lib/navigation.ts`
+- The shared desktop top bar lives in:
+  - `src/components/app-topbar.tsx`
+- Desktop route prefetching now lives in:
+  - `src/components/desktop-top-nav.tsx`
+
+Why this was done:
+- To make desktop and mobile navigation structurally match.
+- To reduce duplicated navigation logic across roles.
+- To make active states, prefetching, and route ownership cleaner.
+- To avoid having recruiter/admin primary navigation hidden inside giant page components.
+
+Current canonical site structure:
+
+Guest
+- `/`
+- `/browse`
+- `/jobs`
+- `/login`
+
+Applicant
+- `/`
+- `/browse`
+- `/jobs`
+- `/profile`
+
+Recruiter
+- `/dashboard/interviews`
+- `/dashboard/applicants`
+- `/dashboard/jobs`
+- `/dashboard/company`
+
+Admin
+- `/admin`
+- `/admin/recruiters`
+- `/admin/applicants`
+- `/admin/jobs`
+
+Important recruiter details:
+- `/dashboard` still exists, but now acts as a redirect layer.
+- Old recruiter links like `?tab=bookings`, `?tab=applicants`, `?tab=company` are redirected to the new route-based pages.
+- Recruiter `View Site` action was removed from recruiter surfaces.
+- Recruiter language switcher was simplified to just `EN / 中`.
+
+Important admin details:
+- `/admin` remains the overview page.
+- Recruiters / Applicants / Jobs are now separate admin routes.
+- The old in-page admin tab switching is no longer the primary nav model.
+
+Performance notes from this refactor:
+- Mobile bottom nav already prefetched role-based routes.
+- Desktop top nav now also prefetches all visible role routes.
+- Recruiter route switching was additionally improved by:
+  - prefetching all recruiter routes on dashboard load
+  - caching recruiter job list client-side so `/dashboard/jobs` is less cold on repeat entry
+
+Files added in this refactor:
+- `src/app/dashboard/recruiter-data.ts`
+- `src/app/dashboard/interviews/page.tsx`
+- `src/app/dashboard/applicants/page.tsx`
+- `src/app/dashboard/jobs/page.tsx`
+- `src/app/dashboard/company/page.tsx`
+- `src/app/admin/admin-data.ts`
+- `src/app/admin/recruiters/page.tsx`
+- `src/app/admin/applicants/page.tsx`
+- `src/app/admin/jobs/page.tsx`
+- `src/components/desktop-top-nav.tsx`
+
+Files heavily changed:
+- `src/components/app-topbar.tsx`
+- `src/lib/navigation.ts`
+- `src/app/dashboard/recruiter-dashboard.tsx`
+- `src/app/dashboard/recruiter-dashboard-company.tsx`
+- `src/app/admin/admin-dashboard.tsx`
+- `src/app/dashboard/page.tsx`
+- `src/app/admin/page.tsx`
+
+Current design intent:
+- desktop and mobile should expose the same primary destinations per role
+- top bar / bottom nav should be the only primary navigation systems
+- page-local primary tab systems should not be reintroduced unless there is a very strong reason
+
+LATEST STATUS UPDATE — APR 24, 2026
+
+What was finalized after the initial nav refactor:
+- Guest access to `/browse` is now truly public.
+- The real fix was in `src/proxy.ts`; the page itself had already been opened, but the proxy layer was still redirecting guests to `/login`.
+- Mobile nav route activation was tightened so highlighted state follows the actual route more reliably.
+- Mobile nav spacing was slimmed down to reduce wasted vertical height.
+- Both mobile bottom nav and desktop top nav now prefetch role-visible routes to reduce cold tab switches.
+
+Canonical current navigation model:
+
+Desktop
+- one shared top bar across public, applicant, recruiter, and admin
+- brand on the left
+- primary nav centered
+- utility actions on the right
+
+Mobile
+- one shared bottom nav across roles
+- one simplified top bar pattern for page chrome
+- no recruiter desktop sidebar anymore
+
+Current route map to preserve:
+
+Guest
+- `/`
+- `/browse`
+- `/jobs`
+- `/login`
+
+Applicant
+- `/`
+- `/browse`
+- `/jobs`
+- `/profile`
+
+Recruiter
+- `/dashboard/interviews`
+- `/dashboard/applicants`
+- `/dashboard/jobs`
+- `/dashboard/company`
+
+Admin
+- `/admin`
+- `/admin/recruiters`
+- `/admin/applicants`
+- `/admin/jobs`
+
+Important behavior notes:
+- `/dashboard` is now compatibility/redirect glue, not the canonical recruiter destination.
+- Old recruiter `?tab=` links should continue redirecting into the route-based recruiter pages.
+- `/browse` must remain public for guests; if it ever starts redirecting again, check `src/proxy.ts` first.
+- Desktop recruiter/admin navigation should stay in the top bar, not drift back into local sidebars or section tabs.
+
+Recruiter-specific UI notes:
+- recruiter desktop sidebar was intentionally removed
+- recruiter language switcher is intentionally simplified to `EN / 中`
+- recruiter `View Site` was intentionally removed from recruiter surfaces
+- recruiter route changes were sped up by prefetching recruiter routes and caching recruiter jobs client-side
+
+Admin-specific UI notes:
+- `/admin` remains the overview page by design
+- recruiter/applicant/jobs admin areas are separate routes now
+- avoid rebuilding a giant single-page admin tab switcher unless absolutely necessary
