@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
 
@@ -11,13 +11,11 @@ export function MobileBottomNav({
 }: {
   role: NavRole;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const items = navItemsByRole[role];
   const [pendingHref, setPendingHref] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
   const currentActiveHref =
     items.find((item) => isNavItemActive(pathname, search, item))?.href ?? null;
   const displayActiveHref = pendingHref ?? currentActiveHref;
@@ -37,10 +35,10 @@ export function MobileBottomNav({
 
   return (
     <>
-      <div className="h-[5.5rem] md:hidden" aria-hidden="true" />
+      <div className="h-[4.75rem] md:hidden" aria-hidden="true" />
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background md:hidden">
         <div
-          className="mx-auto grid max-w-xl px-2 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-1.5"
+          className="mx-auto grid max-w-xl px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] pt-1"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map((item) => {
@@ -51,20 +49,18 @@ export function MobileBottomNav({
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={(event) => {
-                  event.preventDefault();
-
-                  if (displayActiveHref === item.href) {
-                    return;
+                onTouchStart={() => {
+                  if (displayActiveHref !== item.href) {
+                    setPendingHref(item.href);
                   }
-
-                  setPendingHref(item.href);
-                  startTransition(() => {
-                    router.push(item.href);
-                  });
+                }}
+                onMouseDown={() => {
+                  if (displayActiveHref !== item.href) {
+                    setPendingHref(item.href);
+                  }
                 }}
                 className={[
-                  "group flex min-h-13 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-medium transition-premium",
+                  "group flex min-h-11.5 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 text-[11px] font-medium transition-premium",
                   active
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
@@ -72,7 +68,7 @@ export function MobileBottomNav({
               >
                 <span
                   className={[
-                    "flex h-8 w-8 items-center justify-center rounded-full transition-premium",
+                    "flex h-7.5 w-7.5 items-center justify-center rounded-full transition-premium",
                     active ? "bg-primary/10" : "bg-transparent",
                   ].join(" ")}
                 >
