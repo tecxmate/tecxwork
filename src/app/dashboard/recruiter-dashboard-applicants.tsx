@@ -23,7 +23,10 @@ type Applicant = {
   id: number;
   name: string;
   email: string;
+  schoolName: string;
+  schoolNameEn: string;
   major: string;
+  expectedGraduation: string;
   skills: string[];
   cvLink: string;
   description: string;
@@ -55,7 +58,9 @@ export function RecruiterApplicantsTab({
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+    const loadingTimer = window.setTimeout(() => {
+      setLoading(true);
+    }, 0);
 
     const params = new URLSearchParams({
       query: debouncedQuery,
@@ -78,7 +83,10 @@ export function RecruiterApplicantsTab({
       })
       .finally(() => setLoading(false));
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      window.clearTimeout(loadingTimer);
+    };
   }, [debouncedQuery, currentPage]);
 
   if (selectedApplicant) {
@@ -139,8 +147,18 @@ export function RecruiterApplicantsTab({
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
                       <p className="font-medium">{a.name}</p>
+                      {(a.schoolName || a.schoolNameEn) && (
+                        <p className="text-xs text-muted-foreground">
+                          {a.schoolName || a.schoolNameEn}
+                        </p>
+                      )}
                       {a.major && (
                         <p className="text-xs text-muted-foreground">{a.major}</p>
+                      )}
+                      {a.expectedGraduation && (
+                        <p className="text-xs text-muted-foreground">
+                          Expected graduation: {a.expectedGraduation}
+                        </p>
                       )}
                     </div>
                     <a
@@ -280,8 +298,18 @@ function ApplicantBookingView({
         <Card className="lg:col-span-2">
           <CardHeader>
             <h2 className="font-heading text-lg font-semibold">{applicant.name}</h2>
+            {(applicant.schoolName || applicant.schoolNameEn) && (
+              <p className="text-sm text-muted-foreground">
+                {applicant.schoolName || applicant.schoolNameEn}
+              </p>
+            )}
             {applicant.major && (
               <p className="text-sm text-muted-foreground">{applicant.major}</p>
+            )}
+            {applicant.expectedGraduation && (
+              <p className="text-sm text-muted-foreground">
+                Expected graduation: {applicant.expectedGraduation}
+              </p>
             )}
           </CardHeader>
           <CardContent className="space-y-3">
