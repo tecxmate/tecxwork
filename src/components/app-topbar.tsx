@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Briefcase } from "lucide-react";
 
 import { DesktopTopNav } from "@/components/desktop-top-nav";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
@@ -32,9 +31,7 @@ export function AppTopBar({
         <div className="flex items-center gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
           <div className="flex items-center md:justify-self-start">
             <Link href={href} className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-                <Briefcase className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <img src="/icon.svg" alt="TECXWORK" className="h-8 w-8 rounded-md" />
               <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
             </Link>
           </div>
