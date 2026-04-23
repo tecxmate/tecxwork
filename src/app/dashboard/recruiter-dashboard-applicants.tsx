@@ -58,7 +58,9 @@ export function RecruiterApplicantsTab({
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+    const loadingTimer = window.setTimeout(() => {
+      setLoading(true);
+    }, 0);
 
     const params = new URLSearchParams({
       query: debouncedQuery,
@@ -81,7 +83,10 @@ export function RecruiterApplicantsTab({
       })
       .finally(() => setLoading(false));
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      window.clearTimeout(loadingTimer);
+    };
   }, [debouncedQuery, currentPage]);
 
   if (selectedApplicant) {
