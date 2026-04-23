@@ -8,7 +8,6 @@ import {
   Briefcase,
   ChevronRight,
   Calendar,
-  ExternalLink,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +15,11 @@ import { Countdown } from "@/components/countdown";
 import { InstallPrompt } from "@/components/install-prompt";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
-import { ExternalJobsPreview } from "@/components/external-jobs-preview";
+import { LogoutButton } from "@/components/logout-button";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
-import { db, recruiters, jobOpenings, users, externalJobs } from "@/lib/db";
-import { eq, desc, or, and, ilike, not } from "drizzle-orm";
+import { db, recruiters, jobOpenings, users } from "@/lib/db";
+import { eq } from "drizzle-orm";
 
 // Placeholder event photos - replace with actual photos
 const EVENT_PHOTOS = [
@@ -81,47 +80,6 @@ async function getPublicJobs() {
   return result;
 }
 
-async function getExternalJobsPreview() {
-  const vietnamKeywords = or(
-    ilike(externalJobs.title, "%越南%"),
-    ilike(externalJobs.title, "%vietnam%"),
-    ilike(externalJobs.company, "%越南%"),
-    ilike(externalJobs.company, "%vietnam%"),
-    ilike(externalJobs.snippet, "%越南%"),
-    ilike(externalJobs.snippet, "%vietnam%")
-  );
-
-  const excludeOtherNationalities = and(
-    not(ilike(externalJobs.title, "%英語%")),
-    not(ilike(externalJobs.title, "%english%")),
-    not(ilike(externalJobs.title, "%印尼%")),
-    not(ilike(externalJobs.title, "%indonesia%")),
-    not(ilike(externalJobs.snippet, "%英語母語%")),
-    not(ilike(externalJobs.snippet, "%native english%")),
-    not(ilike(externalJobs.snippet, "%印尼%")),
-    not(ilike(externalJobs.snippet, "%indonesia%"))
-  );
-
-  const result = await db
-    .select({
-      id: externalJobs.id,
-      source: externalJobs.source,
-      title: externalJobs.title,
-      company: externalJobs.company,
-      location: externalJobs.location,
-      jobType: externalJobs.jobType,
-      salary: externalJobs.salary,
-      snippet: externalJobs.snippet,
-      externalUrl: externalJobs.externalUrl,
-    })
-    .from(externalJobs)
-    .where(and(vietnamKeywords, excludeOtherNationalities))
-    .orderBy(desc(externalJobs.lastSeenAt))
-    .limit(8);
-
-  return result;
-}
-
 export default async function LandingPage() {
   const session = await getSession();
 
@@ -134,10 +92,9 @@ export default async function LandingPage() {
         : "/browse"
     : null;
 
-  const [publicRecruiters, publicJobs, externalJobsPreview] = await Promise.all([
+  const [publicRecruiters, publicJobs] = await Promise.all([
     getPublicRecruiters(),
     getPublicJobs(),
-    getExternalJobsPreview(),
   ]);
 
   const formattedDate = EVENT_CONFIG.date.toLocaleDateString("en-US", {
@@ -156,13 +113,17 @@ export default async function LandingPage() {
         currentPath="/"
         desktopActions={
           session ? (
-            <Link
-              href={dashboardUrl!}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Go to Dashboard
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            session.role === "applicant" ? (
+              <LogoutButton />
+            ) : (
+              <Link
+                href={dashboardUrl!}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Go to Dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )
           ) : (
             <>
               <Link
@@ -214,42 +175,18 @@ export default async function LandingPage() {
             </div>
 
             <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              {session ? (
-                <Link
-                  href={dashboardUrl!}
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-                >
-                  Go to Dashboard
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-              ) : (
-                <Link
-                  href="/get-started"
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-                >
-                  Get Started
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-              )}
               <Link
-                href="#companies"
+                href="/browse"
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
               >
                 Browse Companies
               </Link>
               <Link
-                href="#jobs"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
+                href="/jobs"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
               >
                 <Briefcase className="h-4 w-4" />
                 Find Jobs
-              </Link>
-              <Link
-                href="/jobs"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
-              >
-                <ExternalLink className="h-4 w-4" />
-                External Jobs
               </Link>
             </div>
           </div>
@@ -444,39 +381,6 @@ export default async function LandingPage() {
               className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
             >
               View all positions
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </section>
-
-        {/* External Jobs Section */}
-        <section className="border-b px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-8 flex items-end justify-between">
-              <div>
-                <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                  External Job Opportunities
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                  More opportunities from Taiwan job banks
-                </p>
-              </div>
-              <Link
-                href="/jobs"
-                className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline sm:flex"
-              >
-                Browse all
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <ExternalJobsPreview jobs={externalJobsPreview} />
-
-            <Link
-              href="/jobs"
-              className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
-            >
-              Browse all external jobs
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>

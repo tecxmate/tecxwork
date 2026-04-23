@@ -36,12 +36,6 @@ export function MobileBottomNav({
   }, [pathname, search]);
 
   useEffect(() => {
-    for (const item of items) {
-      router.prefetch(item.href);
-    }
-  }, [items, router]);
-
-  useEffect(() => {
     return () => {
       if (pendingResetRef.current) {
         window.clearTimeout(pendingResetRef.current);
@@ -80,6 +74,7 @@ export function MobileBottomNav({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 onTouchStart={() => {
                   router.prefetch(item.href);
                 }}

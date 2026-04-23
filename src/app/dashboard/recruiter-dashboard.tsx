@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,6 +88,19 @@ export function RecruiterDashboard({
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   }
+
+  useEffect(() => {
+    const recruiterRoutes = [
+      "/dashboard/interviews",
+      "/dashboard/applicants",
+      "/dashboard/jobs",
+      "/dashboard/company",
+    ];
+
+    for (const href of recruiterRoutes) {
+      router.prefetch(href);
+    }
+  }, [router]);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">

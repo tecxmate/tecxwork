@@ -36,6 +36,8 @@ type JobOpening = {
   moderationNotes: string;
 };
 
+let cachedRecruiterJobs: JobOpening[] | null = null;
+
 export function RecruiterCompanyTab({
   recruiter,
   section = "company",
@@ -64,11 +66,26 @@ export function RecruiterCompanyTab({
   const [jobError, setJobError] = useState("");
 
   useEffect(() => {
+    if (section !== "jobs") {
+      setLoadingJobs(false);
+      return;
+    }
+
+    if (cachedRecruiterJobs) {
+      setJobs(cachedRecruiterJobs);
+      setLoadingJobs(false);
+      return;
+    }
+
     fetch("/api/me/jobs")
       .then((r) => r.json())
-      .then((d) => setJobs(d.jobs ?? []))
+      .then((d) => {
+        const nextJobs = d.jobs ?? [];
+        cachedRecruiterJobs = nextJobs;
+        setJobs(nextJobs);
+      })
       .finally(() => setLoadingJobs(false));
-  }, []);
+  }, [section]);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -119,7 +136,11 @@ export function RecruiterCompanyTab({
     });
     if (res.ok) {
       const d = await res.json();
-      setJobs((current) => [...current, d.job]);
+      setJobs((current) => {
+        const nextJobs = [...current, d.job];
+        cachedRecruiterJobs = nextJobs;
+        return nextJobs;
+      });
       setNewTitle("");
       setNewJdLink("");
       setNewDescription("");
@@ -142,7 +163,11 @@ export function RecruiterCompanyTab({
     });
     if (res.ok) {
       const d = await res.json();
-      setJobs((current) => current.map((j) => (j.id === id ? d.job : j)));
+      setJobs((current) => {
+        const nextJobs = current.map((j) => (j.id === id ? d.job : j));
+        cachedRecruiterJobs = nextJobs;
+        return nextJobs;
+      });
       setEditingId(null);
     } else {
       const d = await res.json().catch(() => ({}));
@@ -153,7 +178,11 @@ export function RecruiterCompanyTab({
   async function handleDeleteJob(id: number) {
     if (!confirm(messages.dashboard.company.removePositionConfirm)) return;
     await fetch(`/api/me/jobs/${id}`, { method: "DELETE" });
-    setJobs((current) => current.filter((j) => j.id !== id));
+    setJobs((current) => {
+      const nextJobs = current.filter((j) => j.id !== id);
+      cachedRecruiterJobs = nextJobs;
+      return nextJobs;
+    });
   }
 
   async function handleSubmitJob(id: number) {
@@ -165,7 +194,11 @@ export function RecruiterCompanyTab({
     });
     if (res.ok) {
       const d = await res.json();
-      setJobs((current) => current.map((j) => (j.id === id ? d.job : j)));
+      setJobs((current) => {
+        const nextJobs = current.map((j) => (j.id === id ? d.job : j));
+        cachedRecruiterJobs = nextJobs;
+        return nextJobs;
+      });
     } else {
       const d = await res.json().catch(() => ({}));
       setJobError(d.error || "Failed to submit job");
