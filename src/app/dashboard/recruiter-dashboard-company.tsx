@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
-import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -227,7 +226,6 @@ export function RecruiterCompanyTab({
         <>
           <Card className="md:hidden">
             <CardContent className="space-y-3 p-4">
-              <RecruiterLanguageSwitcher />
               <Button
                 variant="outline"
                 className="h-11 w-full"

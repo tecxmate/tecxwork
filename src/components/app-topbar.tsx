@@ -11,12 +11,14 @@ export function AppTopBar({
   navRole,
   currentPath,
   desktopActions,
+  mobileActions,
   showActionsOnMobile = false,
 }: {
   href?: string;
   navRole?: NavRole;
   currentPath?: string;
   desktopActions?: React.ReactNode;
+  mobileActions?: React.ReactNode;
   showActionsOnMobile?: boolean;
 }) {
   const navItems = navRole ? navItemsByRole[navRole] : [];
@@ -43,13 +45,13 @@ export function AppTopBar({
             <div className="hidden md:block" />
           )}
           <div className="ml-auto flex items-center gap-2 whitespace-nowrap sm:gap-3 md:ml-0 md:justify-self-end">
+          {showActionsOnMobile ? (
+            <div className="flex items-center gap-2 whitespace-nowrap sm:gap-3 md:hidden">
+              {mobileActions ?? desktopActions}
+            </div>
+          ) : null}
           {desktopActions ? (
-            <div
-              className={[
-                "items-center gap-2 whitespace-nowrap sm:gap-3",
-                showActionsOnMobile ? "flex" : "hidden md:flex",
-              ].join(" ")}
-            >
+            <div className="hidden items-center gap-2 whitespace-nowrap sm:gap-3 md:flex">
               {desktopActions}
             </div>
           ) : null}

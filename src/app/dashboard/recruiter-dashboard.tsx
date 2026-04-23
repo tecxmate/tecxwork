@@ -136,6 +136,8 @@ export function RecruiterDashboard({
         href="/dashboard/interviews"
         navRole="recruiter"
         currentPath={currentPath}
+        mobileActions={<RecruiterLanguageSwitcher />}
+        showActionsOnMobile
         desktopActions={
           <>
             <RecruiterLanguageSwitcher />

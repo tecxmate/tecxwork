@@ -91,7 +91,7 @@ export const studentViMessages = {
   },
   login: {
     ...studentEnMessages.login,
-    welcomeBack: "Chào mừng quay lại",
+    welcomeBack: "Chào mừng",
     subtitle: "Đăng nhập vào TECXWORK",
     password: "Mật khẩu",
     forgotPassword: "Quên mật khẩu?",
@@ -208,7 +208,7 @@ export const studentViMessages = {
     viewJobDescription: "Xem mô tả công việc",
     noJobDescription: "Chưa có mô tả công việc",
     apply: "Ứng tuyển",
-    loginToApply: "Đăng nhập để ứng tuyển",
+    loginToApply: "Đăng nhập",
     selectTimeSlot: "Chọn khung giờ",
     interviewMin: "Phỏng vấn {duration} phút",
   },
