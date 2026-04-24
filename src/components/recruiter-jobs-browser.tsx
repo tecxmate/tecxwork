@@ -162,12 +162,14 @@ function JobDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center pb-[calc(5rem+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:pb-0"
       onClick={onClose}
     >
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+      {/* Fill gap above bottom nav on mobile */}
+      <div className="fixed inset-x-0 bottom-0 h-[calc(5rem+env(safe-area-inset-bottom))] bg-background sm:hidden" />
       <div
-        className="relative z-10 w-full max-w-3xl max-h-[calc(100vh-6rem-env(safe-area-inset-bottom))] overflow-y-auto rounded-t-2xl bg-background shadow-xl animate-in slide-in-from-bottom-4 duration-200 sm:max-h-[90vh] sm:rounded-2xl sm:slide-in-from-bottom-0 sm:zoom-in-95"
+        className="relative z-10 mb-[calc(5rem+env(safe-area-inset-bottom))] w-full max-w-3xl max-h-[calc(100vh-6rem-env(safe-area-inset-bottom))] overflow-y-auto rounded-t-2xl bg-background shadow-xl animate-in slide-in-from-bottom-4 duration-200 sm:mb-0 sm:max-h-[90vh] sm:rounded-2xl sm:slide-in-from-bottom-0 sm:zoom-in-95"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-3 sm:px-6">
