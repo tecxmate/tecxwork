@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
-import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
+import { RecruiterJobsBrowser } from "@/components/recruiter-jobs-browser";
 import { SiteFooter } from "@/components/site-footer";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
@@ -124,41 +124,32 @@ export default async function JobsPage() {
               </p>
             </Card>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {jobs.map((job) => (
-                <RecruiterJobPostingCard
-                  key={job.id}
-                  job={job}
-                  compact
-                  locale={locale}
-                  status={
-                    <Badge variant="secondary" className="text-[11px]">
-                      {messages.jobsPage.recruiterPosted}
-                    </Badge>
-                  }
-                  labels={{
-                    seniority: messages.jobsPage.card.seniority,
-                    languageRequirement: messages.jobsPage.card.languageRequirement,
-                    visaSupport: messages.jobsPage.card.visaSupport,
-                    applicationDeadline: messages.jobsPage.card.applicationDeadline,
-                    description: messages.jobsPage.card.description,
-                    responsibilities: messages.jobsPage.card.responsibilities,
-                    requirements: messages.jobsPage.card.requirements,
-                    benefits: messages.jobsPage.card.benefits,
-                    viewJd: messages.jobsPage.card.viewJd,
-                    noJd: messages.jobsPage.card.noJd,
-                  }}
-                  action={
-                    <Link
-                      href={`/recruiter/${job.recruiterId}`}
-                      className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                    >
-                      {messages.jobsPage.viewCompany}
-                    </Link>
-                  }
-                />
-              ))}
-            </div>
+            <RecruiterJobsBrowser
+              jobs={jobs}
+              locale={locale}
+              labels={{
+                recruiterPosted: messages.jobsPage.recruiterPosted,
+                viewCompany: messages.jobsPage.viewCompany,
+                viewDetails: messages.jobsPage.viewDetails,
+                searchPlaceholder: messages.jobsPage.searchPlaceholder,
+                resultsCount: messages.jobsPage.resultsCount,
+                noMatchTitle: messages.jobsPage.noMatchTitle,
+                noMatchSubtitle: messages.jobsPage.noMatchSubtitle,
+                close: messages.jobsPage.close,
+                card: {
+                  seniority: messages.jobsPage.card.seniority,
+                  languageRequirement: messages.jobsPage.card.languageRequirement,
+                  visaSupport: messages.jobsPage.card.visaSupport,
+                  applicationDeadline: messages.jobsPage.card.applicationDeadline,
+                  description: messages.jobsPage.card.description,
+                  responsibilities: messages.jobsPage.card.responsibilities,
+                  requirements: messages.jobsPage.card.requirements,
+                  benefits: messages.jobsPage.card.benefits,
+                  viewJd: messages.jobsPage.card.viewJd,
+                  noJd: messages.jobsPage.card.noJd,
+                },
+              }}
+            />
           )}
         </div>
       </main>

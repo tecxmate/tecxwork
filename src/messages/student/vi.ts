@@ -58,6 +58,13 @@ export const studentViMessages = {
     badge: "Bảng việc làm",
     title: "Việc làm từ nhà tuyển dụng",
     subtitle: "Xem các vị trí được đăng trực tiếp bởi nhà tuyển dụng tham gia.",
+    searchPlaceholder: "Tìm việc, công ty hoặc địa điểm...",
+    resultsCount: "việc làm",
+    viewDetails: "Xem chi tiết",
+    close: "Đóng",
+    noMatchTitle: "Không tìm thấy việc làm phù hợp",
+    noMatchSubtitle:
+      "Hãy thử từ khóa khác hoặc chuyển sang xem danh sách công ty tham gia.",
     emptyTitle: "Chưa có việc làm nào từ nhà tuyển dụng",
     emptySubtitle: "Nhà tuyển dụng sẽ đăng vị trí khi sự kiện đến gần.",
     recruiterPosted: "Nhà tuyển dụng đăng",

@@ -73,6 +73,12 @@ export const studentEnMessages = {
     title: "Recruiter-Posted Jobs",
     subtitle:
       "Browse open positions published directly by participating recruiters.",
+    searchPlaceholder: "Search jobs, companies, or locations...",
+    resultsCount: "jobs found",
+    viewDetails: "View details",
+    close: "Close",
+    noMatchTitle: "No matching jobs found",
+    noMatchSubtitle: "Try a different keyword or browse participating companies instead.",
     emptyTitle: "No recruiter jobs available yet",
     emptySubtitle: "Recruiters will post openings as the event approaches.",
     recruiterPosted: "Recruiter posted",
