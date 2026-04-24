@@ -7,7 +7,7 @@ import {
   Globe2,
   MapPin,
   ShieldCheck,
-  Sparkles,
+  User,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -196,7 +196,7 @@ export function RecruiterJobPostingCard({
           ) : null}
           {seniority ? (
             <Badge variant="secondary" className="gap-1 text-[10px]">
-              <Sparkles className="h-3 w-3" />
+              <User className="h-3 w-3" />
               {seniority}
             </Badge>
           ) : null}
