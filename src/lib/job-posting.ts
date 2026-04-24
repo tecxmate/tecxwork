@@ -1,3 +1,5 @@
+export type JobPostingLocale = "en" | "vi" | "zh-TW";
+
 export const EMPLOYMENT_TYPE_OPTIONS = [
   { value: "full_time", label: "Full-time" },
   { value: "part_time", label: "Part-time" },
@@ -53,27 +55,194 @@ export const VISA_SUPPORT_VALUES: ReadonlySet<string> = new Set(
   VISA_SUPPORT_OPTIONS.map((option) => option.value)
 );
 
-export function employmentTypeLabel(value: string | null | undefined) {
-  return EMPLOYMENT_TYPE_OPTIONS.find((option) => option.value === value)?.label;
+const localizedLabels = {
+  en: {
+    employmentType: {
+      full_time: "Full-time",
+      part_time: "Part-time",
+      internship: "Internship",
+      contract: "Contract",
+    },
+    workplaceType: {
+      onsite: "On-site",
+      hybrid: "Hybrid",
+      remote: "Remote",
+    },
+    salaryPeriod: {
+      hour: "per hour",
+      month: "per month",
+      year: "per year",
+    },
+    seniority: {
+      entry_level: "Entry level",
+      associate: "Associate",
+      mid_senior: "Mid-Senior",
+      manager: "Manager",
+      director: "Director",
+    },
+    visaSupport: {
+      supported: "Visa/work permit support available",
+      case_by_case: "Visa/work permit reviewed case by case",
+      not_supported: "No visa/work permit support",
+    },
+  },
+  vi: {
+    employmentType: {
+      full_time: "Toàn thời gian",
+      part_time: "Bán thời gian",
+      internship: "Thực tập",
+      contract: "Hợp đồng",
+    },
+    workplaceType: {
+      onsite: "Làm tại văn phòng",
+      hybrid: "Kết hợp",
+      remote: "Từ xa",
+    },
+    salaryPeriod: {
+      hour: "mỗi giờ",
+      month: "mỗi tháng",
+      year: "mỗi năm",
+    },
+    seniority: {
+      entry_level: "Mới bắt đầu",
+      associate: "Nhân sự chính thức",
+      mid_senior: "Trung cấp đến cao cấp",
+      manager: "Quản lý",
+      director: "Giám đốc",
+    },
+    visaSupport: {
+      supported: "Có hỗ trợ visa / giấy phép lao động",
+      case_by_case: "Xem xét visa / giấy phép theo từng trường hợp",
+      not_supported: "Không hỗ trợ visa / giấy phép lao động",
+    },
+  },
+  "zh-TW": {
+    employmentType: {
+      full_time: "全職",
+      part_time: "兼職",
+      internship: "實習",
+      contract: "合約",
+    },
+    workplaceType: {
+      onsite: "現場辦公",
+      hybrid: "混合",
+      remote: "遠端",
+    },
+    salaryPeriod: {
+      hour: "時薪",
+      month: "月薪",
+      year: "年薪",
+    },
+    seniority: {
+      entry_level: "入門級",
+      associate: "初階",
+      mid_senior: "中高階",
+      manager: "經理",
+      director: "總監",
+    },
+    visaSupport: {
+      supported: "提供簽證／工作許可支援",
+      case_by_case: "依個案評估簽證／工作許可",
+      not_supported: "不提供簽證／工作許可支援",
+    },
+  },
+} as const;
+
+function resolveLocale(locale?: JobPostingLocale): JobPostingLocale {
+  return locale === "vi" || locale === "zh-TW" ? locale : "en";
 }
 
-export function workplaceTypeLabel(value: string | null | undefined) {
-  return WORKPLACE_TYPE_OPTIONS.find((option) => option.value === value)?.label;
+type OptionValue =
+  | EmploymentTypeValue
+  | WorkplaceTypeValue
+  | SalaryPeriodValue
+  | SeniorityValue
+  | VisaSupportValue;
+
+function localizedOptionLabel<
+  T extends keyof (typeof localizedLabels)["en"]
+>(category: T, value: OptionValue | string | null | undefined, locale?: JobPostingLocale) {
+  if (!value) return undefined;
+  const resolved = resolveLocale(locale);
+  return localizedLabels[resolved][category][
+    value as keyof (typeof localizedLabels)[typeof resolved][T]
+  ];
 }
 
-export function salaryPeriodLabel(value: string | null | undefined) {
-  return SALARY_PERIOD_OPTIONS.find((option) => option.value === value)?.label;
+export function getEmploymentTypeOptions(locale?: JobPostingLocale) {
+  return EMPLOYMENT_TYPE_OPTIONS.map((option) => ({
+    ...option,
+    label: employmentTypeLabel(option.value, locale) || option.label,
+  }));
 }
 
-export function seniorityLabel(value: string | null | undefined) {
-  return SENIORITY_OPTIONS.find((option) => option.value === value)?.label;
+export function getWorkplaceTypeOptions(locale?: JobPostingLocale) {
+  return WORKPLACE_TYPE_OPTIONS.map((option) => ({
+    ...option,
+    label: workplaceTypeLabel(option.value, locale) || option.label,
+  }));
 }
 
-export function visaSupportLabel(value: string | null | undefined) {
-  return VISA_SUPPORT_OPTIONS.find((option) => option.value === value)?.label;
+export function getSalaryPeriodOptions(locale?: JobPostingLocale) {
+  return SALARY_PERIOD_OPTIONS.map((option) => ({
+    ...option,
+    label: salaryPeriodLabel(option.value, locale) || option.label,
+  }));
 }
 
-export function formatApplicationDeadline(value: string | null | undefined) {
+export function getSeniorityOptions(locale?: JobPostingLocale) {
+  return SENIORITY_OPTIONS.map((option) => ({
+    ...option,
+    label: seniorityLabel(option.value, locale) || option.label,
+  }));
+}
+
+export function getVisaSupportOptions(locale?: JobPostingLocale) {
+  return VISA_SUPPORT_OPTIONS.map((option) => ({
+    ...option,
+    label: visaSupportLabel(option.value, locale) || option.label,
+  }));
+}
+
+export function employmentTypeLabel(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  return localizedOptionLabel("employmentType", value, locale);
+}
+
+export function workplaceTypeLabel(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  return localizedOptionLabel("workplaceType", value, locale);
+}
+
+export function salaryPeriodLabel(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  return localizedOptionLabel("salaryPeriod", value, locale);
+}
+
+export function seniorityLabel(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  return localizedOptionLabel("seniority", value, locale);
+}
+
+export function visaSupportLabel(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  return localizedOptionLabel("visaSupport", value, locale);
+}
+
+export function formatApplicationDeadline(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
   if (!value) return null;
 
   const date = new Date(`${value}T00:00:00`);
@@ -81,7 +250,10 @@ export function formatApplicationDeadline(value: string | null | undefined) {
     return value;
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  const dateLocale =
+    locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
+
+  return new Intl.DateTimeFormat(dateLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -93,11 +265,13 @@ export function formatSalaryRange({
   salaryMax,
   salaryCurrency,
   salaryPeriod,
+  locale,
 }: {
   salaryMin: number | null;
   salaryMax: number | null;
   salaryCurrency: string | null;
   salaryPeriod: string | null;
+  locale?: JobPostingLocale;
 }) {
   if (salaryMin === null && salaryMax === null) {
     return null;
@@ -105,7 +279,7 @@ export function formatSalaryRange({
 
   const formatter = new Intl.NumberFormat("en-US");
   const currency = (salaryCurrency || "TWD").toUpperCase();
-  const period = salaryPeriodLabel(salaryPeriod || "month") || "per month";
+  const period = salaryPeriodLabel(salaryPeriod || "month", locale) || "per month";
 
   if (salaryMin !== null && salaryMax !== null) {
     return `${currency} ${formatter.format(salaryMin)} - ${formatter.format(salaryMax)} ${period}`;

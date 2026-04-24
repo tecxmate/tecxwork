@@ -103,6 +103,7 @@ export async function PUT(
     body.location,
     body.requirements,
     body.responsibilities,
+    body.benefits,
     body.languageRequirement,
     body.applicationDeadline,
   ]);
@@ -131,14 +132,7 @@ export async function PUT(
   }
 
   if ("description" in body) {
-    const description = toCleanString(body.description);
-    if (!description) {
-      return NextResponse.json(
-        { error: "Description is required" },
-        { status: 400 }
-      );
-    }
-    updates.description = description;
+    updates.description = toCleanString(body.description);
   }
 
   if ("location" in body) {
@@ -158,6 +152,10 @@ export async function PUT(
 
   if ("responsibilities" in body) {
     updates.responsibilities = toCleanString(body.responsibilities);
+  }
+
+  if ("benefits" in body) {
+    updates.benefits = toCleanString(body.benefits);
   }
 
   if ("employmentType" in body) {

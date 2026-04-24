@@ -26,6 +26,15 @@ import { SiteFooter } from "@/components/site-footer";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { EVENT_CONFIG } from "@/lib/data";
+import {
+  employmentTypeLabel,
+  formatApplicationDeadline,
+  formatSalaryRange,
+  seniorityLabel,
+  type JobPostingLocale,
+  visaSupportLabel,
+  workplaceTypeLabel,
+} from "@/lib/job-posting";
 import { interpolate } from "@/lib/student-messages";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +69,47 @@ type JobOpening = {
   description: string;
   responsibilities: string;
   requirements: string;
+  benefits: string;
 };
+
+function splitTextItems(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^[-*•]\s*/, "").trim());
+}
+
+function DetailTextBlock({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  const items = splitTextItems(value);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </h3>
+      {items.length === 1 ? (
+        <p className="mt-1 whitespace-pre-wrap text-sm">{items[0]}</p>
+      ) : (
+        <ul className="mt-1 space-y-1 pl-4 text-sm">
+          {items.map((item, index) => (
+            <li key={`${label}-${index}`} className="list-disc">
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 type Step = "positions" | "pick-slot" | "booking-form";
 
@@ -71,7 +120,7 @@ type Props = {
 };
 
 export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated }: Props) {
-  const { messages } = useStudentI18n();
+  const { messages, locale } = useStudentI18n();
   const router = useRouter();
   const [step, setStep] = useState<Step>("positions");
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
@@ -84,6 +133,33 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
   );
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId) ?? null;
+  const postingLocale = locale as JobPostingLocale;
+  const selectedEmploymentLabel = employmentTypeLabel(
+    selectedJob?.employmentType,
+    postingLocale
+  );
+  const selectedWorkplaceLabel = workplaceTypeLabel(
+    selectedJob?.workplaceType,
+    postingLocale
+  );
+  const selectedSeniorityLabel = seniorityLabel(selectedJob?.seniority, postingLocale);
+  const selectedVisaSupportLabel = visaSupportLabel(
+    selectedJob?.visaSupport,
+    postingLocale
+  );
+  const selectedSalaryLabel = selectedJob
+    ? formatSalaryRange({
+        salaryMin: selectedJob.salaryMin,
+        salaryMax: selectedJob.salaryMax,
+        salaryCurrency: selectedJob.salaryCurrency,
+        salaryPeriod: selectedJob.salaryPeriod,
+        locale: postingLocale,
+      })
+    : null;
+  const selectedApplicationDeadline = formatApplicationDeadline(
+    selectedJob?.applicationDeadline,
+    postingLocale
+  );
 
   // Fetch which positions the student already applied to (only if authenticated)
   useEffect(() => {
@@ -324,6 +400,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                           <RecruiterJobPostingCard
                             key={job.id}
                             job={job}
+                            locale={postingLocale}
                             className={cn(
                               alreadyApplied
                                 ? "border-green-200 bg-green-50/50 dark:border-green-900/30 dark:bg-green-900/10"
@@ -340,6 +417,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                               responsibilities:
                                 messages.recruiterDetail.card.responsibilities,
                               requirements: messages.recruiterDetail.card.requirements,
+                              benefits: messages.recruiterDetail.card.benefits,
                               viewJd: messages.recruiterDetail.viewJobDescription,
                               noJd: messages.recruiterDetail.noJobDescription,
                             }}
@@ -428,26 +506,21 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                                 {selectedJob.location}
                               </Badge>
                             )}
-                            {selectedJob.employmentType && (
+                            {selectedEmploymentLabel && (
                               <Badge variant="outline" className="gap-1">
                                 <Building2 className="h-3 w-3" />
-                                {selectedJob.employmentType}
+                                {selectedEmploymentLabel}
                               </Badge>
                             )}
-                            {selectedJob.workplaceType && (
-                              <Badge variant="outline">{selectedJob.workplaceType}</Badge>
+                            {selectedWorkplaceLabel && (
+                              <Badge variant="outline">{selectedWorkplaceLabel}</Badge>
                             )}
-                            {selectedJob.seniority && (
-                              <Badge variant="outline">{selectedJob.seniority}</Badge>
+                            {selectedSeniorityLabel && (
+                              <Badge variant="outline">{selectedSeniorityLabel}</Badge>
                             )}
-                            {(selectedJob.salaryMin || selectedJob.salaryMax) && (
+                            {selectedSalaryLabel && (
                               <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-                                {selectedJob.salaryCurrency}{" "}
-                                {selectedJob.salaryMin?.toLocaleString()}
-                                {selectedJob.salaryMax
-                                  ? ` - ${selectedJob.salaryMax.toLocaleString()}`
-                                  : "+"}
-                                {" "}per {selectedJob.salaryPeriod}
+                                {selectedSalaryLabel}
                               </Badge>
                             )}
                           </div>
@@ -463,54 +536,41 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                             </div>
                           )}
 
-                          {selectedJob.description && (
-                            <div>
-                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {messages.recruiterDetail.card.description}
-                              </h3>
-                              <p className="mt-1 whitespace-pre-wrap text-sm">
-                                {selectedJob.description}
-                              </p>
-                            </div>
-                          )}
+                          <DetailTextBlock
+                            label={messages.recruiterDetail.card.description}
+                            value={selectedJob.description}
+                          />
 
-                          {selectedJob.responsibilities && (
-                            <div>
-                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {messages.recruiterDetail.card.responsibilities}
-                              </h3>
-                              <p className="mt-1 whitespace-pre-wrap text-sm">
-                                {selectedJob.responsibilities}
-                              </p>
-                            </div>
-                          )}
+                          <DetailTextBlock
+                            label={messages.recruiterDetail.card.responsibilities}
+                            value={selectedJob.responsibilities}
+                          />
 
-                          {selectedJob.requirements && (
-                            <div>
-                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {messages.recruiterDetail.card.requirements}
-                              </h3>
-                              <p className="mt-1 whitespace-pre-wrap text-sm">
-                                {selectedJob.requirements}
-                              </p>
-                            </div>
-                          )}
+                          <DetailTextBlock
+                            label={messages.recruiterDetail.card.requirements}
+                            value={selectedJob.requirements}
+                          />
 
-                          {selectedJob.visaSupport && (
+                          <DetailTextBlock
+                            label={messages.recruiterDetail.card.benefits}
+                            value={selectedJob.benefits}
+                          />
+
+                          {selectedVisaSupportLabel && (
                             <div>
                               <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {messages.recruiterDetail.card.visaSupport}
                               </h3>
-                              <p className="mt-1 text-sm">{selectedJob.visaSupport}</p>
+                              <p className="mt-1 text-sm">{selectedVisaSupportLabel}</p>
                             </div>
                           )}
 
-                          {selectedJob.applicationDeadline && (
+                          {selectedApplicationDeadline && (
                             <div>
                               <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {messages.recruiterDetail.card.applicationDeadline}
                               </h3>
-                              <p className="mt-1 text-sm">{selectedJob.applicationDeadline}</p>
+                              <p className="mt-1 text-sm">{selectedApplicationDeadline}</p>
                             </div>
                           )}
 

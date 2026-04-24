@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
   const description = toCleanString(body.description);
   const responsibilities = toCleanString(body.responsibilities);
   const requirements = toCleanString(body.requirements);
+  const benefits = toCleanString(body.benefits);
   const employmentType = toCleanString(body.employmentType);
   const workplaceType = toCleanString(body.workplaceType);
   const salaryCurrency = toCleanString(body.salaryCurrency) || "TWD";
@@ -109,12 +110,6 @@ export async function POST(req: NextRequest) {
   }
   if (!location) {
     return NextResponse.json({ error: "Location is required" }, { status: 400 });
-  }
-  if (!description) {
-    return NextResponse.json(
-      { error: "Description is required" },
-      { status: 400 }
-    );
   }
   if (!employmentType || !EMPLOYMENT_TYPE_VALUES.has(employmentType)) {
     return NextResponse.json(
@@ -159,6 +154,7 @@ export async function POST(req: NextRequest) {
     jdLink,
     responsibilities,
     requirements,
+    benefits,
     location,
     seniority,
     languageRequirement,
@@ -194,6 +190,7 @@ export async function POST(req: NextRequest) {
       description,
       responsibilities,
       requirements,
+      benefits,
       moderationStatus: moderationEnabled ? "draft" : "approved",
       moderationNotes: "",
       submittedAt: null,

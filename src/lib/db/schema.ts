@@ -95,6 +95,7 @@ export const jobOpenings = pgTable("job_openings", {
   description: text("description").notNull().default(""),
   responsibilities: text("responsibilities").notNull().default(""),
   requirements: text("requirements").notNull().default(""),
+  benefits: text("benefits").notNull().default(""),
   moderationStatus: text("moderation_status").notNull().default("draft"),
   moderationNotes: text("moderation_notes").notNull().default(""),
   submittedAt: timestamp("submitted_at", { withTimezone: true }),

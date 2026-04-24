@@ -86,6 +86,7 @@ export const studentEnMessages = {
       description: "Description",
       responsibilities: "Responsibilities",
       requirements: "Requirements",
+      benefits: "Benefits",
       viewJd: "View JD",
       noJd: "No JD link",
     },
@@ -306,6 +307,7 @@ export const studentEnMessages = {
       description: "Description",
       responsibilities: "Responsibilities",
       requirements: "Requirements",
+      benefits: "Benefits",
     },
   },
   bookingForm: {
@@ -449,6 +451,7 @@ export const studentEnMessages = {
         description: "Description",
         responsibilities: "Responsibilities",
         requirements: "Requirements",
+        benefits: "Benefits",
       },
       approve: "Approve",
       reject: "Reject",

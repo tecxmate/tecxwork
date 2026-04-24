@@ -107,6 +107,7 @@ export async function getAdminDashboardData() {
       description: jobOpenings.description,
       responsibilities: jobOpenings.responsibilities,
       requirements: jobOpenings.requirements,
+      benefits: jobOpenings.benefits,
       moderationStatus: jobOpenings.moderationStatus,
       moderationNotes: jobOpenings.moderationNotes,
       submittedAt: jobOpenings.submittedAt,

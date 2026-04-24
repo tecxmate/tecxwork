@@ -38,6 +38,7 @@ async function getRecruiterPostedJobs() {
       applicationDeadline: jobOpenings.applicationDeadline,
       responsibilities: jobOpenings.responsibilities,
       requirements: jobOpenings.requirements,
+      benefits: jobOpenings.benefits,
       createdAt: jobOpenings.createdAt,
       recruiterId: recruiters.id,
       company: recruiters.company,
@@ -129,6 +130,7 @@ export default async function JobsPage() {
                   key={job.id}
                   job={job}
                   compact
+                  locale={locale}
                   status={
                     <Badge variant="secondary" className="text-[11px]">
                       {messages.jobsPage.recruiterPosted}
@@ -142,6 +144,7 @@ export default async function JobsPage() {
                     description: messages.jobsPage.card.description,
                     responsibilities: messages.jobsPage.card.responsibilities,
                     requirements: messages.jobsPage.card.requirements,
+                    benefits: messages.jobsPage.card.benefits,
                     viewJd: messages.jobsPage.card.viewJd,
                     noJd: messages.jobsPage.card.noJd,
                   }}

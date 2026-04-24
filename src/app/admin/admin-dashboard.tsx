@@ -93,6 +93,7 @@ type JobOpening = {
   description: string;
   responsibilities: string;
   requirements: string;
+  benefits: string;
   moderationStatus: string;
   moderationNotes: string;
   submittedAt: Date | string | null;
@@ -1002,6 +1003,7 @@ function JobModerationSection({
                 <RecruiterJobPostingCard
                   job={job}
                   compact
+                  locale={locale}
                   labels={{
                     seniority: admin.moderation.card.seniority,
                     languageRequirement: admin.moderation.card.languageRequirement,
@@ -1010,6 +1012,7 @@ function JobModerationSection({
                     description: admin.moderation.card.description,
                     responsibilities: admin.moderation.card.responsibilities,
                     requirements: admin.moderation.card.requirements,
+                    benefits: admin.moderation.card.benefits,
                     viewJd: admin.moderation.viewJd,
                     noJd: admin.moderation.noJd,
                   }}

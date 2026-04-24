@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/countdown";
 import { InstallPrompt } from "@/components/install-prompt";
+import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
@@ -69,7 +70,23 @@ async function getPublicJobs() {
   const result = await db
     .select({
       id: jobOpenings.id,
+      recruiterId: recruiters.id,
       title: jobOpenings.title,
+      jdLink: jobOpenings.jdLink,
+      location: jobOpenings.location,
+      employmentType: jobOpenings.employmentType,
+      workplaceType: jobOpenings.workplaceType,
+      salaryMin: jobOpenings.salaryMin,
+      salaryMax: jobOpenings.salaryMax,
+      salaryCurrency: jobOpenings.salaryCurrency,
+      salaryPeriod: jobOpenings.salaryPeriod,
+      seniority: jobOpenings.seniority,
+      languageRequirement: jobOpenings.languageRequirement,
+      visaSupport: jobOpenings.visaSupport,
+      applicationDeadline: jobOpenings.applicationDeadline,
+      responsibilities: jobOpenings.responsibilities,
+      requirements: jobOpenings.requirements,
+      benefits: jobOpenings.benefits,
       description: jobOpenings.description,
       company: recruiters.company,
       industry: recruiters.industry,
@@ -352,23 +369,34 @@ export default async function LandingPage() {
             </div>
 
             {publicJobs.length > 0 ? (
-              <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {publicJobs.map((job) => (
-                  <Card key={job.id} className="p-4 transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] hover:-translate-y-0.5">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                        <Briefcase className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-sm font-semibold">
-                          {job.title}
-                        </h3>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {job.company}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
+                  <RecruiterJobPostingCard
+                    key={job.id}
+                    job={job}
+                    compact
+                    locale={locale}
+                    labels={{
+                      seniority: messages.jobsPage.card.seniority,
+                      languageRequirement: messages.jobsPage.card.languageRequirement,
+                      visaSupport: messages.jobsPage.card.visaSupport,
+                      applicationDeadline: messages.jobsPage.card.applicationDeadline,
+                      description: messages.jobsPage.card.description,
+                      responsibilities: messages.jobsPage.card.responsibilities,
+                      requirements: messages.jobsPage.card.requirements,
+                      benefits: messages.jobsPage.card.benefits,
+                      viewJd: messages.jobsPage.card.viewJd,
+                      noJd: messages.jobsPage.card.noJd,
+                    }}
+                    action={
+                      <Link
+                        href={`/recruiter/${job.recruiterId}`}
+                        className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                      >
+                        {messages.jobsPage.viewCompany}
+                      </Link>
+                    }
+                  />
                 ))}
               </div>
             ) : (

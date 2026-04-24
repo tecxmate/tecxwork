@@ -61,6 +61,10 @@ async function main() {
     ALTER TABLE job_openings
     ADD COLUMN IF NOT EXISTS requirements text NOT NULL DEFAULT ''
   `;
+  await sql`
+    ALTER TABLE job_openings
+    ADD COLUMN IF NOT EXISTS benefits text NOT NULL DEFAULT ''
+  `;
 
   console.log("Ensured job_openings detail columns exist");
 }

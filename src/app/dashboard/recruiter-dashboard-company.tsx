@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-  EMPLOYMENT_TYPE_OPTIONS,
-  SALARY_PERIOD_OPTIONS,
-  SENIORITY_OPTIONS,
-  VISA_SUPPORT_OPTIONS,
-  WORKPLACE_TYPE_OPTIONS,
+  getEmploymentTypeOptions,
+  getSalaryPeriodOptions,
+  getSeniorityOptions,
+  getVisaSupportOptions,
+  getWorkplaceTypeOptions,
 } from "@/lib/job-posting";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +45,7 @@ type JobOpening = {
   description: string;
   responsibilities: string;
   requirements: string;
+  benefits: string;
   moderationStatus: string;
   moderationNotes: string;
 };
@@ -66,6 +67,7 @@ type JobDraft = {
   description: string;
   responsibilities: string;
   requirements: string;
+  benefits: string;
 };
 
 const EMPTY_JOB_DRAFT: JobDraft = {
@@ -85,6 +87,7 @@ const EMPTY_JOB_DRAFT: JobDraft = {
   description: "",
   responsibilities: "",
   requirements: "",
+  benefits: "",
 };
 
 let cachedRecruiterJobs: JobOpening[] | null = null;
@@ -116,6 +119,7 @@ function toDraft(job: JobOpening): JobDraft {
     description: job.description ?? "",
     responsibilities: job.responsibilities ?? "",
     requirements: job.requirements ?? "",
+    benefits: job.benefits ?? "",
   };
 }
 
@@ -137,6 +141,7 @@ function buildJobPayload(draft: JobDraft) {
     description: draft.description.trim(),
     responsibilities: draft.responsibilities.trim(),
     requirements: draft.requirements.trim(),
+    benefits: draft.benefits.trim(),
   };
 }
 
@@ -149,7 +154,7 @@ export function RecruiterCompanyTab({
   section?: "company" | "jobs";
   jobModerationEnabled?: boolean;
 }) {
-  const { messages } = useRecruiterI18n();
+  const { messages, locale } = useRecruiterI18n();
   const router = useRouter();
   const [description, setDescription] = useState(recruiter.description);
   const [interviewerCount, setInterviewerCount] = useState(
@@ -224,8 +229,8 @@ export function RecruiterCompanyTab({
   async function handleAddJob(e: React.FormEvent) {
     e.preventDefault();
     const payload = buildJobPayload(newJobDraft);
-    if (!payload.title || !payload.location || !payload.employmentType || !payload.description) {
-      setJobError("Please fill in title, location, employment type, and description.");
+    if (!payload.title || !payload.location || !payload.employmentType) {
+      setJobError("Please fill in title, location, and employment type.");
       return;
     }
 
@@ -251,8 +256,8 @@ export function RecruiterCompanyTab({
 
   async function handleUpdateJob(id: number) {
     const payload = buildJobPayload(editJobDraft);
-    if (!payload.title || !payload.location || !payload.employmentType || !payload.description) {
-      setJobError("Please fill in title, location, employment type, and description.");
+    if (!payload.title || !payload.location || !payload.employmentType) {
+      setJobError("Please fill in title, location, and employment type.");
       return;
     }
 
@@ -374,7 +379,7 @@ export function RecruiterCompanyTab({
             required
           >
             <option value="">{companyMessages.employmentType}</option>
-            {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
+            {getEmploymentTypeOptions(locale).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -392,7 +397,7 @@ export function RecruiterCompanyTab({
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
           >
             <option value="">{companyMessages.workplaceType}</option>
-            {WORKPLACE_TYPE_OPTIONS.map((option) => (
+            {getWorkplaceTypeOptions(locale).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -441,7 +446,7 @@ export function RecruiterCompanyTab({
             onChange={(e) => onChange("salaryPeriod", e.target.value)}
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
           >
-            {SALARY_PERIOD_OPTIONS.map((option) => (
+            {getSalaryPeriodOptions(locale).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -458,7 +463,7 @@ export function RecruiterCompanyTab({
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
           >
             <option value="">{companyMessages.seniority}</option>
-            {SENIORITY_OPTIONS.map((option) => (
+            {getSeniorityOptions(locale).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -485,7 +490,7 @@ export function RecruiterCompanyTab({
             className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
           >
             <option value="">{companyMessages.visaSupport}</option>
-            {VISA_SUPPORT_OPTIONS.map((option) => (
+            {getVisaSupportOptions(locale).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -549,14 +554,25 @@ export function RecruiterCompanyTab({
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
+        <div className="space-y-1 sm:col-span-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            {companyMessages.benefits}
+          </label>
+          <textarea
+            value={draft.benefits}
+            onChange={(e) => onChange("benefits", e.target.value)}
+            placeholder={companyMessages.benefitsPlaceholder}
+            rows={3}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
         <Button
           type={submitButtonType}
           size="sm"
           disabled={
             !draft.title.trim() ||
             !draft.location.trim() ||
-            !draft.employmentType ||
-            !draft.description.trim()
+            !draft.employmentType
           }
           onClick={onSubmit}
         >
@@ -732,6 +748,7 @@ export function RecruiterCompanyTab({
                       <RecruiterJobPostingCard
                         job={job}
                         compact
+                        locale={locale}
                         labels={{
                           seniority: messages.dashboard.company.seniority,
                           languageRequirement:
@@ -742,6 +759,7 @@ export function RecruiterCompanyTab({
                           description: messages.dashboard.company.summary,
                           responsibilities: messages.dashboard.company.responsibilities,
                           requirements: messages.dashboard.company.requirements,
+                          benefits: messages.dashboard.company.benefits,
                           viewJd: messages.dashboard.company.viewJd,
                           noJd: messages.dashboard.company.noJdLink,
                         }}

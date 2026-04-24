@@ -71,6 +71,7 @@ export const studentZhTwMessages = {
       description: "職缺說明",
       responsibilities: "工作內容",
       requirements: "條件要求",
+      benefits: "福利",
       viewJd: "查看 JD",
       noJd: "尚未提供 JD 連結",
     },
@@ -226,6 +227,7 @@ export const studentZhTwMessages = {
       description: "職缺說明",
       responsibilities: "工作內容",
       requirements: "條件要求",
+      benefits: "福利",
     },
   },
   bookingForm: {
@@ -359,6 +361,7 @@ export const studentZhTwMessages = {
         description: "職缺說明",
         responsibilities: "工作內容",
         requirements: "條件要求",
+        benefits: "福利",
       },
       approve: "通過",
       reject: "退回",

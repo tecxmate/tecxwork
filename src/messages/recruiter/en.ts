@@ -117,12 +117,15 @@ export const recruiterEnMessages = {
       summary: "Summary",
       responsibilities: "Responsibilities",
       requirements: "Requirements",
+      benefits: "Benefits & perks",
       descriptionPlaceholder:
         "Short role summary, responsibilities, and key hiring requirements",
       responsibilitiesPlaceholder:
         "Main responsibilities, deliverables, and day-to-day work",
       requirementsPlaceholder:
         "Required skills, experience, language, or degree expectations",
+      benefitsPlaceholder:
+        "Extra perks, bonus structure, training, flexibility, or travel support",
       languageRequirementPlaceholder:
         "e.g. English business level; Mandarin preferred",
       locationPlaceholder: "e.g. Taipei, Taiwan",

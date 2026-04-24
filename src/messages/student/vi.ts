@@ -70,6 +70,7 @@ export const studentViMessages = {
       description: "Mô tả",
       responsibilities: "Trách nhiệm",
       requirements: "Yêu cầu",
+      benefits: "Phúc lợi",
       viewJd: "Xem JD",
       noJd: "Chưa có liên kết JD",
     },
@@ -232,6 +233,7 @@ export const studentViMessages = {
       description: "Mô tả",
       responsibilities: "Trách nhiệm",
       requirements: "Yêu cầu",
+      benefits: "Phúc lợi",
     },
   },
   bookingForm: {
@@ -280,6 +282,7 @@ export const studentViMessages = {
         description: "Mô tả",
         responsibilities: "Trách nhiệm",
         requirements: "Yêu cầu",
+        benefits: "Phúc lợi",
       },
       approve: "Duyệt",
       reject: "Từ chối",

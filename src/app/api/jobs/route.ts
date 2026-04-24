@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
       description: jobOpenings.description,
       responsibilities: jobOpenings.responsibilities,
       requirements: jobOpenings.requirements,
+      benefits: jobOpenings.benefits,
     })
     .from(jobOpenings)
     .where(

@@ -17,6 +17,7 @@ import {
   employmentTypeLabel,
   formatApplicationDeadline,
   formatSalaryRange,
+  type JobPostingLocale,
   seniorityLabel,
   visaSupportLabel,
   workplaceTypeLabel,
@@ -41,6 +42,7 @@ export type RecruiterJobPosting = {
   description: string;
   responsibilities: string;
   requirements: string;
+  benefits: string;
 };
 
 type JobCardLabels = {
@@ -51,6 +53,7 @@ type JobCardLabels = {
   description: string;
   responsibilities: string;
   requirements: string;
+  benefits: string;
   viewJd: string;
   noJd: string;
 };
@@ -63,9 +66,62 @@ const defaultLabels: JobCardLabels = {
   description: "Description",
   responsibilities: "Responsibilities",
   requirements: "Requirements",
+  benefits: "Benefits",
   viewJd: "View JD",
   noJd: "No JD link",
 };
+
+function splitTextItems(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^[-*•]\s*/, "").trim());
+}
+
+function TextBlock({
+  label,
+  value,
+  compact,
+}: {
+  label: string;
+  value: string;
+  compact?: boolean;
+}) {
+  const items = splitTextItems(value);
+
+  if (items.length === 0) return null;
+
+  if (items.length === 1) {
+    return (
+      <div className="space-y-1">
+        <p className="text-[11px] font-semibold uppercase text-muted-foreground">
+          {label}
+        </p>
+        <p className={cn("text-sm text-muted-foreground whitespace-pre-wrap", compact ? "line-clamp-2" : "")}>
+          {items[0]}
+        </p>
+      </div>
+    );
+  }
+
+  const visibleItems = compact ? items.slice(0, 3) : items;
+
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] font-semibold uppercase text-muted-foreground">
+        {label}
+      </p>
+      <ul className="space-y-1 pl-4 text-sm text-muted-foreground">
+        {visibleItems.map((item, index) => (
+          <li key={`${label}-${index}`} className="list-disc">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function RecruiterJobPostingCard({
   job,
@@ -74,6 +130,7 @@ export function RecruiterJobPostingCard({
   action,
   labels = defaultLabels,
   compact = false,
+  locale,
 }: {
   job: RecruiterJobPosting;
   className?: string;
@@ -81,18 +138,21 @@ export function RecruiterJobPostingCard({
   action?: React.ReactNode;
   labels?: JobCardLabels;
   compact?: boolean;
+  locale?: JobPostingLocale;
 }) {
   const salaryLabel = formatSalaryRange({
     salaryMin: job.salaryMin,
     salaryMax: job.salaryMax,
     salaryCurrency: job.salaryCurrency,
     salaryPeriod: job.salaryPeriod,
+    locale,
   });
-  const employmentLabel = employmentTypeLabel(job.employmentType) || "Employment";
-  const workplaceLabel = workplaceTypeLabel(job.workplaceType);
-  const seniority = seniorityLabel(job.seniority);
-  const visaSupport = visaSupportLabel(job.visaSupport);
-  const applicationDeadline = formatApplicationDeadline(job.applicationDeadline);
+  const employmentLabel =
+    employmentTypeLabel(job.employmentType, locale) || "Employment";
+  const workplaceLabel = workplaceTypeLabel(job.workplaceType, locale);
+  const seniority = seniorityLabel(job.seniority, locale);
+  const visaSupport = visaSupportLabel(job.visaSupport, locale);
+  const applicationDeadline = formatApplicationDeadline(job.applicationDeadline, locale);
 
   return (
     <Card
@@ -173,38 +233,14 @@ export function RecruiterJobPostingCard({
           </div>
         ) : null}
 
-        {job.description ? (
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase text-muted-foreground">
-              {labels.description}
-            </p>
-            <p className={cn("text-sm text-muted-foreground", compact ? "line-clamp-2" : "line-clamp-3")}>
-              {job.description}
-            </p>
-          </div>
-        ) : null}
-
-        {job.responsibilities ? (
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase text-muted-foreground">
-              {labels.responsibilities}
-            </p>
-            <p className={cn("text-sm text-muted-foreground", compact ? "line-clamp-2" : "line-clamp-3")}>
-              {job.responsibilities}
-            </p>
-          </div>
-        ) : null}
-
-        {job.requirements ? (
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase text-muted-foreground">
-              {labels.requirements}
-            </p>
-            <p className={cn("text-sm text-muted-foreground", compact ? "line-clamp-2" : "line-clamp-3")}>
-              {job.requirements}
-            </p>
-          </div>
-        ) : null}
+        <TextBlock label={labels.description} value={job.description} compact={compact} />
+        <TextBlock
+          label={labels.responsibilities}
+          value={job.responsibilities}
+          compact={compact}
+        />
+        <TextBlock label={labels.requirements} value={job.requirements} compact={compact} />
+        <TextBlock label={labels.benefits} value={job.benefits} compact={compact} />
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           {job.jdLink ? (

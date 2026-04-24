@@ -45,6 +45,7 @@ export default async function RecruiterPage({
         description: jobOpenings.description,
         responsibilities: jobOpenings.responsibilities,
         requirements: jobOpenings.requirements,
+        benefits: jobOpenings.benefits,
       })
       .from(jobOpenings)
       .where(
