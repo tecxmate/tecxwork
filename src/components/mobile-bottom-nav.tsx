@@ -101,18 +101,17 @@ export function MobileBottomNav({
     return null;
   }
 
-  const safeBottomPadding = "calc(0.2rem + env(safe-area-inset-bottom) * 0.45)";
-  const navSpacerHeight = "calc(4.25rem + env(safe-area-inset-bottom) * 0.45)";
+  const navHeight = "5rem";
+  const navSpacerHeight = `calc(${navHeight} + env(safe-area-inset-bottom))`;
 
   return (
     <>
       <div className="md:hidden" style={{ height: navSpacerHeight }} aria-hidden="true" />
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
         <div
-          className="mx-auto grid max-w-xl px-2 pt-1"
+          className="mx-auto grid max-w-xl px-2 py-1"
           style={{
             gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
-            paddingBottom: safeBottomPadding,
           }}
         >
           {items.map((item) => {
