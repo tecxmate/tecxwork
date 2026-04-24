@@ -128,24 +128,13 @@ export default async function JobsPage() {
               jobs={jobs}
               locale={locale}
               labels={{
-                viewCompany: messages.jobsPage.viewCompany,
                 viewDetails: messages.jobsPage.viewDetails,
                 searchPlaceholder: messages.jobsPage.searchPlaceholder,
                 resultsCount: messages.jobsPage.resultsCount,
                 noMatchTitle: messages.jobsPage.noMatchTitle,
                 noMatchSubtitle: messages.jobsPage.noMatchSubtitle,
-                close: messages.jobsPage.close,
                 card: {
-                  seniority: messages.jobsPage.card.seniority,
-                  languageRequirement: messages.jobsPage.card.languageRequirement,
-                  visaSupport: messages.jobsPage.card.visaSupport,
                   applicationDeadline: messages.jobsPage.card.applicationDeadline,
-                  description: messages.jobsPage.card.description,
-                  responsibilities: messages.jobsPage.card.responsibilities,
-                  requirements: messages.jobsPage.card.requirements,
-                  benefits: messages.jobsPage.card.benefits,
-                  viewJd: messages.jobsPage.card.viewJd,
-                  noJd: messages.jobsPage.card.noJd,
                 },
               }}
             />

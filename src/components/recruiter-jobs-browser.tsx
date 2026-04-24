@@ -1,40 +1,28 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Briefcase,
   Building2,
   MapPin,
   Search,
-  X,
 } from "lucide-react";
 
-import { RecruiterJobPostingCard, type RecruiterJobPosting } from "@/components/recruiter-job-posting-card";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { employmentTypeLabel, formatApplicationDeadline, formatSalaryRange, type JobPostingLocale } from "@/lib/job-posting";
+import type { RecruiterJobPosting } from "@/components/recruiter-job-posting-card";
 
 type JobsBrowserLabels = {
-  viewCompany: string;
   viewDetails: string;
   searchPlaceholder: string;
   resultsCount: string;
   noMatchTitle: string;
   noMatchSubtitle: string;
-  close: string;
   card: {
-    seniority: string;
-    languageRequirement: string;
-    visaSupport: string;
     applicationDeadline: string;
-    description: string;
-    responsibilities: string;
-    requirements: string;
-    benefits: string;
-    viewJd: string;
-    noJd: string;
   };
 };
 
@@ -66,12 +54,10 @@ function JobTeaserCard({
   job,
   locale,
   labels,
-  onOpen,
 }: {
   job: RecruiterBrowseJob;
   locale: JobPostingLocale;
   labels: JobsBrowserLabels;
-  onOpen: () => void;
 }) {
   const salary = formatSalaryRange({
     salaryMin: job.salaryMin,
@@ -85,8 +71,8 @@ function JobTeaserCard({
   const preview = getPreviewText(job);
 
   return (
-    <button
-      onClick={onOpen}
+    <Link
+      href={`/jobs/${job.id}`}
       className="group relative flex h-full w-full flex-col rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]"
     >
       <div className="flex items-start justify-between gap-3">
@@ -131,74 +117,7 @@ function JobTeaserCard({
           {labels.viewDetails}
         </span>
       </div>
-    </button>
-  );
-}
-
-function JobDetailModal({
-  job,
-  locale,
-  labels,
-  onClose,
-}: {
-  job: RecruiterBrowseJob;
-  locale: JobPostingLocale;
-  labels: JobsBrowserLabels;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    document.addEventListener("keydown", handleEsc);
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleEsc);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-      onClick={onClose}
-    >
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-      <div
-        className="relative z-10 mb-[calc(5rem+env(safe-area-inset-bottom))] w-full max-w-3xl max-h-[calc(100dvh-5rem-env(safe-area-inset-bottom))] overflow-y-auto rounded-t-2xl bg-background shadow-xl animate-in slide-in-from-bottom-4 duration-200 sm:mb-0 sm:max-h-[90vh] sm:rounded-2xl sm:slide-in-from-bottom-0 sm:zoom-in-95"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-3 sm:px-6">
-          <div />
-          <button
-            onClick={onClose}
-            className="rounded-full p-1.5 transition-colors hover:bg-muted"
-            aria-label={labels.close}
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="p-4 pb-6 sm:p-6">
-          <RecruiterJobPostingCard
-            job={job}
-            locale={locale}
-            className="rounded-none border-0 bg-transparent p-0 shadow-none hover:border-transparent hover:bg-transparent hover:shadow-none"
-            labels={labels.card}
-            action={
-              <Link
-                href={`/recruiter/${job.recruiterId}`}
-                className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                {labels.viewCompany}
-              </Link>
-            }
-          />
-        </div>
-      </div>
-    </div>
+    </Link>
   );
 }
 
@@ -212,7 +131,6 @@ export function RecruiterJobsBrowser({
   labels: JobsBrowserLabels;
 }) {
   const [query, setQuery] = useState("");
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const deferredQuery = useDeferredValue(query);
 
   const filteredJobs = useMemo(() => {
@@ -234,11 +152,6 @@ export function RecruiterJobsBrowser({
         .some((value) => value.toLowerCase().includes(normalized))
     );
   }, [deferredQuery, jobs]);
-
-  const selectedJob =
-    filteredJobs.find((job) => job.id === selectedJobId) ??
-    jobs.find((job) => job.id === selectedJobId) ??
-    null;
 
   return (
     <section className="space-y-4">
@@ -277,20 +190,10 @@ export function RecruiterJobsBrowser({
               job={job}
               locale={locale}
               labels={labels}
-              onOpen={() => setSelectedJobId(job.id)}
             />
           ))}
         </div>
       )}
-
-      {selectedJob ? (
-        <JobDetailModal
-          job={selectedJob}
-          locale={locale}
-          labels={labels}
-          onClose={() => setSelectedJobId(null)}
-        />
-      ) : null}
     </section>
   );
 }
