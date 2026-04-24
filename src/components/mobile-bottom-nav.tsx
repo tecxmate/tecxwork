@@ -101,13 +101,8 @@ export function MobileBottomNav({
     return null;
   }
 
-  const navHeight = "5rem";
-  const navSpacerHeight = `calc(${navHeight} + env(safe-area-inset-bottom))`;
-
   return (
-    <>
-      <div className="md:hidden" style={{ height: navSpacerHeight }} aria-hidden="true" />
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
         <div
           className="mx-auto grid max-w-xl px-2 py-1"
           style={{
@@ -162,7 +157,6 @@ export function MobileBottomNav({
             );
           })}
         </div>
-      </nav>
-    </>
+    </nav>
   );
 }
