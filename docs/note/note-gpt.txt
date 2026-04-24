@@ -259,6 +259,91 @@ Why this was done:
 
 Current canonical site structure:
 
+
+JOB POSTING EXPANSION NOTE — RECRUITER / STUDENT / ADMIN CONSISTENCY
+
+Context:
+- Recruiter-created jobs were previously too thin for real hiring use.
+- The old job upload flow was mostly title + JD link.
+- The user wanted richer job posting fields similar to external job listings, and the same detail shape across recruiter, student, and admin views.
+
+What changed:
+- `job_openings` is now the real structured source of truth for recruiter-posted jobs.
+- Added richer job fields to `job_openings`:
+  - `location`
+  - `employmentType`
+  - `workplaceType`
+  - `salaryMin`
+  - `salaryMax`
+  - `salaryCurrency`
+  - `salaryPeriod`
+  - `seniority`
+  - `languageRequirement`
+  - `visaSupport`
+  - `applicationDeadline`
+  - `description`
+  - `responsibilities`
+  - `requirements`
+- Added migration helper:
+  - `src/lib/db/add-job-opening-detail-columns.ts`
+- Added shared posting helpers:
+  - `src/lib/job-posting.ts`
+- Added shared job UI card:
+  - `src/components/recruiter-job-posting-card.tsx`
+
+Recruiter-side:
+- Recruiter company/jobs editor now supports a full posting form instead of just a title/link.
+- New fields are visible and editable in:
+  - `src/app/dashboard/recruiter-dashboard-company.tsx`
+- The recruiter job list now uses the shared structured card.
+
+Student/public-side:
+- Public recruiter jobs board and recruiter detail page now render the same richer job card.
+- Files:
+  - `src/app/jobs/page.tsx`
+  - `src/app/recruiter/[id]/page.tsx`
+  - `src/app/recruiter/[id]/recruiter-detail.tsx`
+
+Admin-side:
+- Admin moderation now sees the same structured job card, with the richer fields searchable and reviewable.
+- Files:
+  - `src/app/admin/admin-data.ts`
+  - `src/app/admin/admin-dashboard.tsx`
+
+API changes:
+- Recruiter create/update job APIs now validate and persist the richer fields:
+  - `src/app/api/me/jobs/route.ts`
+  - `src/app/api/me/jobs/[id]/route.ts`
+- Public recruiter jobs API now returns the richer fields:
+  - `src/app/api/jobs/route.ts`
+
+Localization note:
+- Shared job-card labels were added for EN / VI / ZH-TW in student/admin-facing messages.
+- Recruiter form labels were expanded in recruiter EN / ZH-TW messages.
+- The option labels themselves in `src/lib/job-posting.ts` are still English constants for now.
+
+Database note:
+- Ran:
+  - `set -a; source .env.local; set +a; npm run db:update:job-details`
+- Result:
+  - `Ensured job_openings detail columns exist`
+
+Validation:
+- `npm run lint`: passes with existing warnings only, no errors
+- `npm run build`: passes
+
+Git state:
+- Latest pushed commit for this work:
+  - `aba7eee` — `Expand recruiter job posting details`
+
+Practical product note:
+- The recruiter job system is now much closer to a real event recruiting tool workflow.
+- Next sensible extensions, if needed:
+  - application status analytics per job
+  - recruiter-side job preview modal
+  - event-scoped job visibility / deadlines
+  - optional structured filters on student jobs page using the new fields
+
 Guest
 - `/`
 - `/browse`
