@@ -27,6 +27,7 @@ import {
   Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
@@ -465,170 +466,124 @@ export function AdminDashboard({
 
           <Separator />
 
-          {/* Event Mode Toggle */}
-          <div>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          {/* Settings Section */}
+          <Card>
+            <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-muted-foreground" />
                 <h2 className="font-heading text-lg font-semibold">
                   {admin.eventMode.title}
                 </h2>
                 {saving && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="ml-2 text-xs text-muted-foreground">
                     {messages.common.saving}
                   </span>
                 )}
               </div>
-              <Button
-                variant={locked ? "default" : "outline"}
-                size="sm"
-                onClick={handleToggleLock}
-                disabled={saving}
-              >
-                {locked ? (
-                  <>
-                    <Lock className="mr-1.5 h-3.5 w-3.5" />
-                    {admin.eventMode.locked}
-                  </>
-                ) : (
-                  <>
-                    <LockOpen className="mr-1.5 h-3.5 w-3.5" />
-                    {admin.eventMode.unlocked}
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {locked && (
-              <div className="mb-3 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
-                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">
-                    {admin.eventMode.modeLocked}
-                  </span>{" "}
-                  {admin.eventMode.modeLockedHint}
-                </p>
-              </div>
-            )}
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {modes.map((m) => (
-                <button
-                  key={m.value}
-                  onClick={() => handleModeChange(m.value)}
-                  disabled={locked}
-                  className={cn(
-                    "rounded-lg border p-4 text-left transition-colors",
-                    locked
-                      ? "cursor-not-allowed opacity-60"
-                      : "cursor-pointer",
-                    mode === m.value
-                      ? "border-primary bg-primary/5"
-                      : !locked && "border-border hover:border-primary/40"
-                  )}
-                >
-                  <p className="text-sm font-medium">{m.label}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{m.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-heading text-lg font-semibold">
-                {admin.onboarding.title}
-              </h2>
-              {saving && (
-                <span className="text-xs text-muted-foreground">
-                  {messages.common.saving}
-                </span>
-              )}
-            </div>
-            <p className="mb-4 text-sm text-muted-foreground">
-              {admin.onboarding.description}
-            </p>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {onboardingModes.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleOnboardingModeChange(option.value)}
-                  className={cn(
-                    "rounded-lg border p-4 text-left transition-colors",
-                    onboardingMode === option.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/40"
-                  )}
-                >
-                  <p className="text-sm font-medium">{option.label}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {option.desc}
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Event Mode */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-1">
+                  <label className="text-sm font-medium">Booking Mode</label>
+                  <p className="text-xs text-muted-foreground">
+                    {modes.find((m) => m.value === mode)?.desc}
                   </p>
-                </button>
-              ))}
-            </div>
-          </div>
+                </div>
+                <select
+                  value={mode}
+                  onChange={(e) => handleModeChange(e.target.value)}
+                  disabled={locked || saving}
+                  className="h-9 min-w-[180px] rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {modes.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <Separator />
+              <Separator />
 
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-heading text-lg font-semibold">
-                {admin.jobPublishing.title}
-              </h2>
-              {saving && (
-                <span className="text-xs text-muted-foreground">
-                  {messages.common.saving}
-                </span>
-              )}
-            </div>
-            <p className="mb-4 text-sm text-muted-foreground">
-              {admin.jobPublishing.description}
-            </p>
+              {/* Lock Mode */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-1">
+                  <label className="text-sm font-medium">
+                    {locked ? admin.eventMode.locked : admin.eventMode.unlocked}
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    {admin.eventMode.modeLockedHint}
+                  </p>
+                </div>
+                <Switch
+                  checked={locked}
+                  onCheckedChange={handleToggleLock}
+                  disabled={saving}
+                />
+              </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => handleJobModerationToggle(true)}
-                className={cn(
-                  "rounded-lg border p-4 text-left transition-colors",
-                  jobModerationEnabled
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/40"
-                )}
-              >
-                <p className="text-sm font-medium">
-                  {admin.jobPublishing.adminReviewRequired}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {admin.jobPublishing.adminReviewRequiredDesc}
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleJobModerationToggle(false)}
-                className={cn(
-                  "rounded-lg border p-4 text-left transition-colors",
-                  !jobModerationEnabled
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/40"
-                )}
-              >
-                <p className="text-sm font-medium">
-                  {admin.jobPublishing.instantPublish}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {admin.jobPublishing.instantPublishDesc}
-                </p>
-              </button>
-            </div>
-          </div>
+              <Separator />
+
+              {/* Onboarding Mode */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                    <label className="text-sm font-medium">{admin.onboarding.title}</label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {onboardingMode === "full"
+                      ? admin.onboarding.modes.full.desc
+                      : admin.onboarding.modes.minimal.desc}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-xs", onboardingMode === "minimal" ? "text-foreground" : "text-muted-foreground")}>
+                    {admin.onboarding.modes.minimal.label}
+                  </span>
+                  <Switch
+                    checked={onboardingMode === "full"}
+                    onCheckedChange={(checked) => handleOnboardingModeChange(checked ? "full" : "minimal")}
+                    disabled={saving}
+                  />
+                  <span className={cn("text-xs", onboardingMode === "full" ? "text-foreground" : "text-muted-foreground")}>
+                    {admin.onboarding.modes.full.label}
+                  </span>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Job Moderation */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <label className="text-sm font-medium">{admin.jobPublishing.title}</label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {jobModerationEnabled
+                      ? admin.jobPublishing.adminReviewRequiredDesc
+                      : admin.jobPublishing.instantPublishDesc}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-xs", !jobModerationEnabled ? "text-foreground" : "text-muted-foreground")}>
+                    {admin.jobPublishing.instantPublish}
+                  </span>
+                  <Switch
+                    checked={jobModerationEnabled}
+                    onCheckedChange={handleJobModerationToggle}
+                    disabled={saving}
+                  />
+                  <span className={cn("text-xs", jobModerationEnabled ? "text-foreground" : "text-muted-foreground")}>
+                    {admin.jobPublishing.adminReviewRequired}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <Separator />
 
@@ -753,110 +708,6 @@ export function AdminDashboard({
 
           <Separator />
 
-          {/* Allowed Recruiter Domains */}
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <AtSign className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-heading text-lg font-semibold">
-                {admin.domains.title}
-              </h2>
-            </div>
-            <p className="mb-4 text-sm text-muted-foreground">
-              {admin.domains.description}
-            </p>
-
-            <Card className="mb-4">
-              <CardContent className="py-4">
-                <form
-                  onSubmit={handleAddDomain}
-                  className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
-                >
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      {admin.domains.domain}
-                    </label>
-                    <Input
-                      value={newDomain}
-                      onChange={(e) => setNewDomain(e.target.value)}
-                      placeholder="tsmc.com"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      {admin.domains.companyName}
-                    </label>
-                    <Input
-                      value={newCompany}
-                      onChange={(e) => setNewCompany(e.target.value)}
-                      placeholder="TSMC"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      {admin.domains.industry}
-                    </label>
-                    <select
-                      value={newIndustry}
-                      onChange={(e) => setNewIndustry(e.target.value)}
-                      className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                    >
-                      {INDUSTRY_OPTIONS.map((industry) => (
-                        <option key={industry} value={industry}>
-                          {messages.options.preferredIndustries[industry]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {domainError && (
-                    <p className="text-xs text-destructive sm:col-span-3">
-                      {domainError}
-                    </p>
-                  )}
-                  <Button
-                    type="submit"
-                    disabled={addingDomain}
-                    className="sm:col-span-3"
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    {admin.domains.addDomain}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-2">
-              {domains.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  {admin.domains.empty}
-                </p>
-              ) : (
-                domains.map((d) => (
-                  <Card key={d.id}>
-                    <CardContent className="flex items-center justify-between py-3">
-                      <div className="flex-1">
-                        <p className="font-medium">{d.company}</p>
-                        <p className="text-xs text-muted-foreground">
-                          @{d.domain} · {d.industry}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteDomain(d.id)}
-                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        aria-label={`${messages.common.remove} ${d.domain}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </div>
-
-          <Separator />
-
           <PeopleSection
             recruiters={recruiters}
             applicants={applicants}
@@ -869,15 +720,9 @@ export function AdminDashboard({
           />
             </>
           ) : section === "recruiters" ? (
-            <PeopleSection
+            <RecruitersSection
               recruiters={recruiters}
-              applicants={applicants}
-              bookings={adminBookings}
               onDeleteRecruiter={handleDeleteRecruiter}
-              onDeleteApplicant={handleDeleteApplicant}
-              onCancelBooking={handleCancelBooking}
-              initialTab="recruiters"
-              showTabs={false}
             />
           ) : section === "applicants" ? (
             <PeopleSection
@@ -1555,5 +1400,267 @@ function SortHeader({
         )}
       </button>
     </th>
+  );
+}
+
+// ------------------------------------------------------------------
+// Recruiters Section — Simple list of recruiters by email
+// ------------------------------------------------------------------
+
+function RecruitersSection({
+  recruiters,
+  onDeleteRecruiter,
+}: {
+  recruiters: Recruiter[];
+  onDeleteRecruiter: (r: Recruiter) => void;
+}) {
+  const router = useRouter();
+  const { messages, locale } = useStudentI18n();
+  const admin = messages.admin;
+  const localeTag = locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<{ key: "name" | "email" | "createdAt"; dir: SortDir }>({
+    key: "name",
+    dir: "asc",
+  });
+
+  // Add recruiter form
+  const [showForm, setShowForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newCompany, setNewCompany] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  async function handleAddRecruiter(e: React.FormEvent) {
+    e.preventDefault();
+    setAdding(true);
+    setAddError("");
+
+    try {
+      const res = await fetch("/api/admin/recruiters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newName.trim(),
+          email: newEmail.trim().toLowerCase(),
+          company: newCompany.trim(),
+          password: newPassword,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to add recruiter");
+      }
+
+      setNewName("");
+      setNewEmail("");
+      setNewCompany("");
+      setNewPassword("");
+      setShowForm(false);
+      router.refresh();
+    } catch (err) {
+      setAddError(err instanceof Error ? err.message : "Failed to add recruiter");
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  function toggleSort(key: "name" | "email" | "createdAt") {
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" }
+    );
+  }
+
+  const filteredRecruiters = recruiters
+    .filter((r) => {
+      if (!query.trim()) return true;
+      const q = query.toLowerCase();
+      return (
+        r.name.toLowerCase().includes(q) ||
+        r.email.toLowerCase().includes(q) ||
+        r.company.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      const dir = sort.dir === "asc" ? 1 : -1;
+      const av = String(a[sort.key] ?? "").toLowerCase();
+      const bv = String(b[sort.key] ?? "").toLowerCase();
+      return av < bv ? -dir : av > bv ? dir : 0;
+    });
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          <h2 className="font-heading text-lg font-semibold">
+            {admin.people.tabs.recruiters}
+          </h2>
+          <Badge variant="secondary" className="ml-1">
+            {recruiters.length}
+          </Badge>
+        </div>
+        <Button
+          size="sm"
+          variant={showForm ? "outline" : "default"}
+          onClick={() => setShowForm(!showForm)}
+        >
+          <Plus className="mr-1.5 h-4 w-4" />
+          Add Recruiter
+        </Button>
+      </div>
+
+      {/* Add Recruiter Form */}
+      {showForm && (
+        <Card>
+          <CardContent className="py-4">
+            <form onSubmit={handleAddRecruiter} className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Name</label>
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Email</label>
+                  <Input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="john@company.com"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Company</label>
+                  <Input
+                    value={newCompany}
+                    onChange={(e) => setNewCompany(e.target.value)}
+                    placeholder="Acme Inc"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Password</label>
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              </div>
+              {addError && (
+                <p className="text-sm text-destructive">{addError}</p>
+              )}
+              <div className="flex gap-2">
+                <Button type="submit" disabled={adding} size="sm">
+                  {adding ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Adding...</> : "Add Recruiter"}
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      <p className="text-sm text-muted-foreground">
+        Only these recruiters can access the system with their registered email.
+      </p>
+
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder={admin.people.searchRecruitersPlaceholder}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {/* Recruiters Table */}
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
+            <tr>
+              <SortHeader
+                label={admin.people.columns.name}
+                active={sort.key === "name"}
+                dir={sort.dir}
+                onClick={() => toggleSort("name")}
+              />
+              <SortHeader
+                label={admin.people.columns.email}
+                active={sort.key === "email"}
+                dir={sort.dir}
+                onClick={() => toggleSort("email")}
+              />
+              <SortHeader
+                label={admin.people.columns.joined}
+                active={sort.key === "createdAt"}
+                dir={sort.dir}
+                onClick={() => toggleSort("createdAt")}
+                className="hidden sm:table-cell"
+              />
+              <th className="w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRecruiters.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                  {admin.people.noRecruiters}
+                </td>
+              </tr>
+            ) : (
+              filteredRecruiters.map((r) => (
+                <tr key={r.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                  <td className="px-3 py-2.5">
+                    <p className="font-medium">{r.name}</p>
+                    <p className="text-xs text-muted-foreground">{r.company}</p>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <a href={`mailto:${r.email}`} className="text-muted-foreground hover:text-primary hover:underline">
+                      {r.email}
+                    </a>
+                  </td>
+                  <td className="hidden px-3 py-2.5 text-xs text-muted-foreground sm:table-cell">
+                    {new Date(r.createdAt).toLocaleDateString(localeTag, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <button
+                      onClick={() => onDeleteRecruiter(r)}
+                      className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={interpolate(admin.people.removeRecruiterAria, { company: r.company })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

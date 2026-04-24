@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     contactEmail,
   } = body;
 
-  if (!email || !password || !name || !company || !industry || !contactEmail) {
+  if (!email || !password || !name || !company) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
     .values({
       userId: user.id,
       company,
-      industry,
+      industry: industry ?? "",
       description: description ?? "",
-      contactEmail,
+      contactEmail: contactEmail ?? email,
     })
     .returning();
 
