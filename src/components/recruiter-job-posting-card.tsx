@@ -5,6 +5,7 @@ import {
   ExternalLink,
   FileText,
   Globe2,
+  Laptop,
   MapPin,
   ShieldCheck,
   User,
@@ -190,7 +191,8 @@ export function RecruiterJobPostingCard({
             {employmentLabel}
           </Badge>
           {workplaceLabel ? (
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Laptop className="h-3 w-3" />
               {workplaceLabel}
             </Badge>
           ) : null}
