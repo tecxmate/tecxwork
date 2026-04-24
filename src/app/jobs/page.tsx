@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Briefcase } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
@@ -101,7 +100,6 @@ export default async function JobsPage() {
 
       <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-7xl text-center">
-          <Badge className="mb-2 sm:mb-4">{messages.jobsPage.badge}</Badge>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
             {messages.jobsPage.title}
           </h1>
