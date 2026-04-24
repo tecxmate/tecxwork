@@ -95,6 +95,17 @@ export const studentZhTwMessages = {
     page: "第",
     of: "頁 / 共",
   },
+  browsePage: {
+    ...studentEnMessages.browsePage,
+    badge: "公司名錄",
+    title: "參展公司",
+    subtitle: "探索參加就業博覽會的招募企業，發現開放職缺。",
+    pipaTitle: "資料保護聲明 (PIPA)",
+    pipaBody:
+      "您的履歷連結僅會分享給您預約的招募方。所有預約資料將在活動結束後 2 日內清除。",
+    guestHint:
+      "訪客可瀏覽參展公司。準備應徵及預約面試時請先登入。",
+  },
   recruiterCard: {
     ...studentEnMessages.recruiterCard,
     openPositions: "開放職缺",

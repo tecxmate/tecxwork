@@ -62,6 +62,10 @@ export const studentEnMessages = {
     getStarted: "Get Started",
   },
   browsePage: {
+    badge: "Company Directory",
+    title: "Participating Companies",
+    subtitle:
+      "Explore recruiters attending the career fair and discover open positions.",
     pipaTitle: "Data Protection Notice (PIPA)",
     pipaBody:
       "Your CV link is shared only with the recruiter you book with. All booking data is purged within 2 days after the event.",

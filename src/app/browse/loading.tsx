@@ -18,6 +18,13 @@ export default function Loading() {
           </div>
         </div>
       </header>
+      <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12">
+        <div className="mx-auto max-w-7xl text-center">
+          <Skeleton className="mx-auto mb-2 h-6 w-32 rounded-full sm:mb-4" />
+          <Skeleton className="mx-auto h-8 w-64 sm:h-12 sm:w-96" />
+          <Skeleton className="mx-auto mt-2 h-4 w-80 sm:mt-3 sm:h-5" />
+        </div>
+      </section>
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
           <Skeleton className="mb-4 h-10 w-full max-w-sm" />
