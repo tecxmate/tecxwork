@@ -79,6 +79,11 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
   const [infoExpanded, setInfoExpanded] = useState(false);
   const [jobs] = useState<JobOpening[]>(initialJobs);
   const [appliedPositions, setAppliedPositions] = useState<string[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(
+    initialJobs.length > 0 ? initialJobs[0].id : null
+  );
+
+  const selectedJob = jobs.find((j) => j.id === selectedJobId) ?? null;
 
   // Fetch which positions the student already applied to (only if authenticated)
   useEffect(() => {
@@ -214,60 +219,104 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
           </div>
 
           <div className="grid gap-6 lg:grid-cols-5">
-            {/* Desktop sidebar */}
+            {/* Desktop sidebar: Company info + Job list */}
             <div className="hidden lg:col-span-2 lg:block">
-              <Card>
-                <CardHeader className="gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-secondary">
-                    <Building2 className="h-7 w-7 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="font-heading text-2xl font-bold">{recruiter.company}</h1>
-                    <Badge variant="secondary" className="mt-1">{recruiter.industry}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{recruiter.description}</p>
-                  <Separator />
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-start gap-2">
-                      <Mail className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span className="break-all">{recruiter.contactEmail}</span>
+              <div className="sticky top-20 space-y-4">
+                <Card>
+                  <CardHeader className="gap-3 pb-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
+                      <Building2 className="h-6 w-6 text-primary" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 shrink-0" />
-                      <span>
-                        {interpolate(messages.recruiterDetail.interviewMin, {
-                          duration: EVENT_CONFIG.slotDuration,
-                        })}
-                      </span>
+                    <div>
+                      <h1 className="font-heading text-xl font-bold">{recruiter.company}</h1>
+                      <Badge variant="secondary" className="mt-1 text-xs">{recruiter.industry}</Badge>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 shrink-0" />
-                      <span>{EVENT_CONFIG.location}</span>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    <p className="text-sm text-muted-foreground line-clamp-3">{recruiter.description}</p>
+                    <Separator />
+                    <div className="space-y-1.5 text-xs text-muted-foreground">
+                      <div className="flex items-start gap-2">
+                        <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span className="break-all">{recruiter.contactEmail}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
+                        <span>
+                          {interpolate(messages.recruiterDetail.interviewMin, {
+                            duration: EVENT_CONFIG.slotDuration,
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        <span>{EVENT_CONFIG.location}</span>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+
+                {/* Compact job list */}
+                {jobs.length > 0 && step === "positions" && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <h2 className="text-sm font-semibold text-muted-foreground">
+                        {messages.recruiterDetail.openPositions}
+                      </h2>
+                    </CardHeader>
+                    <CardContent className="space-y-1 pt-0">
+                      {jobs.map((job) => {
+                        const isSelected = selectedJobId === job.id;
+                        const alreadyApplied = appliedPositions.includes(job.title);
+                        return (
+                          <button
+                            key={job.id}
+                            onClick={() => setSelectedJobId(job.id)}
+                            className={cn(
+                              "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors",
+                              isSelected
+                                ? "bg-primary/10 text-primary"
+                                : "hover:bg-muted",
+                              alreadyApplied && !isSelected && "text-green-700 dark:text-green-400"
+                            )}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className={cn(
+                                "truncate text-sm font-medium",
+                                isSelected && "text-primary"
+                              )}>
+                                {job.title}
+                              </p>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {job.location || job.employmentType}
+                              </p>
+                            </div>
+                            {alreadyApplied && (
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
 
             {/* Main content — step-based */}
             <div className="lg:col-span-3">
               {step === "positions" && (
-                <Card>
-                  <CardHeader>
-                    <h2 className="font-heading text-lg font-semibold">
-                      {messages.recruiterDetail.openPositions}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {messages.recruiterDetail.reviewAndApply}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
+                <>
+                  {/* Mobile: show all jobs as cards */}
+                  <div className="space-y-2 lg:hidden">
                     {jobs.length === 0 ? (
-                      <p className="py-6 text-center text-sm text-muted-foreground">
-                        {messages.recruiterDetail.noPositions}
-                      </p>
+                      <Card>
+                        <CardContent className="py-6">
+                          <p className="text-center text-sm text-muted-foreground">
+                            {messages.recruiterDetail.noPositions}
+                          </p>
+                        </CardContent>
+                      </Card>
                     ) : (
                       jobs.map((job) => {
                         const alreadyApplied = appliedPositions.includes(job.title);
@@ -331,8 +380,164 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                         );
                       })
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  {/* Desktop: detailed job view */}
+                  <div className="hidden lg:block">
+                    {selectedJob ? (
+                      <Card>
+                        <CardHeader>
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h2 className="font-heading text-xl font-bold">
+                                {selectedJob.title}
+                              </h2>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {recruiter.company}
+                              </p>
+                            </div>
+                            {appliedPositions.includes(selectedJob.title) ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                {messages.recruiterDetail.applied}
+                              </span>
+                            ) : (
+                              <Button
+                                onClick={() => handleSelectPosition(selectedJob.title)}
+                              >
+                                {isAuthenticated ? (
+                                  <>
+                                    {messages.recruiterDetail.apply}
+                                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <LogIn className="mr-1.5 h-4 w-4" />
+                                    {messages.recruiterDetail.loginToApply}
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex flex-wrap gap-2">
+                            {selectedJob.location && (
+                              <Badge variant="outline" className="gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {selectedJob.location}
+                              </Badge>
+                            )}
+                            {selectedJob.employmentType && (
+                              <Badge variant="outline" className="gap-1">
+                                <Building2 className="h-3 w-3" />
+                                {selectedJob.employmentType}
+                              </Badge>
+                            )}
+                            {selectedJob.workplaceType && (
+                              <Badge variant="outline">{selectedJob.workplaceType}</Badge>
+                            )}
+                            {selectedJob.seniority && (
+                              <Badge variant="outline">{selectedJob.seniority}</Badge>
+                            )}
+                            {(selectedJob.salaryMin || selectedJob.salaryMax) && (
+                              <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
+                                {selectedJob.salaryCurrency}{" "}
+                                {selectedJob.salaryMin?.toLocaleString()}
+                                {selectedJob.salaryMax
+                                  ? ` - ${selectedJob.salaryMax.toLocaleString()}`
+                                  : "+"}
+                                {" "}per {selectedJob.salaryPeriod}
+                              </Badge>
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {selectedJob.languageRequirement && (
+                            <div>
+                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {messages.recruiterDetail.card.languageRequirement}
+                              </h3>
+                              <p className="mt-1 text-sm">{selectedJob.languageRequirement}</p>
+                            </div>
+                          )}
+
+                          {selectedJob.description && (
+                            <div>
+                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {messages.recruiterDetail.card.description}
+                              </h3>
+                              <p className="mt-1 whitespace-pre-wrap text-sm">
+                                {selectedJob.description}
+                              </p>
+                            </div>
+                          )}
+
+                          {selectedJob.responsibilities && (
+                            <div>
+                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {messages.recruiterDetail.card.responsibilities}
+                              </h3>
+                              <p className="mt-1 whitespace-pre-wrap text-sm">
+                                {selectedJob.responsibilities}
+                              </p>
+                            </div>
+                          )}
+
+                          {selectedJob.requirements && (
+                            <div>
+                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {messages.recruiterDetail.card.requirements}
+                              </h3>
+                              <p className="mt-1 whitespace-pre-wrap text-sm">
+                                {selectedJob.requirements}
+                              </p>
+                            </div>
+                          )}
+
+                          {selectedJob.visaSupport && (
+                            <div>
+                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {messages.recruiterDetail.card.visaSupport}
+                              </h3>
+                              <p className="mt-1 text-sm">{selectedJob.visaSupport}</p>
+                            </div>
+                          )}
+
+                          {selectedJob.applicationDeadline && (
+                            <div>
+                              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {messages.recruiterDetail.card.applicationDeadline}
+                              </h3>
+                              <p className="mt-1 text-sm">{selectedJob.applicationDeadline}</p>
+                            </div>
+                          )}
+
+                          {selectedJob.jdLink && (
+                            <a
+                              href={selectedJob.jdLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                            >
+                              {messages.recruiterDetail.viewJobDescription}
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardContent className="py-12">
+                          <p className="text-center text-sm text-muted-foreground">
+                            {messages.recruiterDetail.noPositions}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </>
               )}
 
               {step === "pick-slot" && selectedPosition && (
