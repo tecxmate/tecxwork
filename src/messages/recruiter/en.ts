@@ -127,7 +127,7 @@ export const recruiterEnMessages = {
       benefitsPlaceholder:
         "Extra perks, bonus structure, training, flexibility, or travel support",
       languageRequirementPlaceholder:
-        "e.g. English business level; Mandarin preferred",
+        "Other language note, score target, or proficiency note",
       locationPlaceholder: "e.g. Taipei, Taiwan",
       salaryCurrencyPlaceholder: "e.g. TWD",
       add: "Add",

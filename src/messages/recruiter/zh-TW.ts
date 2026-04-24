@@ -122,7 +122,7 @@ export const recruiterZhTwMessages = {
       responsibilitiesPlaceholder: "請列出主要工作內容、交付成果與日常任務",
       requirementsPlaceholder: "請列出技能、經驗、語言或學歷條件",
       benefitsPlaceholder: "請列出福利、獎金、培訓、彈性安排或其他加分項目",
-      languageRequirementPlaceholder: "例如：英文商務程度；中文加分",
+      languageRequirementPlaceholder: "補充其他語言備註、分數門檻或程度要求",
       locationPlaceholder: "例如：台北市，台灣",
       salaryCurrencyPlaceholder: "例如：TWD",
       add: "新增",

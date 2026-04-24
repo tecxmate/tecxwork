@@ -3,7 +3,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  BadgeInfo,
   Briefcase,
   Building2,
   MapPin,
@@ -18,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { employmentTypeLabel, formatApplicationDeadline, formatSalaryRange, type JobPostingLocale } from "@/lib/job-posting";
 
 type JobsBrowserLabels = {
-  recruiterPosted: string;
   viewCompany: string;
   viewDetails: string;
   searchPlaceholder: string;
@@ -89,7 +87,7 @@ function JobTeaserCard({
   return (
     <button
       onClick={onOpen}
-      className="group relative flex w-full flex-col rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]"
+      className="group relative flex h-full w-full flex-col rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
@@ -101,9 +99,6 @@ function JobTeaserCard({
             <span className="line-clamp-1">{job.company}</span>
           </p>
         </div>
-        <Badge variant="secondary" className="shrink-0 text-[10px]">
-          {labels.recruiterPosted}
-        </Badge>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
@@ -131,7 +126,7 @@ function JobTeaserCard({
         <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{preview}</p>
       ) : null}
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-auto flex items-end justify-end pt-4">
         <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
           {labels.viewDetails}
         </span>
@@ -167,7 +162,7 @@ function JobDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
+      className="fixed inset-0 z-50 flex items-end justify-center pb-[calc(5rem+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
       onClick={onClose}
     >
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
@@ -176,9 +171,7 @@ function JobDetailModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-3 sm:px-6">
-          <Badge variant="secondary" className="text-[10px]">
-            {labels.recruiterPosted}
-          </Badge>
+          <div />
           <button
             onClick={onClose}
             className="rounded-full p-1.5 transition-colors hover:bg-muted"
@@ -192,7 +185,7 @@ function JobDetailModal({
           <RecruiterJobPostingCard
             job={job}
             locale={locale}
-            className="border-0 p-0 shadow-none hover:border-border/70 hover:shadow-none"
+            className="rounded-none border-0 bg-transparent p-0 shadow-none hover:border-transparent hover:bg-transparent hover:shadow-none"
             labels={labels.card}
             action={
               <Link
@@ -268,7 +261,7 @@ export function RecruiterJobsBrowser({
 
       {filteredJobs.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-16 text-center">
-          <BadgeInfo className="h-10 w-10 text-muted-foreground/50" />
+          <Briefcase className="h-10 w-10 text-muted-foreground/50" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">
             {labels.noMatchTitle}
           </p>

@@ -17,6 +17,7 @@ import {
   employmentTypeLabel,
   formatApplicationDeadline,
   formatSalaryRange,
+  parseLanguageRequirementTokens,
   type JobPostingLocale,
   seniorityLabel,
   visaSupportLabel,
@@ -112,7 +113,7 @@ function TextBlock({
       <p className="text-[11px] font-semibold uppercase text-muted-foreground">
         {label}
       </p>
-      <ul className="space-y-1 pl-4 text-sm text-muted-foreground">
+      <ul className="space-y-1 pl-6 text-sm text-muted-foreground marker:text-muted-foreground">
         {visibleItems.map((item, index) => (
           <li key={`${label}-${index}`} className="list-disc">
             {item}
@@ -221,15 +222,22 @@ export function RecruiterJobPostingCard({
             <p className="text-[11px] font-semibold uppercase text-muted-foreground">
               {labels.languageRequirement}
             </p>
-            <p
-              className={cn(
-                "flex items-start gap-2 text-sm text-muted-foreground",
-                compact ? "line-clamp-2" : "line-clamp-3"
-              )}
-            >
-              <Globe2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>{job.languageRequirement}</span>
-            </p>
+            <div className="flex flex-wrap items-start gap-1.5">
+              <Globe2 className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <div className="flex flex-wrap gap-1.5">
+                {parseLanguageRequirementTokens(job.languageRequirement, locale).map(
+                  (item) => (
+                    <Badge
+                      key={item.key}
+                      variant="secondary"
+                      className="text-[10px]"
+                    >
+                      {item.label}
+                    </Badge>
+                  )
+                )}
+              </div>
+            </div>
           </div>
         ) : null}
 

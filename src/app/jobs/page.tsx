@@ -128,7 +128,6 @@ export default async function JobsPage() {
               jobs={jobs}
               locale={locale}
               labels={{
-                recruiterPosted: messages.jobsPage.recruiterPosted,
                 viewCompany: messages.jobsPage.viewCompany,
                 viewDetails: messages.jobsPage.viewDetails,
                 searchPlaceholder: messages.jobsPage.searchPlaceholder,

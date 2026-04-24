@@ -33,11 +33,23 @@ export const VISA_SUPPORT_OPTIONS = [
   { value: "not_supported", label: "No visa/work permit support" },
 ] as const;
 
+export const LANGUAGE_REQUIREMENT_OPTIONS = [
+  { value: "english", label: "English" },
+  { value: "chinese", label: "Chinese" },
+  { value: "vietnamese", label: "Vietnamese" },
+  { value: "japanese", label: "Japanese" },
+  { value: "korean", label: "Korean" },
+  { value: "thai", label: "Thai" },
+  { value: "indonesian", label: "Bahasa Indonesia" },
+] as const;
+
 export type EmploymentTypeValue = (typeof EMPLOYMENT_TYPE_OPTIONS)[number]["value"];
 export type WorkplaceTypeValue = (typeof WORKPLACE_TYPE_OPTIONS)[number]["value"];
 export type SalaryPeriodValue = (typeof SALARY_PERIOD_OPTIONS)[number]["value"];
 export type SeniorityValue = (typeof SENIORITY_OPTIONS)[number]["value"];
 export type VisaSupportValue = (typeof VISA_SUPPORT_OPTIONS)[number]["value"];
+export type LanguageRequirementValue =
+  (typeof LANGUAGE_REQUIREMENT_OPTIONS)[number]["value"];
 
 export const EMPLOYMENT_TYPE_VALUES: ReadonlySet<string> = new Set(
   EMPLOYMENT_TYPE_OPTIONS.map((option) => option.value)
@@ -53,6 +65,9 @@ export const SENIORITY_VALUES: ReadonlySet<string> = new Set(
 );
 export const VISA_SUPPORT_VALUES: ReadonlySet<string> = new Set(
   VISA_SUPPORT_OPTIONS.map((option) => option.value)
+);
+export const LANGUAGE_REQUIREMENT_VALUES: ReadonlySet<string> = new Set(
+  LANGUAGE_REQUIREMENT_OPTIONS.map((option) => option.value)
 );
 
 const localizedLabels = {
@@ -85,6 +100,15 @@ const localizedLabels = {
       case_by_case: "Visa/work permit reviewed case by case",
       not_supported: "No visa/work permit support",
     },
+    languageRequirement: {
+      english: "English",
+      chinese: "Chinese",
+      vietnamese: "Vietnamese",
+      japanese: "Japanese",
+      korean: "Korean",
+      thai: "Thai",
+      indonesian: "Bahasa Indonesia",
+    },
   },
   vi: {
     employmentType: {
@@ -114,6 +138,15 @@ const localizedLabels = {
       supported: "Có hỗ trợ visa / giấy phép lao động",
       case_by_case: "Xem xét visa / giấy phép theo từng trường hợp",
       not_supported: "Không hỗ trợ visa / giấy phép lao động",
+    },
+    languageRequirement: {
+      english: "Tiếng Anh",
+      chinese: "Tiếng Trung",
+      vietnamese: "Tiếng Việt",
+      japanese: "Tiếng Nhật",
+      korean: "Tiếng Hàn",
+      thai: "Tiếng Thái",
+      indonesian: "Tiếng Indonesia",
     },
   },
   "zh-TW": {
@@ -145,6 +178,15 @@ const localizedLabels = {
       case_by_case: "依個案評估簽證／工作許可",
       not_supported: "不提供簽證／工作許可支援",
     },
+    languageRequirement: {
+      english: "英文",
+      chinese: "中文",
+      vietnamese: "越文",
+      japanese: "日文",
+      korean: "韓文",
+      thai: "泰文",
+      indonesian: "印尼文",
+    },
   },
 } as const;
 
@@ -157,7 +199,8 @@ type OptionValue =
   | WorkplaceTypeValue
   | SalaryPeriodValue
   | SeniorityValue
-  | VisaSupportValue;
+  | VisaSupportValue
+  | LanguageRequirementValue;
 
 function localizedOptionLabel<
   T extends keyof (typeof localizedLabels)["en"]
@@ -204,6 +247,13 @@ export function getVisaSupportOptions(locale?: JobPostingLocale) {
   }));
 }
 
+export function getLanguageRequirementOptions(locale?: JobPostingLocale) {
+  return LANGUAGE_REQUIREMENT_OPTIONS.map((option) => ({
+    ...option,
+    label: languageRequirementOptionLabel(option.value, locale) || option.label,
+  }));
+}
+
 export function employmentTypeLabel(
   value: string | null | undefined,
   locale?: JobPostingLocale
@@ -237,6 +287,66 @@ export function visaSupportLabel(
   locale?: JobPostingLocale
 ) {
   return localizedOptionLabel("visaSupport", value, locale);
+}
+
+export function languageRequirementOptionLabel(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  return localizedOptionLabel("languageRequirement", value, locale);
+}
+
+export function parseLanguageRequirementTokens(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  if (!value) return [] as Array<{ key: string; label: string; preset: boolean }>;
+
+  const tokens = value
+    .split(/\r?\n|,/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  const result: Array<{ key: string; label: string; preset: boolean }> = [];
+
+  for (const token of tokens) {
+    if (token.startsWith("custom:")) {
+      const label = token.slice("custom:".length).trim();
+      if (!label) continue;
+      const key = `custom:${label}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push({ key, label, preset: false });
+      continue;
+    }
+
+    if (LANGUAGE_REQUIREMENT_VALUES.has(token)) {
+      const label = languageRequirementOptionLabel(token, locale) || token;
+      if (seen.has(token)) continue;
+      seen.add(token);
+      result.push({ key: token, label, preset: true });
+      continue;
+    }
+  }
+
+  return result;
+}
+
+export function serializeLanguageRequirements(
+  selectedValues: string[],
+  customText: string
+) {
+  const uniqueValues = Array.from(
+    new Set(selectedValues.filter((value) => LANGUAGE_REQUIREMENT_VALUES.has(value)))
+  );
+  const customValues = customText
+    .split(/\r?\n|,/)
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => `custom:${value}`);
+
+  return [...uniqueValues, ...customValues].join(", ");
 }
 
 export function formatApplicationDeadline(

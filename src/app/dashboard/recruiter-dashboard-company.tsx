@@ -11,8 +11,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   getEmploymentTypeOptions,
+  getLanguageRequirementOptions,
   getSalaryPeriodOptions,
   getSeniorityOptions,
+  LANGUAGE_REQUIREMENT_VALUES,
+  parseLanguageRequirementTokens,
+  serializeLanguageRequirements,
   getVisaSupportOptions,
   getWorkplaceTypeOptions,
 } from "@/lib/job-posting";
@@ -143,6 +147,19 @@ function buildJobPayload(draft: JobDraft) {
     requirements: draft.requirements.trim(),
     benefits: draft.benefits.trim(),
   };
+}
+
+function getSelectedLanguageValues(value: string, locale: "en" | "zh-TW") {
+  return parseLanguageRequirementTokens(value, locale)
+    .filter((item) => item.preset && LANGUAGE_REQUIREMENT_VALUES.has(item.key))
+    .map((item) => item.key);
+}
+
+function getCustomLanguageText(value: string, locale: "en" | "zh-TW") {
+  return parseLanguageRequirementTokens(value, locale)
+    .filter((item) => !item.preset)
+    .map((item) => item.label)
+    .join(", ");
 }
 
 export function RecruiterCompanyTab({
@@ -342,6 +359,11 @@ export function RecruiterCompanyTab({
     showPlusIcon?: boolean;
   }) {
     const companyMessages = messages.dashboard.company;
+    const languageOptions = getLanguageRequirementOptions(locale);
+    const selectedLanguageValues = new Set(
+      getSelectedLanguageValues(draft.languageRequirement, locale)
+    );
+    const customLanguageText = getCustomLanguageText(draft.languageRequirement, locale);
 
     return (
       <div className="grid gap-4 sm:grid-cols-2">
@@ -501,11 +523,55 @@ export function RecruiterCompanyTab({
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.languageRequirement}
           </label>
-          <Input
-            value={draft.languageRequirement}
-            onChange={(e) => onChange("languageRequirement", e.target.value)}
-            placeholder={companyMessages.languageRequirementPlaceholder}
-          />
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {languageOptions.map((option) => {
+                const selected = selectedLanguageValues.has(option.value);
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      const nextSelected = new Set(selectedLanguageValues);
+                      if (selected) {
+                        nextSelected.delete(option.value);
+                      } else {
+                        nextSelected.add(option.value);
+                      }
+                      onChange(
+                        "languageRequirement",
+                        serializeLanguageRequirements(
+                          Array.from(nextSelected),
+                          customLanguageText
+                        )
+                      );
+                    }}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                      selected
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            <Input
+              value={customLanguageText}
+              onChange={(e) =>
+                onChange(
+                  "languageRequirement",
+                  serializeLanguageRequirements(
+                    Array.from(selectedLanguageValues),
+                    e.target.value
+                  )
+                )
+              }
+              placeholder={companyMessages.languageRequirementPlaceholder}
+            />
+          </div>
         </div>
         <div className="space-y-1 sm:col-span-2">
           <label className="text-xs font-medium text-muted-foreground">

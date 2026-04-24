@@ -30,6 +30,7 @@ import {
   employmentTypeLabel,
   formatApplicationDeadline,
   formatSalaryRange,
+  parseLanguageRequirementTokens,
   seniorityLabel,
   type JobPostingLocale,
   visaSupportLabel,
@@ -99,7 +100,7 @@ function DetailTextBlock({
       {items.length === 1 ? (
         <p className="mt-1 whitespace-pre-wrap text-sm">{items[0]}</p>
       ) : (
-        <ul className="mt-1 space-y-1 pl-4 text-sm">
+        <ul className="mt-1 space-y-1 pl-6 text-sm marker:text-muted-foreground">
           {items.map((item, index) => (
             <li key={`${label}-${index}`} className="list-disc">
               {item}
@@ -532,7 +533,16 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                               <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {messages.recruiterDetail.card.languageRequirement}
                               </h3>
-                              <p className="mt-1 text-sm">{selectedJob.languageRequirement}</p>
+                              <div className="mt-1 flex flex-wrap gap-2">
+                                {parseLanguageRequirementTokens(
+                                  selectedJob.languageRequirement,
+                                  postingLocale
+                                ).map((item) => (
+                                  <Badge key={item.key} variant="secondary">
+                                    {item.label}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
                           )}
 
