@@ -120,7 +120,7 @@ export default function LoginPage() {
         </div>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
+      <main className="flex flex-1 justify-center px-4 py-8 sm:items-center sm:py-12">
         <div className="w-full max-w-sm space-y-4">
           <Card className="w-full">
             <CardHeader className="items-center gap-2">
@@ -248,28 +248,30 @@ export default function LoginPage() {
           </Card>
 
           {showPipaNotice ? (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
-              <div className="flex items-start gap-2 sm:gap-3">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary sm:h-5 sm:w-5" />
-                <div className="min-w-0 flex-1 space-y-1 text-xs sm:text-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-semibold">{messages.browsePage.pipaTitle}</p>
-                    <button
-                      type="button"
-                      onClick={handleDismissPipaNotice}
-                      className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
-                      aria-label="Dismiss notice"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-2.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
                   </div>
-                  <p className="text-muted-foreground">
-                    {messages.browsePage.pipaBody}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {messages.browsePage.guestHint}
-                  </p>
+                  <div className="min-w-0 space-y-1 text-xs">
+                    <p className="font-semibold">{messages.browsePage.pipaTitle}</p>
+                    <p className="text-muted-foreground">
+                      {messages.browsePage.pipaBody}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {messages.browsePage.guestHint}
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleDismissPipaNotice}
+                  className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
+                  aria-label="Dismiss notice"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             </div>
           ) : null}
