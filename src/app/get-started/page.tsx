@@ -69,6 +69,7 @@ export default async function GetStartedPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
+        <div className="h-[env(safe-area-inset-top)] bg-primary md:hidden" />
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
             href="/"
