@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
+import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { SiteFooter } from "@/components/site-footer";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
@@ -24,6 +25,19 @@ async function getRecruiterPostedJobs() {
       title: jobOpenings.title,
       description: jobOpenings.description,
       jdLink: jobOpenings.jdLink,
+      location: jobOpenings.location,
+      employmentType: jobOpenings.employmentType,
+      workplaceType: jobOpenings.workplaceType,
+      salaryMin: jobOpenings.salaryMin,
+      salaryMax: jobOpenings.salaryMax,
+      salaryCurrency: jobOpenings.salaryCurrency,
+      salaryPeriod: jobOpenings.salaryPeriod,
+      seniority: jobOpenings.seniority,
+      languageRequirement: jobOpenings.languageRequirement,
+      visaSupport: jobOpenings.visaSupport,
+      applicationDeadline: jobOpenings.applicationDeadline,
+      responsibilities: jobOpenings.responsibilities,
+      requirements: jobOpenings.requirements,
       createdAt: jobOpenings.createdAt,
       recruiterId: recruiters.id,
       company: recruiters.company,
@@ -111,31 +125,35 @@ export default async function JobsPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {jobs.map((job) => (
-                <Link key={job.id} href={`/recruiter/${job.recruiterId}`}>
-                  <Card className="h-full p-4 transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] hover:-translate-y-0.5">
-                    <div className="space-y-2">
-                      <h2 className="line-clamp-2 text-base font-semibold">
-                        {job.title}
-                      </h2>
-                      <p className="text-sm text-muted-foreground">{job.company}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        <Badge variant="secondary" className="text-[11px]">
-                          {messages.jobsPage.recruiterPosted}
-                        </Badge>
-                        {job.jdLink ? (
-                          <Badge variant="outline" className="text-[11px]">
-                            {messages.jobsPage.jdAvailable}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      {job.description ? (
-                        <p className="line-clamp-3 text-xs text-muted-foreground">
-                          {job.description}
-                        </p>
-                      ) : null}
-                    </div>
-                  </Card>
-                </Link>
+                <RecruiterJobPostingCard
+                  key={job.id}
+                  job={job}
+                  compact
+                  status={
+                    <Badge variant="secondary" className="text-[11px]">
+                      {messages.jobsPage.recruiterPosted}
+                    </Badge>
+                  }
+                  labels={{
+                    seniority: messages.jobsPage.card.seniority,
+                    languageRequirement: messages.jobsPage.card.languageRequirement,
+                    visaSupport: messages.jobsPage.card.visaSupport,
+                    applicationDeadline: messages.jobsPage.card.applicationDeadline,
+                    description: messages.jobsPage.card.description,
+                    responsibilities: messages.jobsPage.card.responsibilities,
+                    requirements: messages.jobsPage.card.requirements,
+                    viewJd: messages.jobsPage.card.viewJd,
+                    noJd: messages.jobsPage.card.noJd,
+                  }}
+                  action={
+                    <Link
+                      href={`/recruiter/${job.recruiterId}`}
+                      className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      {messages.jobsPage.viewCompany}
+                    </Link>
+                  }
+                />
               ))}
             </div>
           )}

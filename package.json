@@ -13,6 +13,7 @@
     "db:init:schools": "npx tsx src/lib/db/create-schools-table.ts",
     "db:cleanup:legacy-recruiter-jobs": "npx tsx src/lib/db/cleanup-legacy-recruiter-job-fields.ts",
     "db:update:job-opening-moderation": "npx tsx src/lib/db/add-job-opening-moderation-columns.ts",
+    "db:update:job-details": "npx tsx src/lib/db/add-job-opening-detail-columns.ts",
     "db:update:job-moderation-toggle": "npx tsx src/lib/db/add-job-moderation-toggle-column.ts",
     "db:update:onboarding-mode": "npx tsx src/lib/db/add-onboarding-mode-column.ts",
     "db:update:student-profile-columns": "npx tsx src/lib/db/add-student-profile-columns.ts",

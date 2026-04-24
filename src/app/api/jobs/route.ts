@@ -16,7 +16,20 @@ export async function GET(req: NextRequest) {
       id: jobOpenings.id,
       title: jobOpenings.title,
       jdLink: jobOpenings.jdLink,
+      location: jobOpenings.location,
+      employmentType: jobOpenings.employmentType,
+      workplaceType: jobOpenings.workplaceType,
+      salaryMin: jobOpenings.salaryMin,
+      salaryMax: jobOpenings.salaryMax,
+      salaryCurrency: jobOpenings.salaryCurrency,
+      salaryPeriod: jobOpenings.salaryPeriod,
+      seniority: jobOpenings.seniority,
+      languageRequirement: jobOpenings.languageRequirement,
+      visaSupport: jobOpenings.visaSupport,
+      applicationDeadline: jobOpenings.applicationDeadline,
       description: jobOpenings.description,
+      responsibilities: jobOpenings.responsibilities,
+      requirements: jobOpenings.requirements,
     })
     .from(jobOpenings)
     .where(

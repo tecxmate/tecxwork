@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
 import { QRCard } from "@/components/qr-code";
 import { AppTopBar } from "@/components/app-topbar";
+import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
 
@@ -78,7 +79,20 @@ type JobOpening = {
   company: string;
   title: string;
   jdLink: string | null;
+  location: string;
+  employmentType: string;
+  workplaceType: string;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string;
+  salaryPeriod: string;
+  seniority: string;
+  languageRequirement: string;
+  visaSupport: string;
+  applicationDeadline: string | null;
   description: string;
+  responsibilities: string;
+  requirements: string;
   moderationStatus: string;
   moderationNotes: string;
   submittedAt: Date | string | null;
@@ -917,6 +931,13 @@ function JobModerationSection({
         job.company.toLowerCase().includes(q) ||
         job.title.toLowerCase().includes(q) ||
         job.description.toLowerCase().includes(q) ||
+        job.location.toLowerCase().includes(q) ||
+        job.responsibilities.toLowerCase().includes(q) ||
+        job.requirements.toLowerCase().includes(q) ||
+        job.seniority.toLowerCase().includes(q) ||
+        job.languageRequirement.toLowerCase().includes(q) ||
+        job.visaSupport.toLowerCase().includes(q) ||
+        (job.applicationDeadline ?? "").toLowerCase().includes(q) ||
         job.moderationStatus.toLowerCase().includes(q)
       );
     })
@@ -978,48 +999,43 @@ function JobModerationSection({
           filteredJobs.map((job) => (
             <Card key={job.id}>
               <CardContent className="space-y-4 py-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{job.title}</p>
-                      <span
-                        className={cn(
-                          "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                          statusStyles[job.moderationStatus] ?? "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {statusLabels[job.moderationStatus] ??
-                          job.moderationStatus.replace("_", " ")}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{job.company}</p>
-                    {job.description && (
-                      <p className="max-w-3xl text-xs text-muted-foreground">
-                        {job.description}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {interpolate(admin.moderation.createdOn, {
-                        date: new Date(job.createdAt).toLocaleDateString(localeTag),
-                      })}
-                      {job.submittedAt
-                        ? ` · ${interpolate(admin.moderation.submittedOn, {
-                            date: new Date(job.submittedAt).toLocaleDateString(localeTag),
-                          })}`
-                        : ""}
-                    </p>
-                    {job.jdLink && (
-                      <a
-                        href={job.jdLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        {admin.moderation.viewJd}
-                      </a>
-                    )}
-                  </div>
-                </div>
+                <RecruiterJobPostingCard
+                  job={job}
+                  compact
+                  labels={{
+                    seniority: admin.moderation.card.seniority,
+                    languageRequirement: admin.moderation.card.languageRequirement,
+                    visaSupport: admin.moderation.card.visaSupport,
+                    applicationDeadline: admin.moderation.card.applicationDeadline,
+                    description: admin.moderation.card.description,
+                    responsibilities: admin.moderation.card.responsibilities,
+                    requirements: admin.moderation.card.requirements,
+                    viewJd: admin.moderation.viewJd,
+                    noJd: admin.moderation.noJd,
+                  }}
+                  status={
+                    <span
+                      className={cn(
+                        "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                        statusStyles[job.moderationStatus] ?? "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {statusLabels[job.moderationStatus] ??
+                        job.moderationStatus.replace("_", " ")}
+                    </span>
+                  }
+                />
+
+                <p className="text-xs text-muted-foreground">
+                  {interpolate(admin.moderation.createdOn, {
+                    date: new Date(job.createdAt).toLocaleDateString(localeTag),
+                  })}
+                  {job.submittedAt
+                    ? ` · ${interpolate(admin.moderation.submittedOn, {
+                        date: new Date(job.submittedAt).toLocaleDateString(localeTag),
+                      })}`
+                    : ""}
+                </p>
 
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground">

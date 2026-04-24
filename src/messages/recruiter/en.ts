@@ -102,9 +102,31 @@ export const recruiterEnMessages = {
       instantPublishHint:
         "Jobs publish immediately. Recruiters can update or remove them directly.",
       positionTitle: "Position title",
+      location: "Location",
+      employmentType: "Employment type",
+      workplaceType: "Workplace type",
+      seniority: "Seniority",
+      languageRequirement: "Language requirement",
+      visaSupport: "Visa/work permit support",
+      applicationDeadline: "Application deadline",
+      salaryMin: "Salary min",
+      salaryMax: "Salary max",
+      salaryCurrency: "Currency",
+      salaryPeriod: "Salary period",
       jdLinkOptional: "JD link (optional)",
+      summary: "Summary",
+      responsibilities: "Responsibilities",
+      requirements: "Requirements",
       descriptionPlaceholder:
         "Short role summary, responsibilities, and key hiring requirements",
+      responsibilitiesPlaceholder:
+        "Main responsibilities, deliverables, and day-to-day work",
+      requirementsPlaceholder:
+        "Required skills, experience, language, or degree expectations",
+      languageRequirementPlaceholder:
+        "e.g. English business level; Mandarin preferred",
+      locationPlaceholder: "e.g. Taipei, Taiwan",
+      salaryCurrencyPlaceholder: "e.g. TWD",
       add: "Add",
       noPositions: "No positions added yet.",
       title: "Title",

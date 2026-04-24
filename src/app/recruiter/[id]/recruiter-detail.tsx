@@ -11,9 +11,6 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
-  FileText,
-  ExternalLink,
-  Briefcase,
   CheckCircle2,
   ArrowRight,
   LogIn,
@@ -22,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { SlotPicker } from "@/components/slot-picker";
 import { BookingForm } from "@/components/booking-form";
 import { SiteFooter } from "@/components/site-footer";
@@ -44,7 +42,25 @@ type SelectedSlot = {
   endTime: string;
 };
 
-type JobOpening = { id: number; title: string; jdLink: string | null; description: string };
+type JobOpening = {
+  id: number;
+  title: string;
+  jdLink: string | null;
+  location: string;
+  employmentType: string;
+  workplaceType: string;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string;
+  salaryPeriod: string;
+  seniority: string;
+  languageRequirement: string;
+  visaSupport: string;
+  applicationDeadline: string | null;
+  description: string;
+  responsibilities: string;
+  requirements: string;
+};
 
 type Step = "positions" | "pick-slot" | "booking-form";
 
@@ -114,12 +130,6 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
     setStep("positions");
   };
 
-  // Determine which positions to show
-  const positionList: { title: string; jdLink: string | null }[] = jobs.map((j) => ({
-    title: j.title,
-    jdLink: j.jdLink,
-  }));
-
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
@@ -172,7 +182,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     <p className="truncate text-xs text-muted-foreground">
                       {recruiter.industry} ·{" "}
                       {interpolate(messages.recruiterDetail.positionsCount, {
-                        count: positionList.length,
+                        count: jobs.length,
                       })}
                     </p>
                   </div>
@@ -254,75 +264,70 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {positionList.length === 0 ? (
+                    {jobs.length === 0 ? (
                       <p className="py-6 text-center text-sm text-muted-foreground">
                         {messages.recruiterDetail.noPositions}
                       </p>
                     ) : (
-                      positionList.map((pos) => {
-                        const alreadyApplied = appliedPositions.includes(pos.title);
+                      jobs.map((job) => {
+                        const alreadyApplied = appliedPositions.includes(job.title);
                         return (
-                          <div
-                            key={pos.title}
+                          <RecruiterJobPostingCard
+                            key={job.id}
+                            job={job}
                             className={cn(
-                              "flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors",
                               alreadyApplied
                                 ? "border-green-200 bg-green-50/50 dark:border-green-900/30 dark:bg-green-900/10"
-                                : "hover:border-primary/30"
+                                : ""
                             )}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <Briefcase className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <p className="text-sm font-medium">{pos.title}</p>
-                                {alreadyApplied && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    {messages.recruiterDetail.applied}
-                                  </span>
-                                )}
-                              </div>
-                              {pos.jdLink ? (
-                                <a
-                                  href={pos.jdLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                            labels={{
+                              seniority: messages.recruiterDetail.card.seniority,
+                              languageRequirement:
+                                messages.recruiterDetail.card.languageRequirement,
+                              visaSupport: messages.recruiterDetail.card.visaSupport,
+                              applicationDeadline:
+                                messages.recruiterDetail.card.applicationDeadline,
+                              description: messages.recruiterDetail.card.description,
+                              responsibilities:
+                                messages.recruiterDetail.card.responsibilities,
+                              requirements: messages.recruiterDetail.card.requirements,
+                              viewJd: messages.recruiterDetail.viewJobDescription,
+                              noJd: messages.recruiterDetail.noJobDescription,
+                            }}
+                            status={
+                              alreadyApplied ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  {messages.recruiterDetail.applied}
+                                </span>
+                              ) : undefined
+                            }
+                            action={
+                              !alreadyApplied ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSelectPosition(job.title)}
+                                  className="shrink-0"
                                 >
-                                  <FileText className="h-3 w-3" />
-                                  {messages.recruiterDetail.viewJobDescription}
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
+                                  {isAuthenticated ? (
+                                    <>
+                                      {messages.recruiterDetail.apply}
+                                      <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <LogIn className="mr-1 h-3.5 w-3.5" />
+                                      {messages.recruiterDetail.loginToApply}
+                                    </>
+                                  )}
+                                </Button>
                               ) : (
-                                <p className="mt-1 text-xs text-muted-foreground/60">
-                                  {messages.recruiterDetail.noJobDescription}
-                                </p>
-                              )}
-                            </div>
-                            {!alreadyApplied ? (
-                              <Button
-                                size="sm"
-                                onClick={() => handleSelectPosition(pos.title)}
-                                className="shrink-0"
-                              >
-                                {isAuthenticated ? (
-                                  <>
-                                    {messages.recruiterDetail.apply}
-                                    <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                  </>
-                                ) : (
-                                  <>
-                                    <LogIn className="mr-1 h-3.5 w-3.5" />
-                                    {messages.recruiterDetail.loginToApply}
-                                  </>
-                                )}
-                              </Button>
-                            ) : (
-                              <span className="shrink-0 text-xs text-muted-foreground">
-                                {messages.recruiterDetail.onePerPosition}
-                              </span>
-                            )}
-                          </div>
+                                <span className="shrink-0 text-xs text-muted-foreground">
+                                  {messages.recruiterDetail.onePerPosition}
+                                </span>
+                              )
+                            }
+                          />
                         );
                       })
                     )}

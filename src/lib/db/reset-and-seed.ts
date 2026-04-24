@@ -65,7 +65,22 @@ async function resetAndSeed() {
       c.jobTitles.map((title) => ({
         recruiterId: rec.id,
         title,
+        location: "Taipei, Taiwan",
+        employmentType: "full_time",
+        workplaceType: "onsite",
+        salaryMin: 36000,
+        salaryMax: 52000,
+        salaryCurrency: "TWD",
+        salaryPeriod: "month",
+        seniority: "entry_level",
+        languageRequirement: "English working proficiency; Mandarin is a plus.",
+        visaSupport: "case_by_case",
+        applicationDeadline: "2026-05-20",
         description: `${title} role at ${c.company}.`,
+        responsibilities:
+          "Collaborate with team members to deliver business and technical outcomes for event hiring.",
+        requirements:
+          "Relevant major or prior internship experience; clear communication skills.",
         moderationStatus: "approved" as const,
         reviewedAt: new Date(),
       }))
