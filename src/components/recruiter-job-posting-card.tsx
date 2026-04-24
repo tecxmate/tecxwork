@@ -194,9 +194,6 @@ export function RecruiterJobPostingCard({
               {workplaceLabel}
             </Badge>
           ) : null}
-          {salaryLabel ? (
-            <Badge className="text-[10px]">{salaryLabel}</Badge>
-          ) : null}
           {seniority ? (
             <Badge variant="secondary" className="gap-1 text-[10px]">
               <Sparkles className="h-3 w-3" />
@@ -214,6 +211,9 @@ export function RecruiterJobPostingCard({
               <CalendarClock className="h-3 w-3" />
               {labels.applicationDeadline}: {applicationDeadline}
             </Badge>
+          ) : null}
+          {salaryLabel ? (
+            <Badge className="text-[10px]">{salaryLabel}</Badge>
           ) : null}
         </div>
 
