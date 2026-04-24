@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
-import { Separator } from "@/components/ui/separator";
 import { Directory } from "@/components/directory";
 import { SiteFooter } from "@/components/site-footer";
 import { getSession } from "@/lib/auth";
@@ -50,29 +48,6 @@ export default async function BrowsePage() {
           <Directory />
         </div>
       </main>
-
-      <Separator />
-
-      <div className="px-4 py-6 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary sm:h-5 sm:w-5" />
-              <div className="space-y-1 text-xs sm:text-sm">
-                <p className="font-semibold">{messages.browsePage.pipaTitle}</p>
-                <p className="text-muted-foreground">
-                  {messages.browsePage.pipaBody}
-                </p>
-                {!session && (
-                  <p className="text-muted-foreground">
-                    {messages.browsePage.guestHint}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <SiteFooter />
     </div>
