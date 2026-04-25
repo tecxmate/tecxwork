@@ -48,7 +48,7 @@ import { useStudentI18n } from "@/components/student-locale-provider";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { interpolate } from "@/lib/student-messages";
 
-type Step = "form" | "availability" | "done";
+type Step = "email" | "verify" | "form" | "availability" | "done";
 
 const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor({
   experience,
@@ -173,11 +173,14 @@ const RegisterWorkExperienceEditor = memo(function RegisterWorkExperienceEditor(
 export default function RegisterPage() {
   const router = useRouter();
   const { messages } = useStudentI18n();
-  const [step, setStep] = useState<Step>("form");
+  const [step, setStep] = useState<Step>("email");
   const [onboardingMode, setOnboardingMode] = useState<"minimal" | "full">("full");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [profileId, setProfileId] = useState<number | null>(null);
   const [schools, setSchools] = useState<TaiwanSchoolOption[]>([]);
   const [schoolsLoading, setSchoolsLoading] = useState(true);
@@ -477,6 +480,88 @@ export default function RegisterPage() {
     }));
   }, []);
 
+  async function handleSendVerification(e: React.FormEvent) {
+    e.preventDefault();
+    if (!draft.email.trim() || password.length < 6) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: draft.email.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send verification code");
+
+      setStep("verify");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!verificationCode.trim()) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: draft.email.trim(),
+          code: verificationCode.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Verification failed");
+
+      setEmailVerified(true);
+      setStep("form");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid verification code");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
+
+  async function handleResendCode() {
+    if (resendCooldown > 0) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: draft.email.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to resend code");
+
+      setResendCooldown(60);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resend code");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -559,6 +644,176 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (step === "email") {
+    return (
+      <div className="flex min-h-full flex-1 items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md">
+          <CardHeader className="items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+              <Mail className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <h2 className="font-heading text-xl font-semibold">
+              {messages.register.verifyEmailTitle ?? "Verify your email"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {messages.register.verifyEmailSubtitle ?? "We'll send you a verification code"}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSendVerification} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="email-verify" className="text-sm font-medium">
+                  {messages.login.email}
+                </label>
+                <Input
+                  id="email-verify"
+                  type="email"
+                  required
+                  value={draft.email}
+                  onChange={(e) => setField("email", e.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="password-verify" className="text-sm font-medium">
+                  {messages.login.password}
+                </label>
+                <PasswordInput
+                  id="password-verify"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={!draft.email.trim() || password.length < 6 || loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {messages.register.sendingCode ?? "Sending code..."}
+                  </>
+                ) : (
+                  messages.register.sendVerificationCode ?? "Send verification code"
+                )}
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground">
+                {messages.register.alreadyHaveAccount}{" "}
+                <Link href="/login" className="text-primary hover:underline">
+                  {messages.common.logIn}
+                </Link>
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (step === "verify") {
+    return (
+      <div className="flex min-h-full flex-1 items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md">
+          <CardHeader className="items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+              <ShieldCheck className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <h2 className="font-heading text-xl font-semibold">
+              {messages.register.enterCodeTitle ?? "Enter verification code"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {messages.register.enterCodeSubtitle ?? `We sent a 6-digit code to ${draft.email}`}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleVerifyCode} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="verification-code" className="text-sm font-medium">
+                  {messages.register.verificationCode ?? "Verification code"}
+                </label>
+                <Input
+                  id="verification-code"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  required
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  className="text-center text-2xl tracking-[0.5em] font-mono"
+                  autoComplete="one-time-code"
+                />
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={verificationCode.length !== 6 || loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {messages.register.verifying ?? "Verifying..."}
+                  </>
+                ) : (
+                  messages.register.verifyAndContinue ?? "Verify and continue"
+                )}
+              </Button>
+
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("email");
+                    setVerificationCode("");
+                    setError("");
+                  }}
+                  className="text-primary hover:underline"
+                >
+                  {messages.register.changeEmail ?? "Change email"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={loading || resendCooldown > 0}
+                  className="text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resendCooldown > 0
+                    ? `${messages.register.resendCode ?? "Resend code"} (${resendCooldown}s)`
+                    : messages.register.resendCode ?? "Resend code"}
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (step === "done") {

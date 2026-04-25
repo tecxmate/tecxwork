@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, applicantProfiles, eventConfig, users } from "@/lib/db";
+import { db, applicantProfiles, eventConfig, users, emailVerificationCodes } from "@/lib/db";
 import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
 import { MAX_STUDENT_WORK_EXPERIENCES, type StudentWorkExperience } from "@/lib/student-profile";
-import { asc, count, desc, ilike, or, sql } from "drizzle-orm";
+import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
 
 function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
   if (!Array.isArray(value)) return [];
@@ -178,6 +178,26 @@ export async function POST(req: NextRequest) {
   if (!pipaConsent) {
     return NextResponse.json(
       { error: "PIPA consent is required" },
+      { status: 400 }
+    );
+  }
+
+  // Check email was verified
+  const [verifiedRecord] = await db
+    .select({ id: emailVerificationCodes.id })
+    .from(emailVerificationCodes)
+    .where(
+      and(
+        eq(emailVerificationCodes.email, email.toLowerCase()),
+        eq(emailVerificationCodes.verified, true),
+        gte(emailVerificationCodes.expiresAt, new Date(Date.now() - 30 * 60 * 1000)) // Allow 30 min after verification
+      )
+    )
+    .limit(1);
+
+  if (!verifiedRecord) {
+    return NextResponse.json(
+      { error: "Email not verified. Please verify your email first." },
       { status: 400 }
     );
   }

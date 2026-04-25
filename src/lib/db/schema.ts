@@ -256,6 +256,20 @@ export const passwordResetCodes = pgTable("password_reset_codes", {
     .defaultNow(),
 });
 
+// ---- Email verification codes (signup flow) ----
+
+export const emailVerificationCodes = pgTable("email_verification_codes", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  verified: boolean("verified").notNull().default(false),
+  failedAttempts: integer("failed_attempts").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ---- Event config (single-row table for global settings) ----
 
 export const eventConfig = pgTable("event_config", {

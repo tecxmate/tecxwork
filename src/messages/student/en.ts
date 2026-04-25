@@ -191,6 +191,17 @@ export const studentEnMessages = {
   },
   register: {
     title: "Applicant Registration",
+    verifyEmailTitle: "Verify your email",
+    verifyEmailSubtitle: "We'll send you a verification code",
+    sendingCode: "Sending code...",
+    sendVerificationCode: "Send verification code",
+    enterCodeTitle: "Enter verification code",
+    enterCodeSubtitle: "We sent a 6-digit code to your email",
+    verificationCode: "Verification code",
+    verifying: "Verifying...",
+    verifyAndContinue: "Verify and continue",
+    changeEmail: "Change email",
+    resendCode: "Resend code",
     minimalSubtitle:
       "Create the minimum student profile needed for recruiters to review your CV and contact you.",
     fullSubtitle:

@@ -182,6 +182,17 @@ export const studentViMessages = {
   register: {
     ...studentEnMessages.register,
     title: "Đăng ký ứng viên",
+    verifyEmailTitle: "Xác minh email của bạn",
+    verifyEmailSubtitle: "Chúng tôi sẽ gửi mã xác minh cho bạn",
+    sendingCode: "Đang gửi mã...",
+    sendVerificationCode: "Gửi mã xác minh",
+    enterCodeTitle: "Nhập mã xác minh",
+    enterCodeSubtitle: "Chúng tôi đã gửi mã 6 chữ số đến email của bạn",
+    verificationCode: "Mã xác minh",
+    verifying: "Đang xác minh...",
+    verifyAndContinue: "Xác minh và tiếp tục",
+    changeEmail: "Đổi email",
+    resendCode: "Gửi lại mã",
     minimalSubtitle:
       "Tạo hồ sơ tối thiểu để nhà tuyển dụng xem CV và liên hệ với bạn.",
     fullSubtitle:
