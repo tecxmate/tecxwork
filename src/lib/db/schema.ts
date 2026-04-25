@@ -66,6 +66,7 @@ export const recruiters = pgTable("recruiters", {
   positions: text("positions").array().notNull().default([]),
   contactEmail: text("contact_email").notNull(),
   jdLink: text("jd_link"),
+  logoUrl: text("logo_url"),
   interviewerCount: integer("interviewer_count").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -130,6 +131,7 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   cvLink: text("cv_link").notNull(),
   linkedinUrl: text("linkedin_url").notNull().default(""),
   portfolioUrl: text("portfolio_url").notNull().default(""),
+  avatarUrl: text("avatar_url"),
   description: text("description").notNull().default(""),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
   wantsNewsletter: boolean("wants_newsletter").notNull().default(false),
