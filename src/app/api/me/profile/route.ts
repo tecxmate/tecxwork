@@ -75,6 +75,7 @@ export async function GET() {
       cvLink: applicantProfiles.cvLink,
       linkedinUrl: applicantProfiles.linkedinUrl,
       portfolioUrl: applicantProfiles.portfolioUrl,
+      avatarUrl: applicantProfiles.avatarUrl,
       description: applicantProfiles.description,
     })
     .from(applicantProfiles)
@@ -115,6 +116,7 @@ export async function PUT(req: NextRequest) {
     cvLink,
     linkedinUrl,
     portfolioUrl,
+    avatarUrl,
     description,
   } = body;
 
@@ -140,6 +142,7 @@ export async function PUT(req: NextRequest) {
   if (typeof cvLink === "string" && cvLink.trim()) updates.cvLink = cvLink.trim();
   if (typeof linkedinUrl === "string") updates.linkedinUrl = linkedinUrl.trim();
   if (typeof portfolioUrl === "string") updates.portfolioUrl = portfolioUrl.trim();
+  if (typeof avatarUrl === "string" || avatarUrl === null) updates.avatarUrl = avatarUrl;
   if (typeof description === "string") updates.description = description.trim();
 
   if (Object.keys(updates).length === 0) {

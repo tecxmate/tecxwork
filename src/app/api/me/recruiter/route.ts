@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { description, interviewerCount } = body;
+  const { description, interviewerCount, logoUrl, galleryUrls } = body;
 
   // Fetch current recruiter
   const [current] = await db
@@ -30,6 +30,8 @@ export async function PUT(req: NextRequest) {
 
   const updates: Record<string, unknown> = {};
   if (typeof description === "string") updates.description = description.trim();
+  if (typeof logoUrl === "string" || logoUrl === null) updates.logoUrl = logoUrl;
+  if (Array.isArray(galleryUrls)) updates.galleryUrls = galleryUrls.slice(0, 4);
 
   const newCount =
     typeof interviewerCount === "number"

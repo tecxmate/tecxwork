@@ -61,6 +61,7 @@ export async function getAdminDashboardData() {
       endHour: eventConfig.endHour,
       endMinute: eventConfig.endMinute,
       slotDuration: eventConfig.slotDurationMinutes,
+      homepageImages: eventConfig.homepageImages,
     })
     .from(eventConfig)
     .limit(1);
@@ -151,5 +152,6 @@ export async function getAdminDashboardData() {
       endMinute: config?.endMinute ?? 30,
       slotDuration: config?.slotDuration ?? 15,
     },
+    initialHomepageImages: config?.homepageImages ?? [],
   };
 }

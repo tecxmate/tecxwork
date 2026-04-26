@@ -26,6 +26,8 @@ export async function getRecruiterDashboardData() {
       description: recruiters.description,
       contactEmail: recruiters.contactEmail,
       interviewerCount: recruiters.interviewerCount,
+      logoUrl: recruiters.logoUrl,
+      galleryUrls: recruiters.galleryUrls,
     })
     .from(recruiters)
     .where(eq(recruiters.userId, session.userId));

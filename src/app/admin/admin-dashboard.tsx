@@ -32,6 +32,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
 import { QRCard } from "@/components/qr-code";
+import { MultiImageUpload } from "@/components/image-upload";
 import { AppTopBar } from "@/components/app-topbar";
 import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { useStudentI18n } from "@/components/student-locale-provider";
@@ -138,6 +139,7 @@ export function AdminDashboard({
   initialJobModerationEnabled,
   initialLocked,
   timeFrame: initialTimeFrame,
+  initialHomepageImages,
   section,
 }: {
   recruiters: Recruiter[];
@@ -151,6 +153,7 @@ export function AdminDashboard({
   initialJobModerationEnabled: boolean;
   initialLocked: boolean;
   timeFrame: { startHour: number; endHour: number; endMinute: number; slotDuration: number };
+  initialHomepageImages: string[];
   section: AdminSection;
 }) {
   const { messages } = useStudentI18n();
@@ -172,6 +175,9 @@ export function AdminDashboard({
   const [tfSaving, setTfSaving] = useState(false);
   const [tfSaved, setTfSaved] = useState(false);
   const [tfError, setTfError] = useState("");
+  const [homepageImages, setHomepageImages] = useState<string[]>(initialHomepageImages ?? []);
+  const [hpSaving, setHpSaving] = useState(false);
+  const [hpSaved, setHpSaved] = useState(false);
 
   // Domain form
   const [newDomain, setNewDomain] = useState("");
@@ -581,6 +587,40 @@ export function AdminDashboard({
                     {admin.jobPublishing.adminReviewRequired}
                   </span>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Homepage Images */}
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Homepage Images</label>
+                  <p className="text-xs text-muted-foreground">
+                    Upload up to 4 images for the homepage carousel/gallery
+                  </p>
+                </div>
+                <MultiImageUpload
+                  values={homepageImages}
+                  onChange={async (urls) => {
+                    setHomepageImages(urls);
+                    setHpSaving(true);
+                    try {
+                      await fetch("/api/admin/homepage-images", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ homepageImages: urls }),
+                      });
+                      setHpSaved(true);
+                      setTimeout(() => setHpSaved(false), 2000);
+                    } finally {
+                      setHpSaving(false);
+                    }
+                  }}
+                  type="homepage"
+                  max={4}
+                />
+                {hpSaving && <p className="text-xs text-muted-foreground">Saving...</p>}
+                {hpSaved && <p className="text-xs text-green-600">Saved!</p>}
               </div>
             </CardContent>
           </Card>

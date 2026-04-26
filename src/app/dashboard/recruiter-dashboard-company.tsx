@@ -6,6 +6,7 @@ import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
+import { ImageUpload, MultiImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,8 @@ type Recruiter = {
   description: string;
   contactEmail: string;
   interviewerCount: number;
+  logoUrl: string | null;
+  galleryUrls: string[];
 };
 
 type JobOpening = {
@@ -177,6 +180,8 @@ export function RecruiterCompanyTab({
   const [interviewerCount, setInterviewerCount] = useState(
     recruiter.interviewerCount
   );
+  const [logoUrl, setLogoUrl] = useState<string | null>(recruiter.logoUrl);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(recruiter.galleryUrls ?? []);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -226,6 +231,8 @@ export function RecruiterCompanyTab({
         body: JSON.stringify({
           description: description.trim(),
           interviewerCount,
+          logoUrl,
+          galleryUrls,
         }),
       });
       if (!res.ok) throw new Error(messages.dashboard.company.saveFailed);
@@ -676,6 +683,26 @@ export function RecruiterCompanyTab({
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveCompany} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Company Logo</label>
+                  <ImageUpload
+                    value={logoUrl ?? undefined}
+                    onChange={setLogoUrl}
+                    type="logo"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Gallery Photos</label>
+                  <p className="text-xs text-muted-foreground">Upload up to 4 photos to showcase your company</p>
+                  <MultiImageUpload
+                    values={galleryUrls}
+                    onChange={setGalleryUrls}
+                    type="gallery"
+                    max={4}
+                  />
+                </div>
+
                 <div className="space-y-1.5">
                   <label htmlFor="desc" className="text-sm font-medium">
                     {messages.dashboard.company.companyDescription}

@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!type || !["avatar", "logo"].includes(type)) {
+  if (!type || !["avatar", "logo", "gallery", "homepage"].includes(type)) {
     return NextResponse.json(
-      { error: "Invalid type. Must be 'avatar' or 'logo'" },
+      { error: "Invalid type. Must be 'avatar', 'logo', 'gallery', or 'homepage'" },
       { status: 400 }
     );
   }
@@ -46,7 +46,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const folder = type === "avatar" ? "avatars" : "logos";
+  const folders: Record<string, string> = {
+    avatar: "avatars",
+    logo: "logos",
+    gallery: "gallery",
+    homepage: "homepage",
+  };
+  const folder = folders[type];
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${folder}/${session.userId}-${Date.now()}.${ext}`;
 

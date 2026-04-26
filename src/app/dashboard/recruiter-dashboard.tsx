@@ -43,6 +43,8 @@ type Recruiter = {
   description: string;
   contactEmail: string;
   interviewerCount: number;
+  logoUrl: string | null;
+  galleryUrls: string[];
 };
 
 type Section = "interviews" | "applicants" | "jobs" | "company";

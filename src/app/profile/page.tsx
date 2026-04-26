@@ -26,6 +26,7 @@ import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
 import { QRCard } from "@/components/qr-code";
 import { SiteFooter } from "@/components/site-footer";
+import { ImageUpload } from "@/components/image-upload";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
 import {
@@ -64,6 +65,7 @@ type ProfileResponse = {
   cvLink: string;
   linkedinUrl: string;
   portfolioUrl: string;
+  avatarUrl: string | null;
   description: string;
 };
 
@@ -294,6 +296,7 @@ export default function ProfilePage() {
   const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false);
   const deferredSchoolQuery = useDeferredValue(draft.schoolQuery);
   const [lastSavedPayload, setLastSavedPayload] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const profilePayload = useMemo(() => buildProfilePayload(draft), [draft]);
   const serializedPayload = useMemo(
@@ -317,6 +320,7 @@ export default function ProfilePage() {
       .then((data) => {
         const profile = data.profile as ProfileResponse;
         setProfileEmail(profile.email ?? "");
+        setAvatarUrl(profile.avatarUrl ?? null);
         const nextDraft = profileToDraft(profile);
         setDraft(nextDraft);
         setLastSavedPayload(JSON.stringify(buildProfilePayload(nextDraft)));
@@ -565,7 +569,7 @@ export default function ProfilePage() {
       const res = await fetch("/api/me/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profilePayload),
+        body: JSON.stringify({ ...profilePayload, avatarUrl }),
       });
 
       if (!res.ok) {
@@ -703,6 +707,22 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <form id="profile-form" onSubmit={handleSave} className="space-y-6">
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <ImageUpload
+                      value={avatarUrl ?? undefined}
+                      onChange={setAvatarUrl}
+                      type="avatar"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">Profile Photo</p>
+                      <p className="text-xs text-muted-foreground">Max 4MB. JPEG, PNG, WebP, or GIF.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <Separator />
 
                 <section className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
