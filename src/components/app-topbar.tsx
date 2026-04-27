@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AppTopBarAccountActions } from "@/components/app-topbar-account-actions";
 import { AppTopBarActions } from "@/components/app-topbar-actions";
 import { DesktopTopNav } from "@/components/desktop-top-nav";
 import { NotificationBell } from "@/components/notification-bell";
@@ -26,12 +27,7 @@ export function AppTopBar({
   const showStudentLanguageSwitcher =
     navRole === "guest" || navRole === "applicant" || navRole === "admin";
   const showNotifications = Boolean(navRole && navRole !== "guest");
-  const mobileActionCount =
-    1 +
-    (showNotifications ? 1 : 0) +
-    (showStudentLanguageSwitcher ? 1 : 0) +
-    (showActionsOnMobile ? 1 : 0);
-  const mobileOverflow = mobileActionCount > 2;
+  const mobileOverflow = true;
 
   return (
     <header className="app-header sticky top-0 z-10 border-b bg-white dark:bg-card">
@@ -70,6 +66,7 @@ export function AppTopBar({
                     <StudentLanguageSwitcher />
                   ) : null}
                   {showActionsOnMobile ? (mobileActions ?? desktopActions) : null}
+                  <AppTopBarAccountActions role={navRole ?? "guest"} />
                 </>
               }
             />

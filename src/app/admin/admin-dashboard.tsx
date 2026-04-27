@@ -439,13 +439,6 @@ export function AdminDashboard({
             {messages.common.logout}
           </Button>
         }
-        mobileActions={
-          <AdminMobileActions
-            logoutLabel={messages.common.logout}
-            onLogout={handleLogout}
-          />
-        }
-        showActionsOnMobile
       />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
@@ -939,27 +932,6 @@ export function AdminDashboard({
         </div>
       </main>
       <SiteFooter />
-    </div>
-  );
-}
-
-function AdminMobileActions({
-  logoutLabel,
-  onLogout,
-}: {
-  logoutLabel: string;
-  onLogout: () => void;
-}) {
-  return (
-    <div className="flex w-full min-w-40 flex-col">
-      <button
-        type="button"
-        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-destructive transition-premium hover:bg-destructive/10"
-        onClick={onLogout}
-      >
-        <LogOut className="h-4 w-4" />
-        {logoutLabel}
-      </button>
     </div>
   );
 }
