@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
 import {
   Search,
@@ -9,6 +10,7 @@ import {
   Mail,
   FileText,
   ExternalLink,
+  User,
 } from "lucide-react";
 
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
@@ -155,17 +157,27 @@ export function RecruiterApplicantsTab({
                         </p>
                       )}
                     </div>
-                    <a
-                      href={a.cvLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <FileText className="h-3 w-3" />
-                      {messages.dashboard.applicants.cv}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/applicant/${a.id}`}
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <User className="h-3 w-3" />
+                        {messages.dashboard.applicants.viewProfile ?? "View Profile"}
+                      </Link>
+                      <a
+                        href={a.cvLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <FileText className="h-3 w-3" />
+                        {messages.dashboard.applicants.cv}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
                   </div>
                   {a.skills.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
@@ -327,16 +339,25 @@ function ApplicantBookingView({
               <Mail className="h-4 w-4" />
               {applicant.email}
             </div>
-            <a
-              href={applicant.cvLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-            >
-              <FileText className="h-4 w-4" />
-              {messages.dashboard.applicants.viewCv}
-              <ExternalLink className="h-3 w-3" />
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={`/applicant/${applicant.id}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <User className="h-4 w-4" />
+                {messages.dashboard.applicants.viewProfile ?? "View Profile"}
+              </Link>
+              <a
+                href={applicant.cvLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                <FileText className="h-4 w-4" />
+                {messages.dashboard.applicants.viewCv}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
           </CardContent>
         </Card>
 

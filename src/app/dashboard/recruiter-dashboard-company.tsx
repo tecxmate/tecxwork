@@ -590,7 +590,6 @@ export function RecruiterCompanyTab({
             value={draft.jdLink}
             onChange={(e) => onChange("jdLink", e.target.value)}
             placeholder={companyMessages.jdLinkOptional}
-            type="url"
           />
         </div>
         <div className="space-y-1 sm:col-span-2">

@@ -1040,7 +1040,7 @@ export default function RegisterPage() {
                       </label>
                       <Input
                         id="cv-link"
-                        type="url"
+                        type="text"
                         required
                         value={draft.cvLink}
                         onChange={(e) => setField("cvLink", e.target.value)}
@@ -1446,7 +1446,7 @@ export default function RegisterPage() {
                       </label>
                       <Input
                         id="linkedin"
-                        type="url"
+                        type="text"
                         value={draft.linkedinUrl}
                         onChange={(e) => setField("linkedinUrl", e.target.value)}
                         placeholder="https://linkedin.com/in/..."
@@ -1459,7 +1459,7 @@ export default function RegisterPage() {
                       </label>
                       <Input
                         id="portfolio"
-                        type="url"
+                        type="text"
                         value={draft.portfolioUrl}
                         onChange={(e) => setField("portfolioUrl", e.target.value)}
                         placeholder="https://github.com/... or portfolio site"
