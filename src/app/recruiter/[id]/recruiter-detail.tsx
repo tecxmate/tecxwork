@@ -308,21 +308,21 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
             </Card>
           </div>
 
-          {/* Company Gallery */}
-          {recruiter.galleryUrls.length > 0 && (
+          {/* Company Gallery - Horizontal Carousel */}
+          {recruiter.galleryUrls && recruiter.galleryUrls.length > 0 && (
             <div className="mb-6 lg:hidden">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
                 {recruiter.galleryUrls.slice(0, 4).map((url, index) => (
                   <div
                     key={index}
-                    className="relative aspect-[4/3] overflow-hidden rounded-lg bg-secondary"
+                    className="relative aspect-[4/3] w-[70vw] shrink-0 overflow-hidden rounded-xl bg-secondary"
                   >
                     <Image
                       src={url}
                       alt={`${recruiter.company} photo ${index + 1}`}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 50vw, 25vw"
+                      sizes="70vw"
                     />
                   </div>
                 ))}
@@ -377,20 +377,20 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                   </CardContent>
                 </Card>
 
-                {/* Desktop Gallery */}
-                {recruiter.galleryUrls.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2">
+                {/* Desktop Gallery - Horizontal Carousel */}
+                {recruiter.galleryUrls && recruiter.galleryUrls.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     {recruiter.galleryUrls.slice(0, 4).map((url, index) => (
                       <div
                         key={index}
-                        className="relative aspect-[4/3] overflow-hidden rounded-lg bg-secondary"
+                        className="relative aspect-[4/3] w-40 shrink-0 overflow-hidden rounded-lg bg-secondary"
                       >
                         <Image
                           src={url}
                           alt={`${recruiter.company} photo ${index + 1}`}
                           fill
                           className="object-cover"
-                          sizes="20vw"
+                          sizes="160px"
                         />
                       </div>
                     ))}

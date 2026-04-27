@@ -135,7 +135,7 @@ export function RecruiterDashboard({
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <AppTopBar
-        href="/dashboard/interviews"
+        href="/"
         navRole="recruiter"
         currentPath={currentPath}
         mobileActions={<RecruiterLanguageSwitcher />}

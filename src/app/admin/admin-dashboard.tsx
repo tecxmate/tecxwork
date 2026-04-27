@@ -417,7 +417,7 @@ export function AdminDashboard({
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <AppTopBar
-        href="/admin"
+        href="/"
         navRole="admin"
         currentPath={
           section === "overview"
