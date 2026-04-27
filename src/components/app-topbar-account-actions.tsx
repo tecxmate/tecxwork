@@ -7,10 +7,19 @@ import { useRouter } from "next/navigation";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import type { NavRole } from "@/lib/navigation";
 
+export type AppTopBarAccountLabels = {
+  roleLabel?: string;
+  login?: string;
+  logout?: string;
+  signup?: string;
+};
+
 export function AppTopBarAccountActions({
   role,
+  labels,
 }: {
   role: NavRole;
+  labels?: AppTopBarAccountLabels;
 }) {
   const router = useRouter();
   const { messages } = useStudentI18n();
@@ -23,12 +32,16 @@ export function AppTopBarAccountActions({
   }
 
   const statusLabel = signedIn
-    ? role === "admin"
-      ? "Admin"
-      : role === "recruiter"
-        ? "Recruiter"
-        : "Student"
+    ? labels?.roleLabel ??
+      (role === "admin"
+        ? "Admin"
+        : role === "recruiter"
+          ? "Recruiter"
+          : "Student")
     : "Guest";
+  const logoutLabel = labels?.logout ?? messages.common.logout;
+  const loginLabel = labels?.login ?? messages.common.logIn;
+  const signupLabel = labels?.signup ?? messages.common.signUp;
 
   return (
     <div className="flex w-full flex-col gap-1">
@@ -43,7 +56,7 @@ export function AppTopBarAccountActions({
             className="flex items-center gap-2 rounded-md px-3 py-2 text-destructive transition-colors hover:bg-destructive/10"
             onClick={handleLogout}
           >
-            {messages.common.logout}
+            {logoutLabel}
             <LogOut className="h-4 w-4" />
           </button>
         </div>
@@ -60,14 +73,14 @@ export function AppTopBarAccountActions({
               className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               <LogIn className="h-4 w-4" />
-              {messages.common.logIn}
+              {loginLabel}
             </Link>
             <div className="my-0.5 h-px w-full bg-border" />
             <Link
               href="/get-started"
               className="flex w-full items-center justify-center rounded-md bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {messages.common.signUp}
+              {signupLabel}
             </Link>
           </div>
         </>
