@@ -8,6 +8,15 @@ export const recruiterZhTwMessages = {
     tryAgain: "再試一次",
     logout: "登出",
     viewSite: "查看網站",
+    recruiter: "招募方",
+  },
+  notifications: {
+    notifications: "通知",
+    recent: "最近",
+    markAllRead: "全部標為已讀",
+    enablePush: "啟用推播通知",
+    empty: "目前沒有通知",
+    markAsRead: "標為已讀",
   },
   language: {
     english: "EN",

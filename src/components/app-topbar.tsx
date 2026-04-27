@@ -1,9 +1,15 @@
 import Link from "next/link";
 
-import { AppTopBarAccountActions } from "@/components/app-topbar-account-actions";
+import {
+  AppTopBarAccountActions,
+  type AppTopBarAccountLabels,
+} from "@/components/app-topbar-account-actions";
 import { AppTopBarActions } from "@/components/app-topbar-actions";
 import { DesktopTopNav } from "@/components/desktop-top-nav";
-import { NotificationBell } from "@/components/notification-bell";
+import {
+  NotificationBell,
+  type NotificationBellLabels,
+} from "@/components/notification-bell";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { navItemsByRole, type NavRole } from "@/lib/navigation";
@@ -15,6 +21,8 @@ export function AppTopBar({
   desktopActions,
   mobileActions,
   showActionsOnMobile = false,
+  accountLabels,
+  notificationLabels,
 }: {
   href?: string;
   navRole?: NavRole;
@@ -22,6 +30,8 @@ export function AppTopBar({
   desktopActions?: React.ReactNode;
   mobileActions?: React.ReactNode;
   showActionsOnMobile?: boolean;
+  accountLabels?: AppTopBarAccountLabels;
+  notificationLabels?: NotificationBellLabels;
 }) {
   const navItems = navRole ? navItemsByRole[navRole] : [];
   const showStudentLanguageSwitcher =
@@ -57,7 +67,7 @@ export function AppTopBar({
               desktopChildren={
                 <>
                   {desktopActions}
-                  {showNotifications ? <NotificationBell /> : null}
+                  {showNotifications ? <NotificationBell labels={notificationLabels} /> : null}
                   <ThemeToggle />
                   {showStudentLanguageSwitcher ? <StudentLanguageSwitcher /> : null}
                 </>
@@ -82,9 +92,11 @@ export function AppTopBar({
                     </div>
                   ) : null}
                   {!isGuest ? (
-                    <AppTopBarAccountActions role={navRole} />
+                    <AppTopBarAccountActions role={navRole} labels={accountLabels} />
                   ) : null}
-                  {showNotifications ? <NotificationBell variant="inline" /> : null}
+                  {showNotifications ? (
+                    <NotificationBell variant="inline" labels={notificationLabels} />
+                  ) : null}
                 </>
               }
             />

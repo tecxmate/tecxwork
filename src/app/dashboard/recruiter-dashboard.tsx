@@ -141,6 +141,11 @@ export function RecruiterDashboard({
         currentPath={currentPath}
         mobileActions={<RecruiterLanguageSwitcher />}
         showActionsOnMobile
+        accountLabels={{
+          roleLabel: messages.common.recruiter,
+          logout: messages.common.logout,
+        }}
+        notificationLabels={messages.notifications}
         desktopActions={
           <>
             <RecruiterLanguageSwitcher />
@@ -292,11 +297,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
 
   // Design system status colors
   const statusColor: Record<string, string> = {
-    pending: "bg-[#FF9500]/15 text-[#FF9500]", // WARNING orange
-    accepted: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
-    waitlisted: "bg-[#8C52FF]/15 text-[#8C52FF]", // INFO purple
-    rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
-    cancelled: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+    pending: "bg-orange-500/15 text-orange-600 dark:text-orange-400", // WARNING
+    accepted: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", // SUCCESS
+    waitlisted: "bg-primary/15 text-primary", // INFO
+    rejected: "bg-destructive/15 text-destructive", // DESTRUCTIVE
+    cancelled: "bg-muted text-muted-foreground",
   };
 
   function renderBooking(b: Booking) {
@@ -306,7 +311,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     const isActing = acting === b.id;
 
     return (
-      <Card key={b.id} className={isPending ? "border-[#FF9500]/30" : ""}>
+      <Card key={b.id}>
         <CardContent className="py-4">
           <div className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3">
@@ -354,7 +359,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   size="sm"
                   disabled={isActing}
                   onClick={() => handleReview(b.id, "accept")}
-                  className="h-8 bg-[#30D158] text-white hover:bg-[#30D158]/90"
+                  className="h-8 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
                 >
                   {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
                   {messages.dashboard.bookings.accept}
@@ -375,7 +380,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   variant="outline"
                   disabled={isActing}
                   onClick={() => openRejectModal(b.id, b.applicantName, "reject")}
-                  className="h-8 text-[#D70015] border-[#D70015]/30 hover:bg-[#D70015]/10"
+                  className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10"
                 >
                   {messages.dashboard.bookings.reject}
                 </Button>
@@ -403,7 +408,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {pending.length > 0 && (
         <div>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF9500]/15 text-[10px] font-bold text-[#FF9500]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500/15 text-[10px] font-bold text-orange-600 dark:text-orange-400">
               {pending.length}
             </span>
             {messages.dashboard.bookings.pendingReview}
@@ -415,8 +420,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Accepted */}
       {accepted.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-[#30D158]">
-            {messages.dashboard.bookings.accepted} ({accepted.length})
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              {accepted.length}
+            </span>
+            {messages.dashboard.bookings.accepted}
           </h3>
           <div className="space-y-2">{accepted.map(renderBooking)}</div>
         </div>
@@ -425,8 +433,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Waitlisted */}
       {waitlisted.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-[#8C52FF]">
-            {messages.dashboard.bookings.waitlisted} ({waitlisted.length})
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+              {waitlisted.length}
+            </span>
+            {messages.dashboard.bookings.waitlisted}
           </h3>
           <div className="space-y-2">{waitlisted.map(renderBooking)}</div>
         </div>
@@ -435,8 +446,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Rejected/Cancelled */}
       {other.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            {messages.dashboard.bookings.past} ({other.length})
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+              {other.length}
+            </span>
+            {messages.dashboard.bookings.past}
           </h3>
           <div className="space-y-2">{other.map(renderBooking)}</div>
         </div>

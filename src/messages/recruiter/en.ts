@@ -8,6 +8,15 @@ export const recruiterEnMessages = {
     tryAgain: "Try again",
     logout: "Logout",
     viewSite: "View Site",
+    recruiter: "Recruiter",
+  },
+  notifications: {
+    notifications: "Notifications",
+    recent: "Recent",
+    markAllRead: "Mark all read",
+    enablePush: "Enable push notifications",
+    empty: "No notifications yet",
+    markAsRead: "Mark as read",
   },
   language: {
     english: "EN",
