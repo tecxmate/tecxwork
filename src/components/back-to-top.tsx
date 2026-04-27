@@ -8,16 +8,14 @@ const STORAGE_KEY = "backToTopPosition";
 
 export function BackToTop() {
   const [visible, setVisible] = useState(false);
-  const [position, setPosition] = useState<"left" | "right">("right");
+  const [position, setPosition] = useState<"left" | "right">(() => {
+    if (typeof window === "undefined") return "right";
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved === "left" || saved === "right" ? saved : "right";
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) as "left" | "right" | null;
-    if (saved === "left" || saved === "right") {
-      setPosition(saved);
-    }
-  }, []);
 
   useEffect(() => {
     function handleScroll() {
