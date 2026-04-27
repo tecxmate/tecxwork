@@ -27,6 +27,7 @@ export function AppTopBar({
   const showStudentLanguageSwitcher =
     navRole === "guest" || navRole === "applicant" || navRole === "admin";
   const showNotifications = Boolean(navRole && navRole !== "guest");
+  const isGuest = !navRole || navRole === "guest";
   const mobileOverflow = true;
 
   return (
@@ -66,10 +67,17 @@ export function AppTopBar({
                     <StudentLanguageSwitcher />
                   ) : null}
                   {showActionsOnMobile ? (mobileActions ?? desktopActions) : null}
-                  <AppTopBarAccountActions role={navRole ?? "guest"} />
+                  {!isGuest ? (
+                    <AppTopBarAccountActions role={navRole} />
+                  ) : null}
                 </>
               }
             />
+            {isGuest && desktopActions ? (
+              <div className="flex items-center gap-2 whitespace-nowrap md:hidden">
+                {desktopActions}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
