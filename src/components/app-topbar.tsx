@@ -60,7 +60,7 @@ export function AppTopBar({
               mobileChildren={
                 <>
                   <div className="flex w-full items-center gap-2">
-                    {showNotifications ? <NotificationBell /> : null}
+                    {showNotifications ? <NotificationBell variant="inline" /> : null}
                     <ThemeToggle />
                   </div>
                   {showStudentLanguageSwitcher ? (

@@ -16,7 +16,11 @@ type Notification = {
   createdAt: string;
 };
 
-export function NotificationBell() {
+export function NotificationBell({
+  variant = "popover",
+}: {
+  variant?: "popover" | "inline";
+}) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -105,20 +109,115 @@ export function NotificationBell() {
     setUnreadCount((c) => Math.max(0, c - 1));
   }
 
+  const button = (
+    <button
+      onClick={() => setOpen(!open)}
+      className="relative flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+      aria-label="Notifications"
+    >
+      <Bell className="h-4 w-4" />
+      {unreadCount > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
+      )}
+    </button>
+  );
+
+  const panel = (
+    <>
+      <div className="flex items-center justify-between border-b px-4 py-3">
+        <h3 className="font-semibold">Notifications</h3>
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllRead}
+              disabled={loading}
+              className="text-xs text-primary hover:underline disabled:opacity-50"
+            >
+              Mark all read
+            </button>
+          )}
+          {variant === "popover" ? (
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded p-1 text-muted-foreground hover:bg-muted"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {pushEnabled === false && VAPID_PUBLIC_KEY && (
+        <button
+          onClick={enablePush}
+          className="flex w-full items-center gap-2 border-b bg-primary/5 px-4 py-2 text-xs text-primary hover:bg-primary/10"
+        >
+          <BellRing className="h-4 w-4" />
+          Enable push notifications
+        </button>
+      )}
+
+      <div className={variant === "inline" ? "max-h-56 overflow-y-auto" : "max-h-80 overflow-y-auto"}>
+        {notifications.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            No notifications yet
+          </div>
+        ) : (
+          <div className="divide-y">
+            {notifications.map((n) => (
+              <div
+                key={n.id}
+                className={cn(
+                  "flex gap-3 px-4 py-3 transition-colors",
+                  !n.read && "bg-primary/5"
+                )}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-sm", !n.read && "font-medium")}>
+                    {n.title}
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                    {n.message}
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                  </p>
+                </div>
+                {!n.read && (
+                  <button
+                    onClick={() => markAsRead(n.id)}
+                    className="shrink-0 self-start rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    title="Mark as read"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  if (variant === "inline") {
+    return (
+      <div className="w-full">
+        {button}
+        {open ? (
+          <div className="mt-2 overflow-hidden rounded-lg border bg-card">
+            {panel}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="relative flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-        aria-label="Notifications"
-      >
-        <Bell className="h-4 w-4" />
-        {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
+      {button}
 
       {open && (
         <>
@@ -126,78 +225,8 @@ export function NotificationBell() {
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border bg-card shadow-lg sm:w-96">
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <h3 className="font-semibold">Notifications</h3>
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllRead}
-                    disabled={loading}
-                    className="text-xs text-primary hover:underline disabled:opacity-50"
-                  >
-                    Mark all read
-                  </button>
-                )}
-                <button
-                  onClick={() => setOpen(false)}
-                  className="rounded p-1 text-muted-foreground hover:bg-muted"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {pushEnabled === false && VAPID_PUBLIC_KEY && (
-              <button
-                onClick={enablePush}
-                className="flex w-full items-center gap-2 border-b bg-primary/5 px-4 py-2 text-xs text-primary hover:bg-primary/10"
-              >
-                <BellRing className="h-4 w-4" />
-                Enable push notifications
-              </button>
-            )}
-
-            <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  No notifications yet
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className={cn(
-                        "flex gap-3 px-4 py-3 transition-colors",
-                        !n.read && "bg-primary/5"
-                      )}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className={cn("text-sm", !n.read && "font-medium")}>
-                          {n.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                          {n.message}
-                        </p>
-                        <p className="mt-1 text-[10px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
-                        </p>
-                      </div>
-                      {!n.read && (
-                        <button
-                          onClick={() => markAsRead(n.id)}
-                          className="shrink-0 self-start rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          title="Mark as read"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border bg-card shadow-lg sm:w-96">
+            {panel}
           </div>
         </>
       )}
