@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -435,22 +434,13 @@ export function AdminDashboard({
                 : "/admin/jobs"
         }
         desktopActions={
-          <>
-            <Link
-              href="/"
-              className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
-            >
-              {messages.common.viewSite}
-            </Link>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-1.5 h-3.5 w-3.5" />
-              {messages.common.logout}
-            </Button>
-          </>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut className="mr-1.5 h-3.5 w-3.5" />
+            {messages.common.logout}
+          </Button>
         }
         mobileActions={
           <AdminMobileActions
-            viewSiteLabel={messages.common.viewSite}
             logoutLabel={messages.common.logout}
             onLogout={handleLogout}
           />
@@ -954,23 +944,14 @@ export function AdminDashboard({
 }
 
 function AdminMobileActions({
-  viewSiteLabel,
   logoutLabel,
   onLogout,
 }: {
-  viewSiteLabel: string;
   logoutLabel: string;
   onLogout: () => void;
 }) {
   return (
-    <div className="flex w-full min-w-40 flex-col gap-1">
-      <Link
-        href="/"
-        className="flex w-full items-center rounded-lg px-2.5 py-1.5 text-left text-foreground transition-premium hover:bg-muted"
-      >
-        {viewSiteLabel}
-      </Link>
-      <div className="my-0.5 h-px w-full bg-border" />
+    <div className="flex w-full min-w-40 flex-col">
       <button
         type="button"
         className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-destructive transition-premium hover:bg-destructive/10"
