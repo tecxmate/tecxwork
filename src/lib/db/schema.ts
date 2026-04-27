@@ -257,6 +257,22 @@ export const allowedDomains = pgTable("allowed_domains", {
     .defaultNow(),
 });
 
+// ---- Exact recruiter email approvals (admin-reviewed signup allow-list) ----
+
+export const recruiterEmailApprovals = pgTable("recruiter_email_approvals", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  company: text("company").notNull(),
+  industry: text("industry").notNull(),
+  status: text("status").notNull().default("approved"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  approvedAt: timestamp("approved_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ---- Password reset codes ----
 
 export const passwordResetCodes = pgTable("password_reset_codes", {

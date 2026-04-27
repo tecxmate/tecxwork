@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, users, recruiters, allowedDomains, slots } from "@/lib/db";
+import {
+  db,
+  users,
+  recruiters,
+  allowedDomains,
+  recruiterEmailApprovals,
+} from "@/lib/db";
 import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
-import { eq } from "drizzle-orm";
-import { EVENT_CONFIG } from "@/lib/data";
+import { and, eq } from "drizzle-orm";
+import { ensureDefaultRecruiterSlots } from "@/lib/recruiter-onboarding";
 
 /** POST — Recruiter self-signup with allowed-domain check */
 export async function POST(req: NextRequest) {
@@ -49,17 +55,41 @@ export async function POST(req: NextRequest) {
   }
 
   // Verify email domain is allowed
-  const domain = email.split("@")[1]?.trim().toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
+  const domain = normalizedEmail.split("@")[1]?.trim().toLowerCase();
   if (!domain) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
+
+  const [emailApproval] = await db
+    .select()
+    .from(recruiterEmailApprovals)
+    .where(
+      and(
+        eq(recruiterEmailApprovals.email, normalizedEmail),
+        eq(recruiterEmailApprovals.status, "approved")
+      )
+    );
 
   const [allowed] = await db
     .select()
     .from(allowedDomains)
     .where(eq(allowedDomains.domain, domain));
 
-  if (!allowed) {
+  const [existingRecruiter] = await db
+    .select({
+      userId: users.id,
+      email: users.email,
+      role: users.role,
+      recruiterId: recruiters.id,
+      company: recruiters.company,
+      industry: recruiters.industry,
+    })
+    .from(users)
+    .innerJoin(recruiters, eq(recruiters.userId, users.id))
+    .where(and(eq(users.email, normalizedEmail), eq(users.role, "recruiter")));
+
+  if (!emailApproval && !allowed && !existingRecruiter) {
     return NextResponse.json(
       {
         error:
@@ -70,11 +100,55 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Create user
     const passwordHash = await hashPassword(password);
+
+    if (existingRecruiter) {
+      await db
+        .update(users)
+        .set({ name, passwordHash })
+        .where(eq(users.id, existingRecruiter.userId));
+
+      await db
+        .update(recruiters)
+        .set({
+          company: company || emailApproval?.company || allowed?.company || existingRecruiter.company,
+          industry:
+            industry || emailApproval?.industry || allowed?.industry || existingRecruiter.industry,
+          description: description ?? "",
+          contactEmail: contactEmail ?? normalizedEmail,
+        })
+        .where(eq(recruiters.id, existingRecruiter.recruiterId));
+
+      await ensureDefaultRecruiterSlots(existingRecruiter.recruiterId);
+      await db
+        .delete(recruiterEmailApprovals)
+        .where(eq(recruiterEmailApprovals.email, normalizedEmail));
+
+      const token = createToken({
+        userId: existingRecruiter.userId,
+        email: existingRecruiter.email,
+        role: "recruiter",
+      });
+
+      const res = NextResponse.json(
+        { recruiter: { id: existingRecruiter.recruiterId } },
+        { status: 200 }
+      );
+      res.cookies.set(COOKIE_NAME, token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24,
+        path: "/",
+      });
+
+      return res;
+    }
+
+    // Create user
     const [user] = await db
       .insert(users)
-      .values({ email, name, passwordHash, role: "recruiter" })
+      .values({ email: normalizedEmail, name, passwordHash, role: "recruiter" })
       .returning();
 
     // Create recruiter profile
@@ -82,33 +156,17 @@ export async function POST(req: NextRequest) {
       .insert(recruiters)
       .values({
         userId: user.id,
-        company: company ?? allowed.company,
-        industry: industry ?? allowed.industry,
+        company: company || emailApproval?.company || allowed?.company || "",
+        industry: industry || emailApproval?.industry || allowed?.industry || "",
         description: description ?? "",
-        contactEmail: contactEmail ?? email,
+        contactEmail: contactEmail ?? normalizedEmail,
       })
       .returning();
 
-    // Generate default slots for event day using EVENT_CONFIG
-    const dateObj = EVENT_CONFIG.date;
-    const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
-    const startHour: number = EVENT_CONFIG.startHour;
-    const endHour: number = EVENT_CONFIG.endHour;
-    const endMinutes: number = EVENT_CONFIG.endMinutes;
-    const slotDuration: number = EVENT_CONFIG.slotDuration;
-    const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] = [];
-    for (let h = startHour; h < endHour + 1; h++) {
-      for (let m = 0; m < 60; m += slotDuration) {
-        if (h === endHour && m >= endMinutes) break;
-        if (h > endHour) break;
-        const start = new Date(
-          `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
-        );
-        const end = new Date(start.getTime() + slotDuration * 60 * 1000);
-        slotValues.push({ recruiterId: recruiter.id, startTime: start, endTime: end });
-      }
-    }
-    await db.insert(slots).values(slotValues);
+    await ensureDefaultRecruiterSlots(recruiter.id);
+    await db
+      .delete(recruiterEmailApprovals)
+      .where(eq(recruiterEmailApprovals.email, normalizedEmail));
 
     // Auto-login
     const token = createToken({

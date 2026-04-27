@@ -10,11 +10,15 @@ function buildDefaultSlotValues(recruiterId: number) {
   ).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
   const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] =
     [];
+  const startHour: number = EVENT_CONFIG.startHour;
+  const endHour: number = EVENT_CONFIG.endHour;
+  const endMinutes: number = EVENT_CONFIG.endMinutes;
+  const slotDuration: number = EVENT_CONFIG.slotDuration;
 
-  for (let h = EVENT_CONFIG.startHour; h < EVENT_CONFIG.endHour + 1; h++) {
-    for (let m = 0; m < 60; m += EVENT_CONFIG.slotDuration) {
-      if (h === EVENT_CONFIG.endHour && m >= EVENT_CONFIG.endMinutes) break;
-      if (h > EVENT_CONFIG.endHour) break;
+  for (let h = startHour; h < endHour + 1; h++) {
+    for (let m = 0; m < 60; m += slotDuration) {
+      if (h === endHour && m >= endMinutes) break;
+      if (h > endHour) break;
 
       const start = new Date(
         `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(
@@ -22,7 +26,7 @@ function buildDefaultSlotValues(recruiterId: number) {
           "0"
         )}:00+08:00`
       );
-      const end = new Date(start.getTime() + EVENT_CONFIG.slotDuration * 60 * 1000);
+      const end = new Date(start.getTime() + slotDuration * 60 * 1000);
       slotValues.push({ recruiterId, startTime: start, endTime: end });
     }
   }

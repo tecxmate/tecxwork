@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, users, recruiters, bookings, slots, jobOpenings } from "@/lib/db";
+import {
+  db,
+  users,
+  recruiters,
+  bookings,
+  slots,
+  jobOpenings,
+  recruiterEmailApprovals,
+} from "@/lib/db";
 import { requireAdmin, hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { ensureDefaultRecruiterSlots } from "@/lib/recruiter-onboarding";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,15 +30,45 @@ export async function POST(req: NextRequest) {
     contactEmail,
   } = body;
 
-  if (!email || !password || !name || !company) {
+  const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
+  if (!normalizedEmail || !company) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  if (!password) {
+    try {
+      const [approval] = await db
+        .insert(recruiterEmailApprovals)
+        .values({
+          email: normalizedEmail,
+          company,
+          industry: industry ?? "Technology",
+          status: "approved",
+        })
+        .returning();
+
+      return NextResponse.json({ approval }, { status: 201 });
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("unique")) {
+        return NextResponse.json(
+          { error: "This recruiter email is already approved" },
+          { status: 409 }
+        );
+      }
+      throw err;
+    }
+  }
+
+  if (!name) {
+    return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
 
   const passwordHash = await hashPassword(password);
 
   const [user] = await db
     .insert(users)
-    .values({ email, name, passwordHash, role: "recruiter" })
+    .values({ email: normalizedEmail, name, passwordHash, role: "recruiter" })
     .returning();
 
   const [recruiter] = await db
@@ -39,9 +78,11 @@ export async function POST(req: NextRequest) {
       company,
       industry: industry ?? "",
       description: description ?? "",
-      contactEmail: contactEmail ?? email,
+      contactEmail: contactEmail ?? normalizedEmail,
     })
     .returning();
+
+  await ensureDefaultRecruiterSlots(recruiter.id);
 
   return NextResponse.json({ recruiter }, { status: 201 });
 }

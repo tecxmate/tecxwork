@@ -76,6 +76,16 @@ type Domain = {
   industry: string;
 };
 
+type RecruiterApproval = {
+  id: number;
+  email: string;
+  company: string;
+  industry: string;
+  status: string;
+  createdAt: Date | string;
+  approvedAt: Date | string;
+};
+
 type JobOpening = {
   id: number;
   recruiterId: number;
@@ -134,6 +144,7 @@ export function AdminDashboard({
   bookings: initialBookings,
   jobs: initialJobs,
   domains: initialDomains,
+  recruiterApprovals: initialRecruiterApprovals,
   stats,
   currentMode,
   initialOnboardingMode,
@@ -148,6 +159,7 @@ export function AdminDashboard({
   bookings: AdminBooking[];
   jobs: JobOpening[];
   domains: Domain[];
+  recruiterApprovals: RecruiterApproval[];
   stats: Stats;
   currentMode: string;
   initialOnboardingMode: OnboardingMode;
@@ -168,6 +180,9 @@ export function AdminDashboard({
   const [locked, setLocked] = useState(initialLocked);
   const [saving, setSaving] = useState(false);
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
+  const [recruiterApprovals, setRecruiterApprovals] = useState<
+    RecruiterApproval[]
+  >(initialRecruiterApprovals);
   const [recruiters, setRecruiters] = useState<Recruiter[]>(initialRecruiters);
   const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants);
   const [adminBookings, setAdminBookings] = useState<AdminBooking[]>(initialBookings);
@@ -363,6 +378,19 @@ export function AdminDashboard({
     });
     if (res.ok) {
       setRecruiters(recruiters.filter((x) => x.id !== r.id));
+      router.refresh();
+    }
+  }
+
+  async function handleDeleteRecruiterApproval(approval: RecruiterApproval) {
+    if (!confirm(`Remove recruiter approval for ${approval.email}?`)) return;
+    const res = await fetch(`/api/admin/recruiter-approvals?id=${approval.id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setRecruiterApprovals((current) =>
+        current.filter((item) => item.id !== approval.id)
+      );
       router.refresh();
     }
   }
@@ -913,7 +941,12 @@ export function AdminDashboard({
           ) : section === "recruiters" ? (
             <RecruitersSection
               recruiters={recruiters}
+              approvals={recruiterApprovals}
               onDeleteRecruiter={handleDeleteRecruiter}
+              onDeleteApproval={handleDeleteRecruiterApproval}
+              onApprovalCreated={(approval) =>
+                setRecruiterApprovals((current) => [...current, approval])
+              }
             />
           ) : section === "applicants" ? (
             <PeopleSection
@@ -1602,10 +1635,16 @@ function SortHeader({
 
 function RecruitersSection({
   recruiters,
+  approvals,
   onDeleteRecruiter,
+  onDeleteApproval,
+  onApprovalCreated,
 }: {
   recruiters: Recruiter[];
+  approvals: RecruiterApproval[];
   onDeleteRecruiter: (r: Recruiter) => void;
+  onDeleteApproval: (approval: RecruiterApproval) => void;
+  onApprovalCreated: (approval: RecruiterApproval) => void;
 }) {
   const router = useRouter();
   const { messages, locale } = useStudentI18n();
@@ -1619,10 +1658,9 @@ function RecruitersSection({
 
   // Add recruiter form
   const [showForm, setShowForm] = useState(false);
-  const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newCompany, setNewCompany] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [newIndustry, setNewIndustry] = useState("Technology");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
 
@@ -1636,10 +1674,9 @@ function RecruitersSection({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: newName.trim(),
           email: newEmail.trim().toLowerCase(),
           company: newCompany.trim(),
-          password: newPassword,
+          industry: newIndustry,
         }),
       });
 
@@ -1648,10 +1685,11 @@ function RecruitersSection({
         throw new Error(data.error || "Failed to add recruiter");
       }
 
-      setNewName("");
+      const data = await res.json();
+      onApprovalCreated(data.approval);
       setNewEmail("");
       setNewCompany("");
-      setNewPassword("");
+      setNewIndustry("Technology");
       setShowForm(false);
       router.refresh();
     } catch (err) {
@@ -1705,7 +1743,7 @@ function RecruitersSection({
           onClick={() => setShowForm(!showForm)}
         >
           <Plus className="mr-1.5 h-4 w-4" />
-          Add Recruiter
+          Approve Recruiter
         </Button>
       </div>
 
@@ -1714,16 +1752,7 @@ function RecruitersSection({
         <Card>
           <CardContent className="py-4">
             <form onSubmit={handleAddRecruiter} className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Name</label>
-                  <Input
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
+              <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Email</label>
                   <Input
@@ -1744,15 +1773,18 @@ function RecruitersSection({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Password</label>
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    minLength={6}
-                  />
+                  <label className="text-xs font-medium text-muted-foreground">Industry</label>
+                  <select
+                    value={newIndustry}
+                    onChange={(e) => setNewIndustry(e.target.value)}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {INDUSTRY_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               {addError && (
@@ -1760,7 +1792,14 @@ function RecruitersSection({
               )}
               <div className="flex gap-2">
                 <Button type="submit" disabled={adding} size="sm">
-                  {adding ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Adding...</> : "Add Recruiter"}
+                  {adding ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                      Approving...
+                    </>
+                  ) : (
+                    "Approve recruiter email"
+                  )}
                 </Button>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>
                   Cancel
@@ -1772,8 +1811,58 @@ function RecruitersSection({
       )}
 
       <p className="text-sm text-muted-foreground">
-        Only these recruiters can access the system with their registered email.
+        Approved recruiter emails can complete their own signup. Active
+        recruiters can access the dashboard with their registered email.
       </p>
+
+      {approvals.length > 0 ? (
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium">Approved email</th>
+                <th className="px-3 py-2 text-left font-medium">Company</th>
+                <th className="hidden px-3 py-2 text-left font-medium sm:table-cell">
+                  Industry
+                </th>
+                <th className="w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {approvals.map((approval) => (
+                <tr
+                  key={approval.id}
+                  className="border-b last:border-b-0 hover:bg-muted/20"
+                >
+                  <td className="px-3 py-2.5">
+                    <a
+                      href={`mailto:${approval.email}`}
+                      className="text-muted-foreground hover:text-primary hover:underline"
+                    >
+                      {approval.email}
+                    </a>
+                  </td>
+                  <td className="px-3 py-2.5">{approval.company}</td>
+                  <td className="hidden px-3 py-2.5 sm:table-cell">
+                    <Badge variant="secondary" className="text-xs font-normal">
+                      {approval.industry}
+                    </Badge>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <button
+                      onClick={() => onDeleteApproval(approval)}
+                      className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={`Remove approval for ${approval.email}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
 
       {/* Search */}
       <div className="relative max-w-sm">

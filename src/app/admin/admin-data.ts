@@ -10,6 +10,7 @@ import {
   applicantProfiles,
   eventConfig,
   allowedDomains,
+  recruiterEmailApprovals,
   users,
   jobOpenings,
 } from "@/lib/db";
@@ -70,6 +71,11 @@ export async function getAdminDashboardData() {
     .select()
     .from(allowedDomains)
     .orderBy(allowedDomains.company);
+
+  const recruiterApprovals = await db
+    .select()
+    .from(recruiterEmailApprovals)
+    .orderBy(recruiterEmailApprovals.company);
 
   const bookingList = await db
     .select({
@@ -134,6 +140,7 @@ export async function getAdminDashboardData() {
     bookings: bookingList,
     jobs: jobList,
     domains,
+    recruiterApprovals,
     stats: {
       totalRecruiters: recruiterList.length,
       totalBookings: bookingCount.count,
