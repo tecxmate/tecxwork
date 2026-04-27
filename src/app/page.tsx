@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Users,
   MapPin,
   Clock,
   Building2,
@@ -17,19 +16,19 @@ import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
+import { HomepageImageEditor } from "@/components/homepage-image-editor";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getSession } from "@/lib/auth";
-import { db, recruiters, jobOpenings, users } from "@/lib/db";
+import { db, recruiters, jobOpenings, users, eventConfig } from "@/lib/db";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
 import { eq } from "drizzle-orm";
 
-// Placeholder event photos - replace with actual photos
-const EVENT_PHOTOS = [
-  { id: 1, alt: "Career fair networking", placeholder: true },
-  { id: 2, alt: "Interview session", placeholder: true },
-  { id: 3, alt: "Company presentations", placeholder: true },
-  { id: 4, alt: "Student registration", placeholder: true },
+const EVENT_PHOTO_PLACEHOLDERS = [
+  { id: 1, alt: "Career fair networking" },
+  { id: 2, alt: "Interview session" },
+  { id: 3, alt: "Company presentations" },
+  { id: 4, alt: "Student registration" },
 ];
 
 async function getPublicRecruiters() {
@@ -99,6 +98,14 @@ async function getPublicJobs() {
   return result;
 }
 
+async function getHomepageImages() {
+  const [config] = await db
+    .select({ homepageImages: eventConfig.homepageImages })
+    .from(eventConfig)
+    .limit(1);
+  return config?.homepageImages ?? [];
+}
+
 export default async function LandingPage() {
   const session = await getSession();
   const locale = await getStudentLocale();
@@ -113,9 +120,10 @@ export default async function LandingPage() {
         : "/browse"
     : null;
 
-  const [publicRecruiters, publicJobs] = await Promise.all([
+  const [publicRecruiters, publicJobs, homepageImages] = await Promise.all([
     getPublicRecruiters(),
     getPublicJobs(),
+    getHomepageImages(),
   ]);
 
   const formattedDate = EVENT_CONFIG.date.toLocaleDateString(
@@ -227,26 +235,11 @@ export default async function LandingPage() {
                 {messages.landing.eventHighlightsSubtitle}
               </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {EVENT_PHOTOS.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="aspect-[4/3] overflow-hidden rounded-xl bg-secondary"
-                >
-                  {photo.placeholder ? (
-                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                      <div className="text-center">
-                        <Users className="mx-auto h-8 w-8 opacity-50" />
-                        <p className="mt-2 text-xs">{photo.alt}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    // Replace with actual Image component when photos are added
-                    <div className="h-full w-full bg-secondary" />
-                  )}
-                </div>
-              ))}
-            </div>
+            <HomepageImageEditor
+              images={homepageImages}
+              isAdmin={session?.role === "admin"}
+              placeholders={EVENT_PHOTO_PLACEHOLDERS}
+            />
           </div>
         </section>
 

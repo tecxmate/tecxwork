@@ -130,3 +130,67 @@ export async function sendBookingEmails(data: BookingEmailData) {
     console.error("Failed to send recruiter email:", err);
   }
 }
+
+type RejectionEmailData = {
+  applicantName: string;
+  applicantEmail: string;
+  company: string;
+  recruiterNote?: string;
+  action: "rejected" | "cancelled";
+};
+
+/**
+ * Send rejection/cancellation email to applicant with optional recruiter note.
+ */
+export async function sendRejectionEmail(data: RejectionEmailData) {
+  const resend = getResend();
+  if (!resend) {
+    console.log("RESEND_API_KEY not set — skipping rejection email");
+    return;
+  }
+
+  const actionText = data.action === "rejected" ? "declined" : "cancelled";
+  const subject = `Interview ${actionText} — ${data.company}`;
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: data.applicantEmail,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">Interview ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}</h2>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+            Your interview request with <strong>${data.company}</strong> has been ${actionText}.
+          </p>
+
+          ${data.recruiterNote ? `
+          <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <p style="margin: 0 0 8px; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Message from the recruiter</p>
+            <p style="margin: 0; font-size: 14px; color: #333; white-space: pre-wrap;">${data.recruiterNote}</p>
+          </div>
+          ` : ''}
+
+          <p style="font-size: 14px; color: #666; margin-bottom: 24px;">
+            Don't be discouraged — there are many other companies participating in the career fair.
+            Visit the platform to explore other opportunities.
+          </p>
+
+          <div style="margin-bottom: 24px;">
+            <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://tecxwork.com"}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+              Browse Other Companies
+            </a>
+          </div>
+
+          <p style="font-size: 12px; color: #999; margin-top: 32px;">
+            ${EVENT_CONFIG.name}<br>
+            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+          </p>
+        </div>
+      `,
+    });
+    console.log("Rejection email result:", JSON.stringify(result));
+  } catch (err) {
+    console.error("Failed to send rejection email:", err);
+  }
+}

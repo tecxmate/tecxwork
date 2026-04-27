@@ -235,14 +235,16 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const { messages } = useRecruiterI18n();
   const [items, setItems] = useState(initialBookings);
   const [acting, setActing] = useState<number | null>(null);
+  const [rejectModal, setRejectModal] = useState<{ id: number; name: string; type: "reject" | "cancel" } | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
   const router = useRouter();
 
-  async function handleReview(id: number, action: "accept" | "reject" | "waitlist") {
+  async function handleReview(id: number, action: "accept" | "reject" | "waitlist", note?: string) {
     setActing(id);
     const res = await fetch("/api/bookings/review", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId: id, action }),
+      body: JSON.stringify({ bookingId: id, action, note }),
     });
     if (res.ok) {
       const newStatus = action === "accept" ? "accepted" : action === "reject" ? "rejected" : "waitlisted";
@@ -252,15 +254,34 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     setActing(null);
   }
 
-  async function handleCancel(id: number) {
-    if (!confirm(messages.dashboard.bookings.cancelConfirm)) return;
+  async function handleCancel(id: number, note?: string) {
     setActing(id);
-    const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/bookings/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note }),
+    });
     if (res.ok) {
       setItems(items.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
       router.refresh();
     }
     setActing(null);
+  }
+
+  function openRejectModal(id: number, name: string, type: "reject" | "cancel") {
+    setRejectModal({ id, name, type });
+    setRejectNote("");
+  }
+
+  async function confirmReject() {
+    if (!rejectModal) return;
+    if (rejectModal.type === "reject") {
+      await handleReview(rejectModal.id, "reject", rejectNote);
+    } else {
+      await handleCancel(rejectModal.id, rejectNote);
+    }
+    setRejectModal(null);
+    setRejectNote("");
   }
 
   const pending = items.filter((b) => b.status === "pending");
@@ -351,7 +372,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   size="sm"
                   variant="outline"
                   disabled={isActing}
-                  onClick={() => handleReview(b.id, "reject")}
+                  onClick={() => openRejectModal(b.id, b.applicantName, "reject")}
                   className="h-8 text-destructive hover:bg-destructive/10"
                 >
                   {messages.dashboard.bookings.reject}
@@ -361,7 +382,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
             {isAccepted && (
               <div className="flex gap-2">
                 <button
-                  onClick={() => handleCancel(b.id)}
+                  onClick={() => openRejectModal(b.id, b.applicantName, "cancel")}
                   className="cursor-pointer text-xs text-muted-foreground hover:text-destructive hover:underline"
                 >
                   {messages.dashboard.bookings.cancelInterview}
@@ -425,6 +446,56 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
             <p className="text-muted-foreground">{messages.dashboard.bookings.noApplications}</p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Rejection/Cancellation Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-heading text-lg font-semibold">
+                {rejectModal.type === "reject"
+                  ? messages.dashboard.bookings.rejectTitle ?? "Decline Application"
+                  : messages.dashboard.bookings.cancelTitle ?? "Cancel Interview"}
+              </h3>
+              <button
+                onClick={() => setRejectModal(null)}
+                className="rounded-full p-1 hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {rejectModal.type === "reject"
+                ? messages.dashboard.bookings.rejectDescription ?? `You are declining the application from ${rejectModal.name}. Add an optional note to let them know why.`
+                : messages.dashboard.bookings.cancelDescription ?? `You are cancelling the interview with ${rejectModal.name}. Add an optional note to let them know why.`}
+            </p>
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder={messages.dashboard.bookings.notePlaceholder ?? "Optional: Add a message for the student..."}
+              rows={3}
+              className="mb-4 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setRejectModal(null)}>
+                {messages.common?.cancel ?? "Cancel"}
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={acting === rejectModal.id}
+                onClick={confirmReject}
+              >
+                {acting === rejectModal.id ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : null}
+                {rejectModal.type === "reject"
+                  ? messages.dashboard.bookings.confirmReject ?? "Decline"
+                  : messages.dashboard.bookings.confirmCancel ?? "Cancel Interview"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

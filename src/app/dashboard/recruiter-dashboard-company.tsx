@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Building2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
@@ -702,6 +703,49 @@ export function RecruiterCompanyTab({
                     max={4}
                   />
                 </div>
+
+                {/* Preview: How students will see your company */}
+                {(logoUrl || galleryUrls.length > 0) && (
+                  <div className="space-y-3 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-4">
+                    <p className="text-xs font-medium text-primary">Preview: How students see your company</p>
+                    <div className="flex items-start gap-3">
+                      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary">
+                        {logoUrl ? (
+                          <Image
+                            src={logoUrl}
+                            alt={recruiter.company}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <Building2 className="h-6 w-6 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-heading text-base font-semibold">{recruiter.company}</p>
+                        <p className="text-xs text-muted-foreground">{recruiter.industry}</p>
+                      </div>
+                    </div>
+                    {galleryUrls.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {galleryUrls.slice(0, 4).map((url, index) => (
+                          <div
+                            key={index}
+                            className="relative aspect-[4/3] overflow-hidden rounded-lg bg-secondary"
+                          >
+                            <Image
+                              src={url}
+                              alt={`${recruiter.company} photo ${index + 1}`}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 50vw, 25vw"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <label htmlFor="desc" className="text-sm font-medium">

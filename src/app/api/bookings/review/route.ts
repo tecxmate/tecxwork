@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, recruiters } from "@/lib/db";
 import { eq, and, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { sendBookingEmails } from "@/lib/email";
+import { sendBookingEmails, sendRejectionEmail } from "@/lib/email";
 import { users } from "@/lib/db";
 
 /**
@@ -19,7 +19,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { bookingId, action } = body;
+  const { bookingId, action, note } = body;
 
   if (!bookingId || !["accept", "reject", "waitlist"].includes(action)) {
     return NextResponse.json(
@@ -64,6 +64,24 @@ export async function PUT(req: NextRequest) {
       .update(bookings)
       .set({ status: action === "reject" ? "rejected" : "waitlisted" })
       .where(eq(bookings.id, bookingId));
+
+    // Send rejection email with optional note
+    if (action === "reject") {
+      const [rec] = await db
+        .select({ company: recruiters.company })
+        .from(recruiters)
+        .where(eq(recruiters.id, recruiter.id));
+
+      if (rec) {
+        sendRejectionEmail({
+          applicantName: booking.applicantName,
+          applicantEmail: booking.applicantEmail,
+          company: rec.company,
+          recruiterNote: note?.trim() || undefined,
+          action: "rejected",
+        }).catch(() => {});
+      }
+    }
 
     return NextResponse.json({
       ok: true,

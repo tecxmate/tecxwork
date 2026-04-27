@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { sendRejectionEmail } from "@/lib/email";
 
 /**
  * DELETE /api/bookings/[id] — cancel a booking.
@@ -9,12 +10,21 @@ import { getSession } from "@/lib/auth";
  * Auto-promotes the first waitlisted applicant for the same time+recruiter.
  */
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Parse optional note from request body
+  let note: string | undefined;
+  try {
+    const body = await req.json();
+    note = body.note?.trim();
+  } catch {
+    // No body or invalid JSON — note stays undefined
   }
 
   const { id } = await params;
@@ -68,6 +78,24 @@ export async function DELETE(
     .update(bookings)
     .set({ status: "cancelled" })
     .where(eq(bookings.id, bookingId));
+
+  // Send cancellation email to applicant (only when recruiter cancels)
+  if (session.role === "recruiter" || session.role === "admin") {
+    const [rec] = await db
+      .select({ company: recruiters.company })
+      .from(recruiters)
+      .where(eq(recruiters.id, booking.recruiterId));
+
+    if (rec) {
+      sendRejectionEmail({
+        applicantName: booking.applicantName,
+        applicantEmail: booking.applicantEmail,
+        company: rec.company,
+        recruiterNote: note,
+        action: "cancelled",
+      }).catch(() => {});
+    }
+  }
 
   // Auto-promote: if there's a waitlisted applicant for the same time+recruiter,
   // promote them to pending so recruiter can accept

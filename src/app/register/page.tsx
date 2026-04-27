@@ -219,6 +219,8 @@ export default function RegisterPage() {
     return () => window.clearTimeout(timeout);
   }, [draft]);
 
+  const [eventMode, setEventMode] = useState<string>("both");
+
   useEffect(() => {
     fetch("/api/admin/mode")
       .then(async (response) => {
@@ -230,6 +232,7 @@ export default function RegisterPage() {
       })
       .then((data) => {
         setOnboardingMode(data.onboardingMode === "minimal" ? "minimal" : "full");
+        setEventMode(data.mode ?? "both");
       })
       .catch(() => {
         setOnboardingMode("full");
@@ -606,7 +609,12 @@ export default function RegisterPage() {
       clearDraft();
       setPassword("");
       setProfileId(data.profile.id);
-      setStep("availability");
+      // Skip availability step if students are only booking recruiters (not the other way around)
+      if (eventMode === "applicant_books_recruiter") {
+        setStep("done");
+      } else {
+        setStep("availability");
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : messages.register.somethingWentWrong

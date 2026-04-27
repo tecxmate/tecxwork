@@ -65,6 +65,13 @@ export const recruiterEnMessages = {
       cv: "CV",
       cancelConfirm:
         "Cancel this? The slot will be released and a waitlisted applicant may be promoted.",
+      rejectTitle: "Decline Application",
+      rejectDescription: "Add an optional note to let the student know why their application was declined.",
+      cancelTitle: "Cancel Interview",
+      cancelDescription: "Add an optional note to let the student know why the interview was cancelled.",
+      notePlaceholder: "Optional: Add a message for the student...",
+      confirmReject: "Decline",
+      confirmCancel: "Cancel Interview",
     },
     applicants: {
       searchPlaceholder: "Search by name, major, or skill...",

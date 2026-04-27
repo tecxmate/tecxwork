@@ -722,7 +722,6 @@ export function AdminDashboard({
                     <div className="flex items-start gap-2 rounded-lg border border-yellow-300/50 bg-yellow-50 p-3 text-xs dark:border-yellow-800/50 dark:bg-yellow-900/10">
                       <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-700 dark:text-yellow-400" />
                       <p className="text-yellow-800 dark:text-yellow-300">
-                        <span className="font-semibold">{admin.eventMode.locked}</span>{" "}
                         {interpolate(admin.timeFrame.activeBookingsLocked, {
                           count: stats.activeBookings,
                         })}
@@ -731,9 +730,59 @@ export function AdminDashboard({
                   )}
 
                   <div className="flex items-center gap-3">
-                    <Button type="submit" disabled={tfSaving || stats.activeBookings > 0} size="sm">
-                      {tfSaving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />{messages.common.saving}</> : admin.timeFrame.saveAndRegenerate}
-                    </Button>
+                    {stats.activeBookings > 0 ? (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={tfSaving}
+                        size="sm"
+                        onClick={async () => {
+                          const confirmMsg = interpolate(
+                            admin.timeFrame.forceOverrideConfirm ?? "This will cancel {count} active booking(s) and notify students. Are you sure?",
+                            { count: stats.activeBookings }
+                          );
+                          if (!confirm(confirmMsg)) return;
+
+                          setTfSaving(true);
+                          setTfSaved(false);
+                          setTfError("");
+                          const res = await fetch("/api/admin/timeframe", {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ ...tf, forceOverride: true }),
+                          });
+                          if (!res.ok) {
+                            const d = await res.json().catch(() => ({}));
+                            setTfError(d.error || admin.timeFrame.saveFailed);
+                          } else {
+                            setTfSaved(true);
+                            setTimeout(() => setTfSaved(false), 3000);
+                          }
+                          setTfSaving(false);
+                          router.refresh();
+                        }}
+                      >
+                        {tfSaving ? (
+                          <>
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            {messages.common.saving}
+                          </>
+                        ) : (
+                          admin.timeFrame.forceOverride ?? "Override & Cancel Bookings"
+                        )}
+                      </Button>
+                    ) : (
+                      <Button type="submit" disabled={tfSaving} size="sm">
+                        {tfSaving ? (
+                          <>
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            {messages.common.saving}
+                          </>
+                        ) : (
+                          admin.timeFrame.saveAndRegenerate
+                        )}
+                      </Button>
+                    )}
                     {tfSaved && (
                       <span className="text-xs text-green-600">{admin.timeFrame.saved}</span>
                     )}

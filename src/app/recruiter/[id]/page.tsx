@@ -23,6 +23,8 @@ export default async function RecruiterPage({
         industry: recruiters.industry,
         description: recruiters.description,
         contactEmail: recruiters.contactEmail,
+        logoUrl: recruiters.logoUrl,
+        galleryUrls: recruiters.galleryUrls,
       })
       .from(recruiters)
       .where(eq(recruiters.id, recruiterId)),

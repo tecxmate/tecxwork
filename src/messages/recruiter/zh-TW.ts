@@ -65,6 +65,13 @@ export const recruiterZhTwMessages = {
       cv: "履歷",
       cancelConfirm:
         "要取消這筆面談嗎？釋出的時段可能會自動遞補候補中的申請者。",
+      rejectTitle: "拒絕申請",
+      rejectDescription: "新增一則訊息讓學生了解申請被拒絕的原因（選填）。",
+      cancelTitle: "取消面談",
+      cancelDescription: "新增一則訊息讓學生了解面談被取消的原因（選填）。",
+      notePlaceholder: "選填：給學生的訊息...",
+      confirmReject: "拒絕",
+      confirmCancel: "取消面談",
     },
     applicants: {
       searchPlaceholder: "依姓名、科系或技能搜尋...",

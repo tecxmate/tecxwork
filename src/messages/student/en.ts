@@ -434,8 +434,11 @@ export const studentEnMessages = {
       slotDuration: "Slot Duration (minutes)",
       eventRuns: "Event runs {start} - {end} with {duration}-minute slots.",
       activeBookingsLocked:
-        "Cannot update time frame while {count} active bookings exist.",
+        "{count} active bookings exist. Override will cancel all and notify students.",
       saveAndRegenerate: "Save and Regenerate Slots",
+      forceOverride: "Override & Cancel Bookings",
+      forceOverrideConfirm:
+        "This will cancel {count} active booking(s) and send rescheduling emails to all affected students. Are you sure?",
       saved: "Saved",
       saveFailed: "Failed to save time frame",
     },

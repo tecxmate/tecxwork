@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -45,6 +46,8 @@ type Recruiter = {
   industry: string;
   description: string;
   contactEmail: string;
+  logoUrl: string | null;
+  galleryUrls: string[];
 };
 
 type SelectedSlot = {
@@ -255,8 +258,17 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                 className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                    <Building2 className="h-5 w-5 text-primary" />
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary">
+                    {recruiter.logoUrl ? (
+                      <Image
+                        src={recruiter.logoUrl}
+                        alt={recruiter.company}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <Building2 className="h-5 w-5 text-primary" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-heading text-base font-semibold">
@@ -296,14 +308,45 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
             </Card>
           </div>
 
+          {/* Company Gallery */}
+          {recruiter.galleryUrls.length > 0 && (
+            <div className="mb-6 lg:hidden">
+              <div className="grid grid-cols-2 gap-2">
+                {recruiter.galleryUrls.slice(0, 4).map((url, index) => (
+                  <div
+                    key={index}
+                    className="relative aspect-[4/3] overflow-hidden rounded-lg bg-secondary"
+                  >
+                    <Image
+                      src={url}
+                      alt={`${recruiter.company} photo ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 50vw, 25vw"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-6 lg:grid-cols-5">
             {/* Desktop sidebar: Company info + Job list */}
             <div className="hidden lg:col-span-2 lg:block">
               <div className="sticky top-20 space-y-4">
                 <Card>
                   <CardHeader className="gap-3 pb-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
-                      <Building2 className="h-6 w-6 text-primary" />
+                    <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-secondary">
+                      {recruiter.logoUrl ? (
+                        <Image
+                          src={recruiter.logoUrl}
+                          alt={recruiter.company}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <Building2 className="h-6 w-6 text-primary" />
+                      )}
                     </div>
                     <div>
                       <h1 className="font-heading text-xl font-bold">{recruiter.company}</h1>
@@ -333,6 +376,26 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Desktop Gallery */}
+                {recruiter.galleryUrls.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {recruiter.galleryUrls.slice(0, 4).map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative aspect-[4/3] overflow-hidden rounded-lg bg-secondary"
+                      >
+                        <Image
+                          src={url}
+                          alt={`${recruiter.company} photo ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="20vw"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Compact job list */}
                 {jobs.length > 0 && step === "positions" && (
