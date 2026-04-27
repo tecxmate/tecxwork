@@ -54,10 +54,10 @@ export function AppTopBarActions({
             />
             <div
               role="menu"
-              className="absolute right-0 top-11 z-50 flex min-w-48 flex-col items-stretch gap-2 rounded-2xl border border-border bg-background p-2 text-sm shadow-xl"
+              className="absolute right-0 top-11 z-50 flex min-w-52 flex-col items-stretch gap-1 rounded-2xl border border-border bg-background p-2 text-sm shadow-xl"
             >
               {mobileItems.map((item, index) => (
-                <div key={index} className="flex justify-end">
+                <div key={index} className="flex w-full flex-col items-stretch">
                   {item}
                 </div>
               ))}

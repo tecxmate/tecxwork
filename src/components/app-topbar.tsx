@@ -63,8 +63,12 @@ export function AppTopBar({
               mobileChildren={
                 <>
                   {showNotifications ? <NotificationBell /> : null}
-                  <ThemeToggle />
-                  {showStudentLanguageSwitcher ? <StudentLanguageSwitcher /> : null}
+                  <ThemeToggle variant={mobileOverflow ? "menu" : "icon"} />
+                  {showStudentLanguageSwitcher ? (
+                    <StudentLanguageSwitcher
+                      orientation={mobileOverflow ? "vertical" : "horizontal"}
+                    />
+                  ) : null}
                   {showActionsOnMobile ? (mobileActions ?? desktopActions) : null}
                 </>
               }
