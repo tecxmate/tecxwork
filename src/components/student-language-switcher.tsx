@@ -33,7 +33,7 @@ export function StudentLanguageSwitcher({
         className={[
           vertical
             ? "h-10 w-full justify-start rounded-xl px-3 text-sm"
-            : "h-8 w-8 flex-none justify-center rounded-md p-0 text-xs",
+            : "h-8 flex-1 basis-0 justify-center rounded-md px-2 text-xs",
           locale === "en" ? "bg-background shadow-sm text-primary hover:bg-background" : "hover:bg-background/50",
         ].join(" ")}
         onClick={() => updateLocale("en")}
@@ -46,7 +46,7 @@ export function StudentLanguageSwitcher({
         className={[
           vertical
             ? "h-10 w-full justify-start rounded-xl px-3 text-sm"
-            : "h-8 w-8 flex-none justify-center rounded-md p-0 text-xs",
+            : "h-8 flex-1 basis-0 justify-center rounded-md px-2 text-xs",
           locale === "vi" ? "bg-background shadow-sm text-primary hover:bg-background" : "hover:bg-background/50",
         ].join(" ")}
         onClick={() => updateLocale("vi")}
@@ -59,7 +59,7 @@ export function StudentLanguageSwitcher({
         className={[
           vertical
             ? "h-10 w-full justify-start rounded-xl px-3 text-sm"
-            : "h-8 w-8 flex-none justify-center rounded-md p-0 text-xs",
+            : "h-8 flex-1 basis-0 justify-center rounded-md px-2 text-xs",
           locale === "zh-TW" ? "bg-background shadow-sm text-primary hover:bg-background" : "hover:bg-background/50",
         ].join(" ")}
         onClick={() => updateLocale("zh-TW")}
