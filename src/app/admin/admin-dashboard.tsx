@@ -963,16 +963,16 @@ function AdminMobileActions({
   onLogout: () => void;
 }) {
   return (
-    <div className="flex w-full min-w-40 flex-col gap-1">
+    <div className="flex w-full min-w-40 flex-col gap-0.5">
       <Link
         href="/"
-        className="flex w-full items-center rounded-xl px-3 py-2 text-left text-foreground transition-premium hover:bg-muted"
+        className="flex w-full items-center rounded-lg px-2.5 py-1.5 text-left text-foreground transition-premium hover:bg-muted"
       >
         {viewSiteLabel}
       </Link>
       <button
         type="button"
-        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-destructive transition-premium hover:bg-destructive/10"
+        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-destructive transition-premium hover:bg-destructive/10"
         onClick={onLogout}
       >
         <LogOut className="h-4 w-4" />
