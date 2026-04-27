@@ -15,6 +15,8 @@ import {
   Loader2,
   CheckCircle2,
   X,
+  LayoutList,
+  LayoutGrid,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -22,6 +24,8 @@ import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switc
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
+
+// ... existing Booking/Recruiter types ...
 
 type Booking = {
   id: number;
@@ -245,6 +249,10 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const [rejectNote, setRejectNote] = useState("");
   const router = useRouter();
 
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [sortBy, setSortBy] = useState<"date" | "name">("date");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
   async function handleReview(id: number, action: "accept" | "reject" | "waitlist", note?: string) {
     setActing(id);
     const res = await fetch("/api/bookings/review", {
@@ -290,10 +298,22 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     setRejectNote("");
   }
 
-  const pending = items.filter((b) => b.status === "pending");
-  const accepted = items.filter((b) => b.status === "accepted");
-  const waitlisted = items.filter((b) => b.status === "waitlisted");
-  const other = items.filter((b) => b.status === "rejected" || b.status === "cancelled");
+  const sortedItems = [...items].sort((a, b) => {
+    let comparison = 0;
+    if (sortBy === "date") {
+      const dateA = a.requestedTime ? new Date(a.requestedTime).getTime() : 0;
+      const dateB = b.requestedTime ? new Date(b.requestedTime).getTime() : 0;
+      comparison = dateA - dateB;
+    } else if (sortBy === "name") {
+      comparison = a.applicantName.localeCompare(b.applicantName);
+    }
+    return sortOrder === "asc" ? comparison : -comparison;
+  });
+
+  const pending = sortedItems.filter((b) => b.status === "pending");
+  const accepted = sortedItems.filter((b) => b.status === "accepted");
+  const waitlisted = sortedItems.filter((b) => b.status === "waitlisted");
+  const other = sortedItems.filter((b) => b.status === "rejected" || b.status === "cancelled");
 
   // Design system status colors
   const statusColor: Record<string, string> = {
@@ -310,14 +330,65 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     const isAccepted = b.status === "accepted";
     const isActing = acting === b.id;
 
+    if (viewMode === "list") {
+      return (
+        <div key={b.id} className={cn("flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between transition-colors hover:bg-muted/30")}>
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-center gap-3">
+              <p className="truncate text-sm font-semibold">{b.applicantName}</p>
+              <span className={cn("inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", statusColor[b.status] ?? "")}>
+                {messages.dashboard.status[b.status as keyof typeof messages.dashboard.status] ?? b.status}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {b.position && <span className="font-medium text-foreground/80">{b.position}</span>}
+              <span className="flex items-center gap-1"><Mail className="h-3 w-3 shrink-0" /> <span className="truncate">{b.applicantEmail}</span></span>
+              {b.requestedTime && <span className="flex items-center gap-1"><Calendar className="h-3 w-3 shrink-0" /> {format(new Date(b.requestedTime), "MMM d, HH:mm")}</span>}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+            <a
+              href={b.cvLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+            >
+              {messages.dashboard.bookings.cv} <ExternalLink className="h-3 w-3" />
+            </a>
+            {(isPending || isWaitlisted) && (
+              <>
+                <Button size="sm" disabled={isActing} onClick={() => handleReview(b.id, "accept")} className="h-8 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600">
+                  {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
+                  {messages.dashboard.bookings.accept}
+                </Button>
+                {isPending && (
+                  <Button size="sm" variant="outline" disabled={isActing} onClick={() => handleReview(b.id, "waitlist")} className="h-8">
+                    {messages.dashboard.bookings.waitlist}
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "reject")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
+                  {messages.dashboard.bookings.reject}
+                </Button>
+              </>
+            )}
+            {isAccepted && (
+              <button onClick={() => openRejectModal(b.id, b.applicantName, "cancel")} className="text-xs text-muted-foreground hover:text-destructive hover:underline">
+                {messages.dashboard.bookings.cancelInterview}
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <Card key={b.id}>
         <CardContent className="py-4">
           <div className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1 space-y-1">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <p className="text-base font-semibold">{b.applicantName}</p>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{b.applicantName}</p>
                   <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold", statusColor[b.status] ?? "")}>
                     {messages.dashboard.status[b.status as keyof typeof messages.dashboard.status] ?? b.status}
                   </span>
@@ -404,6 +475,47 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
 
   return (
     <div className="space-y-6">
+      {/* Controls Header */}
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Sort by:</span>
+            <select
+              className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [by, order] = e.target.value.split("-");
+                setSortBy(by as "date" | "name");
+                setSortOrder(order as "asc" | "desc");
+              }}
+            >
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-1 rounded-md border border-input bg-background p-0.5">
+            <button
+              onClick={() => setViewMode("card")}
+              className={cn("inline-flex items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors", viewMode === "card" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+              aria-label="Card view"
+            >
+              <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
+              Cards
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={cn("inline-flex items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors", viewMode === "list" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+              aria-label="List view"
+            >
+              <LayoutList className="mr-1.5 h-3.5 w-3.5" />
+              List
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Pending — most urgent */}
       {pending.length > 0 && (
         <div>
