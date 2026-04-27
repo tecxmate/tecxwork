@@ -10,8 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Mode A bookings
-  const modeA = await db
+  const allBookings = await db
     .select({
       id: bookings.id,
       direction: bookings.direction,
@@ -22,39 +21,28 @@ export async function GET() {
       createdAt: bookings.createdAt,
       slotStart: slots.startTime,
       slotEnd: slots.endTime,
+      applicantSlotStart: applicantSlots.startTime,
+      applicantSlotEnd: applicantSlots.endTime,
       company: recruiters.company,
       contactEmail: recruiters.contactEmail,
     })
     .from(bookings)
     .leftJoin(slots, eq(bookings.slotId, slots.id))
-    .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
-    .orderBy(bookings.createdAt);
-
-  // Mode B bookings
-  const modeB = await db
-    .select({
-      id: bookings.id,
-      direction: bookings.direction,
-      applicantName: bookings.applicantName,
-      applicantEmail: bookings.applicantEmail,
-      cvLink: bookings.cvLink,
-      status: bookings.status,
-      createdAt: bookings.createdAt,
-      slotStart: applicantSlots.startTime,
-      slotEnd: applicantSlots.endTime,
-      company: recruiters.company,
-      contactEmail: recruiters.contactEmail,
-    })
-    .from(bookings)
     .leftJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
     .orderBy(bookings.createdAt);
 
-  const all = [...modeA, ...modeB].sort(
+  const all = allBookings
+    .map(({ applicantSlotStart, applicantSlotEnd, ...booking }) => ({
+      ...booking,
+      slotStart: booking.slotStart ?? applicantSlotStart,
+      slotEnd: booking.slotEnd ?? applicantSlotEnd,
+    }))
+    .sort(
     (a, b) =>
       (a.slotStart ? new Date(a.slotStart).getTime() : 0) -
       (b.slotStart ? new Date(b.slotStart).getTime() : 0)
-  );
+    );
 
   // Build CSV
   const headers = [

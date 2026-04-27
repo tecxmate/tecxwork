@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, slots, recruiters } from "@/lib/db";
+import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
@@ -23,10 +23,13 @@ export async function GET(req: NextRequest) {
       createdAt: bookings.createdAt,
       slotStart: slots.startTime,
       slotEnd: slots.endTime,
+      applicantSlotStart: applicantSlots.startTime,
+      applicantSlotEnd: applicantSlots.endTime,
       company: recruiters.company,
     })
     .from(bookings)
     .leftJoin(slots, eq(bookings.slotId, slots.id))
+    .leftJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
     .orderBy(bookings.createdAt)
     .$dynamic();
@@ -36,5 +39,11 @@ export async function GET(req: NextRequest) {
   }
 
   const result = await query;
-  return NextResponse.json({ bookings: result });
+  return NextResponse.json({
+    bookings: result.map(({ applicantSlotStart, applicantSlotEnd, ...booking }) => ({
+      ...booking,
+      slotStart: booking.slotStart ?? applicantSlotStart,
+      slotEnd: booking.slotEnd ?? applicantSlotEnd,
+    })),
+  });
 }

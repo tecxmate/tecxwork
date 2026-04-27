@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db, bookings, recruiters, users, slots } from "@/lib/db";
+import { db, bookings, recruiters, users, slots, applicantSlots } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import {
   sendStudentReminderEmail,
   sendRecruiterReminderEmail,
@@ -27,6 +27,7 @@ export async function POST() {
       cvLink: bookings.cvLink,
       recruiterId: bookings.recruiterId,
       slotId: bookings.slotId,
+      applicantSlotId: bookings.applicantSlotId,
       requestedTime: bookings.requestedTime,
     })
     .from(bookings)
@@ -55,6 +56,21 @@ export async function POST() {
       : [];
 
   const slotTimeMap = new Map(slotTimes.map((s) => [s.id, s.startTime]));
+  const applicantSlotIds = acceptedBookings
+    .map((b) => b.applicantSlotId)
+    .filter((id): id is number => id !== null);
+
+  const applicantSlotTimes =
+    applicantSlotIds.length > 0
+      ? await db
+          .select({ id: applicantSlots.id, startTime: applicantSlots.startTime })
+          .from(applicantSlots)
+          .where(inArray(applicantSlots.id, applicantSlotIds))
+      : [];
+
+  const applicantSlotTimeMap = new Map(
+    applicantSlotTimes.map((s) => [s.id, s.startTime])
+  );
 
   // Get recruiter info
   const recruiterIds = [...new Set(acceptedBookings.map((b) => b.recruiterId))];
@@ -109,6 +125,8 @@ export async function POST() {
   for (const booking of acceptedBookings) {
     const time =
       (booking.slotId && slotTimeMap.get(booking.slotId)) ||
+      (booking.applicantSlotId &&
+        applicantSlotTimeMap.get(booking.applicantSlotId)) ||
       (booking.requestedTime ? new Date(booking.requestedTime) : null);
 
     if (!time) continue;
