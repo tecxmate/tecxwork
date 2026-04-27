@@ -134,6 +134,7 @@ export default async function JobsPage() {
                 card: {
                   applicationDeadline: messages.jobsPage.card.applicationDeadline,
                 },
+                filters: messages.jobsPage.filters,
               }}
             />
           )}

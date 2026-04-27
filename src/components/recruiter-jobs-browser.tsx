@@ -5,15 +5,22 @@ import Link from "next/link";
 import {
   Briefcase,
   Building2,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
   MapPin,
   Search,
+  X,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { employmentTypeLabel, formatApplicationDeadline, formatSalaryRange, type JobPostingLocale } from "@/lib/job-posting";
 import type { RecruiterJobPosting } from "@/components/recruiter-job-posting-card";
+
+const ITEMS_PER_PAGE = 12;
 
 type JobsBrowserLabels = {
   viewDetails: string;
@@ -23,6 +30,15 @@ type JobsBrowserLabels = {
   noMatchSubtitle: string;
   card: {
     applicationDeadline: string;
+  };
+  filters?: {
+    all: string;
+    location: string;
+    company: string;
+    employmentType: string;
+    clearFilters: string;
+    page: string;
+    of: string;
   };
 };
 
@@ -131,15 +147,46 @@ export function RecruiterJobsBrowser({
   labels: JobsBrowserLabels;
 }) {
   const [query, setQuery] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [employmentFilter, setEmploymentFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
+
+  const filterLabels = labels.filters ?? {
+    all: "All",
+    location: "Location",
+    company: "Company",
+    employmentType: "Type",
+    clearFilters: "Clear filters",
+    page: "Page",
+    of: "of",
+  };
+
+  const uniqueLocations = useMemo(
+    () => [...new Set(jobs.map((j) => j.location).filter(Boolean))].sort(),
+    [jobs]
+  );
+  const uniqueCompanies = useMemo(
+    () => [...new Set(jobs.map((j) => j.company).filter(Boolean))].sort(),
+    [jobs]
+  );
+  const uniqueEmploymentTypes = useMemo(
+    () => [...new Set(jobs.map((j) => j.employmentType).filter(Boolean))].sort(),
+    [jobs]
+  );
 
   const filteredJobs = useMemo(() => {
     const normalized = deferredQuery.trim().toLowerCase();
 
-    if (!normalized) return jobs;
+    return jobs.filter((job) => {
+      if (locationFilter && job.location !== locationFilter) return false;
+      if (companyFilter && job.company !== companyFilter) return false;
+      if (employmentFilter && job.employmentType !== employmentFilter) return false;
 
-    return jobs.filter((job) =>
-      [
+      if (!normalized) return true;
+
+      return [
         job.title,
         job.company,
         job.location,
@@ -149,25 +196,94 @@ export function RecruiterJobsBrowser({
         job.benefits,
       ]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [deferredQuery, jobs]);
+        .some((value) => value.toLowerCase().includes(normalized));
+    });
+  }, [deferredQuery, jobs, locationFilter, companyFilter, employmentFilter]);
+
+  const totalPages = Math.ceil(filteredJobs.length / ITEMS_PER_PAGE);
+  const paginatedJobs = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredJobs.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredJobs, currentPage]);
+
+  const hasActiveFilters = locationFilter || companyFilter || employmentFilter;
+
+  const clearFilters = () => {
+    setLocationFilter("");
+    setCompanyFilter("");
+    setEmploymentFilter("");
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
+    setter(value);
+    setCurrentPage(1);
+  };
 
   return (
     <section className="space-y-4">
-      <div className="mx-auto max-w-xl">
+      <div className="mx-auto max-w-3xl space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setCurrentPage(1);
+            }}
             placeholder={labels.searchPlaceholder}
             className="pl-9"
             aria-label={labels.searchPlaceholder}
           />
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <select
+            value={locationFilter}
+            onChange={(e) => handleFilterChange(setLocationFilter)(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{filterLabels.location}: {filterLabels.all}</option>
+            {uniqueLocations.map((loc) => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
+          </select>
+          <select
+            value={companyFilter}
+            onChange={(e) => handleFilterChange(setCompanyFilter)(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{filterLabels.company}: {filterLabels.all}</option>
+            {uniqueCompanies.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            value={employmentFilter}
+            onChange={(e) => handleFilterChange(setEmploymentFilter)(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{filterLabels.employmentType}: {filterLabels.all}</option>
+            {uniqueEmploymentTypes.map((t) => (
+              <option key={t} value={t}>{employmentTypeLabel(t, locale) || t}</option>
+            ))}
+          </select>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="h-8 gap-1 px-2 text-xs"
+            >
+              <X className="h-3 w-3" />
+              {filterLabels.clearFilters}
+            </Button>
+          )}
+        </div>
+
+        <p className="text-sm text-muted-foreground">
           {filteredJobs.length} {labels.resultsCount}
         </p>
       </div>
@@ -183,16 +299,44 @@ export function RecruiterJobsBrowser({
           </p>
         </Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredJobs.map((job) => (
-            <JobTeaserCard
-              key={job.id}
-              job={job}
-              locale={locale}
-              labels={labels}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedJobs.map((job) => (
+              <JobTeaserCard
+                key={job.id}
+                job={job}
+                locale={locale}
+                labels={labels}
+              />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-8 w-8 p-0"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {filterLabels.page} {currentPage} {filterLabels.of} {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 w-8 p-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );

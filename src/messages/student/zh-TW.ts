@@ -81,6 +81,15 @@ export const studentZhTwMessages = {
       viewJd: "查看 JD",
       noJd: "尚未提供 JD 連結",
     },
+    filters: {
+      all: "全部",
+      location: "地點",
+      company: "公司",
+      employmentType: "類型",
+      clearFilters: "清除篩選",
+      page: "第",
+      of: "頁，共",
+    },
   },
   directory: {
     ...studentEnMessages.directory,

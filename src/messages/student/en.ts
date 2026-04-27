@@ -100,6 +100,15 @@ export const studentEnMessages = {
       viewJd: "View JD",
       noJd: "No JD link",
     },
+    filters: {
+      all: "All",
+      location: "Location",
+      company: "Company",
+      employmentType: "Type",
+      clearFilters: "Clear filters",
+      page: "Page",
+      of: "of",
+    },
   },
   directory: {
     searchPlaceholder: "Search companies or positions...",
