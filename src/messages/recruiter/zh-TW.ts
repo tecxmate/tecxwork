@@ -146,6 +146,7 @@ export const recruiterZhTwMessages = {
       delete: "刪除",
       removePositionConfirm: "要刪除此職缺嗎？",
       whatDoesCompanyDo: "請簡述貴公司業務內容",
+      websiteUrl: "公司網站",
       moderationStatus: {
         draft: "草稿",
         pendingReview: "審核中",

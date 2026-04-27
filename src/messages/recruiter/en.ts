@@ -151,6 +151,7 @@ export const recruiterEnMessages = {
       delete: "Delete",
       removePositionConfirm: "Remove this position?",
       whatDoesCompanyDo: "What does your company do?",
+      websiteUrl: "Company Website",
       moderationStatus: {
         draft: "Draft",
         pendingReview: "Pending review",

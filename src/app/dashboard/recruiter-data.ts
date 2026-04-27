@@ -27,6 +27,7 @@ export async function getRecruiterDashboardData() {
       contactEmail: recruiters.contactEmail,
       interviewerCount: recruiters.interviewerCount,
       logoUrl: recruiters.logoUrl,
+      websiteUrl: recruiters.websiteUrl,
       galleryUrls: recruiters.galleryUrls,
     })
     .from(recruiters)

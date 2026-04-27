@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
 import {
   ArrowLeft,
   Building2,
+  ExternalLink,
+  Globe,
   Mail,
   MapPin,
   Clock,
@@ -47,6 +50,7 @@ type Recruiter = {
   description: string;
   contactEmail: string;
   logoUrl: string | null;
+  websiteUrl: string | null;
   galleryUrls: string[];
 };
 
@@ -131,7 +135,9 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [infoExpanded, setInfoExpanded] = useState(false);
   const [jobs] = useState<JobOpening[]>(initialJobs);
-  const [appliedPositions, setAppliedPositions] = useState<string[]>([]);
+  const [appliedPositions, setAppliedPositions] = useState<
+    { position: string; requestedTime: string; status: string }[]
+  >([]);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(
     initialJobs.length > 0 ? initialJobs[0].id : null
   );
@@ -171,10 +177,14 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
     fetch(`/api/bookings/mine?recruiterId=${recruiter.id}`)
       .then((r) => r.json())
       .then((d) => {
-        const positions = (d.bookings ?? [])
+        const bookingsList = (d.bookings ?? [])
           .filter((b: { status: string }) => b.status === "pending" || b.status === "accepted" || b.status === "waitlisted")
-          .map((b: { position: string }) => b.position);
-        setAppliedPositions(positions);
+          .map((b: { position: string; requestedTime: string; status: string }) => ({
+            position: b.position,
+            requestedTime: b.requestedTime,
+            status: b.status,
+          }));
+        setAppliedPositions(bookingsList);
       })
       .catch(() => {});
   }, [recruiter.id, isAuthenticated]);
@@ -207,13 +217,21 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
 
   const handleDone = () => {
     // After successful booking, refresh applied positions
-    if (selectedPosition) {
-      setAppliedPositions([...appliedPositions, selectedPosition]);
+    if (selectedPosition && selectedSlot) {
+      setAppliedPositions([
+        ...appliedPositions,
+        { position: selectedPosition, requestedTime: selectedSlot.startTime, status: "pending" },
+      ]);
     }
     setSelectedSlot(null);
     setSelectedPosition(null);
     setStep("positions");
   };
+
+  const getBookingForPosition = (positionTitle: string) =>
+    appliedPositions.find((b) => b.position === positionTitle);
+  const isPositionApplied = (positionTitle: string) =>
+    appliedPositions.some((b) => b.position === positionTitle);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -296,6 +314,18 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                       <Mail className="mt-0.5 h-3 w-3 shrink-0" />
                       <span className="break-all">{recruiter.contactEmail}</span>
                     </p>
+                    {recruiter.websiteUrl && (
+                      <a
+                        href={recruiter.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-primary hover:underline"
+                      >
+                        <Globe className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{recruiter.websiteUrl.replace(/^https?:\/\//, "")}</span>
+                        <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                      </a>
+                    )}
                     <p className="flex items-center gap-1.5">
                       <Clock className="h-3 w-3 shrink-0" />
                       {interpolate(messages.recruiterDetail.interviewMin, {
@@ -361,6 +391,18 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                         <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                         <span className="break-all">{recruiter.contactEmail}</span>
                       </div>
+                      {recruiter.websiteUrl && (
+                        <a
+                          href={recruiter.websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-primary hover:underline"
+                        >
+                          <Globe className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{recruiter.websiteUrl.replace(/^https?:\/\//, "")}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0" />
+                        </a>
+                      )}
                       <div className="flex items-center gap-2">
                         <Clock className="h-3.5 w-3.5 shrink-0" />
                         <span>
@@ -408,7 +450,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     <CardContent className="space-y-1 pt-0">
                       {jobs.map((job) => {
                         const isSelected = selectedJobId === job.id;
-                        const alreadyApplied = appliedPositions.includes(job.title);
+                        const alreadyApplied = isPositionApplied(job.title);
                         return (
                           <button
                             key={job.id}
@@ -460,7 +502,8 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                       </Card>
                     ) : (
                       jobs.map((job) => {
-                        const alreadyApplied = appliedPositions.includes(job.title);
+                        const alreadyApplied = isPositionApplied(job.title);
+                        const booking = getBookingForPosition(job.title);
                         return (
                           <RecruiterJobPostingCard
                             key={job.id}
@@ -487,11 +530,18 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                               noJd: messages.recruiterDetail.noJobDescription,
                             }}
                             status={
-                              alreadyApplied ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  {messages.recruiterDetail.applied}
-                                </span>
+                              alreadyApplied && booking ? (
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {messages.recruiterDetail.applied}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {interpolate(messages.recruiterDetail.interviewAt, {
+                                      time: format(new Date(booking.requestedTime), "MMM d, HH:mm"),
+                                    })}
+                                  </span>
+                                </div>
                               ) : undefined
                             }
                             action={
@@ -539,11 +589,23 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                                 {recruiter.company}
                               </p>
                             </div>
-                            {appliedPositions.includes(selectedJob.title) ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                {messages.recruiterDetail.applied}
-                              </span>
+                            {isPositionApplied(selectedJob.title) ? (
+                              <div className="flex flex-col items-end gap-0.5">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  {messages.recruiterDetail.applied}
+                                </span>
+                                {getBookingForPosition(selectedJob.title) && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {interpolate(messages.recruiterDetail.interviewAt, {
+                                      time: format(
+                                        new Date(getBookingForPosition(selectedJob.title)!.requestedTime),
+                                        "MMM d, HH:mm"
+                                      ),
+                                    })}
+                                  </span>
+                                )}
+                              </div>
                             ) : (
                               <Button
                                 onClick={() => handleSelectPosition(selectedJob.title)}

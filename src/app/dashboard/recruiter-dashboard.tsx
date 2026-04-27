@@ -44,6 +44,7 @@ type Recruiter = {
   contactEmail: string;
   interviewerCount: number;
   logoUrl: string | null;
+  websiteUrl: string | null;
   galleryUrls: string[];
 };
 

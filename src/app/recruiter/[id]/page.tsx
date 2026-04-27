@@ -24,6 +24,7 @@ export default async function RecruiterPage({
         description: recruiters.description,
         contactEmail: recruiters.contactEmail,
         logoUrl: recruiters.logoUrl,
+        websiteUrl: recruiters.websiteUrl,
         galleryUrls: recruiters.galleryUrls,
       })
       .from(recruiters)

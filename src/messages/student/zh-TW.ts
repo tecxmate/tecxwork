@@ -250,6 +250,7 @@ export const studentZhTwMessages = {
     reviewAndApply: "查看職缺說明後再投遞。",
     noPositions: "目前尚無職缺。",
     applied: "已投遞",
+    interviewAt: "面談時間：{time}",
     viewJobDescription: "查看職務說明",
     noJobDescription: "尚未提供職務說明",
     apply: "投遞",

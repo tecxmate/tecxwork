@@ -320,6 +320,7 @@ export const studentEnMessages = {
     reviewAndApply: "Review the job descriptions, then apply to a position.",
     noPositions: "No positions listed yet.",
     applied: "Applied",
+    interviewAt: "Interview at {time}",
     viewJobDescription: "View Job Description",
     noJobDescription: "No job description uploaded yet",
     apply: "Apply",

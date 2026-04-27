@@ -248,6 +248,7 @@ export const studentViMessages = {
     reviewAndApply: "Xem mô tả công việc rồi ứng tuyển vào vị trí phù hợp.",
     noPositions: "Chưa có vị trí nào.",
     applied: "Đã ứng tuyển",
+    interviewAt: "Phỏng vấn lúc {time}",
     viewJobDescription: "Xem mô tả công việc",
     noJobDescription: "Chưa có mô tả công việc",
     apply: "Ứng tuyển",

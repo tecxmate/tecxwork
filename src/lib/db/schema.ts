@@ -67,6 +67,7 @@ export const recruiters = pgTable("recruiters", {
   contactEmail: text("contact_email").notNull(),
   jdLink: text("jd_link"),
   logoUrl: text("logo_url"),
+  websiteUrl: text("website_url"),
   galleryUrls: text("gallery_urls").array().notNull().default([]),
   interviewerCount: integer("interviewer_count").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
+import { BackToTop } from "@/components/back-to-top";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { StudentLocaleProvider } from "@/components/student-locale-provider";
@@ -91,6 +92,7 @@ export default async function RootLayout({
           <StudentLocaleProvider initialLocale={studentLocale}>
             <RouteLoadingSignal />
             {children}
+            <BackToTop />
             <Suspense fallback={null}>
               <MobileBottomNavServer sessionPromise={sessionPromise} />
             </Suspense>

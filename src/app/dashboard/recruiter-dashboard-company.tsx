@@ -32,6 +32,7 @@ type Recruiter = {
   contactEmail: string;
   interviewerCount: number;
   logoUrl: string | null;
+  websiteUrl: string | null;
   galleryUrls: string[];
 };
 
@@ -178,6 +179,7 @@ export function RecruiterCompanyTab({
   const { messages, locale } = useRecruiterI18n();
   const router = useRouter();
   const [description, setDescription] = useState(recruiter.description);
+  const [websiteUrl, setWebsiteUrl] = useState(recruiter.websiteUrl ?? "");
   const [interviewerCount, setInterviewerCount] = useState(
     recruiter.interviewerCount
   );
@@ -231,6 +233,7 @@ export function RecruiterCompanyTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description: description.trim(),
+          websiteUrl: websiteUrl.trim() || null,
           interviewerCount,
           logoUrl,
           galleryUrls,
@@ -758,6 +761,17 @@ export function RecruiterCompanyTab({
                     placeholder={messages.dashboard.company.whatDoesCompanyDo}
                     rows={3}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="website" className="text-sm font-medium">
+                    {messages.dashboard.company.websiteUrl}
+                  </label>
+                  <Input
+                    id="website"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="https://company.com"
                   />
                 </div>
                 <div className="space-y-1.5">
