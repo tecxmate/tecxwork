@@ -1068,7 +1068,7 @@ export default function ProfilePage() {
                     <div className="space-y-4">
                       {draft.workExperiences.map((experience, index) => (
                         <WorkExperienceEditor
-                          key={`${index}-${experience.company}-${experience.title}`}
+                          key={index}
                           index={index}
                           experience={experience}
                           onRemove={removeWorkExperience}

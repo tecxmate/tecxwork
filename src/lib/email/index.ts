@@ -85,7 +85,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Confirmed</h2>
-          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">Your interview has been scheduled for the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair.</p>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">Your interview has been scheduled for the ${EVENT_CONFIG.emailEventName}.</p>
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
@@ -129,7 +129,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">New Interview Booking</h2>
-          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">A candidate has been booked for an interview at the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair.</p>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">A candidate has been booked for an interview at the ${EVENT_CONFIG.emailEventName}.</p>
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
@@ -273,7 +273,7 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Reminder</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Hi ${data.name}, here's your interview schedule for the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair on <strong>${EVENT_CONFIG.displayDate}</strong>.
+            Hi ${data.name}, here's your interview schedule for the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
           </p>
 
           <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
@@ -367,7 +367,7 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 700px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Schedule</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Hi ${data.name}, here's your interview schedule for <strong>${data.company}</strong> at the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair on <strong>${EVENT_CONFIG.displayDate}</strong>.
+            Hi ${data.name}, here's your interview schedule for <strong>${data.company}</strong> at the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
           </p>
 
           <div style="background: #30D158; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 16px; font-weight: 600;">

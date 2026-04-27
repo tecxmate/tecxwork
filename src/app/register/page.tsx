@@ -1360,7 +1360,7 @@ export default function RegisterPage() {
                     <div className="space-y-4">
                       {draft.workExperiences.map((experience, index) => (
                         <RegisterWorkExperienceEditor
-                          key={`${index}-${experience.company}-${experience.title}`}
+                          key={index}
                           index={index}
                           experience={experience}
                           onRemove={removeWorkExperience}

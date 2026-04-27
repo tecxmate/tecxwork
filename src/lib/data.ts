@@ -1,5 +1,6 @@
 export const EVENT_CONFIG = {
   name: "VSATW 2026 — V-GEN TRIDENT",
+  emailEventName: "VSATW JOB FAIR 2026 V-GEN TRIDENT",
   tagline: "The Vietnamese Generation — Versatile in Talent, Value in Action",
   subtitle: "Career Fair",
   organizer: "Vietnamese Student Association in Taiwan",
