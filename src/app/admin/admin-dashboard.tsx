@@ -205,6 +205,7 @@ export function AdminDashboard({
   const [homepageImages, setHomepageImages] = useState<string[]>(initialHomepageImages ?? []);
   const [hpSaving, setHpSaving] = useState(false);
   const [hpSaved, setHpSaved] = useState(false);
+  const [timeFrameOpen, setTimeFrameOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [emailStats, setEmailStats] = useState<{
     today: { sent: number; failed: number; limit: number; remaining: number; percentUsed: number };
@@ -510,41 +511,7 @@ export function AdminDashboard({
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={async () => {
-                      setSendingReminders(true);
-                      setReminderResult(null);
-                      try {
-                        const res = await fetch("/api/admin/send-reminders", { method: "POST" });
-                        const data = await res.json();
-                        if (data.ok) {
-                          setReminderResult({ studentsSent: data.studentsSent, recruitersSent: data.recruitersSent });
-                        }
-                      } finally {
-                        setSendingReminders(false);
-                      }
-                    }}
-                    disabled={sendingReminders}
-                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {sendingReminders ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                    {admin.qr.sendReminders ?? "Send Reminders"}
-                  </button>
-                  <a
-                    href="/api/admin/export"
-                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    {admin.qr.exportCsv}
-                  </a>
-                </div>
               </div>
-              {reminderResult && (
-                <div className="rounded-lg border border-[#30D158]/30 bg-[#30D158]/10 px-3 py-2 text-sm">
-                  ✓ Sent to {reminderResult.studentsSent} students, {reminderResult.recruitersSent} recruiters
-                </div>
-              )}
 
               {/* Settings: 2-Column Layout */}
               <div className="grid gap-4 lg:grid-cols-2">
@@ -607,15 +574,22 @@ export function AdminDashboard({
                   </CardContent>
                 </Card>
 
-                {/* Right Column: Scheduling */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="text-sm font-semibold">{admin.timeFrame.title}</h3>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
+              </div>
+
+              <div className="rounded-lg border bg-card">
+                <button
+                  type="button"
+                  onClick={() => setTimeFrameOpen(!timeFrameOpen)}
+                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
+                >
+                  <span className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    {admin.timeFrame.title}
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", timeFrameOpen && "rotate-180")} />
+                </button>
+                {timeFrameOpen && (
+                  <div className="border-t px-4 py-4">
                     <form
                       onSubmit={async (e) => {
                         e.preventDefault();
@@ -755,12 +729,12 @@ export function AdminDashboard({
                             {tfSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : admin.timeFrame.saveAndRegenerate}
                           </Button>
                         )}
-                        {tfSaved && <span className="text-[10px] text-green-600">{admin.timeFrame.saved}</span>}
-                        {tfError && <span className="text-[10px] text-destructive">{tfError}</span>}
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
+                      {tfSaved && <span className="text-[10px] text-green-600">{admin.timeFrame.saved}</span>}
+                      {tfError && <span className="text-[10px] text-destructive">{tfError}</span>}
+                    </div>
+                  </form>
+                </div>
+                )}
               </div>
 
               {/* Collapsible Tools Section */}
@@ -776,6 +750,43 @@ export function AdminDashboard({
                 {toolsOpen && (
                 <div className="border-t px-4 py-4">
                   <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-3">
+                      <label className="text-xs font-medium text-muted-foreground">Tools</label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={async () => {
+                            setSendingReminders(true);
+                            setReminderResult(null);
+                            try {
+                              const res = await fetch("/api/admin/send-reminders", { method: "POST" });
+                              const data = await res.json();
+                              if (data.ok) {
+                                setReminderResult({ studentsSent: data.studentsSent, recruitersSent: data.recruitersSent });
+                              }
+                            } finally {
+                              setSendingReminders(false);
+                            }
+                          }}
+                          disabled={sendingReminders}
+                          className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {sendingReminders ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                          {admin.qr.sendReminders ?? "Send Reminders"}
+                        </button>
+                        <a
+                          href="/api/admin/export"
+                          className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          {admin.qr.exportCsv}
+                        </a>
+                      </div>
+                      {reminderResult && (
+                        <div className="rounded-lg border border-[#30D158]/30 bg-[#30D158]/10 px-3 py-2 text-sm">
+                          ✓ Sent to {reminderResult.studentsSent} students, {reminderResult.recruitersSent} recruiters
+                        </div>
+                      )}
+                    </div>
                     <div>
                       <QRCard
                         value={typeof window !== "undefined" ? window.location.origin : ""}
