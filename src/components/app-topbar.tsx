@@ -91,6 +91,11 @@ export function AppTopBar({
                       {desktopActions}
                     </div>
                   ) : null}
+                  {isGuest && desktopActions ? (
+                    <div className="flex items-center justify-end gap-3 px-3 py-2">
+                      {desktopActions}
+                    </div>
+                  ) : null}
                   {!isGuest ? (
                     <AppTopBarAccountActions role={navRole} labels={accountLabels} />
                   ) : null}

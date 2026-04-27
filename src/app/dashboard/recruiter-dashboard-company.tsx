@@ -191,7 +191,7 @@ export function RecruiterCompanyTab({
   const [jobs, setJobs] = useState<JobOpening[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [newJobDraft, setNewJobDraft] = useState<JobDraft>(EMPTY_JOB_DRAFT);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<number | "new" | null>("new");
   const [editJobDraft, setEditJobDraft] = useState<JobDraft>(EMPTY_JOB_DRAFT);
   const [jobError, setJobError] = useState("");
 
@@ -213,6 +213,10 @@ export function RecruiterCompanyTab({
         const nextJobs = data.jobs ?? [];
         cachedRecruiterJobs = nextJobs;
         setJobs(nextJobs);
+        if (nextJobs.length > 0) {
+          setSelectedJobId(nextJobs[0].id);
+          setEditJobDraft(toDraft(nextJobs[0]));
+        }
       })
       .finally(() => setLoadingJobs(false));
   }, [section]);
@@ -302,8 +306,6 @@ export function RecruiterCompanyTab({
         cachedRecruiterJobs = nextJobs;
         return nextJobs;
       });
-      setEditingId(null);
-      setEditJobDraft(EMPTY_JOB_DRAFT);
     } else {
       const data = await res.json().catch(() => ({}));
       setJobError(data.error || "Failed to update job");
@@ -318,6 +320,10 @@ export function RecruiterCompanyTab({
       cachedRecruiterJobs = nextJobs;
       return nextJobs;
     });
+    if (selectedJobId === id) {
+      setSelectedJobId("new");
+      setNewJobDraft(EMPTY_JOB_DRAFT);
+    }
   }
 
   async function handleSubmitJob(id: number) {
@@ -646,6 +652,7 @@ export function RecruiterCompanyTab({
         <Button
           type={submitButtonType}
           size="sm"
+          className="mt-4 sm:col-span-2"
           disabled={
             !draft.title.trim() ||
             !draft.location.trim() ||
@@ -825,151 +832,153 @@ export function RecruiterCompanyTab({
       ) : null}
 
       {section === "jobs" ? (
-        <Card>
-          <CardHeader>
-            <h2 className="font-heading text-lg font-semibold">
-              {messages.dashboard.company.jobOpenings}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {messages.dashboard.company.jobOpeningsHint}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {jobModerationEnabled
-                ? messages.dashboard.company.moderationHint
-                : messages.dashboard.company.instantPublishHint}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form
-              onSubmit={handleAddJob}
-              className="space-y-2 rounded-lg border bg-muted/20 p-3"
-            >
-              {renderJobForm({
-                draft: newJobDraft,
-                onChange: (field, value) =>
-                  setNewJobDraft((current) => ({ ...current, [field]: value })),
-                submitLabel: messages.dashboard.company.add,
-                submitButtonType: "submit",
-                showPlusIcon: true,
-              })}
-            </form>
+        <div className="flex flex-col items-start gap-6 md:flex-row">
+          {/* LEFT COLUMN: List */}
+          <div className="w-full shrink-0 space-y-4 md:w-1/3">
+            <div className="space-y-1.5">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                {messages.dashboard.company.jobOpenings}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {messages.dashboard.company.jobOpeningsHint}
+              </p>
+            </div>
 
-            {jobError ? <p className="text-xs text-destructive">{jobError}</p> : null}
+            <Button
+              className="w-full justify-start"
+              variant={selectedJobId === "new" ? "default" : "outline"}
+              onClick={() => {
+                setSelectedJobId("new");
+                setNewJobDraft(EMPTY_JOB_DRAFT);
+                setJobError("");
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {messages.dashboard.company.add}
+            </Button>
 
             {loadingJobs ? (
               <div className="flex justify-center py-6">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
-            ) : jobs.length === 0 ? (
+            ) : jobs.length > 0 ? (
+              <div className="space-y-2">
+                {jobs.map((job) => (
+                  <button
+                    key={job.id}
+                    onClick={() => {
+                      setSelectedJobId(job.id);
+                      setEditJobDraft(toDraft(job));
+                      setJobError("");
+                    }}
+                    className={cn(
+                      "w-full rounded-lg border p-3 text-left transition-colors",
+                      selectedJobId === job.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border bg-card hover:bg-muted/50"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="truncate text-sm font-semibold text-foreground">{job.title || "Untitled Position"}</p>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {job.location} • {getEmploymentTypeOptions(locale).find(o => o.value === job.employmentType)?.label || job.employmentType}
+                    </p>
+                    <div className="mt-2">
+                      <span
+                        className={cn(
+                          "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                          statusClassName[job.moderationStatus] ?? "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {statusLabel[job.moderationStatus] ?? job.moderationStatus}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
                 {messages.dashboard.company.noPositions}
               </p>
-            ) : (
-              <div className="space-y-3">
-                {jobs.map((job) =>
-                  editingId === job.id ? (
-                    <div
-                      key={job.id}
-                      className="space-y-2 rounded-lg border border-primary/30 p-3"
-                    >
-                      {renderJobForm({
-                        draft: editJobDraft,
-                        onChange: (field, value) =>
-                          setEditJobDraft((current) => ({ ...current, [field]: value })),
-                        submitLabel: messages.common.save,
-                        onSubmit: () => {
-                          void handleUpdateJob(job.id);
-                        },
-                        submitButtonType: "button",
-                        showPlusIcon: false,
-                      })}
+            )}
+          </div>
+
+          {/* RIGHT COLUMN: Editor */}
+          <div className="w-full overflow-hidden rounded-xl border bg-card p-4 shadow-sm sm:p-6 md:flex-1">
+            {selectedJobId === "new" ? (
+              <div className="space-y-4">
+                <div className="mb-4 border-b pb-4">
+                  <h2 className="text-lg font-semibold">{messages.dashboard.company.add}</h2>
+                </div>
+                <form onSubmit={handleAddJob}>
+                  {renderJobForm({
+                    draft: newJobDraft,
+                    onChange: (field, value) =>
+                      setNewJobDraft((current) => ({ ...current, [field]: value })),
+                    submitLabel: messages.dashboard.company.add,
+                    submitButtonType: "submit",
+                    showPlusIcon: true,
+                  })}
+                </form>
+                {jobError ? <p className="mt-2 text-xs text-destructive">{jobError}</p> : null}
+              </div>
+            ) : typeof selectedJobId === "number" ? (
+              <div className="space-y-4">
+                <div className="mb-4 flex items-center justify-between gap-4 border-b pb-4">
+                  <h2 className="truncate text-lg font-semibold">
+                    Edit {jobs.find((j) => j.id === selectedJobId)?.title}
+                  </h2>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {jobModerationEnabled &&
+                    jobs.find((j) => j.id === selectedJobId)?.moderationStatus !==
+                      "pending_review" ? (
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          setEditingId(null);
-                          setEditJobDraft(EMPTY_JOB_DRAFT);
-                        }}
+                        onClick={() => handleSubmitJob(selectedJobId)}
                       >
-                        {messages.common.cancel}
+                        {messages.dashboard.company.submitForReview}
                       </Button>
-                    </div>
-                  ) : (
-                    <div key={job.id} className="space-y-2">
-                      <RecruiterJobPostingCard
-                        job={job}
-                        compact
-                        locale={locale}
-                        labels={{
-                          seniority: messages.dashboard.company.seniority,
-                          languageRequirement:
-                            messages.dashboard.company.languageRequirement,
-                          visaSupport: messages.dashboard.company.visaSupport,
-                          applicationDeadline:
-                            messages.dashboard.company.applicationDeadline,
-                          description: messages.dashboard.company.summary,
-                          responsibilities: messages.dashboard.company.responsibilities,
-                          requirements: messages.dashboard.company.requirements,
-                          benefits: messages.dashboard.company.benefits,
-                          viewJd: messages.dashboard.company.viewJd,
-                          noJd: messages.dashboard.company.noJdLink,
-                        }}
-                        status={
-                          <span
-                            className={cn(
-                              "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                              statusClassName[job.moderationStatus] ??
-                                "bg-muted text-muted-foreground"
-                            )}
-                          >
-                            {statusLabel[job.moderationStatus] ?? job.moderationStatus}
-                          </span>
-                        }
-                        action={
-                          <div className="flex shrink-0 flex-wrap gap-1">
-                            {jobModerationEnabled &&
-                            job.moderationStatus !== "pending_review" ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSubmitJob(job.id)}
-                              >
-                                {messages.dashboard.company.submitForReview}
-                              </Button>
-                            ) : null}
-                            <button
-                              onClick={() => {
-                                setEditingId(job.id);
-                                setEditJobDraft(toDraft(job));
-                              }}
-                              className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
-                              aria-label={messages.dashboard.company.edit}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteJob(job.id)}
-                              className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              aria-label={messages.dashboard.company.delete}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        }
-                      />
-                      {job.moderationNotes ? (
-                        <p className="px-1 text-xs text-amber-700 dark:text-amber-300">
-                          {messages.dashboard.company.adminNotePrefix}{" "}
-                          {job.moderationNotes}
-                        </p>
-                      ) : null}
-                    </div>
-                  )
-                )}
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteJob(selectedJobId)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {jobs.find((j) => j.id === selectedJobId)?.moderationNotes ? (
+                  <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                    <span className="font-semibold">
+                      {messages.dashboard.company.adminNotePrefix}
+                    </span>{" "}
+                    {jobs.find((j) => j.id === selectedJobId)?.moderationNotes}
+                  </div>
+                ) : null}
+
+                {renderJobForm({
+                  draft: editJobDraft,
+                  onChange: (field, value) =>
+                    setEditJobDraft((current) => ({ ...current, [field]: value })),
+                  submitLabel: messages.common.save,
+                  onSubmit: () => void handleUpdateJob(selectedJobId),
+                  submitButtonType: "button",
+                  showPlusIcon: false,
+                })}
+                {jobError ? <p className="mt-2 text-xs text-destructive">{jobError}</p> : null}
+              </div>
+            ) : (
+              <div className="flex h-40 items-center justify-center text-muted-foreground">
+                Select a job to edit, or create a new one.
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : null}
     </div>
   );
