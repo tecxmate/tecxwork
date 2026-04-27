@@ -60,7 +60,6 @@ export function AppTopBar({
               mobileChildren={
                 <>
                   <div className="flex w-full items-center gap-2">
-                    {showNotifications ? <NotificationBell variant="inline" /> : null}
                     <ThemeToggle />
                   </div>
                   {showStudentLanguageSwitcher ? (
@@ -70,6 +69,7 @@ export function AppTopBar({
                   {!isGuest ? (
                     <AppTopBarAccountActions role={navRole} />
                   ) : null}
+                  {showNotifications ? <NotificationBell variant="inline" /> : null}
                 </>
               }
             />
