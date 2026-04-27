@@ -213,7 +213,7 @@ export const studentViMessages = {
     schoolInTaiwan: "Trường học tại Đài Loan",
     major: "Ngành / Khoa",
     studyLevel: "Bậc học",
-    expectedGraduation: "Ngày tốt nghiệp dự kiến",
+    expectedGraduation: "Ngày tốt nghiệp (dự kiến)",
     jobSearchStatus: "Trạng thái tìm việc",
     workAuthorization: "Tình trạng giấy phép làm việc",
     skills: "Kỹ năng",

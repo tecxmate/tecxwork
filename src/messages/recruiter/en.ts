@@ -78,6 +78,7 @@ export const recruiterEnMessages = {
       loading: "Loading applicants...",
       empty: "No applicants found.",
       cv: "CV",
+      expectedGraduation: "Graduation date (expected)",
       booked: "Interview Booked!",
       interviewWith: "Interview with",
       backToApplicants: "Back to Applicants",

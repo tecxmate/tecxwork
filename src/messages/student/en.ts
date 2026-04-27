@@ -240,7 +240,7 @@ export const studentEnMessages = {
     major: "Major / Department",
     studyLevel: "Study Level",
     studyYear: "Current Year / Status",
-    expectedGraduation: "Expected Graduation Date",
+    expectedGraduation: "Graduation date (expected)",
     jobSearchStatus: "Job Search Status",
     workAuthorization: "Work Authorization",
     preferredLocations: "Preferred Work Locations",

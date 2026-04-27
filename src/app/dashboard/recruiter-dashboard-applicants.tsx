@@ -151,7 +151,7 @@ export function RecruiterApplicantsTab({
                       )}
                       {a.expectedGraduation && (
                         <p className="text-xs text-muted-foreground">
-                          Expected graduation: {a.expectedGraduation}
+                          {messages.dashboard.applicants.expectedGraduation}: {a.expectedGraduation}
                         </p>
                       )}
                     </div>
@@ -302,7 +302,7 @@ function ApplicantBookingView({
             )}
             {applicant.expectedGraduation && (
               <p className="text-sm text-muted-foreground">
-                Expected graduation: {applicant.expectedGraduation}
+                {messages.dashboard.applicants.expectedGraduation}: {applicant.expectedGraduation}
               </p>
             )}
           </CardHeader>

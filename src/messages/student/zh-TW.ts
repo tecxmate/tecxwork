@@ -217,7 +217,7 @@ export const studentZhTwMessages = {
     schoolInTaiwan: "台灣學校",
     major: "科系",
     studyLevel: "學歷",
-    expectedGraduation: "預計畢業日期",
+    expectedGraduation: "畢業日期（預計）",
     jobSearchStatus: "求職狀態",
     workAuthorization: "工作資格",
     skills: "技能",

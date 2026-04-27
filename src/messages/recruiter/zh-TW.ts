@@ -78,6 +78,7 @@ export const recruiterZhTwMessages = {
       loading: "正在載入候選人...",
       empty: "找不到候選人。",
       cv: "履歷",
+      expectedGraduation: "畢業日期（預計）",
       booked: "面談已預約！",
       interviewWith: "已與",
       backToApplicants: "返回候選人列表",
