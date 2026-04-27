@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -61,6 +62,7 @@ type Applicant = {
 
 type AdminBooking = {
   id: number;
+  applicantId: number | null;
   position: string | null;
   applicantName: string;
   applicantEmail: string;
@@ -1550,7 +1552,14 @@ function PeopleSection({
               ) : (
                 filteredApplicants.map((a) => (
                   <tr key={a.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                    <td className="px-3 py-2.5 font-medium">{a.name}</td>
+                    <td className="px-3 py-2.5 font-medium">
+                      <Link
+                        href={`/applicant/${a.id}`}
+                        className="transition-colors hover:text-primary hover:underline"
+                      >
+                        {a.name}
+                      </Link>
+                    </td>
                     <td className="px-3 py-2.5 text-muted-foreground"><a href={`mailto:${a.email}`} className="hover:text-primary hover:underline">{a.email}</a></td>
                     <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">{a.major || admin.people.emptyValue}</td>
                     <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">{new Date(a.createdAt).toLocaleDateString(localeTag, { month: "short", day: "numeric" })}</td>
@@ -1645,7 +1654,16 @@ function BookingsTable({
               return (
                 <tr key={b.id} className="border-b last:border-b-0 hover:bg-muted/20">
                   <td className="px-3 py-2.5">
-                    <p className="font-medium">{b.applicantName}</p>
+                    {b.applicantId ? (
+                      <Link
+                        href={`/applicant/${b.applicantId}`}
+                        className="font-medium transition-colors hover:text-primary hover:underline"
+                      >
+                        {b.applicantName}
+                      </Link>
+                    ) : (
+                      <p className="font-medium">{b.applicantName}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">{b.applicantEmail}</p>
                   </td>
                   <td className="px-3 py-2.5">{b.company}</td>

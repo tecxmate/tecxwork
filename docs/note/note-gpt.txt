@@ -512,3 +512,56 @@ Validation:
 
 Commit:
 - `dfa84a0` — Add admin toggle for recruiter job moderation
+
+LATEST REVIEW NOTES — APR 28, 2026 01:30 TAIPEI
+
+Overall project consistency scan:
+
+1. High: applicant PII was publicly exposed.
+   - `src/app/api/applicants/route.ts:48` exposed applicant profiles without session checks and returned email, phone, nationality, CV link, LinkedIn, portfolio, work authorization, etc.
+   - Intended direction: restrict applicant browsing/profile data to recruiter/admin.
+   - Status: item 5 follow-up started fixing this by protecting `/api/applicants`, `/applicant/[id]`, and adding applicant-name links from recruiter/admin views.
+
+2. High: force-overriding event time cancels bookings but does not release booked slots.
+   - `src/app/api/admin/timeframe/route.ts:81` marks active bookings cancelled, but booked `slots` / `applicantSlots` are not reset.
+   - Later regeneration deletes only available slots and treats remaining booked slots as blocked at `src/app/api/admin/timeframe/route.ts:166`, so cancelled interviews can leave stale unavailable slots.
+
+3. High: accepting applications can double-book applicants.
+   - `src/app/api/bookings/review/route.ts:162` locks a recruiter slot and then accepts the booking, but does not re-check whether the applicant already has another accepted interview at the same time.
+   - Two recruiters can accept two pending requests for the same applicant/time.
+
+4. Medium: recruiter-books-applicant flow can overbook recruiters.
+   - `src/app/api/bookings/reverse/route.ts:87` books the applicant's slot and creates an accepted booking, but does not check recruiter availability or interviewer capacity at that time.
+   - A recruiter can book multiple applicants into the same time slot.
+
+5. Medium: Browse Applicants feature was orphaned/inconsistent.
+   - `RecruiterApplicantsTab` still exists at `src/app/dashboard/recruiter-dashboard-applicants.tsx:37`, and `showApplicants` is still computed in `src/app/dashboard/recruiter-data.ts:72`, but the dashboard no longer routes to that UI.
+   - Clarified intent: recruiter/admin should be able to click any applicant name and see the full profile.
+   - Status: keep full applicant profile route, protect it, and link names into it from recruiter/admin surfaces.
+
+6. Low: lint debt remains.
+   - `npm run lint` passes with warnings only, but there are 36 warnings: unused imports/state/functions, `img` warnings, and hook dependency warnings.
+   - Not currently blocking, but it hides real regressions.
+
+FOLLOW-UP FIXES — APR 28, 2026 01:45 TAIPEI
+
+Fixed issues 1-3 from the review notes:
+
+1. Applicant profile/PII access:
+   - Protected `/api/applicants` so only recruiter/admin sessions can list applicant profile data.
+   - Protected `/applicant/[id]` via `src/proxy.ts` and page-level checks.
+   - Added applicant profile links from recruiter booking cards and admin applicant/booking tables.
+
+2. Force timeframe override slot release:
+   - `PUT /api/admin/timeframe` now releases linked recruiter `slots` and `applicantSlots` before regenerating slots after active bookings are force-cancelled.
+
+3. Applicant double-book prevention on recruiter accept:
+   - `PUT /api/bookings/review` now accepts inside a DB transaction.
+   - Added an advisory lock keyed by applicant email + requested time.
+   - Re-checks accepted booking conflicts before locking a recruiter slot.
+   - Checks conflicts against both normal recruiter slots and recruiter-booked applicant slots.
+
+Validation:
+- `npm run lint` passed with existing warnings only.
+- `git diff --check` passed.
+- `npm run build` passed.

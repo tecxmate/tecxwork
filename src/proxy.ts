@@ -46,6 +46,14 @@ export function proxy(req: NextRequest) {
     }
   }
 
+  // Recruiter/admin-only: applicant profile review pages
+  if (pathname.startsWith("/applicant")) {
+    if (!session) return NextResponse.redirect(new URL("/login", req.url));
+    if (session.role !== "recruiter" && session.role !== "admin") {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+  }
+
   // /recruiter/[id] pages are public for viewing - booking requires auth handled in-page
 
   return NextResponse.next();
@@ -56,6 +64,7 @@ export const config = {
     "/dashboard/:path*",
     "/admin/:path*",
     "/recruiter/:path*",
+    "/applicant/:path*",
     "/profile/:path*",
     "/login",
     "/register",

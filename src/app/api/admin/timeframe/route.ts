@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, eventConfig, slots, recruiters, bookings, applicantProfiles } from "@/lib/db";
+import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applicantSlots } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { eq, and, count, inArray } from "drizzle-orm";
 import { EVENT_CONFIG } from "@/lib/data";
@@ -56,6 +56,8 @@ export async function PUT(req: NextRequest) {
       .select({
         id: bookings.id,
         applicantId: bookings.applicantId,
+        slotId: bookings.slotId,
+        applicantSlotId: bookings.applicantSlotId,
         status: bookings.status,
       })
       .from(bookings)
@@ -83,6 +85,26 @@ export async function PUT(req: NextRequest) {
       .update(bookings)
       .set({ status: "cancelled" })
       .where(inArray(bookings.status, ["pending", "accepted", "waitlisted"]));
+
+    const recruiterSlotIds = activeBookingsList
+      .map((b) => b.slotId)
+      .filter((id): id is number => id !== null);
+    const applicantSlotIds = activeBookingsList
+      .map((b) => b.applicantSlotId)
+      .filter((id): id is number => id !== null);
+
+    if (recruiterSlotIds.length > 0) {
+      await db
+        .update(slots)
+        .set({ status: "available" })
+        .where(inArray(slots.id, recruiterSlotIds));
+    }
+    if (applicantSlotIds.length > 0) {
+      await db
+        .update(applicantSlots)
+        .set({ status: "available" })
+        .where(inArray(applicantSlots.id, applicantSlotIds));
+    }
 
     // Send rescheduling emails to affected students
     const resend = getResend();

@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import { AppTopBar } from "@/components/app-topbar";
 type Booking = {
   id: number;
   direction: string;
+  applicantId: number | null;
   position: string | null;
   applicantName: string;
   applicantEmail: string;
@@ -249,9 +251,18 @@ function BookingSummaryCard({
         </a>
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-3">
-            <p className="truncate text-sm font-semibold">
-              {booking.applicantName}
-            </p>
+            {booking.applicantId ? (
+              <Link
+                href={`/applicant/${booking.applicantId}`}
+                className="truncate text-sm font-semibold transition-colors hover:text-primary hover:underline"
+              >
+                {booking.applicantName}
+              </Link>
+            ) : (
+              <p className="truncate text-sm font-semibold">
+                {booking.applicantName}
+              </p>
+            )}
           </div>
           <div className="grid gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-[minmax(9rem,0.9fr)_minmax(14rem,1.2fr)_minmax(9rem,0.8fr)]">
             <span className="min-w-0 truncate font-medium text-foreground/80">

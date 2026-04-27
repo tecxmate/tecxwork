@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles, eventConfig, users, emailVerificationCodes } from "@/lib/db";
-import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
+import { getSession, hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
 import { MAX_STUDENT_WORK_EXPERIENCES, type StudentWorkExperience } from "@/lib/student-profile";
 import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
 
@@ -45,8 +45,13 @@ function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
     });
 }
 
-// GET — public listing of applicant profiles (for recruiter browsing)
+// GET — applicant profile listing for recruiter/admin review.
 export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session || (session.role !== "recruiter" && session.role !== "admin")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const query = req.nextUrl.searchParams.get("query")?.trim() ?? "";
   const page = Math.max(1, Number(req.nextUrl.searchParams.get("page") ?? "1") || 1);
   const limit = Math.min(

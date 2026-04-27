@@ -39,6 +39,7 @@ export async function getRecruiterDashboardData() {
     .select({
       id: bookings.id,
       direction: bookings.direction,
+      applicantId: bookings.applicantId,
       position: bookings.position,
       applicantName: bookings.applicantName,
       applicantEmail: bookings.applicantEmail,

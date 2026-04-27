@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, slots, recruiters } from "@/lib/db";
-import { eq, and, sql } from "drizzle-orm";
+import { db, bookings, slots, recruiters, applicantSlots } from "@/lib/db";
+import { eq, and, sql, or, ne, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { sendBookingEmails, sendRejectionEmail, sendWaitlistEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
@@ -131,53 +131,123 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  // Find a random available slot at the requested time
-  const [randomSlot] = await db
-    .select({
-      id: slots.id,
-      startTime: slots.startTime,
-      endTime: slots.endTime,
-    })
-    .from(slots)
-    .where(
-      and(
-        eq(slots.recruiterId, recruiter.id),
-        eq(slots.startTime, booking.requestedTime),
-        eq(slots.status, "available")
-      )
-    )
-    .orderBy(sql`random()`)
-    .limit(1);
+  const acceptanceResult = await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext(${`${booking.applicantEmail}:${booking.requestedTime!.toISOString()}`}))`
+    );
 
-  if (!randomSlot) {
-    return NextResponse.json(
-      {
+    const [currentBooking] = await tx
+      .select({
+        id: bookings.id,
+        status: bookings.status,
+      })
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+
+    if (!currentBooking || !["pending", "waitlisted"].includes(currentBooking.status)) {
+      return {
+        ok: false as const,
+        status: 409,
+        error: `Cannot ${action} a booking with status "${currentBooking?.status ?? "missing"}"`,
+      };
+    }
+
+    const [acceptedConflict] = await tx
+      .select({ id: bookings.id })
+      .from(bookings)
+      .leftJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
+      .where(
+        and(
+          eq(bookings.applicantEmail, booking.applicantEmail),
+          ne(bookings.id, bookingId),
+          eq(bookings.status, "accepted"),
+          or(
+            eq(bookings.requestedTime, booking.requestedTime!),
+            eq(applicantSlots.startTime, booking.requestedTime!)
+          )
+        )
+      )
+      .limit(1);
+
+    if (acceptedConflict) {
+      return {
+        ok: false as const,
+        status: 409,
+        error:
+          "This applicant already has an accepted interview at this time.",
+      };
+    }
+
+    // Find a random available slot at the requested time
+    const [randomSlot] = await tx
+      .select({
+        id: slots.id,
+        startTime: slots.startTime,
+        endTime: slots.endTime,
+      })
+      .from(slots)
+      .where(
+        and(
+          eq(slots.recruiterId, recruiter.id),
+          eq(slots.startTime, booking.requestedTime!),
+          eq(slots.status, "available")
+        )
+      )
+      .orderBy(sql`random()`)
+      .limit(1);
+
+    if (!randomSlot) {
+      return {
+        ok: false as const,
+        status: 409,
         error:
           "No available interviewer slots at this time. All interviewers are booked. Try waitlisting instead.",
-      },
-      { status: 409 }
-    );
-  }
+      };
+    }
 
-  // Atomic lock the slot
-  const updated = await db
-    .update(slots)
-    .set({ status: "booked" })
-    .where(and(eq(slots.id, randomSlot.id), eq(slots.status, "available")))
-    .returning({ id: slots.id });
+    // Atomic lock the slot
+    const updated = await tx
+      .update(slots)
+      .set({ status: "booked" })
+      .where(and(eq(slots.id, randomSlot.id), eq(slots.status, "available")))
+      .returning({ id: slots.id });
 
-  if (!updated.length) {
+    if (!updated.length) {
+      return {
+        ok: false as const,
+        status: 409,
+        error: "Slot was just taken. Try again.",
+      };
+    }
+
+    // Update booking: assign slot, mark accepted
+    const accepted = await tx
+      .update(bookings)
+      .set({ slotId: randomSlot.id, status: "accepted" })
+      .where(
+        and(
+          eq(bookings.id, bookingId),
+          inArray(bookings.status, ["pending", "waitlisted"])
+        )
+      )
+      .returning({ id: bookings.id });
+
+    if (!accepted.length) {
+      throw new Error("Booking status changed before acceptance completed");
+    }
+
+    return { ok: true as const, slot: randomSlot };
+  });
+
+  if (!acceptanceResult.ok) {
     return NextResponse.json(
-      { error: "Slot was just taken. Try again." },
-      { status: 409 }
+      { error: acceptanceResult.error },
+      { status: acceptanceResult.status }
     );
   }
 
-  // Update booking: assign slot, mark accepted
-  await db
-    .update(bookings)
-    .set({ slotId: randomSlot.id, status: "accepted" })
-    .where(eq(bookings.id, bookingId));
+  const randomSlot = acceptanceResult.slot;
 
   // Send confirmation emails
   const [rec] = await db

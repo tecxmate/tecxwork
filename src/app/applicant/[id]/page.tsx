@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
   Briefcase,
@@ -65,6 +65,11 @@ async function getApplicant(id: number) {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  if (session?.role !== "recruiter" && session?.role !== "admin") {
+    return { title: "Applicant Profile | TECXWORK" };
+  }
+
   const { id } = await params;
   const applicant = await getApplicant(parseInt(id));
   if (!applicant) return { title: "Applicant Not Found" };
@@ -80,12 +85,15 @@ export default async function ApplicantProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.role !== "recruiter" && session.role !== "admin") redirect("/login");
+
   const applicant = await getApplicant(parseInt(id));
 
   if (!applicant) notFound();
 
-  const session = await getSession();
-  const isRecruiter = session?.role === "recruiter" || session?.role === "admin";
+  const backHref = session.role === "admin" ? "/admin/applicants" : "/dashboard/applicants";
 
   const workExperiences = (applicant.workExperiences as WorkExperience[]) || [];
   const school = applicant.schoolNameEn
@@ -98,7 +106,7 @@ export default async function ApplicantProfilePage({
         <div className="h-[env(safe-area-inset-top)] bg-primary md:hidden" />
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
-            href={isRecruiter ? "/dashboard/applicants" : "/"}
+            href={backHref}
             className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />

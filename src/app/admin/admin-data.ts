@@ -80,6 +80,7 @@ export async function getAdminDashboardData() {
   const bookingList = await db
     .select({
       id: bookings.id,
+      applicantId: bookings.applicantId,
       position: bookings.position,
       applicantName: bookings.applicantName,
       applicantEmail: bookings.applicantEmail,
