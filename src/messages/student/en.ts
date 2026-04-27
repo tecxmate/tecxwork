@@ -314,6 +314,18 @@ export const studentEnMessages = {
       "Search and pick from the dropdown when available. If your school is missing, type it manually and continue.",
     noSchoolMatch:
       "No matching school found. You can keep typing to use a custom school name.",
+    profileCompletion: "Profile completion",
+    certifications: "Certifications",
+    addCertification: "Add",
+    certificationsHint: "Add language certificates, professional certifications, or online courses.",
+    certificationTitle: "Certificate #{index}",
+    certType: "Type",
+    certName: "Certificate Name",
+    certNamePlaceholder: "Select or enter name",
+    certScore: "Score / Level",
+    certScorePlaceholder: "e.g. N2, Band 7, 850",
+    certIssueDate: "Issue Date",
+    noCertifications: "No certifications added yet.",
   },
   recruiterDetail: {
     openPositions: "Open Positions",

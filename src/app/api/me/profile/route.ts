@@ -2,7 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
-import { MAX_STUDENT_WORK_EXPERIENCES, type StudentWorkExperience } from "@/lib/student-profile";
+import {
+  MAX_STUDENT_CERTIFICATIONS,
+  MAX_STUDENT_WORK_EXPERIENCES,
+  type StudentCertification,
+  type StudentWorkExperience,
+} from "@/lib/student-profile";
+
+function sanitizeCertifications(value: unknown): StudentCertification[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .slice(0, MAX_STUDENT_CERTIFICATIONS)
+    .flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+
+      const record = item as Record<string, unknown>;
+      const cert: StudentCertification = {
+        type: typeof record.type === "string" ? record.type.trim() : "language",
+        name: typeof record.name === "string" ? record.name.trim() : "",
+        score: typeof record.score === "string" ? record.score.trim() : "",
+        issueDate: typeof record.issueDate === "string" ? record.issueDate.trim() : "",
+      };
+
+      if (!cert.name && !cert.score && !cert.issueDate) {
+        return [];
+      }
+
+      return [cert];
+    });
+}
 
 function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
   if (!Array.isArray(value)) return [];
@@ -72,6 +101,7 @@ export async function GET() {
       preferredLocations: applicantProfiles.preferredLocations,
       preferredIndustries: applicantProfiles.preferredIndustries,
       workExperiences: applicantProfiles.workExperiences,
+      certifications: applicantProfiles.certifications,
       cvLink: applicantProfiles.cvLink,
       linkedinUrl: applicantProfiles.linkedinUrl,
       portfolioUrl: applicantProfiles.portfolioUrl,
@@ -113,6 +143,7 @@ export async function PUT(req: NextRequest) {
     preferredLocations,
     preferredIndustries,
     workExperiences,
+    certifications,
     cvLink,
     linkedinUrl,
     portfolioUrl,
@@ -138,6 +169,9 @@ export async function PUT(req: NextRequest) {
   if (Array.isArray(preferredIndustries)) updates.preferredIndustries = preferredIndustries;
   if (Array.isArray(workExperiences)) {
     updates.workExperiences = sanitizeWorkExperiences(workExperiences);
+  }
+  if (Array.isArray(certifications)) {
+    updates.certifications = sanitizeCertifications(certifications);
   }
   if (typeof cvLink === "string" && cvLink.trim()) updates.cvLink = cvLink.trim();
   if (typeof linkedinUrl === "string") updates.linkedinUrl = linkedinUrl.trim();

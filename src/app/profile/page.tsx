@@ -30,15 +30,21 @@ import { ImageUpload } from "@/components/image-upload";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
 import {
+  calculateProfileCompletion,
+  CERTIFICATION_TYPE_OPTIONS,
+  EMPTY_STUDENT_CERTIFICATION,
   EMPTY_STUDENT_REGISTRATION_DRAFT,
   EMPTY_STUDENT_WORK_EXPERIENCE,
   JOB_SEEKING_STATUS_OPTIONS,
+  LANGUAGE_CERT_OPTIONS,
+  MAX_STUDENT_CERTIFICATIONS,
   MAX_STUDENT_WORK_EXPERIENCES,
   PREFERRED_INDUSTRY_OPTIONS,
   PREFERRED_LOCATION_OPTIONS,
   STUDY_LEVEL_OPTIONS,
   STUDY_YEAR_OPTIONS,
   WORK_AUTHORIZATION_OPTIONS,
+  type StudentCertification,
   type StudentRegistrationDraft,
   type StudentWorkExperience,
   type TaiwanSchoolOption,
@@ -62,6 +68,7 @@ type ProfileResponse = {
   preferredLocations: string[];
   preferredIndustries: string[];
   workExperiences: StudentWorkExperience[];
+  certifications: StudentCertification[];
   cvLink: string;
   linkedinUrl: string;
   portfolioUrl: string;
@@ -86,6 +93,7 @@ type ProfileSavePayload = {
   preferredLocations: string[];
   preferredIndustries: string[];
   workExperiences: StudentWorkExperience[];
+  certifications: StudentCertification[];
   cvLink: string;
   linkedinUrl: string;
   portfolioUrl: string;
@@ -125,6 +133,9 @@ function profileToDraft(profile: ProfileResponse): StudentRegistrationDraft {
     workExperiences: Array.isArray(profile.workExperiences)
       ? profile.workExperiences
       : [],
+    certifications: Array.isArray(profile.certifications)
+      ? profile.certifications
+      : [],
     cvLink: profile.cvLink ?? "",
     linkedinUrl: profile.linkedinUrl ?? "",
     portfolioUrl: profile.portfolioUrl ?? "",
@@ -152,6 +163,7 @@ function buildProfilePayload(
     preferredLocations: draft.preferredLocations,
     preferredIndustries: draft.preferredIndustries,
     workExperiences: draft.workExperiences,
+    certifications: draft.certifications,
     cvLink: draft.cvLink.trim(),
     linkedinUrl: draft.linkedinUrl.trim(),
     portfolioUrl: draft.portfolioUrl.trim(),
@@ -272,6 +284,107 @@ const WorkExperienceEditor = memo(function WorkExperienceEditor({
             rows={3}
             placeholder={labels.summaryPlaceholder}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const CertificationEditor = memo(function CertificationEditor({
+  certification,
+  index,
+  onRemove,
+  onUpdate,
+  labels,
+}: {
+  certification: StudentCertification;
+  index: number;
+  onRemove: (index: number) => void;
+  onUpdate: <K extends keyof StudentCertification>(
+    index: number,
+    field: K,
+    value: StudentCertification[K]
+  ) => void;
+  labels: {
+    certificationTitle: string;
+    remove: string;
+    certType: string;
+    certName: string;
+    certNamePlaceholder: string;
+    score: string;
+    scorePlaceholder: string;
+    issueDate: string;
+  };
+}) {
+  const isLanguage = certification.type === "language";
+
+  return (
+    <div className="space-y-3 rounded-xl border border-border/60 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">
+          {interpolate(labels.certificationTitle, { index: index + 1 })}
+        </h3>
+        <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(index)}>
+          {labels.remove}
+        </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">{labels.certType}</label>
+          <select
+            value={certification.type}
+            onChange={(e) => onUpdate(index, "type", e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          >
+            {CERTIFICATION_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">{labels.certName}</label>
+          {isLanguage ? (
+            <select
+              value={certification.name}
+              onChange={(e) => onUpdate(index, "name", e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">{labels.certNamePlaceholder}</option>
+              {LANGUAGE_CERT_OPTIONS.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Input
+              value={certification.name}
+              onChange={(e) => onUpdate(index, "name", e.target.value)}
+              placeholder={labels.certNamePlaceholder}
+            />
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">{labels.score}</label>
+          <Input
+            value={certification.score}
+            onChange={(e) => onUpdate(index, "score", e.target.value)}
+            placeholder={labels.scorePlaceholder}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">{labels.issueDate}</label>
+          <Input
+            type="month"
+            value={certification.issueDate}
+            onChange={(e) => onUpdate(index, "issueDate", e.target.value)}
           />
         </div>
       </div>
@@ -560,6 +673,38 @@ export default function ProfilePage() {
     }));
   }, []);
 
+  function addCertification() {
+    if (draft.certifications.length >= MAX_STUDENT_CERTIFICATIONS) return;
+    setField("certifications", [
+      ...draft.certifications,
+      { ...EMPTY_STUDENT_CERTIFICATION },
+    ]);
+  }
+
+  const removeCertification = useCallback((index: number) => {
+    setDraft((current) => ({
+      ...current,
+      certifications: current.certifications.filter(
+        (_, itemIndex) => itemIndex !== index
+      ),
+    }));
+  }, []);
+
+  const updateCertification = useCallback(<K extends keyof StudentCertification>(
+    index: number,
+    field: K,
+    value: StudentCertification[K]
+  ) => {
+    setDraft((current) => ({
+      ...current,
+      certifications: current.certifications.map((cert, itemIndex) =>
+        itemIndex === index ? { ...cert, [field]: value } : cert
+      ),
+    }));
+  }, []);
+
+  const profileCompletion = useMemo(() => calculateProfileCompletion(draft), [draft]);
+
   const saveProfile = useCallback(async () => {
     setSaving(true);
     setSaved(false);
@@ -688,6 +833,22 @@ export default function ProfilePage() {
                   {messages.profile.title}
                 </h1>
                 <p className="text-xs text-muted-foreground">{profileEmail}</p>
+                <div className="mt-1 w-full max-w-xs">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {messages.profile.profileCompletion ?? "Profile completion"}
+                    </span>
+                    <span className={profileCompletion >= 80 ? "font-medium text-green-600" : "font-medium text-primary"}>
+                      {profileCompletion}%
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className={`h-full transition-all ${profileCompletion >= 80 ? "bg-green-500" : "bg-primary"}`}
+                      style={{ width: `${profileCompletion}%` }}
+                    />
+                  </div>
+                </div>
               </div>
               <Button
                 type="submit"
@@ -1095,6 +1256,58 @@ export default function ProfilePage() {
                   ) : (
                     <div className="rounded-xl border border-dashed border-border/80 px-4 py-6 text-sm text-muted-foreground">
                       {messages.register.noExperience}
+                    </div>
+                  )}
+                </section>
+
+                <Separator />
+
+                {/* Certifications */}
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="font-heading text-lg font-semibold">
+                      {messages.profile.certifications ?? "Certifications"}
+                    </h2>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addCertification}
+                      disabled={draft.certifications.length >= MAX_STUDENT_CERTIFICATIONS}
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      {messages.profile.addCertification ?? "Add"}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {messages.profile.certificationsHint ?? "Add language certificates, professional certifications, or online courses."}
+                  </p>
+
+                  {draft.certifications.length > 0 ? (
+                    <div className="space-y-4">
+                      {draft.certifications.map((cert, index) => (
+                        <CertificationEditor
+                          key={index}
+                          index={index}
+                          certification={cert}
+                          onRemove={removeCertification}
+                          onUpdate={updateCertification}
+                          labels={{
+                            certificationTitle: messages.profile.certificationTitle ?? "Certificate #{index}",
+                            remove: messages.common.remove,
+                            certType: messages.profile.certType ?? "Type",
+                            certName: messages.profile.certName ?? "Certificate Name",
+                            certNamePlaceholder: messages.profile.certNamePlaceholder ?? "Select or enter name",
+                            score: messages.profile.certScore ?? "Score / Level",
+                            scorePlaceholder: messages.profile.certScorePlaceholder ?? "e.g. N2, Band 7, 850",
+                            issueDate: messages.profile.certIssueDate ?? "Issue Date",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border/80 px-4 py-6 text-sm text-muted-foreground">
+                      {messages.profile.noCertifications ?? "No certifications added yet."}
                     </div>
                   )}
                 </section>

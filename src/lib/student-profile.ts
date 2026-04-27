@@ -18,7 +18,42 @@ export type StudentWorkExperience = {
   description: string;
 };
 
+export type StudentCertification = {
+  type: string;
+  name: string;
+  score: string;
+  issueDate: string;
+};
+
 export const MAX_STUDENT_WORK_EXPERIENCES = 5;
+export const MAX_STUDENT_CERTIFICATIONS = 10;
+
+export const CERTIFICATION_TYPE_OPTIONS = [
+  { value: "language", label: "Language Certificate" },
+  { value: "professional", label: "Professional Certificate" },
+  { value: "course", label: "Online Course" },
+  { value: "other", label: "Other" },
+] as const;
+
+export const LANGUAGE_CERT_OPTIONS = [
+  "TOCFL",
+  "HSK",
+  "JLPT",
+  "TOEIC",
+  "TOEFL",
+  "IELTS",
+  "TOPIK",
+  "DELF/DALF",
+  "Goethe-Zertifikat",
+  "Other",
+] as const;
+
+export const EMPTY_STUDENT_CERTIFICATION: StudentCertification = {
+  type: "language",
+  name: "",
+  score: "",
+  issueDate: "",
+};
 
 export const EMPTY_STUDENT_WORK_EXPERIENCE: StudentWorkExperience = {
   company: "",
@@ -113,6 +148,7 @@ export type StudentRegistrationDraft = {
   linkedinUrl: string;
   portfolioUrl: string;
   workExperiences: StudentWorkExperience[];
+  certifications: StudentCertification[];
 };
 
 export const STUDENT_REGISTRATION_DRAFT_KEY = "student-registration-draft-v2";
@@ -143,4 +179,30 @@ export const EMPTY_STUDENT_REGISTRATION_DRAFT: StudentRegistrationDraft = {
   linkedinUrl: "",
   portfolioUrl: "",
   workExperiences: [],
+  certifications: [],
 };
+
+export function calculateProfileCompletion(draft: StudentRegistrationDraft): number {
+  const fields = [
+    { filled: !!draft.name.trim(), weight: 10 },
+    { filled: !!draft.phone.trim(), weight: 5 },
+    { filled: !!draft.nationality.trim(), weight: 5 },
+    { filled: !!draft.schoolName.trim(), weight: 10 },
+    { filled: !!draft.major.trim(), weight: 10 },
+    { filled: !!draft.studyLevel, weight: 5 },
+    { filled: !!draft.studyYear, weight: 5 },
+    { filled: !!draft.expectedGraduation.trim(), weight: 5 },
+    { filled: !!draft.jobSeekingStatus, weight: 5 },
+    { filled: !!draft.workAuthorization, weight: 5 },
+    { filled: draft.skills.length > 0, weight: 10 },
+    { filled: draft.preferredLocations.length > 0, weight: 5 },
+    { filled: draft.preferredIndustries.length > 0, weight: 5 },
+    { filled: !!draft.cvLink.trim(), weight: 10 },
+    { filled: !!draft.description.trim(), weight: 5 },
+  ];
+
+  const totalWeight = fields.reduce((sum, f) => sum + f.weight, 0);
+  const filledWeight = fields.reduce((sum, f) => sum + (f.filled ? f.weight : 0), 0);
+
+  return Math.round((filledWeight / totalWeight) * 100);
+}
