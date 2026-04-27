@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +38,12 @@ type Booking = {
   createdAt: Date | null;
   requestedTime: Date | null;
   slotId: number | null;
+  applicantSlotId: number | null;
+  slotStart: Date | null;
+  slotEnd: Date | null;
+  interviewerNumber: number | null;
+  applicantSlotStart: Date | null;
+  applicantSlotEnd: Date | null;
 };
 
 type Recruiter = {
@@ -56,14 +62,6 @@ type Section = "interviews" | "applicants" | "jobs" | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
   "recruiter_applicants_compliance_notice_dismissed_v1";
 
-const RecruiterApplicantsTab = dynamic(
-  () =>
-    import("./recruiter-dashboard-applicants").then(
-      (module) => module.RecruiterApplicantsTab
-    ),
-  { loading: () => <DashboardTabLoader /> }
-);
-
 const RecruiterCompanyTab = dynamic(
   () =>
     import("./recruiter-dashboard-company").then(
@@ -76,7 +74,6 @@ export function RecruiterDashboard({
   recruiter,
   bookings,
   section,
-  showApplicants,
   jobModerationEnabled,
 }: {
   recruiter: Recruiter;
@@ -167,13 +164,9 @@ export function RecruiterDashboard({
       <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
         <div className="mx-auto max-w-6xl">
           {section === "interviews" ? (
-            <BookingsTab bookings={bookings} />
+            <InterviewScheduleTab bookings={bookings} />
           ) : section === "applicants" ? (
-            showApplicants ? (
-              <RecruiterApplicantsTab recruiterId={recruiter.id} />
-            ) : (
-              <BookingsTab bookings={bookings} />
-            )
+            <BookingsTab bookings={bookings} />
           ) : section === "jobs" ? (
             <RecruiterCompanyTab
               recruiter={recruiter}
@@ -212,6 +205,203 @@ export function RecruiterDashboard({
         </div>
       ) : null}
       <SiteFooter />
+    </div>
+  );
+}
+
+function getInterviewStart(booking: Booking) {
+  return booking.slotStart ?? booking.applicantSlotStart ?? booking.requestedTime;
+}
+
+function getInterviewEnd(booking: Booking) {
+  return booking.slotEnd ?? booking.applicantSlotEnd;
+}
+
+function BookingSummaryCard({
+  booking,
+  borderClassName,
+  timeLabel,
+  rightSlot,
+  cvLabel,
+}: {
+  booking: Booking;
+  borderClassName?: string;
+  timeLabel?: string;
+  rightSlot?: ReactNode;
+  cvLabel: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between",
+        borderClassName
+      )}
+    >
+      <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
+        <a
+          href={booking.cvLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+        >
+          <FileText className="h-4 w-4" />
+          {cvLabel}
+        </a>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-3">
+            <p className="truncate text-sm font-semibold">
+              {booking.applicantName}
+            </p>
+          </div>
+          <div className="grid gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-[minmax(9rem,0.9fr)_minmax(14rem,1.2fr)_minmax(9rem,0.8fr)]">
+            <span className="min-w-0 truncate font-medium text-foreground/80">
+              {booking.position || "—"}
+            </span>
+            <span className="flex min-w-0 items-center gap-1">
+              <Mail className="h-3 w-3 shrink-0" />
+              <span className="truncate">{booking.applicantEmail}</span>
+            </span>
+            {timeLabel ? (
+              <span className="flex min-w-0 items-center gap-1 whitespace-nowrap">
+                <Calendar className="h-3 w-3 shrink-0" />
+                {timeLabel}
+              </span>
+            ) : (
+              <span aria-hidden="true">—</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+        {rightSlot}
+      </div>
+    </div>
+  );
+}
+
+function InterviewScheduleTab({ bookings }: { bookings: Booking[] }) {
+  const { messages } = useRecruiterI18n();
+  const [sortBy, setSortBy] = useState<
+    "time" | "interviewer" | "name" | "email" | "position"
+  >("time");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const accepted = bookings
+    .filter((booking) => booking.status === "accepted")
+    .sort((a, b) => {
+      let comparison = 0;
+
+      if (sortBy === "time") {
+        comparison =
+          (getInterviewStart(a)?.getTime() ?? 0) -
+          (getInterviewStart(b)?.getTime() ?? 0);
+      } else if (sortBy === "interviewer") {
+        comparison =
+          (a.interviewerNumber ?? Number.MAX_SAFE_INTEGER) -
+          (b.interviewerNumber ?? Number.MAX_SAFE_INTEGER);
+      } else if (sortBy === "name") {
+        comparison = a.applicantName.localeCompare(b.applicantName);
+      } else if (sortBy === "email") {
+        comparison = a.applicantEmail.localeCompare(b.applicantEmail);
+      } else if (sortBy === "position") {
+        comparison = (a.position ?? "").localeCompare(b.position ?? "");
+      }
+
+      if (comparison === 0 && sortBy !== "time") {
+        comparison =
+          (getInterviewStart(a)?.getTime() ?? 0) -
+          (getInterviewStart(b)?.getTime() ?? 0);
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-heading text-lg font-semibold">
+          {messages.dashboard.bookings.acceptedSchedule}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {messages.dashboard.bookings.acceptedScheduleDescription}
+        </p>
+      </div>
+
+      {accepted.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground">
+              {messages.dashboard.bookings.noAcceptedInterviews}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="flex justify-end border-b border-border pb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Sort by:
+              </span>
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [by, order] = e.target.value.split("-");
+                  setSortBy(
+                    by as "time" | "interviewer" | "name" | "email" | "position"
+                  );
+                  setSortOrder(order as "asc" | "desc");
+                }}
+              >
+                <option value="time-asc">Booking Time (Earliest)</option>
+                <option value="time-desc">Booking Time (Latest)</option>
+                <option value="interviewer-asc">Interviewer (Low to High)</option>
+                <option value="interviewer-desc">Interviewer (High to Low)</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="email-asc">Email (A-Z)</option>
+                <option value="email-desc">Email (Z-A)</option>
+                <option value="position-asc">Position (A-Z)</option>
+                <option value="position-desc">Position (Z-A)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              {accepted.length}
+            </span>
+            {messages.dashboard.bookings.accepted}
+          </h3>
+          <div className="space-y-2">
+            {accepted.map((booking) => {
+              const start = getInterviewStart(booking);
+              const end = getInterviewEnd(booking);
+              const timeLabel = start
+                ? `${format(start, "MMM d, HH:mm")}${end ? ` - ${format(end, "HH:mm")}` : ""}`
+                : undefined;
+
+              return (
+                <BookingSummaryCard
+                  key={booking.id}
+                  booking={booking}
+                  borderClassName="border-emerald-500/60 dark:border-emerald-500/50"
+                  timeLabel={timeLabel}
+                  cvLabel={messages.dashboard.bookings.cv}
+                  rightSlot={
+                    booking.interviewerNumber ? (
+                      <Badge variant="secondary" className="h-8 px-3 text-xs font-normal">
+                        Interviewer {booking.interviewerNumber}
+                      </Badge>
+                    ) : null
+                  }
+                />
+              );
+            })}
+          </div>
+        </div>
+        </>
+      )}
     </div>
   );
 }
@@ -314,32 +504,20 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     const isWaitlisted = b.status === "waitlisted";
     const isAccepted = b.status === "accepted";
     const isActing = acting === b.id;
+    const timeLabel = b.requestedTime
+      ? format(new Date(b.requestedTime), "MMM d, HH:mm")
+      : undefined;
 
     return (
-      <div key={b.id} className={cn("flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between transition-colors hover:bg-muted/30", statusBorderColor[b.status] ?? "")}>
-        <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
-          <a
-            href={b.cvLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-          >
-            <FileText className="h-4 w-4" />
-            {messages.dashboard.bookings.cv}
-          </a>
-          <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-center gap-3">
-              <p className="truncate text-sm font-semibold">{b.applicantName}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              {b.position && <span className="font-medium text-foreground/80">{b.position}</span>}
-              <span className="flex items-center gap-1"><Mail className="h-3 w-3 shrink-0" /> <span className="truncate">{b.applicantEmail}</span></span>
-              {b.requestedTime && <span className="flex items-center gap-1"><Calendar className="h-3 w-3 shrink-0" /> {format(new Date(b.requestedTime), "MMM d, HH:mm")}</span>}
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-          {(isPending || isWaitlisted) && (
+      <BookingSummaryCard
+        key={b.id}
+        booking={b}
+        borderClassName={statusBorderColor[b.status]}
+        timeLabel={timeLabel}
+        cvLabel={messages.dashboard.bookings.cv}
+        rightSlot={
+          <>
+            {(isPending || isWaitlisted) ? (
             <>
               <Button size="sm" disabled={isActing} onClick={() => handleReview(b.id, "accept")} className="h-8 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600">
                 {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
@@ -354,19 +532,29 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                 {messages.dashboard.bookings.reject}
               </Button>
             </>
-          )}
-          {isAccepted && (
+            ) : null}
+            {isAccepted ? (
             <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "cancel")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
               {messages.dashboard.bookings.cancelInterview}
             </Button>
-          )}
-        </div>
-      </div>
+            ) : null}
+          </>
+        }
+      />
     );
   }
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="font-heading text-lg font-semibold">
+          {messages.dashboard.bookings.applicationStages}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {messages.dashboard.bookings.applicationStagesDescription}
+        </p>
+      </div>
+
       {/* Controls Header */}
       {items.length > 0 && (
         <div className="flex justify-end border-b border-border pb-4">

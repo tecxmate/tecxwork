@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { requireAdmin } from "@/lib/auth";
-import { db, jobOpenings } from "@/lib/db";
+import { db, jobOpenings, recruiters } from "@/lib/db";
 
 export async function PUT(
   req: NextRequest,
@@ -39,7 +39,7 @@ export async function PUT(
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
-  const [updated] = await db
+  await db
     .update(jobOpenings)
     .set({
       moderationStatus:
@@ -51,8 +51,40 @@ export async function PUT(
       moderationNotes,
       reviewedAt: new Date(),
     })
+    .where(eq(jobOpenings.id, jobId));
+
+  const [updated] = await db
+    .select({
+      id: jobOpenings.id,
+      recruiterId: recruiters.id,
+      company: recruiters.company,
+      title: jobOpenings.title,
+      jdLink: jobOpenings.jdLink,
+      location: jobOpenings.location,
+      employmentType: jobOpenings.employmentType,
+      workplaceType: jobOpenings.workplaceType,
+      salaryMin: jobOpenings.salaryMin,
+      salaryMax: jobOpenings.salaryMax,
+      salaryCurrency: jobOpenings.salaryCurrency,
+      salaryPeriod: jobOpenings.salaryPeriod,
+      seniority: jobOpenings.seniority,
+      languageRequirement: jobOpenings.languageRequirement,
+      visaSupport: jobOpenings.visaSupport,
+      applicationDeadline: jobOpenings.applicationDeadline,
+      description: jobOpenings.description,
+      responsibilities: jobOpenings.responsibilities,
+      requirements: jobOpenings.requirements,
+      benefits: jobOpenings.benefits,
+      moderationStatus: jobOpenings.moderationStatus,
+      moderationNotes: jobOpenings.moderationNotes,
+      submittedAt: jobOpenings.submittedAt,
+      reviewedAt: jobOpenings.reviewedAt,
+      createdAt: jobOpenings.createdAt,
+    })
+    .from(jobOpenings)
+    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
     .where(eq(jobOpenings.id, jobId))
-    .returning();
+    .limit(1);
 
   return NextResponse.json({ job: updated });
 }

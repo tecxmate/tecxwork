@@ -62,8 +62,13 @@ export const recruiterZhTwMessages = {
       company: "我的公司",
     },
     bookings: {
+      applicationStages: "申請審核階段",
+      applicationStagesDescription:
+        "依階段審核申請，並接受、候補、拒絕或取消面談。",
       pendingReview: "待審核",
       accepted: "已接受",
+      acceptedSchedule: "已確認面談時程",
+      acceptedScheduleDescription: "已確認並分配時段的面談。",
       waitlisted: "候補中",
       past: "歷史紀錄",
       accept: "接受",
@@ -71,6 +76,7 @@ export const recruiterZhTwMessages = {
       waitlist: "候補",
       cancelInterview: "取消面談",
       noApplications: "目前沒有申請資料。",
+      noAcceptedInterviews: "目前沒有已確認的面談時程。",
       cv: "履歷",
       cancelConfirm:
         "要取消這筆面談嗎？釋出的時段可能會自動遞補候補中的申請者。",

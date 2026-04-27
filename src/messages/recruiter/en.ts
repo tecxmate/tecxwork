@@ -62,8 +62,14 @@ export const recruiterEnMessages = {
       company: "My Company",
     },
     bookings: {
+      applicationStages: "Applicant Approval Stages",
+      applicationStagesDescription:
+        "Review applications by stage and accept, waitlist, reject, or cancel interviews.",
       pendingReview: "Pending Review",
       accepted: "Accepted",
+      acceptedSchedule: "Accepted Interview Schedule",
+      acceptedScheduleDescription:
+        "Confirmed interviews with assigned time slots.",
       waitlisted: "Waitlisted",
       past: "Past",
       accept: "Accept",
@@ -71,6 +77,7 @@ export const recruiterEnMessages = {
       waitlist: "Waitlist",
       cancelInterview: "Cancel interview",
       noApplications: "No applications yet.",
+      noAcceptedInterviews: "No accepted interviews scheduled yet.",
       cv: "CV",
       cancelConfirm:
         "Cancel this? The slot will be released and a waitlisted applicant may be promoted.",

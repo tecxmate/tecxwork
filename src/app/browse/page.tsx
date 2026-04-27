@@ -13,7 +13,7 @@ export default async function BrowsePage() {
   const locale = await getStudentLocale();
   const messages = getStudentMessages(locale);
   if (session?.role === "admin") redirect("/admin");
-  if (session?.role === "recruiter") redirect("/dashboard");
+  if (session?.role === "recruiter") redirect("/dashboard/interviews");
 
   return (
     <div className="flex flex-1 flex-col">

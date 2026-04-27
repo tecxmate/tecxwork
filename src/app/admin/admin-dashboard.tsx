@@ -26,6 +26,9 @@ import {
   Search,
   Mail,
   Send,
+  FileText,
+  MapPin,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -35,7 +38,6 @@ import { SiteFooter } from "@/components/site-footer";
 import { QRCard } from "@/components/qr-code";
 import { MultiImageUpload } from "@/components/image-upload";
 import { AppTopBar } from "@/components/app-topbar";
-import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
 
@@ -443,7 +445,11 @@ export function AdminDashboard({
     });
     if (!res.ok) return;
     const data = await res.json();
-    setJobs(jobs.map((job) => (job.id === jobId ? data.job : job)));
+    setJobs((currentJobs) =>
+      currentJobs.map((job) =>
+        job.id === jobId ? { ...job, ...data.job } : job
+      )
+    );
     router.refresh();
   }
 
@@ -1022,19 +1028,199 @@ function JobModerationSection({
       return score(a) - score(b);
     });
 
-  // Design system status colors for job moderation
-  const statusStyles: Record<string, string> = {
-    draft: "bg-slate-100 text-slate-600",
-    pending_review: "bg-[#FF9500]/15 text-[#FF9500]", // WARNING orange
-    approved: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
-    rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
+  const pendingJobs = filteredJobs.filter(
+    (job) => job.moderationStatus === "pending_review"
+  );
+  const approvedJobs = filteredJobs.filter(
+    (job) => job.moderationStatus === "approved"
+  );
+  const draftJobs = filteredJobs.filter(
+    (job) => job.moderationStatus === "draft"
+  );
+  const rejectedJobs = filteredJobs.filter(
+    (job) => job.moderationStatus === "rejected"
+  );
+
+  // Design system status border colors for job moderation
+  const statusBorderColor: Record<string, string> = {
+    draft: "border-border",
+    pending_review: "border-orange-500/60 dark:border-orange-500/50",
+    approved: "border-emerald-500/60 dark:border-emerald-500/50",
+    rejected: "border-destructive/60 dark:border-destructive/50",
   };
+
   const statusLabels: Record<string, string> = {
     draft: admin.moderation.status.draft,
     pending_review: admin.moderation.status.pendingReview,
     approved: admin.moderation.status.approved,
     rejected: admin.moderation.status.rejected,
   };
+
+  const statusCountStyles: Record<string, string> = {
+    draft: "bg-muted text-muted-foreground",
+    pending_review:
+      "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+    approved: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    rejected: "bg-destructive/15 text-destructive",
+  };
+
+  function renderStageSection(status: string, stageJobs: JobOpening[]) {
+    if (stageJobs.length === 0) return null;
+
+    return (
+      <div>
+        <h3
+          className={cn(
+            "mb-2 flex items-center gap-2 text-sm font-semibold",
+            status === "draft" ? "text-muted-foreground" : ""
+          )}
+        >
+          <span
+            className={cn(
+              "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+              statusCountStyles[status]
+            )}
+          >
+            {stageJobs.length}
+          </span>
+          {statusLabels[status] ?? status.replace("_", " ")}
+        </h3>
+        <div className="space-y-2">{stageJobs.map(renderJobItem)}</div>
+      </div>
+    );
+  }
+
+  function renderJobItem(job: JobOpening) {
+    const isPending = job.moderationStatus === "pending_review";
+    const notes = notesById[job.id] ?? job.moderationNotes ?? "";
+
+    return (
+      <div
+        key={job.id}
+        className={cn(
+          "flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-muted/30",
+          statusBorderColor[job.moderationStatus] ?? ""
+        )}
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
+            {job.jdLink ? (
+              <a
+                href={job.jdLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                title={admin.moderation.viewJd}
+              >
+                <FileText className="h-4 w-4" />
+                JD
+              </a>
+            ) : (
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-muted-foreground"
+                title={admin.moderation.noJd}
+              >
+                <FileText className="h-4 w-4 opacity-40" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p className="truncate text-sm font-semibold">{job.title}</p>
+                <Badge variant="outline" className="text-[10px] h-4 px-1.5 py-0">
+                  {job.company}
+                </Badge>
+                <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
+                  {statusLabels[job.moderationStatus] ??
+                    job.moderationStatus.replace("_", " ")}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3 shrink-0" /> {job.location}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 shrink-0" /> {job.employmentType}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3 shrink-0" />
+                  {interpolate(admin.moderation.createdOn, {
+                    date: new Date(job.createdAt).toLocaleDateString(localeTag),
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
+            <Button
+              size="sm"
+              onClick={() => onModerate(job.id, "approve", notes)}
+              className="h-8 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+            >
+              <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+              {admin.moderation.approve}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onModerate(job.id, "reject", notes)}
+              className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              {admin.moderation.reject}
+            </Button>
+            {!isPending && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onModerate(job.id, "reset", notes)}
+                className="h-8 text-muted-foreground"
+              >
+                {admin.moderation.resetToDraft}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid gap-4 pt-2 border-t border-border/40 lg:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {admin.moderation.adminNotes}
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) =>
+                setNotesById((current) => ({
+                  ...current,
+                  [job.id]: e.target.value,
+                }))
+              }
+              rows={2}
+              placeholder={admin.moderation.notesPlaceholder}
+              className="w-full rounded-lg border border-input bg-muted/30 px-3 py-2 text-sm transition-colors focus:bg-background"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Quick Details
+            </label>
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground bg-muted/20 rounded-lg p-2.5">
+              <div>
+                <span className="font-medium text-foreground/70">Level:</span> {job.seniority}
+              </div>
+              <div>
+                <span className="font-medium text-foreground/70">Salary:</span> {job.salaryMin ? `${job.salaryMin}-${job.salaryMax} ${job.salaryCurrency}` : "N/A"}
+              </div>
+              <div className="col-span-2">
+                <span className="font-medium text-foreground/70">Requirements:</span> <span className="line-clamp-1 inline">{job.requirements}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div>
@@ -1059,7 +1245,7 @@ function JobModerationSection({
         />
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-6">
         {filteredJobs.length === 0 ? (
           <Card>
             <CardContent className="py-6 text-sm text-muted-foreground">
@@ -1067,98 +1253,12 @@ function JobModerationSection({
             </CardContent>
           </Card>
         ) : (
-          filteredJobs.map((job) => (
-            <Card key={job.id}>
-              <CardContent className="space-y-4 py-4">
-                <RecruiterJobPostingCard
-                  job={job}
-                  compact
-                  locale={locale}
-                  labels={{
-                    seniority: admin.moderation.card.seniority,
-                    languageRequirement: admin.moderation.card.languageRequirement,
-                    visaSupport: admin.moderation.card.visaSupport,
-                    applicationDeadline: admin.moderation.card.applicationDeadline,
-                    description: admin.moderation.card.description,
-                    responsibilities: admin.moderation.card.responsibilities,
-                    requirements: admin.moderation.card.requirements,
-                    benefits: admin.moderation.card.benefits,
-                    viewJd: admin.moderation.viewJd,
-                    noJd: admin.moderation.noJd,
-                  }}
-                  status={
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                        statusStyles[job.moderationStatus] ?? "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {statusLabels[job.moderationStatus] ??
-                        job.moderationStatus.replace("_", " ")}
-                    </span>
-                  }
-                />
-
-                <p className="text-xs text-muted-foreground">
-                  {interpolate(admin.moderation.createdOn, {
-                    date: new Date(job.createdAt).toLocaleDateString(localeTag),
-                  })}
-                  {job.submittedAt
-                    ? ` · ${interpolate(admin.moderation.submittedOn, {
-                        date: new Date(job.submittedAt).toLocaleDateString(localeTag),
-                      })}`
-                    : ""}
-                </p>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    {admin.moderation.adminNotes}
-                  </label>
-                  <textarea
-                    value={notesById[job.id] ?? job.moderationNotes ?? ""}
-                    onChange={(e) =>
-                      setNotesById((current) => ({
-                        ...current,
-                        [job.id]: e.target.value,
-                      }))
-                    }
-                    rows={2}
-                    placeholder={admin.moderation.notesPlaceholder}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      onModerate(job.id, "approve", notesById[job.id] ?? "")
-                    }
-                  >
-                    {admin.moderation.approve}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      onModerate(job.id, "reject", notesById[job.id] ?? "")
-                    }
-                  >
-                    {admin.moderation.reject}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      onModerate(job.id, "reset", notesById[job.id] ?? "")
-                    }
-                  >
-                    {admin.moderation.resetToDraft}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+          <>
+            {renderStageSection("pending_review", pendingJobs)}
+            {renderStageSection("approved", approvedJobs)}
+            {renderStageSection("draft", draftJobs)}
+            {renderStageSection("rejected", rejectedJobs)}
+          </>
         )}
       </div>
     </div>

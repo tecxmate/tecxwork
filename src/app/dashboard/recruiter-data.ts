@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/auth";
-import { db, recruiters, bookings, eventConfig } from "@/lib/db";
+import { db, recruiters, bookings, eventConfig, slots, applicantSlots } from "@/lib/db";
 import { getRecruiterLocale } from "@/lib/recruiter-locale.server";
 
 export type RecruiterDashboardSection =
@@ -47,10 +47,18 @@ export async function getRecruiterDashboardData() {
       createdAt: bookings.createdAt,
       requestedTime: bookings.requestedTime,
       slotId: bookings.slotId,
+      applicantSlotId: bookings.applicantSlotId,
+      slotStart: slots.startTime,
+      slotEnd: slots.endTime,
+      interviewerNumber: slots.interviewerNumber,
+      applicantSlotStart: applicantSlots.startTime,
+      applicantSlotEnd: applicantSlots.endTime,
     })
     .from(bookings)
+    .leftJoin(slots, eq(bookings.slotId, slots.id))
+    .leftJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
     .where(eq(bookings.recruiterId, recruiter.id))
-    .orderBy(bookings.requestedTime, bookings.createdAt);
+    .orderBy(slots.startTime, applicantSlots.startTime, bookings.requestedTime, bookings.createdAt);
 
   const [config] = await db
     .select({

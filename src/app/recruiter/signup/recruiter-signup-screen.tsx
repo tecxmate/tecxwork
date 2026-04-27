@@ -89,7 +89,7 @@ export function RecruiterSignupScreen() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || messages.signup.errors.signupFailed);
 
-      router.push("/dashboard");
+      router.push("/dashboard/interviews");
       router.refresh();
     } catch (err) {
       setError(

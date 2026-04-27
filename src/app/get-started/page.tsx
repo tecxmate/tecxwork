@@ -33,7 +33,7 @@ export default async function GetStartedPage() {
   const messages = getStudentMessages(locale);
   if (session) {
     if (session.role === "admin") redirect("/admin");
-    if (session.role === "recruiter") redirect("/dashboard");
+    if (session.role === "recruiter") redirect("/dashboard/interviews");
     if (session.role === "applicant") redirect("/browse");
   }
 

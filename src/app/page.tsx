@@ -116,7 +116,7 @@ export default async function LandingPage() {
     ? session.role === "admin"
       ? "/admin"
       : session.role === "recruiter"
-        ? "/dashboard"
+        ? "/dashboard/interviews"
         : "/browse"
     : null;
 
