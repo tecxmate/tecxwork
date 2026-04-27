@@ -3,6 +3,7 @@ import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { sendRejectionEmail } from "@/lib/email";
+import { createBookingNotification } from "@/lib/notifications";
 
 /**
  * DELETE /api/bookings/[id] — cancel a booking.
@@ -93,6 +94,15 @@ export async function DELETE(
         company: rec.company,
         recruiterNote: note,
         action: "cancelled",
+      }).catch(() => {});
+
+      createBookingNotification({
+        recipientEmail: booking.applicantEmail,
+        recipientRole: "applicant",
+        status: "cancelled",
+        companyName: rec.company,
+        position: booking.position ?? undefined,
+        note,
       }).catch(() => {});
     }
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, recruiters } from "@/lib/db";
 import { eq, and, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { sendBookingEmails, sendRejectionEmail } from "@/lib/email";
+import { sendBookingEmails, sendRejectionEmail, sendWaitlistEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { users } from "@/lib/db";
 
@@ -100,6 +100,13 @@ export async function PUT(req: NextRequest) {
         .where(eq(recruiters.id, recruiter.id));
 
       if (rec) {
+        sendWaitlistEmail({
+          applicantName: booking.applicantName,
+          applicantEmail: booking.applicantEmail,
+          company: rec.company,
+          position: booking.position ?? undefined,
+        }).catch(() => {});
+
         createBookingNotification({
           recipientEmail: booking.applicantEmail,
           recipientRole: "applicant",
