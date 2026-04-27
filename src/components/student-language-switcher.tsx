@@ -23,7 +23,7 @@ export function StudentLanguageSwitcher({
       className={
         vertical
           ? "flex w-full flex-col gap-1"
-          : "inline-flex h-9 items-center gap-1 rounded-lg border border-border bg-background/80 p-0.5"
+          : "flex h-9 w-full sm:w-auto items-center gap-1 rounded-lg bg-muted p-0.5 shadow-inner"
       }
       aria-label={messages.language.switchLabel}
     >
@@ -33,8 +33,8 @@ export function StudentLanguageSwitcher({
         className={[
           vertical
             ? "h-10 w-full justify-start rounded-xl px-3 text-sm"
-            : "h-8 min-w-9 justify-center px-2 text-xs",
-          locale === "en" ? "bg-primary/10 text-primary hover:bg-primary/10" : "",
+            : "h-8 flex-1 sm:flex-none justify-center px-2 text-xs rounded-md",
+          locale === "en" ? "bg-background shadow-sm text-primary hover:bg-background" : "hover:bg-background/50",
         ].join(" ")}
         onClick={() => updateLocale("en")}
       >
@@ -46,8 +46,8 @@ export function StudentLanguageSwitcher({
         className={[
           vertical
             ? "h-10 w-full justify-start rounded-xl px-3 text-sm"
-            : "h-8 min-w-9 justify-center px-2 text-xs",
-          locale === "vi" ? "bg-primary/10 text-primary hover:bg-primary/10" : "",
+            : "h-8 flex-1 sm:flex-none justify-center px-2 text-xs rounded-md",
+          locale === "vi" ? "bg-background shadow-sm text-primary hover:bg-background" : "hover:bg-background/50",
         ].join(" ")}
         onClick={() => updateLocale("vi")}
       >
@@ -59,8 +59,8 @@ export function StudentLanguageSwitcher({
         className={[
           vertical
             ? "h-10 w-full justify-start rounded-xl px-3 text-sm"
-            : "h-8 min-w-9 justify-center px-2 text-xs",
-          locale === "zh-TW" ? "bg-primary/10 text-primary hover:bg-primary/10" : "",
+            : "h-8 flex-1 sm:flex-none justify-center px-2 text-xs rounded-md",
+          locale === "zh-TW" ? "bg-background shadow-sm text-primary hover:bg-background" : "hover:bg-background/50",
         ].join(" ")}
         onClick={() => updateLocale("zh-TW")}
       >
