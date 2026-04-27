@@ -369,6 +369,7 @@ export const studentEnMessages = {
       title: "Admin QR Code",
       subtitle: "Scan to open this event portal quickly.",
       exportCsv: "Export CSV",
+      sendReminders: "Send Reminders",
     },
     stats: {
       recruiters: "Recruiters",

@@ -289,6 +289,7 @@ export const studentZhTwMessages = {
       title: "管理端 QR Code",
       subtitle: "掃描快速開啟活動入口。",
       exportCsv: "匯出 CSV",
+      sendReminders: "發送提醒",
     },
     stats: {
       ...studentEnMessages.admin.stats,

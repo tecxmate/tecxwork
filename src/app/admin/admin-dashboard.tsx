@@ -26,6 +26,7 @@ import {
   ArrowDown,
   Search,
   Mail,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -182,6 +183,11 @@ export function AdminDashboard({
   const [emailStats, setEmailStats] = useState<{
     today: { sent: number; failed: number; limit: number; remaining: number; percentUsed: number };
     month: { sent: number; limit: number; remaining: number; percentUsed: number };
+  } | null>(null);
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const [reminderResult, setReminderResult] = useState<{
+    studentsSent: number;
+    recruitersSent: number;
   } | null>(null);
 
   // Fetch email stats
@@ -539,7 +545,27 @@ export function AdminDashboard({
               subtitle={admin.qr.subtitle}
               size={140}
             />
-            <div className="flex sm:self-end">
+            <div className="flex flex-col gap-2 sm:flex-row sm:self-end">
+              <button
+                onClick={async () => {
+                  setSendingReminders(true);
+                  setReminderResult(null);
+                  try {
+                    const res = await fetch("/api/admin/send-reminders", { method: "POST" });
+                    const data = await res.json();
+                    if (data.ok) {
+                      setReminderResult({ studentsSent: data.studentsSent, recruitersSent: data.recruitersSent });
+                    }
+                  } finally {
+                    setSendingReminders(false);
+                  }
+                }}
+                disabled={sendingReminders}
+                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {sendingReminders ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {admin.qr.sendReminders ?? "Send Reminders"}
+              </button>
               <a
                 href="/api/admin/export"
                 className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
@@ -548,6 +574,11 @@ export function AdminDashboard({
                 {admin.qr.exportCsv}
               </a>
             </div>
+            {reminderResult && (
+              <div className="rounded-lg border border-[#30D158]/30 bg-[#30D158]/10 p-3 text-sm">
+                ✓ Sent reminders to {reminderResult.studentsSent} students and {reminderResult.recruitersSent} recruiters
+              </div>
+            )}
           </div>
 
           <Separator />

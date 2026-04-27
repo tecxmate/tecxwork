@@ -226,3 +226,184 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
     await logEmail(data.action, data.applicantEmail, subject, false, String(err));
   }
 }
+
+type StudentReminderData = {
+  name: string;
+  email: string;
+  interviews: Array<{
+    company: string;
+    time: Date;
+    recruiterEmail: string;
+  }>;
+};
+
+/**
+ * Send interview reminder email to a student with their schedule.
+ */
+export async function sendStudentReminderEmail(data: StudentReminderData) {
+  const resend = getResend();
+  if (!resend) {
+    console.log("RESEND_API_KEY not set — skipping student reminder email");
+    return false;
+  }
+
+  const subject = `Interview Reminder — ${EVENT_CONFIG.displayDate}`;
+  const interviewRows = data.interviews
+    .map((i) => {
+      const timeStr = i.time.toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: EVENT_CONFIG.timezone,
+      });
+      return `<tr>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${i.company}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${timeStr}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="mailto:${i.recruiterEmail}" style="color: #8C52FF;">${i.recruiterEmail}</a></td>
+      </tr>`;
+    })
+    .join("");
+
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: data.email,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Reminder</h2>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+            Hi ${data.name}, here's your interview schedule for the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair on <strong>${EVENT_CONFIG.displayDate}</strong>.
+          </p>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
+            <thead>
+              <tr style="background: #f8f6f4;">
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Company</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Time</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${interviewRows}
+            </tbody>
+          </table>
+
+          <div style="background: #f3eeff; border-radius: 12px; padding: 16px; margin-bottom: 24px; font-size: 13px;">
+            <strong style="color: #8C52FF;">Reminders</strong>
+            <ul style="margin: 8px 0 0; padding-left: 18px; color: #555;">
+              <li>Arrive 10 minutes early</li>
+              <li>Bring your student ID</li>
+              <li>Make sure your CV is shared with the recruiter's email</li>
+            </ul>
+          </div>
+
+          <p style="font-size: 14px; color: #666;">
+            Location: <strong>${EVENT_CONFIG.location}</strong>
+          </p>
+
+          <p style="font-size: 12px; color: #999; margin-top: 32px;">
+            ${EVENT_CONFIG.name}<br>
+            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+          </p>
+        </div>
+      `,
+    });
+    await logEmail("student_reminder", data.email, subject, true);
+    return true;
+  } catch (err) {
+    console.error("Failed to send student reminder email:", err);
+    await logEmail("student_reminder", data.email, subject, false, String(err));
+    return false;
+  }
+}
+
+type RecruiterReminderData = {
+  name: string;
+  email: string;
+  company: string;
+  interviews: Array<{
+    applicantName: string;
+    applicantEmail: string;
+    time: Date;
+    cvLink: string;
+  }>;
+};
+
+/**
+ * Send interview reminder email to a recruiter with their schedule.
+ */
+export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
+  const resend = getResend();
+  if (!resend) {
+    console.log("RESEND_API_KEY not set — skipping recruiter reminder email");
+    return false;
+  }
+
+  const subject = `Interview Schedule — ${data.interviews.length} interviews on ${EVENT_CONFIG.displayDate}`;
+  const interviewRows = data.interviews
+    .map((i) => {
+      const timeStr = i.time.toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: EVENT_CONFIG.timezone,
+      });
+      return `<tr>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${timeStr}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${i.applicantName}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="mailto:${i.applicantEmail}" style="color: #8C52FF;">${i.applicantEmail}</a></td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="${i.cvLink}" target="_blank" style="color: #8C52FF;">View CV</a></td>
+      </tr>`;
+    })
+    .join("");
+
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: data.email,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 700px; margin: 0 auto; padding: 32px 20px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Schedule</h2>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+            Hi ${data.name}, here's your interview schedule for <strong>${data.company}</strong> at the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair on <strong>${EVENT_CONFIG.displayDate}</strong>.
+          </p>
+
+          <div style="background: #30D158; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 16px; font-weight: 600;">
+            ${data.interviews.length} interview${data.interviews.length > 1 ? "s" : ""} scheduled
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
+            <thead>
+              <tr style="background: #f8f6f4;">
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Time</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Candidate</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Email</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">CV</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${interviewRows}
+            </tbody>
+          </table>
+
+          <p style="font-size: 14px; color: #666;">
+            Location: <strong>${EVENT_CONFIG.location}</strong>
+          </p>
+
+          <p style="font-size: 12px; color: #999; margin-top: 32px;">
+            ${EVENT_CONFIG.name}<br>
+            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+          </p>
+        </div>
+      `,
+    });
+    await logEmail("recruiter_reminder", data.email, subject, true);
+    return true;
+  } catch (err) {
+    console.error("Failed to send recruiter reminder email:", err);
+    await logEmail("recruiter_reminder", data.email, subject, false, String(err));
+    return false;
+  }
+}
