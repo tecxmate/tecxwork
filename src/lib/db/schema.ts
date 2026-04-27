@@ -335,3 +335,15 @@ export const crawlLogs = pgTable("crawl_logs", {
   durationMs: integer("duration_ms"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ---- Email tracking ----
+
+export const emailLogs = pgTable("email_logs", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // booking_confirmation, rejection, rescheduling, verification, etc.
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject"),
+  success: boolean("success").notNull().default(true),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

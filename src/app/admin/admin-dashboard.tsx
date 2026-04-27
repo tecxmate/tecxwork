@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ import {
   ArrowUp,
   ArrowDown,
   Search,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -178,6 +179,18 @@ export function AdminDashboard({
   const [homepageImages, setHomepageImages] = useState<string[]>(initialHomepageImages ?? []);
   const [hpSaving, setHpSaving] = useState(false);
   const [hpSaved, setHpSaved] = useState(false);
+  const [emailStats, setEmailStats] = useState<{
+    today: { sent: number; failed: number; limit: number; remaining: number; percentUsed: number };
+    month: { sent: number; limit: number; remaining: number; percentUsed: number };
+  } | null>(null);
+
+  // Fetch email stats
+  useEffect(() => {
+    fetch("/api/admin/email-stats")
+      .then((res) => res.json())
+      .then((data) => setEmailStats(data))
+      .catch(() => {});
+  }, []);
 
   // Domain form
   const [newDomain, setNewDomain] = useState("");
@@ -450,6 +463,73 @@ export function AdminDashboard({
               </Card>
             ))}
           </div>
+
+          {/* Email Usage Stats */}
+          {emailStats && (
+            <Card>
+              <CardContent className="py-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold">{admin.emailStats?.title ?? "Email Usage (Resend)"}</h3>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{admin.emailStats?.dailyUsage ?? "Daily"}</span>
+                      <span className="font-medium">
+                        {emailStats.today.sent} / {emailStats.today.limit}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className={cn(
+                          "h-full transition-all",
+                          emailStats.today.percentUsed >= 90
+                            ? "bg-red-500"
+                            : emailStats.today.percentUsed >= 70
+                            ? "bg-yellow-500"
+                            : "bg-green-500"
+                        )}
+                        style={{ width: `${Math.min(100, emailStats.today.percentUsed)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {emailStats.today.remaining} {admin.emailStats?.remaining ?? "remaining"} ({emailStats.today.percentUsed}% {admin.emailStats?.used ?? "used"})
+                      {emailStats.today.failed > 0 && (
+                        <span className="ml-2 text-red-500">
+                          {emailStats.today.failed} {admin.emailStats?.failed ?? "failed"}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{admin.emailStats?.monthlyUsage ?? "Monthly"}</span>
+                      <span className="font-medium">
+                        {emailStats.month.sent} / {emailStats.month.limit}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className={cn(
+                          "h-full transition-all",
+                          emailStats.month.percentUsed >= 90
+                            ? "bg-red-500"
+                            : emailStats.month.percentUsed >= 70
+                            ? "bg-yellow-500"
+                            : "bg-green-500"
+                        )}
+                        style={{ width: `${Math.min(100, emailStats.month.percentUsed)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {emailStats.month.remaining} {admin.emailStats?.remaining ?? "remaining"} ({emailStats.month.percentUsed}% {admin.emailStats?.used ?? "used"})
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Tools: QR + Export */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -887,11 +967,12 @@ function JobModerationSection({
       return score(a) - score(b);
     });
 
+  // Design system status colors for job moderation
   const statusStyles: Record<string, string> = {
-    draft: "bg-slate-100 text-slate-700",
-    pending_review: "bg-amber-100 text-amber-800",
-    approved: "bg-green-100 text-green-700",
-    rejected: "bg-red-100 text-red-700",
+    draft: "bg-slate-100 text-slate-600",
+    pending_review: "bg-[#FF9500]/15 text-[#FF9500]", // WARNING orange
+    approved: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
+    rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
   };
   const statusLabels: Record<string, string> = {
     draft: admin.moderation.status.draft,
@@ -1355,12 +1436,13 @@ function BookingsTable({
   const admin = messages.admin;
   const localeTag =
     locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
+  // Design system status colors
   const statusColor: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-    accepted: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    waitlisted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-    rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-    cancelled: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+    pending: "bg-[#FF9500]/15 text-[#FF9500]", // WARNING orange
+    accepted: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
+    waitlisted: "bg-[#8C52FF]/15 text-[#8C52FF]", // INFO purple
+    rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
+    cancelled: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
   };
   const statusLabel: Record<string, string> = {
     pending: admin.bookings.status.pending,

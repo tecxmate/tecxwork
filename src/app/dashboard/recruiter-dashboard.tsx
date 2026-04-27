@@ -289,12 +289,13 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const waitlisted = items.filter((b) => b.status === "waitlisted");
   const other = items.filter((b) => b.status === "rejected" || b.status === "cancelled");
 
+  // Design system status colors
   const statusColor: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-    accepted: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    waitlisted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-    rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-    cancelled: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+    pending: "bg-[#FF9500]/15 text-[#FF9500]", // WARNING orange
+    accepted: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
+    waitlisted: "bg-[#8C52FF]/15 text-[#8C52FF]", // INFO purple
+    rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
+    cancelled: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
   };
 
   function renderBooking(b: Booking) {
@@ -304,7 +305,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     const isActing = acting === b.id;
 
     return (
-      <Card key={b.id} className={isPending ? "border-yellow-300/50" : ""}>
+      <Card key={b.id} className={isPending ? "border-[#FF9500]/30" : ""}>
         <CardContent className="py-4">
           <div className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3">
@@ -352,7 +353,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   size="sm"
                   disabled={isActing}
                   onClick={() => handleReview(b.id, "accept")}
-                  className="h-8 bg-green-600 text-white hover:bg-green-700"
+                  className="h-8 bg-[#30D158] text-white hover:bg-[#30D158]/90"
                 >
                   {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
                   {messages.dashboard.bookings.accept}
@@ -373,7 +374,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   variant="outline"
                   disabled={isActing}
                   onClick={() => openRejectModal(b.id, b.applicantName, "reject")}
-                  className="h-8 text-destructive hover:bg-destructive/10"
+                  className="h-8 text-[#D70015] border-[#D70015]/30 hover:bg-[#D70015]/10"
                 >
                   {messages.dashboard.bookings.reject}
                 </Button>
@@ -401,7 +402,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {pending.length > 0 && (
         <div>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 text-[10px] font-bold text-yellow-700">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF9500]/15 text-[10px] font-bold text-[#FF9500]">
               {pending.length}
             </span>
             {messages.dashboard.bookings.pendingReview}
@@ -413,7 +414,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Accepted */}
       {accepted.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-green-700 dark:text-green-400">
+          <h3 className="mb-2 text-sm font-semibold text-[#30D158]">
             {messages.dashboard.bookings.accepted} ({accepted.length})
           </h3>
           <div className="space-y-2">{accepted.map(renderBooking)}</div>
@@ -423,7 +424,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Waitlisted */}
       {waitlisted.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
+          <h3 className="mb-2 text-sm font-semibold text-[#8C52FF]">
             {messages.dashboard.bookings.waitlisted} ({waitlisted.length})
           </h3>
           <div className="space-y-2">{waitlisted.map(renderBooking)}</div>

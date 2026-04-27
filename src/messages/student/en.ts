@@ -377,6 +377,14 @@ export const studentEnMessages = {
       available: "Available",
       bookings: "Bookings",
     },
+    emailStats: {
+      title: "Email Usage (Resend Free Tier)",
+      dailyUsage: "Daily",
+      monthlyUsage: "Monthly",
+      remaining: "remaining",
+      used: "used",
+      failed: "failed",
+    },
     eventMode: {
       title: "Event Mode",
       locked: "Locked",

@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { EVENT_CONFIG } from "@/lib/data";
+import { db, emailLogs } from "@/lib/db";
 
 export function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -8,6 +9,29 @@ export function getResend(): Resend | null {
 }
 
 export const EMAIL_FROM = process.env.EMAIL_FROM ?? "TECXWORK <onboarding@resend.dev>";
+
+/**
+ * Log an email send attempt for tracking purposes.
+ */
+async function logEmail(
+  type: string,
+  recipientEmail: string,
+  subject: string | undefined,
+  success: boolean,
+  errorMessage?: string
+) {
+  try {
+    await db.insert(emailLogs).values({
+      type,
+      recipientEmail,
+      subject,
+      success,
+      errorMessage,
+    });
+  } catch (err) {
+    console.error("Failed to log email:", err);
+  }
+}
 
 type BookingEmailData = {
   applicantName: string;
@@ -52,11 +76,12 @@ export async function sendBookingEmails(data: BookingEmailData) {
       : data.company;
 
   // Email to applicant
+  const applicantSubject = `Interview Confirmed — ${data.company} on ${timeStr}`;
   try {
     const result = await resend.emails.send({
       from: EMAIL_FROM,
       to: data.applicantEmail,
-      subject: `Interview Confirmed — ${data.company} on ${timeStr}`,
+      subject: applicantSubject,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Confirmed</h2>
@@ -88,16 +113,19 @@ export async function sendBookingEmails(data: BookingEmailData) {
       `,
     });
     console.log("Applicant email result:", JSON.stringify(result));
+    await logEmail("booking_confirmation", data.applicantEmail, applicantSubject, true);
   } catch (err) {
     console.error("Failed to send applicant email:", err);
+    await logEmail("booking_confirmation", data.applicantEmail, applicantSubject, false, String(err));
   }
 
   // Email to recruiter
+  const recruiterSubject = `New Interview Booking — ${data.applicantName}`;
   try {
     const result2 = await resend.emails.send({
       from: EMAIL_FROM,
       to: data.recruiterEmail,
-      subject: `New Interview Booking — ${data.applicantName}`,
+      subject: recruiterSubject,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">New Interview Booking</h2>
@@ -126,8 +154,10 @@ export async function sendBookingEmails(data: BookingEmailData) {
       `,
     });
     console.log("Recruiter email result:", JSON.stringify(result2));
+    await logEmail("booking_notification", data.recruiterEmail, recruiterSubject, true);
   } catch (err) {
     console.error("Failed to send recruiter email:", err);
+    await logEmail("booking_notification", data.recruiterEmail, recruiterSubject, false, String(err));
   }
 }
 
@@ -190,7 +220,9 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
       `,
     });
     console.log("Rejection email result:", JSON.stringify(result));
+    await logEmail(data.action, data.applicantEmail, subject, true);
   } catch (err) {
     console.error("Failed to send rejection email:", err);
+    await logEmail(data.action, data.applicantEmail, subject, false, String(err));
   }
 }

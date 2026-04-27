@@ -344,11 +344,12 @@ export function RecruiterCompanyTab({
     rejected: messages.dashboard.company.moderationStatus.rejected,
   };
 
+  // Design system status colors
   const statusClassName: Record<string, string> = {
-    draft: "bg-slate-100 text-slate-700",
-    pending_review: "bg-amber-100 text-amber-800",
-    approved: "bg-green-100 text-green-700",
-    rejected: "bg-red-100 text-red-700",
+    draft: "bg-slate-100 text-slate-600",
+    pending_review: "bg-[#FF9500]/15 text-[#FF9500]", // WARNING orange
+    approved: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
+    rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
   };
 
   function renderJobForm({
