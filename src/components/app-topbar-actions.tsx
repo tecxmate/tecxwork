@@ -58,7 +58,7 @@ export function AppTopBarActions({
           />
           <div
             role="menu"
-            className="absolute right-0 top-11 z-50 flex w-[calc(100vw-2rem)] max-w-sm flex-col items-stretch gap-1 rounded-xl border border-border bg-background/80 p-1.5 text-sm shadow-2xl backdrop-blur-xl animate-fade-in-scale stagger-fade-in sm:w-80"
+            className="absolute right-0 top-11 z-50 flex w-[280px] flex-col items-stretch gap-1 rounded-xl border border-border bg-background/80 p-1.5 text-sm shadow-2xl backdrop-blur-xl animate-fade-in-scale stagger-fade-in sm:w-80"
           >
             {mobileItems.map((item, index) => (
               <div key={index} className="flex w-full flex-col items-stretch gap-1">

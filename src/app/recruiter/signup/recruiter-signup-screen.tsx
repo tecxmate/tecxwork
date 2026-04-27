@@ -112,7 +112,7 @@ export function RecruiterSignupScreen() {
             <ArrowLeft className="h-4 w-4" />
             {messages.common.back}
           </Link>
-          <RecruiterLanguageSwitcher />
+          <RecruiterLanguageSwitcher className="sm:w-32" />
         </div>
       </header>
 

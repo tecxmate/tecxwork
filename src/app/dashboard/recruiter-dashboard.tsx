@@ -152,7 +152,7 @@ export function RecruiterDashboard({
         notificationLabels={messages.notifications}
         desktopActions={
           <>
-            <RecruiterLanguageSwitcher />
+            <RecruiterLanguageSwitcher className="sm:w-32" />
             <button
               onClick={handleLogout}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-muted-foreground transition-premium hover:bg-muted/55 hover:text-foreground"

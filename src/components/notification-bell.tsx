@@ -296,7 +296,7 @@ export function NotificationBell({
       <div className="flex w-full flex-col">
         <button
           onClick={() => setOpen(!open)}
-          className="flex w-full items-center justify-between rounded-md px-3 py-2.5 transition-colors hover:bg-muted"
+          className="flex w-full items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-muted"
           aria-label={labels.notifications}
         >
           <div className="flex items-center gap-3 text-muted-foreground">
@@ -331,7 +331,7 @@ export function NotificationBell({
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border bg-card shadow-lg sm:w-96">
+          <div className="absolute right-0 top-full z-50 mt-2 w-[280px] overflow-hidden rounded-xl border bg-card shadow-lg sm:w-80">
             {panel}
           </div>
         </>

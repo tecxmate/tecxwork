@@ -3,11 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import type { StudentLocale } from "@/lib/student-messages";
+import { cn } from "@/lib/utils";
 
 export function StudentLanguageSwitcher({
   orientation = "horizontal",
+  className,
 }: {
   orientation?: "horizontal" | "vertical";
+  className?: string;
 }) {
   const { locale, setLocale, messages } = useStudentI18n();
   const vertical = orientation === "vertical";
@@ -22,8 +25,8 @@ export function StudentLanguageSwitcher({
     <div
       className={
         vertical
-          ? "flex w-full flex-col gap-1"
-          : "grid h-9 w-full sm:w-48 grid-cols-3 items-center gap-1 rounded-lg bg-muted p-0.5 shadow-inner"
+          ? cn("flex w-full flex-col gap-1", className)
+          : cn("grid h-9 w-full grid-cols-3 items-center gap-1 rounded-lg bg-muted p-0.5 shadow-inner", className)
       }
       aria-label={messages.language.switchLabel}
     >

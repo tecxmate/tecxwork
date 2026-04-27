@@ -46,14 +46,14 @@ export function AppTopBarAccountActions({
   return (
     <div className="flex w-full flex-col gap-1">
       {signedIn ? (
-        <div className="flex w-full items-center justify-between px-3 py-1 text-sm font-medium">
+        <div className="flex w-full items-center justify-between px-2 py-2 text-sm font-medium">
           <div className="flex items-center gap-3 text-muted-foreground">
             <UserRound className="h-4 w-4" />
             <span>{statusLabel}</span>
           </div>
           <button
             type="button"
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-destructive transition-colors hover:bg-destructive/10"
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-destructive transition-colors hover:bg-destructive/10"
             onClick={handleLogout}
           >
             {logoutLabel}
@@ -62,7 +62,7 @@ export function AppTopBarAccountActions({
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground">
+          <div className="flex items-center gap-3 rounded-md px-2 py-2 text-sm font-medium text-muted-foreground">
             <UserRound className="h-4 w-4" />
             <span>{statusLabel}</span>
           </div>
@@ -70,7 +70,7 @@ export function AppTopBarAccountActions({
           <div className="flex w-full flex-col gap-1">
             <Link
               href="/login"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               <LogIn className="h-4 w-4" />
               {loginLabel}
@@ -78,7 +78,7 @@ export function AppTopBarAccountActions({
             <div className="my-0.5 h-px w-full bg-border" />
             <Link
               href="/get-started"
-              className="flex w-full items-center justify-center rounded-md bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="flex w-full items-center justify-center rounded-md bg-primary px-2 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {signupLabel}
             </Link>

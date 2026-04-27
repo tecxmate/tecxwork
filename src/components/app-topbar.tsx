@@ -69,12 +69,12 @@ export function AppTopBar({
                   {desktopActions}
                   {showNotifications ? <NotificationBell labels={notificationLabels} /> : null}
                   <ThemeToggle />
-                  {showStudentLanguageSwitcher ? <StudentLanguageSwitcher /> : null}
+                  {showStudentLanguageSwitcher ? <StudentLanguageSwitcher className="sm:w-48" /> : null}
                 </>
               }
               mobileChildren={
                 <>
-                  <div className="flex items-center gap-3 px-1 py-1">
+                  <div className="flex items-center gap-3 px-2 py-2">
                     <ThemeToggle />
                     {showStudentLanguageSwitcher ? (
                       <div className="flex-1">
@@ -86,13 +86,13 @@ export function AppTopBar({
                       </div>
                     ) : null}
                   </div>
-                  {showActionsOnMobile && !mobileActions ? (
-                    <div className="px-1 py-1">
+                  {showActionsOnMobile && !mobileActions && desktopActions ? (
+                    <div className="px-2 py-2">
                       {desktopActions}
                     </div>
                   ) : null}
                   {isGuest && desktopActions ? (
-                    <div className="flex items-center justify-end gap-3 px-3 py-2">
+                    <div className="flex items-center justify-end gap-3 px-2 py-2">
                       {desktopActions}
                     </div>
                   ) : null}
