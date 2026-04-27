@@ -152,17 +152,21 @@ export async function PUT(req: NextRequest) {
 
     console.log(`Force override: cancelled ${activeBookingsList.length} bookings, notified ${applicants.length} students`);
   }
-  const { startHour, endHour, endMinute, slotDuration } = body;
+  const { startHour, startMinute = 0, endHour, endMinute, slotDuration, bufferMinutes = 0 } = body;
 
   if (
     typeof startHour !== "number" ||
+    typeof startMinute !== "number" ||
     typeof endHour !== "number" ||
     typeof endMinute !== "number" ||
     typeof slotDuration !== "number" ||
+    typeof bufferMinutes !== "number" ||
     startHour < 0 || startHour > 23 ||
+    startMinute < 0 || startMinute > 59 ||
     endHour < startHour || endHour > 24 ||
     endMinute < 0 || endMinute > 59 ||
-    slotDuration < 5 || slotDuration > 120
+    slotDuration < 5 || slotDuration > 120 ||
+    bufferMinutes < 0 || bufferMinutes > 30
   ) {
     return NextResponse.json({ error: "Invalid time parameters" }, { status: 400 });
   }
@@ -177,9 +181,11 @@ export async function PUT(req: NextRequest) {
     .update(eventConfig)
     .set({
       startHour,
+      startMinute,
       endHour,
       endMinute,
       slotDurationMinutes: slotDuration,
+      bufferMinutes,
     })
     .where(eq(eventConfig.id, config.id));
 
@@ -218,8 +224,10 @@ export async function PUT(req: NextRequest) {
       interviewerNumber: number;
     }[] = [];
 
+    const slotInterval = slotDuration + bufferMinutes;
     for (let h = startHour; h <= endHour; h++) {
-      for (let m = 0; m < 60; m += slotDuration) {
+      const minStart = h === startHour ? startMinute : 0;
+      for (let m = minStart; m < 60; m += slotInterval) {
         if (h === endHour && m >= endMinute) break;
         if (h > endHour) break;
 
@@ -251,9 +259,11 @@ export async function PUT(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     startHour,
+    startMinute,
     endHour,
     endMinute,
     slotDuration,
+    bufferMinutes,
     slotsRegenerated: totalCreated,
   });
 }

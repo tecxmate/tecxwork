@@ -10,6 +10,8 @@ import {
   Users,
   Calendar,
   BookOpen,
+  Briefcase,
+  ChevronDown,
   Clock,
   LogOut,
   GraduationCap,
@@ -36,7 +38,12 @@ import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SiteFooter } from "@/components/site-footer";
-import { QRCard } from "@/components/qr-code";
+import dynamic from "next/dynamic";
+
+const QRCard = dynamic(() => import("@/components/qr-code").then((m) => m.QRCard), {
+  ssr: false,
+  loading: () => <div className="h-[120px] w-[120px] animate-pulse rounded-lg bg-muted" />,
+});
 import { MultiImageUpload } from "@/components/image-upload";
 import { AppTopBar } from "@/components/app-topbar";
 import { useStudentI18n } from "@/components/student-locale-provider";
@@ -169,7 +176,7 @@ export function AdminDashboard({
   initialOnboardingMode: OnboardingMode;
   initialJobModerationEnabled: boolean;
   initialLocked: boolean;
-  timeFrame: { startHour: number; endHour: number; endMinute: number; slotDuration: number };
+  timeFrame: { startHour: number; startMinute: number; endHour: number; endMinute: number; slotDuration: number; bufferMinutes: number };
   initialHomepageImages: string[];
   section: AdminSection;
 }) {
@@ -198,6 +205,7 @@ export function AdminDashboard({
   const [homepageImages, setHomepageImages] = useState<string[]>(initialHomepageImages ?? []);
   const [hpSaving, setHpSaving] = useState(false);
   const [hpSaved, setHpSaved] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [emailStats, setEmailStats] = useState<{
     today: { sent: number; failed: number; limit: number; remaining: number; percentUsed: number };
     month: { sent: number; limit: number; remaining: number; percentUsed: number };
@@ -213,7 +221,7 @@ export function AdminDashboard({
     fetch("/api/admin/email-stats")
       .then((res) => res.json())
       .then((data) => setEmailStats(data))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Domain form
@@ -254,12 +262,12 @@ export function AdminDashboard({
     },
   ];
 
+  const bookedSlots = stats.totalSlots - stats.availableSlots;
   const statsCards = [
     { label: admin.stats.recruiters, value: stats.totalRecruiters, icon: Users },
     { label: admin.stats.students, value: stats.totalApplicants, icon: GraduationCap },
-    { label: admin.stats.slots, value: stats.totalSlots, icon: Calendar },
-    { label: admin.stats.available, value: stats.availableSlots, icon: Clock },
-    { label: admin.stats.bookings, value: stats.totalBookings, icon: BookOpen },
+    { label: admin.stats.slots, value: `${bookedSlots}/${stats.totalSlots}`, icon: Calendar },
+    { label: "Booking Requests", value: stats.totalBookings, icon: Briefcase },
   ];
 
   async function handleLogout() {
@@ -481,470 +489,341 @@ export function AdminDashboard({
         <div className="mx-auto max-w-6xl space-y-8">
           {section === "overview" ? (
             <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
-            {statsCards.map((stat) => (
-              <Card key={stat.label}>
-                <CardContent className="flex items-center gap-3 py-3 sm:gap-4 sm:py-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary sm:h-10 sm:w-10">
-                    <stat.icon className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold sm:text-2xl">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Email Usage Stats */}
-          {emailStats && (
-            <Card>
-              <CardContent className="py-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <h3 className="text-sm font-semibold">{admin.emailStats?.title ?? "Email Usage (Resend)"}</h3>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{admin.emailStats?.dailyUsage ?? "Daily"}</span>
-                      <span className="font-medium">
-                        {emailStats.today.sent} / {emailStats.today.limit}
-                      </span>
+              {/* Stats + Quick Actions Row */}
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                  {statsCards.map((stat) => (
+                    <div key={stat.label} className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
+                      <stat.icon className="h-4 w-4 text-primary" />
+                      <span className="text-lg font-bold">{stat.value}</span>
+                      <span className="text-xs text-muted-foreground">{stat.label}</span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                      <div
-                        className={cn(
-                          "h-full transition-all",
-                          emailStats.today.percentUsed >= 90
-                            ? "bg-red-500"
-                            : emailStats.today.percentUsed >= 70
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
-                        )}
-                        style={{ width: `${Math.min(100, emailStats.today.percentUsed)}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {emailStats.today.remaining} {admin.emailStats?.remaining ?? "remaining"} ({emailStats.today.percentUsed}% {admin.emailStats?.used ?? "used"})
-                      {emailStats.today.failed > 0 && (
-                        <span className="ml-2 text-red-500">
-                          {emailStats.today.failed} {admin.emailStats?.failed ?? "failed"}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{admin.emailStats?.monthlyUsage ?? "Monthly"}</span>
-                      <span className="font-medium">
-                        {emailStats.month.sent} / {emailStats.month.limit}
-                      </span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                      <div
-                        className={cn(
-                          "h-full transition-all",
-                          emailStats.month.percentUsed >= 90
-                            ? "bg-red-500"
-                            : emailStats.month.percentUsed >= 70
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
-                        )}
-                        style={{ width: `${Math.min(100, emailStats.month.percentUsed)}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {emailStats.month.remaining} {admin.emailStats?.remaining ?? "remaining"} ({emailStats.month.percentUsed}% {admin.emailStats?.used ?? "used"})
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Tools: QR + Export */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <QRCard
-              value={typeof window !== "undefined" ? window.location.origin : ""}
-              title={admin.qr.title}
-              subtitle={admin.qr.subtitle}
-              size={140}
-            />
-            <div className="flex flex-col gap-2 sm:flex-row sm:self-end">
-              <button
-                onClick={async () => {
-                  setSendingReminders(true);
-                  setReminderResult(null);
-                  try {
-                    const res = await fetch("/api/admin/send-reminders", { method: "POST" });
-                    const data = await res.json();
-                    if (data.ok) {
-                      setReminderResult({ studentsSent: data.studentsSent, recruitersSent: data.recruitersSent });
-                    }
-                  } finally {
-                    setSendingReminders(false);
-                  }
-                }}
-                disabled={sendingReminders}
-                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {sendingReminders ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {admin.qr.sendReminders ?? "Send Reminders"}
-              </button>
-              <a
-                href="/api/admin/export"
-                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
-              >
-                <Download className="h-4 w-4" />
-                {admin.qr.exportCsv}
-              </a>
-            </div>
-            {reminderResult && (
-              <div className="rounded-lg border border-[#30D158]/30 bg-[#30D158]/10 p-3 text-sm">
-                ✓ Sent reminders to {reminderResult.studentsSent} students and {reminderResult.recruitersSent} recruiters
-              </div>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Settings Section */}
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-muted-foreground" />
-                <h2 className="font-heading text-lg font-semibold">
-                  {admin.eventMode.title}
-                </h2>
-                {saving && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {messages.common.saving}
-                  </span>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Event Mode */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-1">
-                  <label className="text-sm font-medium">Booking Mode</label>
-                  <p className="text-xs text-muted-foreground">
-                    {modes.find((m) => m.value === mode)?.desc}
-                  </p>
-                </div>
-                <select
-                  value={mode}
-                  onChange={(e) => handleModeChange(e.target.value)}
-                  disabled={locked || saving}
-                  className="h-9 min-w-[180px] rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {modes.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
                   ))}
-                </select>
-              </div>
-
-              <Separator />
-
-              {/* Lock Mode */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-1">
-                  <label className="text-sm font-medium">
-                    {locked ? admin.eventMode.locked : admin.eventMode.unlocked}
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    {admin.eventMode.modeLockedHint}
-                  </p>
-                </div>
-                <Switch
-                  checked={locked}
-                  onCheckedChange={handleToggleLock}
-                  disabled={saving}
-                />
-              </div>
-
-              <Separator />
-
-              {/* Onboarding Mode */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                    <label className="text-sm font-medium">{admin.onboarding.title}</label>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {onboardingMode === "full"
-                      ? admin.onboarding.modes.full.desc
-                      : admin.onboarding.modes.minimal.desc}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={cn("text-xs", onboardingMode === "minimal" ? "text-foreground" : "text-muted-foreground")}>
-                    {admin.onboarding.modes.minimal.label}
-                  </span>
-                  <Switch
-                    checked={onboardingMode === "full"}
-                    onCheckedChange={(checked) => handleOnboardingModeChange(checked ? "full" : "minimal")}
-                    disabled={saving}
-                  />
-                  <span className={cn("text-xs", onboardingMode === "full" ? "text-foreground" : "text-muted-foreground")}>
-                    {admin.onboarding.modes.full.label}
-                  </span>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Job Moderation */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    <label className="text-sm font-medium">{admin.jobPublishing.title}</label>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {jobModerationEnabled
-                      ? admin.jobPublishing.adminReviewRequiredDesc
-                      : admin.jobPublishing.instantPublishDesc}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={cn("text-xs", !jobModerationEnabled ? "text-foreground" : "text-muted-foreground")}>
-                    {admin.jobPublishing.instantPublish}
-                  </span>
-                  <Switch
-                    checked={jobModerationEnabled}
-                    onCheckedChange={handleJobModerationToggle}
-                    disabled={saving}
-                  />
-                  <span className={cn("text-xs", jobModerationEnabled ? "text-foreground" : "text-muted-foreground")}>
-                    {admin.jobPublishing.adminReviewRequired}
-                  </span>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Homepage Images */}
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium">Homepage Images</label>
-                  <p className="text-xs text-muted-foreground">
-                    Upload up to 4 images for the homepage carousel/gallery
-                  </p>
-                </div>
-                <MultiImageUpload
-                  values={homepageImages}
-                  onChange={async (urls) => {
-                    setHomepageImages(urls);
-                    setHpSaving(true);
-                    try {
-                      await fetch("/api/admin/homepage-images", {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ homepageImages: urls }),
-                      });
-                      setHpSaved(true);
-                      setTimeout(() => setHpSaved(false), 2000);
-                    } finally {
-                      setHpSaving(false);
-                    }
-                  }}
-                  type="homepage"
-                  max={4}
-                />
-                {hpSaving && <p className="text-xs text-muted-foreground">Saving...</p>}
-                {hpSaved && <p className="text-xs text-green-600">Saved!</p>}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Separator />
-
-          {/* Time Frame */}
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-heading text-lg font-semibold">
-                {admin.timeFrame.title}
-              </h2>
-            </div>
-            <Card>
-              <CardContent className="py-4">
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    setTfSaving(true);
-                    setTfSaved(false);
-                    setTfError("");
-                    const res = await fetch("/api/admin/timeframe", {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(tf),
-                    });
-                    if (!res.ok) {
-                      const d = await res.json().catch(() => ({}));
-                      setTfError(d.error || admin.timeFrame.saveFailed);
-                    } else {
-                      setTfSaved(true);
-                      setTimeout(() => setTfSaved(false), 3000);
-                    }
-                    setTfSaving(false);
-                    router.refresh();
-                  }}
-                  className="space-y-4"
-                >
-                  <div className="grid gap-3 sm:grid-cols-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">
-                        {admin.timeFrame.startHour}
-                      </label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={23}
-                        value={tf.startHour}
-                        onChange={(e) => setTf({ ...tf, startHour: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">
-                        {admin.timeFrame.endHour}
-                      </label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={24}
-                        value={tf.endHour}
-                        onChange={(e) => setTf({ ...tf, endHour: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">
-                        {admin.timeFrame.endMinute}
-                      </label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={59}
-                        value={tf.endMinute}
-                        onChange={(e) => setTf({ ...tf, endMinute: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">
-                        {admin.timeFrame.slotDuration}
-                      </label>
-                      <Input
-                        type="number"
-                        min={5}
-                        max={120}
-                        value={tf.slotDuration}
-                        onChange={(e) => setTf({ ...tf, slotDuration: parseInt(e.target.value) || 15 })}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {interpolate(admin.timeFrame.eventRuns, {
-                      start: `${String(tf.startHour).padStart(2, "0")}:00`,
-                      end: `${String(tf.endHour).padStart(2, "0")}:${String(tf.endMinute).padStart(2, "0")}`,
-                      duration: tf.slotDuration,
-                    })}
-                  </p>
-
-                  {stats.activeBookings > 0 && (
-                    <div className="flex items-start gap-2 rounded-lg border border-yellow-300/50 bg-yellow-50 p-3 text-xs dark:border-yellow-800/50 dark:bg-yellow-900/10">
-                      <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-700 dark:text-yellow-400" />
-                      <p className="text-yellow-800 dark:text-yellow-300">
-                        {interpolate(admin.timeFrame.activeBookingsLocked, {
-                          count: stats.activeBookings,
-                        })}
-                      </p>
+                  {emailStats && (
+                    <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
+                      <Mail className="h-4 w-4 text-primary" />
+                      <span className={cn(
+                        "text-lg font-bold tabular-nums",
+                        emailStats.today.percentUsed >= 90 ? "text-red-500" : emailStats.today.percentUsed >= 70 ? "text-yellow-600" : ""
+                      )}>{emailStats.today.sent}/{emailStats.today.limit}</span>
+                      <span className="text-xs text-muted-foreground">Emails</span>
                     </div>
                   )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      setSendingReminders(true);
+                      setReminderResult(null);
+                      try {
+                        const res = await fetch("/api/admin/send-reminders", { method: "POST" });
+                        const data = await res.json();
+                        if (data.ok) {
+                          setReminderResult({ studentsSent: data.studentsSent, recruitersSent: data.recruitersSent });
+                        }
+                      } finally {
+                        setSendingReminders(false);
+                      }
+                    }}
+                    disabled={sendingReminders}
+                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {sendingReminders ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    {admin.qr.sendReminders ?? "Send Reminders"}
+                  </button>
+                  <a
+                    href="/api/admin/export"
+                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {admin.qr.exportCsv}
+                  </a>
+                </div>
+              </div>
+              {reminderResult && (
+                <div className="rounded-lg border border-[#30D158]/30 bg-[#30D158]/10 px-3 py-2 text-sm">
+                  ✓ Sent to {reminderResult.studentsSent} students, {reminderResult.recruitersSent} recruiters
+                </div>
+              )}
 
-                  <div className="flex items-center gap-3">
-                    {stats.activeBookings > 0 ? (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={tfSaving}
-                        size="sm"
-                        onClick={async () => {
-                          const confirmMsg = interpolate(
-                            admin.timeFrame.forceOverrideConfirm ?? "This will cancel {count} active booking(s) and notify students. Are you sure?",
-                            { count: stats.activeBookings }
-                          );
-                          if (!confirm(confirmMsg)) return;
-
-                          setTfSaving(true);
-                          setTfSaved(false);
-                          setTfError("");
-                          const res = await fetch("/api/admin/timeframe", {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ ...tf, forceOverride: true }),
-                          });
-                          if (!res.ok) {
-                            const d = await res.json().catch(() => ({}));
-                            setTfError(d.error || admin.timeFrame.saveFailed);
-                          } else {
-                            setTfSaved(true);
-                            setTimeout(() => setTfSaved(false), 3000);
-                          }
-                          setTfSaving(false);
-                          router.refresh();
-                        }}
+              {/* Settings: 2-Column Layout */}
+              <div className="grid gap-4 lg:grid-cols-2">
+                {/* Left Column: Platform Settings */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold">Platform Settings</h3>
+                      {saving && <span className="text-[10px] text-muted-foreground">{messages.common.saving}</span>}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Booking Mode */}
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="text-sm">Booking Mode</label>
+                      <select
+                        value={mode}
+                        onChange={(e) => handleModeChange(e.target.value)}
+                        disabled={locked || saving}
+                        className="h-8 rounded-md border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {tfSaving ? (
-                          <>
-                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            {messages.common.saving}
-                          </>
+                        {modes.map((m) => (
+                          <option key={m.value} value={m.value}>{m.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {/* Lock */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        {locked ? <Lock className="h-3.5 w-3.5 text-orange-500" /> : <LockOpen className="h-3.5 w-3.5 text-muted-foreground" />}
+                        <label className="text-sm">Lock Booking Mode</label>
+                      </div>
+                      <Switch checked={locked} onCheckedChange={handleToggleLock} disabled={saving} />
+                    </div>
+                    {/* Onboarding */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
+                        <label className="text-sm">Require Full Student Profile</label>
+                      </div>
+                      <Switch
+                        checked={onboardingMode === "full"}
+                        onCheckedChange={(checked) => handleOnboardingModeChange(checked ? "full" : "minimal")}
+                        disabled={saving}
+                      />
+                    </div>
+                    {/* Job Moderation */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                        <label className="text-sm">Job Posting Requires Approval</label>
+                      </div>
+                      <Switch
+                        checked={jobModerationEnabled}
+                        onCheckedChange={handleJobModerationToggle}
+                        disabled={saving}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Right Column: Scheduling */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold">{admin.timeFrame.title}</h3>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        setTfSaving(true);
+                        setTfSaved(false);
+                        setTfError("");
+                        const res = await fetch("/api/admin/timeframe", {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(tf),
+                        });
+                        if (!res.ok) {
+                          const d = await res.json().catch(() => ({}));
+                          setTfError(d.error || admin.timeFrame.saveFailed);
+                        } else {
+                          setTfSaved(true);
+                          setTimeout(() => setTfSaved(false), 3000);
+                        }
+                        setTfSaving(false);
+                        router.refresh();
+                      }}
+                      className="space-y-3"
+                    >
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground">Start</label>
+                          <input
+                            type="time"
+                            value={`${String(tf.startHour).padStart(2, "0")}:${String(tf.startMinute ?? 0).padStart(2, "0")}`}
+                            onChange={(e) => {
+                              const [h, m] = e.target.value.split(":").map(Number);
+                              setTf({ ...tf, startHour: h, startMinute: m });
+                            }}
+                            className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground">End</label>
+                          <input
+                            type="time"
+                            value={`${String(tf.endHour).padStart(2, "0")}:${String(tf.endMinute).padStart(2, "0")}`}
+                            onChange={(e) => {
+                              const [h, m] = e.target.value.split(":").map(Number);
+                              setTf({ ...tf, endHour: h, endMinute: m });
+                            }}
+                            className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground">Slot</label>
+                          <select
+                            value={tf.slotDuration}
+                            onChange={(e) => setTf({ ...tf, slotDuration: parseInt(e.target.value) })}
+                            className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          >
+                            <option value={10}>10 min</option>
+                            <option value={15}>15 min</option>
+                            <option value={20}>20 min</option>
+                            <option value={30}>30 min</option>
+                            <option value={45}>45 min</option>
+                            <option value={60}>60 min</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground">Buffer</label>
+                          <select
+                            value={tf.bufferMinutes ?? 0}
+                            onChange={(e) => setTf({ ...tf, bufferMinutes: parseInt(e.target.value) })}
+                            className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          >
+                            <option value={0}>None</option>
+                            <option value={5}>5 min</option>
+                            <option value={10}>10 min</option>
+                            <option value={15}>15 min</option>
+                          </select>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        {interpolate(admin.timeFrame.eventRuns, {
+                          start: `${String(tf.startHour).padStart(2, "0")}:${String(tf.startMinute ?? 0).padStart(2, "0")}`,
+                          end: `${String(tf.endHour).padStart(2, "0")}:${String(tf.endMinute).padStart(2, "0")}`,
+                          duration: tf.slotDuration,
+                        })}
+                      </p>
+                      {stats.activeBookings > 0 && (
+                        <div className="flex items-center gap-2 rounded border border-yellow-300/50 bg-yellow-50 px-2 py-1.5 text-[10px] dark:border-yellow-800/50 dark:bg-yellow-900/10">
+                          <Lock className="h-3 w-3 shrink-0 text-yellow-700 dark:text-yellow-400" />
+                          <span className="text-yellow-800 dark:text-yellow-300">
+                            {interpolate(admin.timeFrame.activeBookingsLocked, { count: stats.activeBookings })}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        {stats.activeBookings > 0 ? (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={tfSaving}
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={async () => {
+                              const confirmMsg = interpolate(
+                                admin.timeFrame.forceOverrideConfirm ?? "This will cancel {count} active booking(s). Continue?",
+                                { count: stats.activeBookings }
+                              );
+                              if (!confirm(confirmMsg)) return;
+                              setTfSaving(true);
+                              setTfSaved(false);
+                              setTfError("");
+                              const res = await fetch("/api/admin/timeframe", {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ ...tf, forceOverride: true }),
+                              });
+                              if (!res.ok) {
+                                const d = await res.json().catch(() => ({}));
+                                setTfError(d.error || admin.timeFrame.saveFailed);
+                              } else {
+                                setTfSaved(true);
+                                setTimeout(() => setTfSaved(false), 3000);
+                              }
+                              setTfSaving(false);
+                              router.refresh();
+                            }}
+                          >
+                            {tfSaving ? (
+                              <>
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                {messages.common.saving}
+                              </>
+                            ) : (
+                              admin.timeFrame.forceOverride ?? "Override & Cancel Bookings"
+                            )}
+                          </Button>
                         ) : (
-                          admin.timeFrame.forceOverride ?? "Override & Cancel Bookings"
+                          <Button type="submit" disabled={tfSaving} size="sm" className="h-7 text-xs">
+                            {tfSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : admin.timeFrame.saveAndRegenerate}
+                          </Button>
                         )}
-                      </Button>
-                    ) : (
-                      <Button type="submit" disabled={tfSaving} size="sm">
-                        {tfSaving ? (
-                          <>
-                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            {messages.common.saving}
-                          </>
-                        ) : (
-                          admin.timeFrame.saveAndRegenerate
-                        )}
-                      </Button>
-                    )}
-                    {tfSaved && (
-                      <span className="text-xs text-green-600">{admin.timeFrame.saved}</span>
-                    )}
-                    {tfError && (
-                      <span className="text-xs text-destructive">{tfError}</span>
-                    )}
+                        {tfSaved && <span className="text-[10px] text-green-600">{admin.timeFrame.saved}</span>}
+                        {tfError && <span className="text-[10px] text-destructive">{tfError}</span>}
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Collapsible Tools Section */}
+              <div className="rounded-lg border bg-card">
+                <button
+                  type="button"
+                  onClick={() => setToolsOpen(!toolsOpen)}
+                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
+                >
+                  <span>Tools & Media</span>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", toolsOpen && "rotate-180")} />
+                </button>
+                {toolsOpen && (
+                <div className="border-t px-4 py-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <QRCard
+                        value={typeof window !== "undefined" ? window.location.origin : ""}
+                        title={admin.qr.title}
+                        subtitle={admin.qr.subtitle}
+                        size={120}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground">Homepage Images</label>
+                      <MultiImageUpload
+                        values={homepageImages}
+                        onChange={async (urls) => {
+                          setHomepageImages(urls);
+                          setHpSaving(true);
+                          try {
+                            await fetch("/api/admin/homepage-images", {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ homepageImages: urls }),
+                            });
+                            setHpSaved(true);
+                            setTimeout(() => setHpSaved(false), 2000);
+                          } finally {
+                            setHpSaving(false);
+                          }
+                        }}
+                        type="homepage"
+                        max={4}
+                      />
+                      {hpSaving && <p className="text-[10px] text-muted-foreground">Saving...</p>}
+                      {hpSaved && <p className="text-[10px] text-green-600">Saved!</p>}
+                    </div>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+                </div>
+                )}
+              </div>
 
-          <Separator />
-
-          <PeopleSection
-            recruiters={recruiters}
-            applicants={applicants}
-            bookings={adminBookings}
-            onDeleteRecruiter={handleDeleteRecruiter}
-            onDeleteApplicant={handleDeleteApplicant}
-            onCancelBooking={handleCancelBooking}
-            initialTab="bookings"
-            showTabs={false}
-          />
+              <PeopleSection
+                recruiters={recruiters}
+                applicants={applicants}
+                bookings={adminBookings}
+                onDeleteRecruiter={handleDeleteRecruiter}
+                onDeleteApplicant={handleDeleteApplicant}
+                onCancelBooking={handleCancelBooking}
+                initialTab="bookings"
+                showTabs={false}
+              />
             </>
           ) : section === "recruiters" ? (
             <RecruitersSection
@@ -1673,13 +1552,13 @@ function BookingsTable({
                   <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">
                     {b.requestedTime
                       ? new Date(b.requestedTime).toLocaleString(localeTag, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: false,
-                          timeZone: "Asia/Taipei",
-                        })
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                        timeZone: "Asia/Taipei",
+                      })
                       : admin.people.emptyValue}
                   </td>
                   <td className="px-3 py-2.5">

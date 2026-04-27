@@ -59,9 +59,11 @@ export async function getAdminDashboardData() {
       jobModerationEnabled: eventConfig.jobModerationEnabled,
       locked: eventConfig.modeLocked,
       startHour: eventConfig.startHour,
+      startMinute: eventConfig.startMinute,
       endHour: eventConfig.endHour,
       endMinute: eventConfig.endMinute,
       slotDuration: eventConfig.slotDurationMinutes,
+      bufferMinutes: eventConfig.bufferMinutes,
       homepageImages: eventConfig.homepageImages,
     })
     .from(eventConfig)
@@ -156,9 +158,11 @@ export async function getAdminDashboardData() {
     initialLocked: config?.locked ?? false,
     timeFrame: {
       startHour: config?.startHour ?? 10,
+      startMinute: config?.startMinute ?? 0,
       endHour: config?.endHour ?? 17,
       endMinute: config?.endMinute ?? 30,
       slotDuration: config?.slotDuration ?? 15,
+      bufferMinutes: config?.bufferMinutes ?? 0,
     },
     initialHomepageImages: config?.homepageImages ?? [],
   };

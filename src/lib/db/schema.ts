@@ -310,7 +310,9 @@ export const eventConfig = pgTable("event_config", {
     .notNull()
     .default("NTUT (Taipei Tech), Taipei"),
   slotDurationMinutes: integer("slot_duration_minutes").notNull().default(15),
+  bufferMinutes: integer("buffer_minutes").notNull().default(0),
   startHour: integer("start_hour").notNull().default(10),
+  startMinute: integer("start_minute").notNull().default(0),
   endHour: integer("end_hour").notNull().default(17),
   endMinute: integer("end_minute").notNull().default(30),
   mode: eventModeEnum("mode").notNull().default("both"),
