@@ -22,7 +22,7 @@ export function RecruiterLanguageSwitcher() {
         type="button"
         variant="ghost"
         className={[
-          "h-8 flex-1 sm:flex-none justify-center px-2 text-xs rounded-md",
+          "h-8 w-8 flex-none justify-center rounded-md p-0 text-xs",
           locale === "en" ? "bg-background shadow-sm text-primary hover:bg-background" : "hover:bg-background/50",
         ].join(" ")}
         onClick={() => set("en")}
@@ -33,7 +33,7 @@ export function RecruiterLanguageSwitcher() {
         type="button"
         variant="ghost"
         className={[
-          "h-8 flex-1 sm:flex-none justify-center px-2 text-xs rounded-md",
+          "h-8 w-8 flex-none justify-center rounded-md p-0 text-xs",
           locale === "zh-TW"
             ? "bg-background shadow-sm text-primary hover:bg-background"
             : "hover:bg-background/50",
