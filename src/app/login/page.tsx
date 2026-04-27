@@ -21,6 +21,8 @@ import {
 import { SiteFooter } from "@/components/site-footer";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
+import { AppTopBarActions } from "@/components/app-topbar-actions";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type ErrorState =
   | { code: "NONE" }
@@ -115,7 +117,23 @@ export default function LoginPage() {
             {messages.common.back}
           </Link>
           <div className="ml-auto">
-            <StudentLanguageSwitcher />
+            <AppTopBarActions
+              mobileOverflow={true}
+              desktopChildren={
+                <>
+                  <ThemeToggle />
+                  <StudentLanguageSwitcher />
+                </>
+              }
+              mobileChildren={
+                <div className="flex items-center gap-2 px-1 py-1">
+                  <ThemeToggle />
+                  <div className="flex-1">
+                    <StudentLanguageSwitcher />
+                  </div>
+                </div>
+              }
+            />
           </div>
         </div>
       </header>

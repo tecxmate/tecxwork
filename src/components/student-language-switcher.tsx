@@ -23,7 +23,7 @@ export function StudentLanguageSwitcher({
       className={
         vertical
           ? "flex w-full flex-col gap-1"
-          : "flex h-9 w-full sm:w-auto items-center gap-1 rounded-lg bg-muted p-0.5 shadow-inner"
+          : "grid h-9 w-full sm:w-48 grid-cols-3 items-center gap-1 rounded-lg bg-muted p-0.5 shadow-inner"
       }
       aria-label={messages.language.switchLabel}
     >

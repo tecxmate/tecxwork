@@ -15,7 +15,7 @@ export function RecruiterLanguageSwitcher() {
 
   return (
     <div
-      className="flex h-9 w-full sm:w-auto items-center gap-1 rounded-lg bg-muted p-0.5 shadow-inner"
+      className="grid h-9 w-full sm:w-32 grid-cols-2 items-center gap-1 rounded-lg bg-muted p-0.5 shadow-inner"
       aria-label={messages.language.switchLabel}
     >
       <Button

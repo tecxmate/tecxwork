@@ -1,7 +1,7 @@
 "use client";
 
 import { Children, type ReactNode, useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 export function AppTopBarActions({
   desktopChildren,
@@ -36,13 +36,21 @@ export function AppTopBarActions({
       <div className="relative md:hidden">
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-premium hover:bg-muted hover:text-foreground"
+          className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-premium ${
+            open
+              ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/20"
+              : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
           onClick={() => setOpen((current) => !current)}
           aria-expanded={open}
           aria-haspopup="menu"
-          aria-label="Open menu"
+          aria-label={open ? "Close menu" : "Open menu"}
         >
-          <Menu className="h-4 w-4" />
+          {open ? (
+            <X className="h-4 w-4 animate-fade-in-scale" />
+          ) : (
+            <Menu className="h-4 w-4 animate-fade-in-scale" />
+          )}
         </button>
         {open ? (
           <>
@@ -54,7 +62,7 @@ export function AppTopBarActions({
             />
             <div
               role="menu"
-              className="absolute right-0 top-10 z-50 flex min-w-44 flex-col items-stretch gap-1 rounded-xl border border-border bg-background p-1.5 text-sm shadow-xl"
+              className="absolute right-0 top-11 z-50 flex w-[calc(100vw-2rem)] max-w-sm flex-col items-stretch gap-1 rounded-xl border border-border bg-background/80 p-1.5 text-sm shadow-2xl backdrop-blur-xl animate-fade-in-scale stagger-fade-in sm:w-80"
             >
               {mobileItems.map((item, index) => (
                 <div key={index} className="flex w-full flex-col items-stretch gap-1">

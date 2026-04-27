@@ -17,29 +17,41 @@ export function ThemeToggle({
   );
 
   if (!mounted) {
-    return <div className={variant === "menu" ? "h-10 w-full" : "h-8 w-8"} />;
+    return (
+      <div
+        className={
+          variant === "menu"
+            ? "h-10 w-full"
+            : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted p-0.5 shadow-inner"
+        }
+      />
+    );
   }
 
   const isDark = theme === "dark";
 
-  return (
-    <button
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={
-        variant === "menu"
-          ? "flex h-10 w-full items-center gap-2 rounded-xl px-3 text-left text-foreground transition-premium hover:bg-muted"
-          : "flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-secondary"
-      }
-      aria-label="Toggle theme"
-    >
-      {isDark ? (
-        <Sun className="h-4 w-4" />
-      ) : (
-        <Moon className="h-4 w-4" />
-      )}
-      {variant === "menu" ? (
+  if (variant === "menu") {
+    return (
+      <button
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        aria-label="Toggle theme"
+      >
+        {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         <span>{isDark ? "Light mode" : "Dark mode"}</span>
-      ) : null}
-    </button>
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted p-0.5 shadow-inner">
+      <button
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+        className="flex h-full w-full items-center justify-center rounded-md bg-background text-primary shadow-sm transition-all hover:bg-background/90"
+        aria-label="Toggle theme"
+      >
+        {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </button>
+    </div>
   );
 }

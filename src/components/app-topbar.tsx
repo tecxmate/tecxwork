@@ -47,6 +47,11 @@ export function AppTopBar({
             </div>
           ) : null}
           <div className="ml-auto flex items-center gap-2 whitespace-nowrap sm:gap-3 md:ml-0 md:justify-self-end">
+            {isGuest && desktopActions ? (
+              <div className="flex items-center gap-2 whitespace-nowrap md:hidden">
+                {desktopActions}
+              </div>
+            ) : null}
             <AppTopBarActions
               mobileOverflow={mobileOverflow}
               desktopChildren={
@@ -59,13 +64,23 @@ export function AppTopBar({
               }
               mobileChildren={
                 <>
-                  <div className="flex w-full items-center gap-2">
+                  <div className="flex items-center gap-3 px-1 py-1">
                     <ThemeToggle />
+                    {showStudentLanguageSwitcher ? (
+                      <div className="flex-1">
+                        <StudentLanguageSwitcher />
+                      </div>
+                    ) : showActionsOnMobile && mobileActions ? (
+                      <div className="flex-1">
+                        {mobileActions}
+                      </div>
+                    ) : null}
                   </div>
-                  {showStudentLanguageSwitcher ? (
-                    <StudentLanguageSwitcher />
+                  {showActionsOnMobile && !mobileActions ? (
+                    <div className="px-1 py-1">
+                      {desktopActions}
+                    </div>
                   ) : null}
-                  {showActionsOnMobile ? (mobileActions ?? desktopActions) : null}
                   {!isGuest ? (
                     <AppTopBarAccountActions role={navRole} />
                   ) : null}
@@ -73,11 +88,6 @@ export function AppTopBar({
                 </>
               }
             />
-            {isGuest && desktopActions ? (
-              <div className="flex items-center gap-2 whitespace-nowrap md:hidden">
-                {desktopActions}
-              </div>
-            ) : null}
           </div>
         </div>
       </div>
