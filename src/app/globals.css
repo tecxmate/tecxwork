@@ -277,11 +277,7 @@
   min-height: 100%;
 }
 
-header.sticky {
-  position: sticky;
-}
-
-header.sticky::after {
+header.app-header::after {
   content: "";
   position: absolute;
   left: 0;
@@ -300,7 +296,7 @@ header.sticky::after {
   );
 }
 
-.route-loading header.sticky::after {
+.route-loading header.app-header::after {
   animation: route-progress 240ms linear forwards;
 }
 

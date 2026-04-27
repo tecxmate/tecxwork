@@ -25,7 +25,7 @@ export function AppTopBar({
     navRole === "guest" || navRole === "applicant" || navRole === "admin";
 
   return (
-    <header className="sticky top-0 z-10 border-b bg-white dark:bg-card">
+    <header className="app-header sticky top-0 z-10 border-b bg-white dark:bg-card">
       <div className="h-[env(safe-area-inset-top)] bg-primary md:hidden" />
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
         <div className="flex items-center gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">

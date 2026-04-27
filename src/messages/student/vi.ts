@@ -18,7 +18,7 @@ export const studentViMessages = {
     applicants: "Ứng viên",
     myCompany: "Công ty của tôi",
     overview: "Tổng quan",
-    recruiters: "Nhà tuyển dụng",
+    recruiters: "Doanh nghiệp",
   },
   common: {
     ...studentEnMessages.common,
