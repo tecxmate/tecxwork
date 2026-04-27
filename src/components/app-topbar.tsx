@@ -62,12 +62,12 @@ export function AppTopBar({
               }
               mobileChildren={
                 <>
-                  {showNotifications ? <NotificationBell /> : null}
-                  <ThemeToggle variant={mobileOverflow ? "menu" : "icon"} />
+                  <div className="flex w-full items-center gap-2">
+                    {showNotifications ? <NotificationBell /> : null}
+                    <ThemeToggle />
+                  </div>
                   {showStudentLanguageSwitcher ? (
-                    <StudentLanguageSwitcher
-                      orientation={mobileOverflow ? "vertical" : "horizontal"}
-                    />
+                    <StudentLanguageSwitcher />
                   ) : null}
                   {showActionsOnMobile ? (mobileActions ?? desktopActions) : null}
                 </>
