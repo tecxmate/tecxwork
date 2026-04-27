@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { AppTopBarActions } from "@/components/app-topbar-actions";
 import { DesktopTopNav } from "@/components/desktop-top-nav";
+import { NotificationBell } from "@/components/notification-bell";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { navItemsByRole, type NavRole } from "@/lib/navigation";
@@ -23,6 +25,13 @@ export function AppTopBar({
   const navItems = navRole ? navItemsByRole[navRole] : [];
   const showStudentLanguageSwitcher =
     navRole === "guest" || navRole === "applicant" || navRole === "admin";
+  const showNotifications = Boolean(navRole && navRole !== "guest");
+  const mobileActionCount =
+    1 +
+    (showNotifications ? 1 : 0) +
+    (showStudentLanguageSwitcher ? 1 : 0) +
+    (showActionsOnMobile ? 1 : 0);
+  const mobileOverflow = mobileActionCount > 2;
 
   return (
     <header className="app-header sticky top-0 z-10 border-b bg-white dark:bg-card">
@@ -41,18 +50,25 @@ export function AppTopBar({
             </div>
           ) : null}
           <div className="ml-auto flex items-center gap-2 whitespace-nowrap sm:gap-3 md:ml-0 md:justify-self-end">
-            {showActionsOnMobile ? (
-              <div className="flex items-center gap-2 whitespace-nowrap sm:gap-3 md:hidden">
-                {mobileActions ?? desktopActions}
-              </div>
-            ) : null}
-            {desktopActions ? (
-              <div className="hidden items-center gap-2 whitespace-nowrap sm:gap-3 md:flex">
-                {desktopActions}
-              </div>
-            ) : null}
-            <ThemeToggle />
-            {showStudentLanguageSwitcher ? <StudentLanguageSwitcher /> : null}
+            <AppTopBarActions
+              mobileOverflow={mobileOverflow}
+              desktopChildren={
+                <>
+                  {desktopActions}
+                  {showNotifications ? <NotificationBell /> : null}
+                  <ThemeToggle />
+                  {showStudentLanguageSwitcher ? <StudentLanguageSwitcher /> : null}
+                </>
+              }
+              mobileChildren={
+                <>
+                  {showNotifications ? <NotificationBell /> : null}
+                  <ThemeToggle />
+                  {showStudentLanguageSwitcher ? <StudentLanguageSwitcher /> : null}
+                  {showActionsOnMobile ? (mobileActions ?? desktopActions) : null}
+                </>
+              }
+            />
           </div>
         </div>
       </div>

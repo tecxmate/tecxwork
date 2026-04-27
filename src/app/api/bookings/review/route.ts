@@ -3,6 +3,7 @@ import { db, bookings, slots, recruiters } from "@/lib/db";
 import { eq, and, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { sendBookingEmails, sendRejectionEmail } from "@/lib/email";
+import { createBookingNotification } from "@/lib/notifications";
 import { users } from "@/lib/db";
 
 /**
@@ -79,6 +80,32 @@ export async function PUT(req: NextRequest) {
           company: rec.company,
           recruiterNote: note?.trim() || undefined,
           action: "rejected",
+        }).catch(() => {});
+
+        createBookingNotification({
+          recipientEmail: booking.applicantEmail,
+          recipientRole: "applicant",
+          status: "rejected",
+          companyName: rec.company,
+          position: booking.position ?? undefined,
+          note: note?.trim() || undefined,
+        }).catch(() => {});
+      }
+    }
+
+    if (action === "waitlist") {
+      const [rec] = await db
+        .select({ company: recruiters.company })
+        .from(recruiters)
+        .where(eq(recruiters.id, recruiter.id));
+
+      if (rec) {
+        createBookingNotification({
+          recipientEmail: booking.applicantEmail,
+          recipientRole: "applicant",
+          status: "waitlisted",
+          companyName: rec.company,
+          position: booking.position ?? undefined,
         }).catch(() => {});
       }
     }
@@ -167,6 +194,15 @@ export async function PUT(req: NextRequest) {
       slotEnd: randomSlot.endTime,
       cvLink: booking.cvLink,
       direction: "applicant_books_recruiter",
+    }).catch(() => {});
+
+    createBookingNotification({
+      recipientEmail: booking.applicantEmail,
+      recipientRole: "applicant",
+      status: "accepted",
+      companyName: rec.company,
+      position: booking.position ?? undefined,
+      interviewTime: randomSlot.startTime,
     }).catch(() => {});
   }
 

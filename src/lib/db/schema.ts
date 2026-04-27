@@ -38,6 +38,15 @@ export const eventModeEnum = pgEnum("event_mode", [
   "recruiter_books_applicant",
   "both",
 ]);
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "booking_pending",
+  "booking_accepted",
+  "booking_rejected",
+  "booking_waitlisted",
+  "booking_cancelled",
+  "interview_reminder",
+  "system",
+]);
 
 // ---- Users (admin + recruiter only) ----
 
@@ -347,5 +356,30 @@ export const emailLogs = pgTable("email_logs", {
   subject: text("subject"),
   success: boolean("success").notNull().default(true),
   errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- Push subscriptions ----
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  userEmail: text("user_email").notNull(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- In-app notifications ----
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  recipientEmail: text("recipient_email").notNull(),
+  recipientRole: userRoleEnum("recipient_role").notNull(),
+  type: notificationTypeEnum("type").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  metadata: jsonb("metadata").notNull().default({}),
+  read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
