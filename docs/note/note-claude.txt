@@ -802,3 +802,143 @@ the background on the phone?
   Biggest visual impact to implement next:
   1. Square cards with purple glow on hover (job cards, company cards)
   2. Navbar glassmorphism effect
+
+
+Here's the security & consistency audit. I read every API route plus middleware/auth helpers; findings are grouped by      
+  severity with file:line and a fix.                                                                                         
+                                                                                                                             
+  Critical                                                                                                                   
+                                                                                                                             
+  1. Recruiter signup is an account takeover — src/app/api/recruiters/signup/route.ts:79-146                                 
+  If existingRecruiter is found for the email, the route simply re-hashes the new password and overwrites it, then issues a  
+  session cookie — no current-password check, no email re-verification. Anyone who knows a recruiter's email (and the domain 
+  is in allowedDomains, which it must be since they're already registered) can hijack the account.                           
+  Fix: require the existing-account branch to go through /api/auth/login or a verified email code before updating            
+  credentials. Prefer rejecting outright with "use sign-in" / "reset password".                                              
+                                               
+  2. Password reset skips expiry & verified checks — src/app/api/auth/reset-password/route.ts:50-68                          
+  Verifies only tokenId+code match the row in password_reset_codes. Does NOT check expiresAt and does NOT check
+  used/verified. Consequences:                                                                                               
+  - Expired codes still reset passwords.                           
+  - An attacker with the original 6-digit code can call /reset-password directly, bypassing /verify-code entirely (so        
+  failed-attempt counters and "used" flags don't help).                                                              
+  Fix: add gte(passwordResetCodes.expiresAt, now) and eq(passwordResetCodes.used, true) to the where. Also require verified  
+  === true if you keep that column.                                                                                         
+                                                                                                                             
+  High                                                             
+                                                                                                                             
+  3. CSV formula injection in admin export — src/app/api/admin/export/route.ts:62-77                                         
+  escape() only doubles quotes. An applicant whose name is =cmd|'/c calc'!A1 (or any =/+/-/@/\t/\r prefix) executes when     
+  admin opens the CSV in Excel/Sheets.                                                                                       
+  Fix: prefix any cell starting with = + - @ \t \r with a single quote, or wrap and prefix unconditionally.
+                                                                                                                             
+  4. HTML injection in transactional emails — src/lib/email/index.ts:79, 92, 123, 136, 144, 201-207, 258, 319, 413-415       
+  data.applicantName, data.company, data.recruiterNote, data.cvLink, etc. are interpolated raw into HTML. Email clients won't
+   run JS, but link spoofing/phishing is trivial — e.g. a recruiter "note" of </p><a href="https://evil">click here for      
+  offer</a> lands in the applicant's mailbox.                      
+  Fix: add an escapeHtml(v) helper and apply it to every interpolated user value; for cvLink validate it's an https:// URL   
+  before placing in href.                                                                                                    
+                                               
+  Medium                                                                                                                     
+                                                                   
+  5. IDOR on push-subscription DELETE — src/app/api/push-subscription/route.ts:48-52                                         
+  Any logged-in user can delete another user's subscription by sending its endpoint.
+  Fix: add and(eq(pushSubscriptions.userEmail, session.email)).                                                              
+                                                                   
+  6. Cascade deletes are not transactional — src/app/api/admin/applicants/route.ts:53-58,                                    
+  src/app/api/admin/recruiters/route.ts:116-120                    
+  Sequential db.delete(...) calls with no db.transaction(async tx => …). A failure mid-chain leaves orphans (e.g. user       
+  without profile, slots without recruiter).                                                                                 
+                                               
+  7. Rate-limit race window — src/lib/rate-limit.ts:29-35                                                                    
+  get then set(current+1) is not atomic; two parallel requests can both read 0. The 5/min auth limit can be exceeded under
+  burst attacks.                                                                                                             
+  Fix: use a CAS/incr primitive or a token-bucket library backed by Redis.
+                                                                                                                             
+  8. Weak default JWT secret leaks across dev/staging — src/lib/auth.ts:8-13                                                 
+  Falls back to "dev-secret-change-me" whenever NODE_ENV !== 'production'. A misconfigured preview/staging signs forgeable   
+  tokens.                                                                                                                    
+  Fix: require JWT_SECRET unconditionally; fail fast at boot.      
+                                                                                                                             
+  9. Minimum password length 6 — src/app/api/applicants/route.ts:176, src/app/api/recruiters/signup/route.ts:36,             
+  src/app/api/auth/reset-password/route.ts:24. Bump to 8+ (NIST 800-63B recommends 8 for new passwords).                     
+                                                                                                                             
+  10. Inconsistent admin gating throws 500 — src/app/api/admin/homepage-images/route.ts:7 calls requireAdmin() un-caught;    
+  everything else does try/catch → 401. Non-admins hit a 500 here.
+                                                                                                                             
+  Low / cleanup                                                                                                              
+                                               
+  11. Duplicated sanitizeWorkExperiences — identical block in src/app/api/applicants/route.ts:7-46 and                       
+  src/app/api/me/profile/route.ts:36-75. Move into src/lib/student-profile.ts (the types already live there).
+                                                                                                                             
+  12. Repeated "fetch recruiter by session.userId" pattern — bookings/[id]/route.ts:52-55, bookings/review/route.ts:33-36,   
+  me/recruiter/route.ts:19-25, bookings/reverse/route.ts:44-47, me/jobs/[id]/route.ts:55-58. Extract requireRecruiter()
+  returning { session, recruiterId }.                                                                                        
+                                                                   
+  13. notifications PUT loops one update per id — src/app/api/notifications/route.ts:62-74. Replace with                     
+  inArray(notifications.id, notificationIds).
+                                                                                                                             
+  14. unreadCount selects all rows then .length — src/app/api/notifications/route.ts:28-36. Use count() aggregate.           
+                                               
+  15. Authorization keyed on session.email instead of userId — bookings/[id]/route.ts:48, bookings/mine/route.ts:33,         
+  notifications/route.ts:16,33,57,70. If users are ever allowed to change email, all their booking/notification ACLs silently
+   break. Prefer applicantId/userId joins.                                                                                   
+                                                                   
+  16. /api/admin/slots accepts unvalidated durationMinutes — src/app/api/admin/slots/route.ts:23,36. durationMinutes=0       
+  infinite-loops. Same validation block exists in applicant-slots/route.ts:81-96; reuse it.
+                                                                                                                             
+  17. /api/admin/homepage-images doesn't validate URL strings — route.ts:10-28. Could store javascript: URLs that flow into  
+  <img src>/<a href> somewhere. Validate https://*.public.blob.vercel-storage.com (matches your next.config.ts allowlist).
+                                                                                                                             
+  18. getCachedRecruiters() then in-memory filter+slice — src/app/api/recruiters/route.ts:26-46. Fine for current size, but  
+  at scale this fetches all recruiters per request; push search/pagination into Drizzle.
+                                                                                                                             
+  If you want, I can fix the two Critical items (#1, #2) and the CSV/email-HTML injections (#3, #4) in one pass.             
+                                               
+✻ Sautéed for 7m 28s                                                                                                         
+                                                                   
+❯ ok fix pls ths 
+
+⏺ Pushed as 6cf3dd6. Final task state:                       
+                                                                                                                   
+  ┌─────┬──────────────────┬────────────────────────────────────────────────────────────────────────────────────┐
+  │  #  │      Status      │                                       Notes                                        │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 1   │ ✅               │ Booking ACL switched to applicantId via getApplicantFromSession()                  │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 2   │ ✅               │ All 13 admin routes use non-throwing getAdminSession()                             │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 3   │ ⏭ skipped        │ Zod migration is its own PR — large, touches every route                           │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 4   │ ✅ (best-effort) │ Window-stamped key + remaining-window TTL; strict atomicity needs Upstash/Postgres │
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 5   │ ✅               │ Min password length 6→8 across server, UI, all 3 locales, tutorial                 │
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 6   │ ⏭ skipped        │ Integration test setup (db, runner) is a separate effort                           │  
+  └─────┴──────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  Add integration tests for booking races and reset-password flow what is this is it need to be done?              
+                                                                      
+⏺ Task #6 is automated regression tests for the two trickiest flows we just hardened. What it covers:              
+                                                                                                                   
+  - Booking race: two recruiters/users hitting /api/bookings/review for the same slot at the same time. The
+  advisory lock + atomic slot UPDATE in bookings/review/route.ts:134-241 is meant to serialize them so only one    
+  wins. Without a test, a future refactor (someone removing the lock or reordering the UPDATE) could silently break
+   this and double-book a slot. The test would fire ~50 concurrent accepts and assert exactly one succeeds.        
+  - Reset-password flow: ensures the fixes in commit 16b4adf actually hold — that an expired token, an unverified  
+  token, or a replayed token all return 400 and don't change the password. Without a test, a regression here is
+  invisible until exploited.                                                                                       
+                                                                   
+  Is it needed? Not strictly — the code is correct today. But:                                                     
+                                                                   
+  - The booking race is concurrency-sensitive. Concurrency bugs don't show up in manual testing; they show up at   
+  2am during the career fair when 200 students hit "apply" at the same minute. A test is the cheapest way to keep
+  it correct.                                          
+  - Reset-password is auth-critical. A regression here = account takeover.                                         
+                                                
+  Cost to add: ~2-3 hours of work — pick a runner (vitest), set up a throwaway Neon branch for tests (Neon has a   
+  fast branching API for exactly this), write fixtures, write ~5 test cases. After that it runs in CI on every PR. 
+                                                          
+  Recommendation: do it before the event, skip it if the event is far off and you'd rather ship features. It's a   
+  "preventing regression" investment, not a "fixing a bug" one.
