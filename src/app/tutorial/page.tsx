@@ -45,7 +45,7 @@ export default function TutorialPage() {
                     <ul className="list-disc pl-5 mt-1">
                       <li><strong>Full Name</strong> (required)</li>
                       <li><strong>Email</strong> (required — use your university email)</li>
-                      <li><strong>Password</strong> (at least 6 characters)</li>
+                      <li><strong>Password</strong> (at least 8 characters)</li>
                       <li><strong>Major / Department</strong> (optional but recommended)</li>
                       <li><strong>Skills</strong> (type a skill and press Enter to add; click to remove)</li>
                       <li><strong>CV Link</strong> (required — Google Drive link to your CV)</li>
@@ -176,7 +176,7 @@ export default function TutorialPage() {
                   <li>Complete your profile:
                     <ul className="list-disc pl-5 mt-1">
                       <li><strong>Your Name</strong> (required)</li>
-                      <li><strong>Password</strong> (at least 6 characters)</li>
+                      <li><strong>Password</strong> (at least 8 characters)</li>
                       <li><strong>Company Description</strong> (shown to students)</li>
                       <li><strong>Open Positions</strong> (type and press Enter to add each one)</li>
                     </ul>

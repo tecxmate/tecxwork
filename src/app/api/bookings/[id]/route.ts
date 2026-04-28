@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
-import { getSession, getRecruiterFromSession } from "@/lib/auth";
+import {
+  getApplicantFromSession,
+  getRecruiterFromSession,
+  getSession,
+} from "@/lib/auth";
 import { sendRejectionEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 
@@ -45,7 +49,8 @@ export async function DELETE(
 
   // Authorization
   if (session.role === "applicant") {
-    if (booking.applicantEmail !== session.email) {
+    const auth = await getApplicantFromSession();
+    if (!auth || auth.applicantId !== booking.applicantId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   } else if (session.role === "recruiter") {

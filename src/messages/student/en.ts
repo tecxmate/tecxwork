@@ -195,7 +195,7 @@ export const studentEnMessages = {
       resetFailed: "Reset failed",
       generic: "Something went wrong",
       passwordMismatch: "Passwords do not match",
-      passwordTooShort: "Password must be at least 6 characters",
+      passwordTooShort: "Password must be at least 8 characters",
     },
   },
   register: {

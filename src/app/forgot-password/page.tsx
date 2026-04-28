@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
       setError(forgot.errors.passwordMismatch);
       return;
     }
-    if (password.length < 6) {
+    if (password.length < 8) {
       setError(forgot.errors.passwordTooShort);
       return;
     }
@@ -285,7 +285,7 @@ export default function ForgotPasswordPage() {
                 {error && <ErrorMsg message={error} />}
                 <Button
                   type="submit"
-                  disabled={loading || password.length < 6 || !confirmPassword}
+                  disabled={loading || password.length < 8 || !confirmPassword}
                   className="w-full"
                 >
                   {loading ? (

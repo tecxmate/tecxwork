@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { db, recruiters, users } from "@/lib/db";
+import { db, applicantProfiles, recruiters, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
 function getJwtSecret(): string {
@@ -15,6 +15,13 @@ function getJwtSecret(): string {
   return secret;
 }
 const COOKIE_NAME = "vgen_session";
+
+export const MIN_PASSWORD_LENGTH = 8;
+export const PASSWORD_REQUIREMENT_MESSAGE = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+
+export function isPasswordValid(value: unknown): value is string {
+  return typeof value === "string" && value.length >= MIN_PASSWORD_LENGTH;
+}
 
 export type UserRole = "admin" | "recruiter" | "applicant";
 
@@ -64,6 +71,39 @@ export async function requireAdmin(): Promise<SessionPayload> {
   const session = await requireSession();
   if (session.role !== "admin") throw new Error("Forbidden");
   return session;
+}
+
+/**
+ * Non-throwing variant of requireAdmin for route handlers — returns the
+ * session on success or null on missing/invalid auth so the caller can
+ * just `return NextResponse.json(...)` instead of try/catching.
+ */
+export async function getAdminSession(): Promise<SessionPayload | null> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return null;
+  return session;
+}
+
+/**
+ * Resolve the current applicant from session. Returns null when there is no
+ * session, the role isn't applicant, or no applicant profile exists.
+ *
+ * Prefer this over keying authorization on session.email — emails can change,
+ * but applicantId is stable.
+ */
+export async function getApplicantFromSession(): Promise<
+  { session: SessionPayload; applicantId: number } | null
+> {
+  const session = await getSession();
+  if (!session || session.role !== "applicant") return null;
+
+  const [profile] = await db
+    .select({ id: applicantProfiles.id })
+    .from(applicantProfiles)
+    .where(eq(applicantProfiles.userId, session.userId));
+
+  if (!profile) return null;
+  return { session, applicantId: profile.id };
 }
 
 /**

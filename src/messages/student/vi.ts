@@ -176,7 +176,7 @@ export const studentViMessages = {
       resetFailed: "Đặt lại mật khẩu thất bại",
       generic: "Đã có lỗi xảy ra",
       passwordMismatch: "Hai mật khẩu không khớp",
-      passwordTooShort: "Mật khẩu phải có ít nhất 6 ký tự",
+      passwordTooShort: "Mật khẩu phải có ít nhất 8 ký tự",
     },
   },
   register: {

@@ -184,7 +184,7 @@ export const studentZhTwMessages = {
       resetFailed: "密碼重設失敗",
       generic: "發生錯誤，請稍後再試",
       passwordMismatch: "兩次輸入的密碼不一致",
-      passwordTooShort: "密碼至少需要 6 個字元",
+      passwordTooShort: "密碼至少需要 8 個字元",
     },
   },
   register: {

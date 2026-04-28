@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, emailLogs } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { count, gte, and, eq } from "drizzle-orm";
 
 /**
@@ -8,9 +8,7 @@ import { count, gte, and, eq } from "drizzle-orm";
  * Returns email usage stats for the admin dashboard.
  */
 export async function GET() {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

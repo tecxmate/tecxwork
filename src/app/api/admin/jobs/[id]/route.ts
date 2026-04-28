@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

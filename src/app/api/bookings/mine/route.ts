@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { getApplicantFromSession } from "@/lib/auth";
 
 /** GET /api/bookings/mine?recruiterId=X — student's bookings for a specific recruiter */
 export async function GET(req: NextRequest) {
-  const session = await getSession();
-  if (!session || session.role !== "applicant") {
+  const auth = await getApplicantFromSession();
+  if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     .from(bookings)
     .where(
       and(
-        eq(bookings.applicantEmail, session.email),
+        eq(bookings.applicantId, auth.applicantId),
         eq(bookings.recruiterId, parseInt(recruiterId))
       )
     );

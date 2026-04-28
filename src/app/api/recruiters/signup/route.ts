@@ -6,7 +6,13 @@ import {
   allowedDomains,
   recruiterEmailApprovals,
 } from "@/lib/db";
-import { hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
+import {
+  COOKIE_NAME,
+  PASSWORD_REQUIREMENT_MESSAGE,
+  createToken,
+  hashPassword,
+  isPasswordValid,
+} from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
 import { ensureDefaultRecruiterSlots } from "@/lib/recruiter-onboarding";
 
@@ -33,9 +39,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (password.length < 6) {
+  if (!isPasswordValid(password)) {
     return NextResponse.json(
-      { error: "Password must be at least 6 characters" },
+      { error: PASSWORD_REQUIREMENT_MESSAGE },
       { status: 400 }
     );
   }

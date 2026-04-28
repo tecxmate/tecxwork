@@ -8,14 +8,12 @@ import {
   jobOpenings,
   recruiterEmailApprovals,
 } from "@/lib/db";
-import { requireAdmin, hashPassword } from "@/lib/auth";
+import { getAdminSession, hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { ensureDefaultRecruiterSlots } from "@/lib/recruiter-onboarding";
 
 export async function POST(req: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -89,9 +87,7 @@ export async function POST(req: NextRequest) {
 
 /** DELETE ?id=... — Remove recruiter + user + their slots + bookings */
 export async function DELETE(req: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

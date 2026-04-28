@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles, eventConfig, users, emailVerificationCodes } from "@/lib/db";
-import { getSession, hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
+import {
+  COOKIE_NAME,
+  PASSWORD_REQUIREMENT_MESSAGE,
+  createToken,
+  getSession,
+  hashPassword,
+  isPasswordValid,
+} from "@/lib/auth";
 import { sanitizeWorkExperiences } from "@/lib/student-profile";
 import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
 
@@ -132,9 +139,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (password.length < 6) {
+  if (!isPasswordValid(password)) {
     return NextResponse.json(
-      { error: "Password must be at least 6 characters" },
+      { error: PASSWORD_REQUIREMENT_MESSAGE },
       { status: 400 }
     );
   }

@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { db, recruiterEmailApprovals } from "@/lib/db";
 
 export async function DELETE(req: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

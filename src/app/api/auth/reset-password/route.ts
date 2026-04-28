@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, passwordResetCodes } from "@/lib/db";
 import { and, eq, gte } from "drizzle-orm";
-import { hashPassword } from "@/lib/auth";
+import {
+  PASSWORD_REQUIREMENT_MESSAGE,
+  hashPassword,
+  isPasswordValid,
+} from "@/lib/auth";
 
 /**
  * POST /api/auth/reset-password
@@ -21,9 +25,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (password.length < 6) {
+  if (!isPasswordValid(password)) {
     return NextResponse.json(
-      { error: "Password must be at least 6 characters" },
+      { error: PASSWORD_REQUIREMENT_MESSAGE },
       { status: 400 }
     );
   }

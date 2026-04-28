@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, bookings, recruiters, users, slots, applicantSlots } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { eq, inArray } from "drizzle-orm";
 import {
   sendStudentReminderEmail,
@@ -12,9 +12,7 @@ import {
  * Sends reminder emails to all students and recruiters with accepted bookings.
  */
 export async function POST() {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

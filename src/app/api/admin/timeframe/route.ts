@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applicantSlots } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { eq, and, count, inArray } from "drizzle-orm";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getResend, EMAIL_FROM } from "@/lib/email";
@@ -11,9 +11,7 @@ import { getResend, EMAIL_FROM } from "@/lib/email";
  * Updates event_config and regenerates unbooked slots for all recruiters.
  */
 export async function PUT(req: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

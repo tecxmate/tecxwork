@@ -354,7 +354,7 @@ export default function RegisterPage() {
   const canSubmit =
     draft.name.trim() &&
     draft.email.trim() &&
-    password.length >= 6 &&
+    password.length >= 8 &&
     draft.cvLink.trim() &&
     (isMinimalOnboarding ||
       (draft.schoolName.trim() &&
@@ -485,7 +485,7 @@ export default function RegisterPage() {
 
   async function handleSendVerification(e: React.FormEvent) {
     e.preventDefault();
-    if (!draft.email.trim() || password.length < 6) return;
+    if (!draft.email.trim() || password.length < 8) return;
     setLoading(true);
     setError("");
 
@@ -710,7 +710,7 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                disabled={!draft.email.trim() || password.length < 6 || loading}
+                disabled={!draft.email.trim() || password.length < 8 || loading}
                 className="w-full"
               >
                 {loading ? (
