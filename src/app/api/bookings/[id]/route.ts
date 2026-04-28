@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth";
 import { sendRejectionEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
+import { cancelBookingSchema } from "@/lib/validation";
 
 /**
  * DELETE /api/bookings/[id] — cancel a booking.
@@ -23,11 +24,15 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Parse optional note from request body
+  // Parse optional note from request body. Empty/missing body is fine —
+  // schema is fully optional so an empty parse still succeeds.
   let note: string | undefined;
   try {
-    const body = await req.json();
-    note = body.note?.trim();
+    const raw = await req.json();
+    const parsed = cancelBookingSchema.safeParse(raw);
+    if (parsed.success) {
+      note = parsed.data.note;
+    }
   } catch {
     // No body or invalid JSON — note stays undefined
   }

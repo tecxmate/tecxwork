@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, passwordResetCodes } from "@/lib/db";
 import { and, eq, gte } from "drizzle-orm";
-import {
-  PASSWORD_REQUIREMENT_MESSAGE,
-  hashPassword,
-  isPasswordValid,
-} from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
+import { parseJsonBody, resetPasswordSchema } from "@/lib/validation";
 
 /**
  * POST /api/auth/reset-password
@@ -13,24 +10,9 @@ import {
  * Sets the new password if the token is valid, verified, unexpired, and unused.
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = body.email?.trim().toLowerCase();
-  const resetToken = body.resetToken;
-  const password = body.password;
-
-  if (!email || !resetToken || !password) {
-    return NextResponse.json(
-      { error: "Email, reset token, and new password are required" },
-      { status: 400 }
-    );
-  }
-
-  if (!isPasswordValid(password)) {
-    return NextResponse.json(
-      { error: PASSWORD_REQUIREMENT_MESSAGE },
-      { status: 400 }
-    );
-  }
+  const parsed = await parseJsonBody(req, resetPasswordSchema);
+  if (!parsed.ok) return parsed.response;
+  const { email, resetToken, password } = parsed.data;
 
   // Parse compound token: "id_code"
   const separatorIdx = resetToken.indexOf("_");

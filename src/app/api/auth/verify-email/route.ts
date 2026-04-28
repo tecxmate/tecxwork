@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, emailVerificationCodes } from "@/lib/db";
 import { eq, and, gte, desc, sql } from "drizzle-orm";
+import { parseJsonBody, verifyEmailSchema } from "@/lib/validation";
 
 const MAX_FAILED_ATTEMPTS = 5;
 
@@ -11,16 +12,9 @@ const MAX_FAILED_ATTEMPTS = 5;
  * Blocks after 5 failed attempts.
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = body.email?.trim().toLowerCase();
-  const code = body.code?.trim();
-
-  if (!email || !code) {
-    return NextResponse.json(
-      { error: "Email and code are required" },
-      { status: 400 }
-    );
-  }
+  const parsed = await parseJsonBody(req, verifyEmailSchema);
+  if (!parsed.ok) return parsed.response;
+  const { email, code } = parsed.data;
 
   // Find the most recent unexpired code for this email
   const [latestCode] = await db

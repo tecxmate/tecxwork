@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, passwordResetCodes } from "@/lib/db";
 import { eq, and, gte } from "drizzle-orm";
+import { parseJsonBody, verifyCodeSchema } from "@/lib/validation";
 
 /**
  * POST /api/auth/verify-code
@@ -8,16 +9,9 @@ import { eq, and, gte } from "drizzle-orm";
  * Verifies the code is valid and not expired. Returns a one-time token.
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = body.email?.trim().toLowerCase();
-  const code = body.code?.trim();
-
-  if (!email || !code) {
-    return NextResponse.json(
-      { error: "Email and code are required" },
-      { status: 400 }
-    );
-  }
+  const parsed = await parseJsonBody(req, verifyCodeSchema);
+  if (!parsed.ok) return parsed.response;
+  const { email, code } = parsed.data;
 
   const now = new Date();
 

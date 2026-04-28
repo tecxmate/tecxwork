@@ -5,6 +5,7 @@ import { getRecruiterFromSession } from "@/lib/auth";
 import { sendBookingEmails, sendRejectionEmail, sendWaitlistEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { users } from "@/lib/db";
+import { parseJsonBody, reviewBookingSchema } from "@/lib/validation";
 
 /**
  * PUT /api/bookings/review
@@ -20,15 +21,9 @@ export async function PUT(req: NextRequest) {
   }
   const recruiter = { id: auth.recruiterId };
 
-  const body = await req.json();
-  const { bookingId, action, note } = body;
-
-  if (!bookingId || !["accept", "reject", "waitlist"].includes(action)) {
-    return NextResponse.json(
-      { error: "bookingId and action (accept/reject/waitlist) required" },
-      { status: 400 }
-    );
-  }
+  const parsed = await parseJsonBody(req, reviewBookingSchema);
+  if (!parsed.ok) return parsed.response;
+  const { bookingId, action, note } = parsed.data;
 
   const [booking] = await db
     .select()

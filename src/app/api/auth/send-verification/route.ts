@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, users, emailVerificationCodes } from "@/lib/db";
 import { eq, and, gte } from "drizzle-orm";
 import { getResend, EMAIL_FROM } from "@/lib/email";
+import { parseJsonBody, sendVerificationSchema } from "@/lib/validation";
 
 /**
  * POST /api/auth/send-verification
@@ -10,12 +11,9 @@ import { getResend, EMAIL_FROM } from "@/lib/email";
  * Used during signup to verify email ownership.
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = body.email?.trim().toLowerCase();
-
-  if (!email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(req, sendVerificationSchema);
+  if (!parsed.ok) return parsed.response;
+  const { email } = parsed.data;
 
   // Check if email is already registered
   const [existingUser] = await db

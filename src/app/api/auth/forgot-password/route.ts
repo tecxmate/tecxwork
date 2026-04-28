@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, users, passwordResetCodes } from "@/lib/db";
 import { eq, and, gte } from "drizzle-orm";
 import { getResend, EMAIL_FROM } from "@/lib/email";
+import { forgotPasswordSchema, parseJsonBody } from "@/lib/validation";
 
 /**
  * POST /api/auth/forgot-password
@@ -9,12 +10,9 @@ import { getResend, EMAIL_FROM } from "@/lib/email";
  * Generates a 6-digit code, stores it, emails it. Expires in 10 minutes.
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = body.email?.trim().toLowerCase();
-
-  if (!email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(req, forgotPasswordSchema);
+  if (!parsed.ok) return parsed.response;
+  const { email } = parsed.data;
 
   // Check user exists
   const [user] = await db

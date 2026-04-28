@@ -6,21 +6,17 @@ import {
   allowedDomains,
   recruiterEmailApprovals,
 } from "@/lib/db";
-import {
-  COOKIE_NAME,
-  PASSWORD_REQUIREMENT_MESSAGE,
-  createToken,
-  hashPassword,
-  isPasswordValid,
-} from "@/lib/auth";
+import { COOKIE_NAME, createToken, hashPassword } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
 import { ensureDefaultRecruiterSlots } from "@/lib/recruiter-onboarding";
+import { parseJsonBody, recruiterSignupSchema } from "@/lib/validation";
 
 /** POST — Recruiter self-signup with allowed-domain check */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const parsed = await parseJsonBody(req, recruiterSignupSchema);
+  if (!parsed.ok) return parsed.response;
   const {
-    email,
+    email: normalizedEmail,
     password,
     name,
     company,
@@ -30,21 +26,7 @@ export async function POST(req: NextRequest) {
     confirmsLawfulHiring,
     confirmsNoDiscrimination,
     confirmsWorkAuthorizationChecks,
-  } = body;
-
-  if (!email || !password || !name || !company || !industry) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
-  }
-
-  if (!isPasswordValid(password)) {
-    return NextResponse.json(
-      { error: PASSWORD_REQUIREMENT_MESSAGE },
-      { status: 400 }
-    );
-  }
+  } = parsed.data;
 
   if (
     !confirmsLawfulHiring ||
@@ -60,9 +42,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify email domain is allowed
-  const normalizedEmail = email.trim().toLowerCase();
-  const domain = normalizedEmail.split("@")[1]?.trim().toLowerCase();
+  const domain = normalizedEmail.split("@")[1];
   if (!domain) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
