@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { getSession, getRecruiterFromSession } from "@/lib/auth";
 import { sendRejectionEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 
@@ -49,11 +49,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   } else if (session.role === "recruiter") {
-    const [rec] = await db
-      .select({ id: recruiters.id })
-      .from(recruiters)
-      .where(eq(recruiters.userId, session.userId));
-    if (!rec || rec.id !== booking.recruiterId) {
+    const auth = await getRecruiterFromSession();
+    if (!auth || auth.recruiterId !== booking.recruiterId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   } else if (session.role !== "admin") {

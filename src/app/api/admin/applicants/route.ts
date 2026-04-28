@@ -49,13 +49,16 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Applicant not found" }, { status: 404 });
   }
 
-  // Cascade delete: bookings → slots → profile → user
-  await db.delete(bookings).where(eq(bookings.applicantId, applicantId));
-  await db.delete(applicantSlots).where(eq(applicantSlots.applicantId, applicantId));
-  await db.delete(applicantProfiles).where(eq(applicantProfiles.id, applicantId));
-  if (profile.userId) {
-    await db.delete(users).where(eq(users.id, profile.userId));
-  }
+  // Cascade delete in a single transaction so a partial failure can't
+  // leave orphaned rows (e.g. user without profile, slots without applicant).
+  await db.transaction(async (tx) => {
+    await tx.delete(bookings).where(eq(bookings.applicantId, applicantId));
+    await tx.delete(applicantSlots).where(eq(applicantSlots.applicantId, applicantId));
+    await tx.delete(applicantProfiles).where(eq(applicantProfiles.id, applicantId));
+    if (profile.userId) {
+      await tx.delete(users).where(eq(users.id, profile.userId));
+    }
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -9,7 +9,7 @@ import {
   users,
 } from "@/lib/db";
 import { eq, and, sql, or } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { getRecruiterFromSession } from "@/lib/auth";
 import { sendBookingEmails } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 
@@ -18,17 +18,15 @@ import { createBookingNotification } from "@/lib/notifications";
  * Requires recruiter session. Uses session recruiter ID, not client input.
  */
 export async function POST(req: NextRequest) {
-  // Auth: must be recruiter
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (session.role !== "recruiter") {
+  // Auth: must be recruiter with a profile row
+  const auth = await getRecruiterFromSession();
+  if (!auth) {
     return NextResponse.json(
       { error: "Only recruiters can book applicants" },
       { status: 403 }
     );
   }
+  const recruiter = { id: auth.recruiterId };
 
   const body = await req.json();
   const { applicantSlotId } = body;
@@ -37,19 +35,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "applicantSlotId is required" },
       { status: 400 }
-    );
-  }
-
-  // Fetch recruiter record from session (not client)
-  const [recruiter] = await db
-    .select({ id: recruiters.id })
-    .from(recruiters)
-    .where(eq(recruiters.userId, session.userId));
-
-  if (!recruiter) {
-    return NextResponse.json(
-      { error: "Recruiter profile not found" },
-      { status: 404 }
     );
   }
 

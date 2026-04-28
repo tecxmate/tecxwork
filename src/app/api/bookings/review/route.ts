@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, recruiters, applicantSlots } from "@/lib/db";
 import { eq, and, sql, or, ne, inArray } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { getRecruiterFromSession } from "@/lib/auth";
 import { sendBookingEmails, sendRejectionEmail, sendWaitlistEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { users } from "@/lib/db";
@@ -14,10 +14,11 @@ import { users } from "@/lib/db";
  * On reject/waitlist: just update status.
  */
 export async function PUT(req: NextRequest) {
-  const session = await getSession();
-  if (!session || session.role !== "recruiter") {
+  const auth = await getRecruiterFromSession();
+  if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const recruiter = { id: auth.recruiterId };
 
   const body = await req.json();
   const { bookingId, action, note } = body;
@@ -27,16 +28,6 @@ export async function PUT(req: NextRequest) {
       { error: "bookingId and action (accept/reject/waitlist) required" },
       { status: 400 }
     );
-  }
-
-  // Verify recruiter owns this booking
-  const [recruiter] = await db
-    .select({ id: recruiters.id })
-    .from(recruiters)
-    .where(eq(recruiters.userId, session.userId));
-
-  if (!recruiter) {
-    return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
   }
 
   const [booking] = await db

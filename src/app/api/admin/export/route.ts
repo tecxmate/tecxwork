@@ -59,8 +59,14 @@ export async function GET() {
     "Booked At",
   ];
 
-  const escape = (v: string) =>
-    `"${String(v ?? "").replace(/"/g, '""')}"`;
+  // CSV-escape and neutralize spreadsheet formula prefixes (=, +, -, @, tab, CR).
+  // Without this, a value like `=cmd|'/c calc'!A1` would execute when the CSV
+  // is opened in Excel/Sheets.
+  const escape = (v: string) => {
+    const s = String(v ?? "");
+    const neutralized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    return `"${neutralized.replace(/"/g, '""')}"`;
+  };
 
   const rows = all.map((b) => [
     b.id,

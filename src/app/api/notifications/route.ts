@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, notifications } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray, count } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
     .orderBy(desc(notifications.createdAt))
     .limit(limit);
 
-  const unreadCount = await db
-    .select({ id: notifications.id })
+  const [unread] = await db
+    .select({ value: count() })
     .from(notifications)
     .where(
       and(
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     notifications: result,
-    unreadCount: unreadCount.length,
+    unreadCount: unread?.value ?? 0,
   });
 }
 
@@ -60,13 +60,14 @@ export async function PUT(req: NextRequest) {
   }
 
   if (Array.isArray(notificationIds) && notificationIds.length > 0) {
-    for (const id of notificationIds) {
+    const ids = notificationIds.filter((v): v is number => typeof v === "number");
+    if (ids.length > 0) {
       await db
         .update(notifications)
         .set({ read: true })
         .where(
           and(
-            eq(notifications.id, id),
+            inArray(notifications.id, ids),
             eq(notifications.recipientEmail, session.email)
           )
         );

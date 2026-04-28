@@ -112,12 +112,15 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
   }
 
-  // Cascade delete: bookings → slots → jobOpenings → recruiter → user
-  await db.delete(bookings).where(eq(bookings.recruiterId, recruiterId));
-  await db.delete(slots).where(eq(slots.recruiterId, recruiterId));
-  await db.delete(jobOpenings).where(eq(jobOpenings.recruiterId, recruiterId));
-  await db.delete(recruiters).where(eq(recruiters.id, recruiterId));
-  await db.delete(users).where(eq(users.id, rec.userId));
+  // Cascade delete in a single transaction so a partial failure can't leave
+  // orphaned rows (e.g. recruiter row gone but jobs/bookings still reference it).
+  await db.transaction(async (tx) => {
+    await tx.delete(bookings).where(eq(bookings.recruiterId, recruiterId));
+    await tx.delete(slots).where(eq(slots.recruiterId, recruiterId));
+    await tx.delete(jobOpenings).where(eq(jobOpenings.recruiterId, recruiterId));
+    await tx.delete(recruiters).where(eq(recruiters.id, recruiterId));
+    await tx.delete(users).where(eq(users.id, rec.userId));
+  });
 
   return NextResponse.json({ ok: true });
 }

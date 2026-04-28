@@ -11,6 +11,33 @@ export function getResend(): Resend | null {
 export const EMAIL_FROM = process.env.EMAIL_FROM ?? "TECXWORK <onboarding@resend.dev>";
 
 /**
+ * Escape user-supplied strings before interpolating them into HTML email
+ * templates. Email clients won't run JS, but unescaped HTML enables tag/link
+ * injection (phishing) — e.g. a recruiter "note" closing the surrounding
+ * <p> and inserting a fake CTA.
+ */
+function escapeHtml(value: string | null | undefined): string {
+  if (value == null) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Only return URLs we'd safely place in href attributes. Rejects javascript:,
+ * data:, vbscript:, etc. by requiring http(s) or mailto. Falls back to "#".
+ */
+function safeUrl(value: string | null | undefined): string {
+  if (!value) return "#";
+  const trimmed = String(value).trim();
+  if (!/^(https?:|mailto:)/i.test(trimmed)) return "#";
+  return escapeHtml(trimmed);
+}
+
+/**
  * Log an email send attempt for tracking purposes.
  */
 async function logEmail(
@@ -75,6 +102,13 @@ export async function sendBookingEmails(data: BookingEmailData) {
       ? data.applicantName
       : data.company;
 
+  const safeApplicantName = escapeHtml(data.applicantName);
+  const safeCompany = escapeHtml(data.company);
+  const safeRecruiterEmail = escapeHtml(data.recruiterEmail);
+  const safeApplicantEmail = escapeHtml(data.applicantEmail);
+  const safeBookedBy = escapeHtml(bookedBy);
+  const safeCvHref = safeUrl(data.cvLink);
+
   // Email to applicant
   const applicantSubject = `Interview Confirmed — ${data.company} on ${timeStr}`;
   try {
@@ -89,7 +123,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-              <tr><td style="padding: 6px 0; color: #666; width: 100px;">Company</td><td style="padding: 6px 0; font-weight: 600;">${data.company}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666; width: 100px;">Company</td><td style="padding: 6px 0; font-weight: 600;">${safeCompany}</td></tr>
               <tr><td style="padding: 6px 0; color: #666;">When</td><td style="padding: 6px 0; font-weight: 600;">${timeStr}</td></tr>
               <tr><td style="padding: 6px 0; color: #666;">Where</td><td style="padding: 6px 0;">${EVENT_CONFIG.location}</td></tr>
               <tr><td style="padding: 6px 0; color: #666;">Duration</td><td style="padding: 6px 0;">15 minutes</td></tr>
@@ -100,7 +134,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
             <strong style="color: #8C52FF;">Important — CV Sharing</strong>
             <p style="margin: 8px 0 0; color: #555;">
               Share your Google Drive CV <strong>only</strong> with the recruiter's email:
-              <br><a href="mailto:${data.recruiterEmail}" style="color: #8C52FF;">${data.recruiterEmail}</a>
+              <br><a href="mailto:${safeRecruiterEmail}" style="color: #8C52FF;">${safeRecruiterEmail}</a>
             </p>
             <p style="margin: 8px 0 0; color: #555;">Do NOT set your link to "Anyone can view".</p>
           </div>
@@ -133,15 +167,15 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-              <tr><td style="padding: 6px 0; color: #666; width: 100px;">Candidate</td><td style="padding: 6px 0; font-weight: 600;">${data.applicantName}</td></tr>
-              <tr><td style="padding: 6px 0; color: #666;">Email</td><td style="padding: 6px 0;"><a href="mailto:${data.applicantEmail}" style="color: #8C52FF;">${data.applicantEmail}</a></td></tr>
+              <tr><td style="padding: 6px 0; color: #666; width: 100px;">Candidate</td><td style="padding: 6px 0; font-weight: 600;">${safeApplicantName}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Email</td><td style="padding: 6px 0;"><a href="mailto:${safeApplicantEmail}" style="color: #8C52FF;">${safeApplicantEmail}</a></td></tr>
               <tr><td style="padding: 6px 0; color: #666;">When</td><td style="padding: 6px 0; font-weight: 600;">${timeStr}</td></tr>
-              <tr><td style="padding: 6px 0; color: #666;">Booked by</td><td style="padding: 6px 0;">${bookedBy}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Booked by</td><td style="padding: 6px 0;">${safeBookedBy}</td></tr>
             </table>
           </div>
 
           <div style="margin-bottom: 24px;">
-            <a href="${data.cvLink}" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+            <a href="${safeCvHref}" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
               View Candidate's CV
             </a>
           </div>
@@ -188,6 +222,8 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
 
   const actionText = data.action === "rejected" ? "declined" : "cancelled";
   const subject = `Interview ${actionText} — ${data.company}`;
+  const safeCompany = escapeHtml(data.company);
+  const safeNote = data.recruiterNote ? escapeHtml(data.recruiterNote) : "";
 
   try {
     const result = await resend.emails.send({
@@ -198,13 +234,13 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Your interview request with <strong>${data.company}</strong> has been ${actionText}.
+            Your interview request with <strong>${safeCompany}</strong> has been ${actionText}.
           </p>
 
-          ${data.recruiterNote ? `
+          ${safeNote ? `
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <p style="margin: 0 0 8px; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Message from the recruiter</p>
-            <p style="margin: 0; font-size: 14px; color: #333; white-space: pre-wrap;">${data.recruiterNote}</p>
+            <p style="margin: 0; font-size: 14px; color: #333; white-space: pre-wrap;">${safeNote}</p>
           </div>
           ` : ''}
 
@@ -245,6 +281,9 @@ export async function sendWaitlistEmail(data: WaitlistEmailData) {
   }
 
   const subject = `Application waitlisted — ${data.company}`;
+  const safeApplicantName = escapeHtml(data.applicantName);
+  const safeCompany = escapeHtml(data.company);
+  const safePosition = data.position ? escapeHtml(data.position) : "";
 
   try {
     const result = await resend.emails.send({
@@ -255,7 +294,7 @@ export async function sendWaitlistEmail(data: WaitlistEmailData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Application Waitlisted</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Hi ${data.applicantName}, your application with <strong>${data.company}</strong>${data.position ? ` for <strong>${data.position}</strong>` : ""} has been added to the waitlist.
+            Hi ${safeApplicantName}, your application with <strong>${safeCompany}</strong>${safePosition ? ` for <strong>${safePosition}</strong>` : ""} has been added to the waitlist.
           </p>
 
           <div style="background: #f3eeff; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
@@ -316,9 +355,9 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
         timeZone: EVENT_CONFIG.timezone,
       });
       return `<tr>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${i.company}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${escapeHtml(i.company)}</td>
         <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${timeStr}</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="mailto:${i.recruiterEmail}" style="color: #8C52FF;">${i.recruiterEmail}</a></td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="mailto:${escapeHtml(i.recruiterEmail)}" style="color: #8C52FF;">${escapeHtml(i.recruiterEmail)}</a></td>
       </tr>`;
     })
     .join("");
@@ -332,7 +371,7 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Reminder</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Hi ${data.name}, here's your interview schedule for the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
+            Hi ${escapeHtml(data.name)}, here's your interview schedule for the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
           </p>
 
           <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
@@ -410,9 +449,9 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
       });
       return `<tr>
         <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${timeStr}</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${i.applicantName}</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="mailto:${i.applicantEmail}" style="color: #8C52FF;">${i.applicantEmail}</a></td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="${i.cvLink}" target="_blank" style="color: #8C52FF;">View CV</a></td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${escapeHtml(i.applicantName)}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="mailto:${escapeHtml(i.applicantEmail)}" style="color: #8C52FF;">${escapeHtml(i.applicantEmail)}</a></td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="${safeUrl(i.cvLink)}" target="_blank" style="color: #8C52FF;">View CV</a></td>
       </tr>`;
     })
     .join("");
@@ -426,7 +465,7 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 700px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Schedule</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Hi ${data.name}, here's your interview schedule for <strong>${data.company}</strong> at the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
+            Hi ${escapeHtml(data.name)}, here's your interview schedule for <strong>${escapeHtml(data.company)}</strong> at the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
           </p>
 
           <div style="background: #30D158; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 16px; font-weight: 600;">

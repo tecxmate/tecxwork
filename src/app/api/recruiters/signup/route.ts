@@ -89,7 +89,18 @@ export async function POST(req: NextRequest) {
     .innerJoin(recruiters, eq(recruiters.userId, users.id))
     .where(and(eq(users.email, normalizedEmail), eq(users.role, "recruiter")));
 
-  if (!emailApproval && !allowed && !existingRecruiter) {
+  if (existingRecruiter) {
+    return NextResponse.json(
+      {
+        error:
+          "An account with this email already exists. Please log in, or use 'Forgot password' to reset it.",
+        code: "ACCOUNT_EXISTS",
+      },
+      { status: 409 }
+    );
+  }
+
+  if (!emailApproval && !allowed) {
     return NextResponse.json(
       {
         error:
@@ -101,49 +112,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const passwordHash = await hashPassword(password);
-
-    if (existingRecruiter) {
-      await db
-        .update(users)
-        .set({ name, passwordHash })
-        .where(eq(users.id, existingRecruiter.userId));
-
-      await db
-        .update(recruiters)
-        .set({
-          company: company || emailApproval?.company || allowed?.company || existingRecruiter.company,
-          industry:
-            industry || emailApproval?.industry || allowed?.industry || existingRecruiter.industry,
-          description: description ?? "",
-          contactEmail: contactEmail ?? normalizedEmail,
-        })
-        .where(eq(recruiters.id, existingRecruiter.recruiterId));
-
-      await ensureDefaultRecruiterSlots(existingRecruiter.recruiterId);
-      await db
-        .delete(recruiterEmailApprovals)
-        .where(eq(recruiterEmailApprovals.email, normalizedEmail));
-
-      const token = createToken({
-        userId: existingRecruiter.userId,
-        email: existingRecruiter.email,
-        role: "recruiter",
-      });
-
-      const res = NextResponse.json(
-        { recruiter: { id: existingRecruiter.recruiterId } },
-        { status: 200 }
-      );
-      res.cookies.set(COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24,
-        path: "/",
-      });
-
-      return res;
-    }
 
     // Create user
     const [user] = await db

@@ -3,76 +3,9 @@ import { db, applicantProfiles } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import {
-  MAX_STUDENT_CERTIFICATIONS,
-  MAX_STUDENT_WORK_EXPERIENCES,
-  type StudentCertification,
-  type StudentWorkExperience,
+  sanitizeCertifications,
+  sanitizeWorkExperiences,
 } from "@/lib/student-profile";
-
-function sanitizeCertifications(value: unknown): StudentCertification[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .slice(0, MAX_STUDENT_CERTIFICATIONS)
-    .flatMap((item) => {
-      if (!item || typeof item !== "object") return [];
-
-      const record = item as Record<string, unknown>;
-      const cert: StudentCertification = {
-        type: typeof record.type === "string" ? record.type.trim() : "language",
-        name: typeof record.name === "string" ? record.name.trim() : "",
-        score: typeof record.score === "string" ? record.score.trim() : "",
-        issueDate: typeof record.issueDate === "string" ? record.issueDate.trim() : "",
-      };
-
-      if (!cert.name && !cert.score && !cert.issueDate) {
-        return [];
-      }
-
-      return [cert];
-    });
-}
-
-function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .slice(0, MAX_STUDENT_WORK_EXPERIENCES)
-    .flatMap((item) => {
-      if (!item || typeof item !== "object") return [];
-
-      const record = item as Record<string, unknown>;
-      const experience: StudentWorkExperience = {
-        company: typeof record.company === "string" ? record.company.trim() : "",
-        title: typeof record.title === "string" ? record.title.trim() : "",
-        employmentType:
-          typeof record.employmentType === "string"
-            ? record.employmentType.trim()
-            : "",
-        startDate: typeof record.startDate === "string" ? record.startDate.trim() : "",
-        endDate: typeof record.endDate === "string" ? record.endDate.trim() : "",
-        isCurrent: Boolean(record.isCurrent),
-        description:
-          typeof record.description === "string"
-            ? record.description.trim()
-            : "",
-      };
-
-      if (
-        !experience.company &&
-        !experience.title &&
-        !experience.employmentType &&
-        !experience.startDate &&
-        !experience.endDate &&
-        !experience.description &&
-        !experience.isCurrent
-      ) {
-        return [];
-      }
-
-      return [experience];
-    });
-}
 
 /** GET /api/me/profile — returns the current applicant's profile */
 export async function GET() {

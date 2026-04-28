@@ -4,7 +4,11 @@ import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 export async function PUT(req: NextRequest) {
-  await requireAdmin();
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const body = await req.json();
   const { homepageImages } = body;
@@ -16,6 +20,25 @@ export async function PUT(req: NextRequest) {
     );
   }
 
+  // Only accept https URLs from our blob host. Blocks javascript:/data:
+  // URLs from being stored and rendered later in <img src>/<a href>.
+  const sanitized: string[] = [];
+  for (const raw of homepageImages.slice(0, 4)) {
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.trim();
+    try {
+      const u = new URL(trimmed);
+      if (
+        u.protocol === "https:" &&
+        u.hostname.endsWith(".public.blob.vercel-storage.com")
+      ) {
+        sanitized.push(trimmed);
+      }
+    } catch {
+      // not a valid URL — skip
+    }
+  }
+
   const [config] = await db.select({ id: eventConfig.id }).from(eventConfig).limit(1);
 
   if (!config) {
@@ -24,7 +47,7 @@ export async function PUT(req: NextRequest) {
 
   await db
     .update(eventConfig)
-    .set({ homepageImages: homepageImages.slice(0, 4) })
+    .set({ homepageImages: sanitized })
     .where(eq(eventConfig.id, config.id));
 
   return NextResponse.json({ ok: true });

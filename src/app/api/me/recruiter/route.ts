@@ -1,28 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, recruiters, slots, bookings } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getRecruiterFromSession } from "@/lib/auth";
 import { eq, and, sql } from "drizzle-orm";
 
 /** PUT /api/me/recruiter — recruiter updates their own company profile */
 import { EVENT_CONFIG } from "@/lib/data";
 
 export async function PUT(req: NextRequest) {
-  const session = await getSession();
-  if (!session || session.role !== "recruiter") {
+  const auth = await getRecruiterFromSession();
+  if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
   const { description, websiteUrl, interviewerCount, logoUrl, galleryUrls } = body;
 
-  // Fetch current recruiter
+  // Fetch the current interviewerCount — needed below to detect changes.
   const [current] = await db
     .select({
       id: recruiters.id,
       interviewerCount: recruiters.interviewerCount,
     })
     .from(recruiters)
-    .where(eq(recruiters.userId, session.userId));
+    .where(eq(recruiters.id, auth.recruiterId));
 
   if (!current) {
     return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });

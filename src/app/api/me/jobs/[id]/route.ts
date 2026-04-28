@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, eventConfig, jobOpenings, recruiters } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { db, eventConfig, jobOpenings } from "@/lib/db";
+import { getRecruiterFromSession } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 import {
@@ -44,22 +44,14 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session || session.role !== "recruiter") {
+  const auth = await getRecruiterFromSession();
+  if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const rec = { id: auth.recruiterId };
 
   const { id } = await params;
   const jobId = parseInt(id);
-
-  const [rec] = await db
-    .select({ id: recruiters.id })
-    .from(recruiters)
-    .where(eq(recruiters.userId, session.userId));
-
-  if (!rec) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
 
   const [config] = await db
     .select({ jobModerationEnabled: eventConfig.jobModerationEnabled })
@@ -282,26 +274,17 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session || session.role !== "recruiter") {
+  const auth = await getRecruiterFromSession();
+  if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const jobId = parseInt(id);
 
-  const [rec] = await db
-    .select({ id: recruiters.id })
-    .from(recruiters)
-    .where(eq(recruiters.userId, session.userId));
-
-  if (!rec) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
   await db
     .delete(jobOpenings)
-    .where(and(eq(jobOpenings.id, jobId), eq(jobOpenings.recruiterId, rec.id)));
+    .where(and(eq(jobOpenings.id, jobId), eq(jobOpenings.recruiterId, auth.recruiterId)));
 
   return NextResponse.json({ ok: true });
 }

@@ -1,49 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles, eventConfig, users, emailVerificationCodes } from "@/lib/db";
 import { getSession, hashPassword, createToken, COOKIE_NAME } from "@/lib/auth";
-import { MAX_STUDENT_WORK_EXPERIENCES, type StudentWorkExperience } from "@/lib/student-profile";
+import { sanitizeWorkExperiences } from "@/lib/student-profile";
 import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
-
-function sanitizeWorkExperiences(value: unknown): StudentWorkExperience[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .slice(0, MAX_STUDENT_WORK_EXPERIENCES)
-    .flatMap((item) => {
-      if (!item || typeof item !== "object") return [];
-
-      const record = item as Record<string, unknown>;
-      const experience: StudentWorkExperience = {
-        company: typeof record.company === "string" ? record.company.trim() : "",
-        title: typeof record.title === "string" ? record.title.trim() : "",
-        employmentType:
-          typeof record.employmentType === "string"
-            ? record.employmentType.trim()
-            : "",
-        startDate: typeof record.startDate === "string" ? record.startDate.trim() : "",
-        endDate: typeof record.endDate === "string" ? record.endDate.trim() : "",
-        isCurrent: Boolean(record.isCurrent),
-        description:
-          typeof record.description === "string"
-            ? record.description.trim()
-            : "",
-      };
-
-      if (
-        !experience.company &&
-        !experience.title &&
-        !experience.employmentType &&
-        !experience.startDate &&
-        !experience.endDate &&
-        !experience.description &&
-        !experience.isCurrent
-      ) {
-        return [];
-      }
-
-      return [experience];
-    });
-}
 
 // GET — applicant profile listing for recruiter/admin review.
 export async function GET(req: NextRequest) {

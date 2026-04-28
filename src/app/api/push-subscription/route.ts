@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, pushSubscriptions } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -48,7 +48,12 @@ export async function DELETE(req: NextRequest) {
   if (endpoint) {
     await db
       .delete(pushSubscriptions)
-      .where(eq(pushSubscriptions.endpoint, endpoint));
+      .where(
+        and(
+          eq(pushSubscriptions.endpoint, endpoint),
+          eq(pushSubscriptions.userEmail, session.email)
+        )
+      );
   }
 
   return NextResponse.json({ ok: true });

@@ -30,6 +30,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (
+    typeof startHour !== "number" ||
+    typeof endHour !== "number" ||
+    typeof durationMinutes !== "number" ||
+    startHour < 0 ||
+    startHour > 23 ||
+    endHour <= startHour ||
+    endHour > 24 ||
+    durationMinutes < 5 ||
+    durationMinutes > 120
+  ) {
+    return NextResponse.json(
+      { error: "Invalid time parameters" },
+      { status: 400 }
+    );
+  }
+
   const newSlots: { recruiterId: number; startTime: Date; endTime: Date }[] = [];
 
   for (let hour = startHour; hour < endHour; hour++) {
