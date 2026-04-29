@@ -942,3 +942,179 @@ Here's the security & consistency audit. I read every API route plus middleware/
                                                           
   Recommendation: do it before the event, skip it if the event is far off and you'd rather ship features. It's a   
   "preventing regression" investment, not a "fixing a bug" one.
+
+
+❯ is this similar to jmeter load tester?                                                                           
+                                                                   
+⏺ No — different category of tool. Quick comparison:   
+                                                                      
+  ┌────────────────┬────────────────────────────────────────────┬──────────────────────────────────────────────┐
+  │                │           Integration tests (#6)           │                    JMeter                    │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ Goal           │ Prove logic is correct                        │ Prove system holds up under load           │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Question       │ "Does the advisory lock actually serialize    │ "Can we handle 5000 students hitting       │
+  │ answered       │ concurrent accepts?"                          │ /apply per minute without timeouts?"       │  
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ Concurrency    │ ~50 parallel calls — just enough to expose    │ Thousands; ramps over time                 │  
+  │ level          │ the race                                      │                                            │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Runs where     │ CI on every PR, ~30 sec                       │ Separate machine pointed at staging,       │
+  │                │                                               │ minutes to hours                           │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Pass/fail      │ Asserts on data: "exactly one booking is      │ Asserts on perf: "p95 < 500ms, error rate  │  
+  │                │ accepted, the other is 409"                   │ < 1%"                                      │  
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Catches        │ Logic regressions (someone removed the        │ Capacity issues (DB connection pool        │  
+  │                │ pg_advisory_xact_lock)                        │ exhausted, slow queries, memory leaks)     │
+  └────────────────┴───────────────────────────────────────────────┴────────────────────────────────────────────┘  
+                                                                                                                   
+  There's overlap — both fire concurrent requests — but the intent is different. The integration test is a
+  unit-test-style assertion run constantly; JMeter is a benchmark run occasionally before launch.                  
+                                                                                                                   
+  For the career fair you'd want both eventually:         
+  - Integration tests catch "the code stopped being safe" (regression).                                            
+  - A small JMeter / k6 run catches "the code is safe but Neon free tier maxes out at 80 connections" (capacity).  
+                                                                                                                 
+  For this codebase right now, integration tests give better return — the logic is subtle (advisory locks,         
+  transactions, row-level CAS) and easy to break without noticing. Load testing matters closer to event day when   
+  you know your real traffic shape.  
+
+
+  ❯ after that if i add any feature (not related to login) i dont need to touch this right?                          
+
+⏺ Mostly correct — but a few things to know:
+
+  You don't need to touch:
+  - src/lib/auth.ts, src/lib/validation.ts (unless adding new field types)
+  - src/test/setup.ts, vitest.config.ts
+  - The 4 commits' security fixes — they're in helpers, not in your feature path
+
+  You will reuse (not modify) for any new authed route:
+  - getSession() / getAdminSession() / getRecruiterFromSession() / getApplicantFromSession() — call them at the top
+   of new handlers
+  - parseJsonBody(req, schema) — add a new zod schema in lib/validation.ts and use it
+  - escapeHtml() / safeUrl() from lib/email/index.ts — if your feature sends emails with user data
+  - rateLimit() — call on any public-write endpoint
+  - db.transaction(...) — wrap any multi-step write
+  - getCachedRecruiters / getCachedExternalJobs pattern in lib/cache.ts — for read-heavy lists
+
+  You should add tests for new features touching:
+  - Concurrency (slot booking, inventory-like flows)
+  - Authorization (any "user X can only see/edit their own Y")
+  - Token/code flows (verification, invites, etc.)
+
+  Tests use the same harness — just add a new file under src/test/your-feature.test.ts.
+
+  Things that will break if you add features carelessly:
+  - New API route without auth check → silent IDOR
+  - New email template with ${user.something} → re-introduces HTML injection
+  - New CSV export without the escape() helper → re-introduces formula injection
+  - New mutation route without zod → re-introduces ad-hoc validation drift
+
+  Short version: this PR set up the patterns. New features should follow them, not bypass them. The helpers exist
+  so you write less code, not more.  
+
+
+add TEST_DATABASE_URL for the new branch of test Neon db  
+
+
+❯ do i need to add jmeter now?                                                                                     
+
+⏺ No, not now. Here's the decision tree:
+                                                                                                                   
+  Skip JMeter if:   
+  - Event is more than 2 weeks out (premature — code will change)
+  - You don't yet know your real traffic shape (peak users, peak time, ratio of read:write)                        
+  - Neon is on a paid tier with autoscaling (most capacity issues self-resolve)            
+  - You haven't seen any slow responses in dev/staging                                                             
+                                                                                                                   
+  Add load testing when:                                                                                           
+  - ≤2 weeks before the career fair, on a staging environment that mirrors prod                                    
+  - You want to confirm Neon's connection pool + Vercel function concurrency hold under realistic burst (e.g. "200 
+  students hit /apply in the same minute when slots open")                                                        
+  - You see real-world slowness you can't explain                                                                  
+                                                                   
+  If you do add it, prefer k6 over JMeter for this stack — k6 scripts are JS/TS (matches your codebase), Vercel has
+   a published guide for it, and the output integrates with Grafana cleanly. JMeter is heavier and Java-based;     
+  better for complex enterprise scenarios than a Next.js app.                                                      
+                                                                                                                   
+  Minimum viable load test (when the time comes), ~30 minutes of work:                                             
+  1. One k6 script that simulates "burst at slot-release time": 500 virtual users hammering POST /api/bookings for
+  the same 10 recruiters over 60 seconds.                                                                          
+  2. Run it against a Neon test branch + a Vercel preview URL.     
+  3. Pass if p95 < 1s and error rate (excluding expected 409s for full slots) < 1%.                                
+                                                                                                                   
+  That's the only load test that actually matters for this app — everything else (browse, profile fetch) is cached 
+  and trivial.                                                                                                     
+                                                                                                                   
+  Recommendation: put a calendar reminder for ~10 days before the event to add the k6 script. Don't do it now —    
+  capacity numbers from a half-built feature set tell you nothing useful.
+                                                                                                                   
+❯ so it should be done after all feature is done right                                                             
+                                                                                                                   
+✻ Levitating…                                                                                                      
+  ⎿  Tip: Open the Command Palette (Cmd+Shift+P) and run "Shell Command: Install 'code' command in PATH" to enable 
+     IDE integration                                                                                               
+                                                                                                                   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯                                                                                                                  
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  niko@tecxwork | Opus 4.7 (1M context) | ctx:27% | 5h:49% | 7d:31%
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+  Add load testing when:
+  - ≤2 weeks before the career fair, on a staging environment that mirrors prod
+  - You want to confirm Neon's connection pool + Vercel function concurrency hold under realistic burst (e.g. "200
+  students hit /apply in the same minute when slots open")
+  - You see real-world slowness you can't explain
+
+  If you do add it, prefer k6 over JMeter for this stack — k6 scripts are JS/TS (matches your codebase), Vercel has
+   a published guide for it, and the output integrates with Grafana cleanly. JMeter is heavier and Java-based;
+  better for complex enterprise scenarios than a Next.js app.
+
+  Minimum viable load test (when the time comes), ~30 minutes of work:
+  1. One k6 script that simulates "burst at slot-release time": 500 virtual users hammering POST /api/bookings for
+  the same 10 recruiters over 60 seconds.
+  2. Run it against a Neon test branch + a Vercel preview URL.
+  3. Pass if p95 < 1s and error rate (excluding expected 409s for full slots) < 1%.
+
+  That's the only load test that actually matters for this app — everything else (browse, profile fetch) is cached
+  and trivial.
+
+  Recommendation: put a calendar reminder for ~10 days before the event to add the k6 script. Don't do it now —
+  capacity numbers from a half-built feature set tell you nothing useful.
+
+❯ so it should be done after all feature is done right                                                             
+
+⏺ Yes — but with a caveat.     
+                                                                                                                   
+  Right ordering:   
+  1. Finish all features
+  2. Deploy to staging that matches prod (same Neon tier, same Vercel plan, real seed data volume)                 
+  3. Then load-test                                                                               
+                                                                                                                   
+  Why "after features" is the right rule:                          
+  - A load test on half-built code measures the wrong system. If you optimize against numbers that come from       
+  missing features, you'll re-tune everything once those features ship.                                            
+  - The bottleneck is usually one slow query or one missing index, not "the code." That bottleneck only shows up   
+  once the realistic data + realistic call patterns are in place.                                                  
+  - Capacity targets (p95, error rate) only have meaning relative to expected traffic — and expected traffic       
+  depends on which features exist and how they're surfaced in the UI.                                       
+                                                                                                                   
+  The caveat — don't wait all the way:                             
+  - Run the load test ~7-10 days before the event, not on event day. You need time to fix what it surfaces (add an 
+  index, bump Neon compute, batch a query).                                                                        
+  - If you ship a major feature in the last week (e.g. a new search page that hits the DB hard), re-run.           
+  - Keep the integration tests (npm test) running on every PR throughout — those catch correctness regressions and 
+  don't depend on traffic shape.                                                                                   
+                                                                                                                   
+  Practical sequence for this app:                                                                                 
+  1. Build features → integration tests guard correctness                                                          
+  2. Feature freeze ~10 days before event                                                                          
+  3. Deploy to staging + import realistic data volume                                                              
+  4. Run k6 burst test against /api/bookings and /api/bookings/review                                              
+  5. Fix what it finds (indexes, pool size, function concurrency limits)                                           
+  6. Tag the build, deploy to prod, freeze                                                                         
+                                                                                                                   
+  Skip k6 entirely if your event will have <100 simultaneous users — at that scale Neon + Vercel handle it without 
+  tuning.      
