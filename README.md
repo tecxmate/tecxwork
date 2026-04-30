@@ -12,7 +12,14 @@ Recommended setup:
 
 ```bash
 DATABASE_URL=your_neon_connection_string
+TEST_DATABASE_URL=your_throwaway_neon_branch_connection_string
+JWT_SECRET=your_random_session_secret
+CRON_SECRET=your_random_cron_secret
+NEXT_PUBLIC_SITE_URL=https://your-production-origin.example
 ```
+
+Optional push notifications also need `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and
+`VAPID_PRIVATE_KEY`.
 
 Taiwan school data:
 - the applicant school lookup is stored in the `schools` table in Neon

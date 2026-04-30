@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { afterAll, beforeAll, beforeEach, vi } from "vitest";
 
 /**
@@ -7,6 +9,36 @@ import { afterAll, beforeAll, beforeEach, vi } from "vitest";
  * Postgres database. We refuse to run if it equals DATABASE_URL so a
  * misconfigured CI run can't truncate prod tables.
  */
+
+function loadLocalEnv() {
+  for (const fileName of [".env", ".env.local"]) {
+    const filePath = path.resolve(process.cwd(), fileName);
+    if (!fs.existsSync(filePath)) continue;
+
+    const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+
+      const equalsIndex = trimmed.indexOf("=");
+      if (equalsIndex === -1) continue;
+
+      const key = trimmed.slice(0, equalsIndex).trim();
+      if (process.env[key]) continue;
+
+      let value = trimmed.slice(equalsIndex + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+  }
+}
+
+loadLocalEnv();
 
 const testUrl = process.env.TEST_DATABASE_URL;
 if (!testUrl) {

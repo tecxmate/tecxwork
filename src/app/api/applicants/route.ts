@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles, eventConfig, users, emailVerificationCodes } from "@/lib/db";
-import {
-  COOKIE_NAME,
-  PASSWORD_REQUIREMENT_MESSAGE,
-  createToken,
-  getSession,
-  hashPassword,
-  isPasswordValid,
-} from "@/lib/auth";
+import { COOKIE_NAME, createToken, getSession, hashPassword } from "@/lib/auth";
 import { sanitizeWorkExperiences } from "@/lib/student-profile";
 import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
+import { applicantSignupSchema, parseJsonBody } from "@/lib/validation";
 
 // GET — applicant profile listing for recruiter/admin review.
 export async function GET(req: NextRequest) {
@@ -85,7 +79,9 @@ export async function GET(req: NextRequest) {
 
 // POST — applicant self-signup (creates user + profile, logs in automatically)
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const parsed = await parseJsonBody(req, applicantSignupSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
   const {
     name,
     email,
@@ -119,13 +115,6 @@ export async function POST(req: NextRequest) {
     .limit(1);
   const onboardingMode = config?.onboardingMode === "minimal" ? "minimal" : "full";
 
-  if (!name || !email || !password || !cvLink) {
-    return NextResponse.json(
-      { error: "Name, email, password, and CV link are required" },
-      { status: 400 }
-    );
-  }
-
   if (
     onboardingMode === "full" &&
     (!schoolName || !major || !studyLevel || !expectedGraduation)
@@ -135,13 +124,6 @@ export async function POST(req: NextRequest) {
         error:
           "School, major, study level, graduation date, and CV link are required in full onboarding mode",
       },
-      { status: 400 }
-    );
-  }
-
-  if (!isPasswordValid(password)) {
-    return NextResponse.json(
-      { error: PASSWORD_REQUIREMENT_MESSAGE },
       { status: 400 }
     );
   }
@@ -159,7 +141,7 @@ export async function POST(req: NextRequest) {
     .from(emailVerificationCodes)
     .where(
       and(
-        eq(emailVerificationCodes.email, email.toLowerCase()),
+        eq(emailVerificationCodes.email, email),
         eq(emailVerificationCodes.verified, true),
         gte(emailVerificationCodes.expiresAt, new Date(Date.now() - 30 * 60 * 1000)) // Allow 30 min after verification
       )

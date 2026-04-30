@@ -10,6 +10,14 @@ export function getResend(): Resend | null {
 
 export const EMAIL_FROM = process.env.EMAIL_FROM ?? "TECXWORK <onboarding@resend.dev>";
 
+export function getPublicBaseUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    "https://tecxwork.com"
+  ).replace(/\/+$/, "");
+}
+
 /**
  * Escape user-supplied strings before interpolating them into HTML email
  * templates. Email clients won't run JS, but unescaped HTML enables tag/link
@@ -250,7 +258,7 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
           </p>
 
           <div style="margin-bottom: 24px;">
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://tecxwork.com"}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+            <a href="${getPublicBaseUrl()}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
               Browse Other Companies
             </a>
           </div>
@@ -305,7 +313,7 @@ export async function sendWaitlistEmail(data: WaitlistEmailData) {
           </div>
 
           <div style="margin-bottom: 24px;">
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://tecxwork.com"}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+            <a href="${getPublicBaseUrl()}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
               Browse Other Companies
             </a>
           </div>

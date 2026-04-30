@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applicantSlots } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
-import { eq, and, count, inArray } from "drizzle-orm";
+import { eq, count, inArray } from "drizzle-orm";
 import { EVENT_CONFIG } from "@/lib/data";
-import { getResend, EMAIL_FROM } from "@/lib/email";
+import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
 
 /**
  * PUT /api/admin/timeframe
@@ -17,6 +17,24 @@ export async function PUT(req: NextRequest) {
 
   const body = await req.json();
   const { forceOverride } = body;
+  const { startHour, startMinute = 0, endHour, endMinute, slotDuration, bufferMinutes = 0 } = body;
+
+  if (
+    typeof startHour !== "number" ||
+    typeof startMinute !== "number" ||
+    typeof endHour !== "number" ||
+    typeof endMinute !== "number" ||
+    typeof slotDuration !== "number" ||
+    typeof bufferMinutes !== "number" ||
+    startHour < 0 || startHour > 23 ||
+    startMinute < 0 || startMinute > 59 ||
+    endHour < startHour || endHour > 24 ||
+    endMinute < 0 || endMinute > 59 ||
+    slotDuration < 5 || slotDuration > 120 ||
+    bufferMinutes < 0 || bufferMinutes > 30
+  ) {
+    return NextResponse.json({ error: "Invalid time parameters" }, { status: 400 });
+  }
 
   // Check if any bookings exist (pending, accepted, or waitlisted)
   const [activeBookingsCount] = await db
@@ -128,7 +146,7 @@ export async function PUT(req: NextRequest) {
                 </div>
 
                 <div style="margin-bottom: 24px;">
-                  <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://tecxwork.com"}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+                  <a href="${getPublicBaseUrl()}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
                     Book New Interview
                   </a>
                 </div>
@@ -149,24 +167,6 @@ export async function PUT(req: NextRequest) {
     }
 
     console.log(`Force override: cancelled ${activeBookingsList.length} bookings, notified ${applicants.length} students`);
-  }
-  const { startHour, startMinute = 0, endHour, endMinute, slotDuration, bufferMinutes = 0 } = body;
-
-  if (
-    typeof startHour !== "number" ||
-    typeof startMinute !== "number" ||
-    typeof endHour !== "number" ||
-    typeof endMinute !== "number" ||
-    typeof slotDuration !== "number" ||
-    typeof bufferMinutes !== "number" ||
-    startHour < 0 || startHour > 23 ||
-    startMinute < 0 || startMinute > 59 ||
-    endHour < startHour || endHour > 24 ||
-    endMinute < 0 || endMinute > 59 ||
-    slotDuration < 5 || slotDuration > 120 ||
-    bufferMinutes < 0 || bufferMinutes > 30
-  ) {
-    return NextResponse.json({ error: "Invalid time parameters" }, { status: 400 });
   }
 
   // Update config

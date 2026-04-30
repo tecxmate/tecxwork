@@ -64,6 +64,33 @@ export const recruiterSignupSchema = z.object({
   confirmsWorkAuthorizationChecks: z.boolean(),
 });
 
+export const applicantSignupSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  name: z.string().trim().min(1, "Name is required"),
+  phone: z.string().trim().optional(),
+  nationality: z.string().trim().optional(),
+  schoolCode: z.string().trim().optional(),
+  schoolName: z.string().trim().optional(),
+  schoolNameEn: z.string().trim().optional(),
+  major: z.string().trim().optional(),
+  studyLevel: z.string().trim().optional(),
+  studyYear: z.string().trim().optional(),
+  expectedGraduation: z.string().trim().optional(),
+  jobSeekingStatus: z.string().trim().optional(),
+  workAuthorization: z.string().trim().optional(),
+  skills: z.array(z.string().trim()).optional(),
+  preferredLocations: z.array(z.string().trim()).optional(),
+  preferredIndustries: z.array(z.string().trim()).optional(),
+  workExperiences: z.unknown().optional(),
+  cvLink: z.string().trim().url("CV link must be a valid URL"),
+  linkedinUrl: z.string().trim().optional(),
+  portfolioUrl: z.string().trim().optional(),
+  description: z.string().trim().optional(),
+  pipaConsent: z.boolean(),
+  wantsNewsletter: z.boolean().optional(),
+});
+
 /* ---------- bookings ---------- */
 
 export const createBookingSchema = z.object({

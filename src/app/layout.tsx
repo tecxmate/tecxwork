@@ -35,7 +35,19 @@ const instrumentSerif = Instrument_Serif({
   style: "italic",
 });
 
+function getMetadataBase(): URL {
+  const configured =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_BASE_URL;
+
+  try {
+    return new URL(configured ?? "https://tecxwork.com");
+  } catch {
+    return new URL("https://tecxwork.com");
+  }
+}
+
 export const metadata: Metadata = {
+  metadataBase: getMetadataBase(),
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
