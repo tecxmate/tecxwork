@@ -1,10 +1,9 @@
-import Link from "next/link";
-
 import {
   AppTopBarAccountActions,
   type AppTopBarAccountLabels,
 } from "@/components/app-topbar-account-actions";
 import { AppTopBarActions } from "@/components/app-topbar-actions";
+import { BrandLink } from "@/components/brand-link";
 import { DesktopTopNav } from "@/components/desktop-top-nav";
 import {
   NotificationBell,
@@ -39,6 +38,7 @@ export function AppTopBar({
   const showNotifications = Boolean(navRole && navRole !== "guest");
   const isGuest = !navRole || navRole === "guest";
   const mobileOverflow = true;
+  const brandHref = navItems[0]?.href ?? href;
 
   return (
     <header className="app-header sticky top-0 z-10 border-b bg-white dark:bg-card">
@@ -46,10 +46,7 @@ export function AppTopBar({
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
         <div className="flex items-center gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
           <div className="flex items-center md:justify-self-start">
-            <Link href={href} className="flex items-center gap-2">
-              <img src="/icon.svg" alt="TECXWORK" className="h-8 w-8 rounded-md" />
-              <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
-            </Link>
+            <BrandLink href={brandHref} />
           </div>
           {navItems.length > 0 ? (
             <div className="hidden md:flex md:justify-self-center">
