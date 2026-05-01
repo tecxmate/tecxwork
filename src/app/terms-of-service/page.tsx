@@ -117,7 +117,7 @@ export default async function TermsOfServicePage() {
         <h2 className="text-xl font-semibold mt-8 mb-4">12. Contact Us</h2>
         <p>If you have any questions about these Terms, please contact us at:</p>
         <ul className="list-disc pl-5 space-y-1 mb-4">
-          <li><strong>Email:</strong> ceo@tecxmate.com</li>
+          <li><strong>Email:</strong> official@tecxmate.com</li>
           <li><strong>Company:</strong> TECXMATE COMPANY LIMITED</li>
           <li><strong>Address:</strong> Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam</li>
         </ul>

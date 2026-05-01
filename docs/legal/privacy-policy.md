@@ -72,7 +72,7 @@ Under the Taiwan PDPA, you possess the following rights regarding your personal 
 4. **Cease Collection/Processing:** You may demand that we stop collecting, processing, or using your data.
 5. **Deletion:** You may request the permanent deletion of your account and personal data at any time ("Right to be Forgotten").
 
-To exercise any of these rights, please contact us at: **<ceo@tecxmate.com>**.
+To exercise any of these rights, please contact us at: **<official@tecxmate.com>**.
 
 ## 7. Security Measures
 
@@ -87,6 +87,6 @@ We may update this Privacy Policy from time to time. We will notify you of any m
 If you have any questions or concerns about this Privacy Policy, please contact:
 
 * **Data Controller:** TECXMATE COMPANY LIMITED
-* **Email:** <ceo@tecxmate.com>
+* **Email:** <official@tecxmate.com>
 * **Address:** Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam
 * **Local Partner:** Vietnamese Student Association in Taiwan (VSATW)

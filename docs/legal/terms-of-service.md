@@ -65,6 +65,6 @@ Any dispute arising out of or in connection with these Terms, including any ques
 ## 11. Contact Us
 
 If you have any questions about these Terms, please contact us at:
-*   **Email:** ceo@tecxmate.com
+*   **Email:** official@tecxmate.com
 *   **Company:** TECXMATE COMPANY LIMITED
 *   **Address:** Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam

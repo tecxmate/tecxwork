@@ -101,7 +101,7 @@ export default async function PrivacyPolicyPage() {
           <li><strong>Cease Collection/Processing:</strong> You may demand that we stop collecting, processing, or using your data.</li>
           <li><strong>Deletion:</strong> You may request the permanent deletion of your account and personal data at any time (&quot;Right to be Forgotten&quot;).</li>
         </ol>
-        <p>To exercise any of these rights, please contact us at: <strong>ceo@tecxmate.com</strong>.</p>
+        <p>To exercise any of these rights, please contact us at: <strong>official@tecxmate.com</strong>.</p>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">8. Security Measures</h2>
         <p>We utilize industry-standard security measures, including encrypted connections (HTTPS), hashed passwords (bcrypt), and parameterized database queries to protect against unauthorized access, alteration, disclosure, or destruction of your personal data.</p>
@@ -113,7 +113,7 @@ export default async function PrivacyPolicyPage() {
         <p>If you have any questions or concerns about this Privacy Policy, please contact:</p>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Data Controller:</strong> TECXMATE COMPANY LIMITED</li>
-          <li><strong>Email:</strong> ceo@tecxmate.com</li>
+          <li><strong>Email:</strong> official@tecxmate.com</li>
           <li><strong>Address:</strong> Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam</li>
           <li><strong>Local Partner:</strong> Vietnamese Student Association in Taiwan (VSATW)</li>
         </ul>
