@@ -55,7 +55,7 @@ export function AppTopBar({
           ) : null}
           <div className="ml-auto flex items-center gap-2 whitespace-nowrap sm:gap-3 md:ml-0 md:justify-self-end">
             {isGuest && desktopActions ? (
-              <div className="flex items-center gap-2 whitespace-nowrap md:hidden">
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 {desktopActions}
               </div>
             ) : null}
@@ -63,7 +63,7 @@ export function AppTopBar({
               mobileOverflow={mobileOverflow}
               desktopChildren={
                 <>
-                  {desktopActions}
+                  {!isGuest ? desktopActions : null}
                   {showNotifications ? <NotificationBell labels={notificationLabels} /> : null}
                   <ThemeToggle />
                   {showStudentLanguageSwitcher ? <StudentLanguageSwitcher className="sm:w-48" /> : null}
@@ -83,13 +83,8 @@ export function AppTopBar({
                       </div>
                     ) : null}
                   </div>
-                  {showActionsOnMobile && !mobileActions && desktopActions ? (
+                  {showActionsOnMobile && !mobileActions && desktopActions && !isGuest ? (
                     <div className="px-2 py-2">
-                      {desktopActions}
-                    </div>
-                  ) : null}
-                  {isGuest && desktopActions ? (
-                    <div className="flex items-center justify-end gap-3 px-2 py-2">
                       {desktopActions}
                     </div>
                   ) : null}
