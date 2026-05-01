@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BRAND_SPLASH_EVENT, type BrandSplashDetail } from "@/components/brand-splash";
 import { useStudentI18n } from "@/components/student-locale-provider";
 
 import {
@@ -10,6 +11,8 @@ import {
   navItemsByRole,
   type NavRole,
 } from "@/lib/navigation";
+
+const SKELETON_TABS = new Set<string>(["/browse", "/jobs"]);
 
 export function DesktopTopNav({
   role,
@@ -83,6 +86,20 @@ export function DesktopTopNav({
             prefetch={false}
             onMouseEnter={() => router.prefetch(item.href)}
             onFocus={() => router.prefetch(item.href)}
+            onClick={(event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) {
+                return;
+              }
+              if (currentPath === item.href) return;
+              if (SKELETON_TABS.has(item.href)) return;
+              event.preventDefault();
+              window.dispatchEvent(
+                new CustomEvent<BrandSplashDetail>(BRAND_SPLASH_EVENT, {
+                  detail: { href: item.href },
+                })
+              );
+              router.push(item.href);
+            }}
             className={[
               "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               active

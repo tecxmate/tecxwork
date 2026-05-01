@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { BRAND_SPLASH_EVENT, type BrandSplashDetail } from "@/components/brand-splash";
 import { useStudentI18n } from "@/components/student-locale-provider";
 
 import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
+
+const SKELETON_TABS = new Set<string>(["/browse", "/jobs"]);
 
 export function MobileBottomNav({
   role,
@@ -130,6 +133,13 @@ export function MobileBottomNav({
                   }
                   event.preventDefault();
                   markPending(item.href);
+                  if (!SKELETON_TABS.has(item.href)) {
+                    window.dispatchEvent(
+                      new CustomEvent<BrandSplashDetail>(BRAND_SPLASH_EVENT, {
+                        detail: { href: item.href },
+                      })
+                    );
+                  }
                   router.push(item.href);
                 }}
                 className={[
