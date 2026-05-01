@@ -413,7 +413,13 @@ export function AdminSectionZh() {
           <p>一鍵將活動前的面試行程提醒寄給所有學生或所有招募人員。每筆寄送都會記錄成功/失敗 — 於 email-stats 面板查看送達狀況。</p>
 
           <h4 className="font-semibold mt-4 mb-2">9. 首頁圖片與時段</h4>
-          <p>管理首頁主視覺圖片(URL 會依 Vercel Blob 主機白名單驗證),並於變動時調整活動時段 / 顯示日期。</p>
+          <p className="mb-2">管理首頁主視覺圖片(URL 會依 Vercel Blob 主機白名單驗證),並於變動時調整活動時段 / 顯示日期。</p>
+          <ul className="list-disc pl-5 space-y-1 mb-2">
+            <li>上傳的圖片會成為首頁 <strong>主視覺輪播</strong> 的投影片:活動資訊(標題、倒數計時、CTA)為第 1 張,之後依序顯示每張上傳的照片。</li>
+            <li>輪播在主視覺停留 8 秒、每張照片停留 5 秒,接著循環回到主視覺。訪客可滑動、點選圓點,或滑鼠/觸控暫停。</li>
+            <li>上傳 <strong>0 張</strong> → 不啟用輪播,僅顯示靜態主視覺。<strong>1 張以上</strong> → 啟用輪播。最多支援 4 張。</li>
+            <li>同樣的圖片也會顯示在首頁下方的「活動精選」相簿。</li>
+          </ul>
         </div>
 
         <div>

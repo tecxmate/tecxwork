@@ -15,6 +15,7 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
+import { HeroCarousel } from "@/components/hero-carousel";
 import { LogoutButton } from "@/components/logout-button";
 import { HomepageImageEditor } from "@/components/homepage-image-editor";
 import { EVENT_CONFIG } from "@/lib/data";
@@ -177,52 +178,54 @@ export default async function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="border-b bg-gradient-to-b from-primary/5 to-background px-4 py-12 sm:px-6 sm:py-20 lg:py-28">
-          <div className="mx-auto max-w-4xl text-center">
-            <Badge className="mb-4">{messages.landing.heroBadge}</Badge>
-            <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              {messages.landing.heroTitle}
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base italic text-muted-foreground sm:text-lg">
-              &ldquo;{EVENT_CONFIG.tagline}&rdquo;
-            </p>
+        <HeroCarousel images={homepageImages}>
+          <div className="px-4 py-12 sm:px-6 sm:py-20 lg:py-28">
+            <div className="mx-auto max-w-4xl text-center">
+              <Badge className="mb-4">{messages.landing.heroBadge}</Badge>
+              <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                {messages.landing.heroTitle}
+              </h1>
+              <p className="mx-auto mt-4 max-w-2xl text-base italic text-muted-foreground sm:text-lg">
+                &ldquo;{EVENT_CONFIG.tagline}&rdquo;
+              </p>
 
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground sm:text-base">
-              <span className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
-                {formattedDate}
-              </span>
-              <span className="flex items-center gap-2">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                10:00 - 17:30
-              </span>
-              <span className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
-                {EVENT_CONFIG.hostedAt}
-              </span>
-            </div>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground sm:text-base">
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {formattedDate}
+                </span>
+                <span className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                  10:00 - 17:30
+                </span>
+                <span className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {EVENT_CONFIG.hostedAt}
+                </span>
+              </div>
 
-            <div className="mt-8 flex justify-center">
-              <Countdown target={EVENT_CONFIG.date} />
-            </div>
+              <div className="mt-8 flex justify-center">
+                <Countdown target={EVENT_CONFIG.date} />
+              </div>
 
-            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link
-                href="/browse"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
-              >
-                {messages.common.browseCompanies}
-              </Link>
-              <Link
-                href="/jobs"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-              >
-                <Briefcase className="h-4 w-4" />
-                {messages.common.findJobs}
-              </Link>
+              <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <Link
+                  href="/browse"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
+                >
+                  {messages.common.browseCompanies}
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  {messages.common.findJobs}
+                </Link>
+              </div>
             </div>
           </div>
-        </section>
+        </HeroCarousel>
 
         {/* Event Photos Section */}
         <section className="border-b px-4 py-12 sm:px-6 sm:py-16">

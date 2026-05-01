@@ -413,7 +413,13 @@ export function AdminSectionEn() {
           <p>Send pre-event interview schedule reminders to all students or all recruiters with one click. Each send is logged with success/error per recipient — view the email-stats panel to see delivery health.</p>
 
           <h4 className="font-semibold mt-4 mb-2">9. Homepage Images &amp; Timeframe</h4>
-          <p>Manage the hero/homepage images (URLs validated against the Vercel Blob host allow-list) and adjust the event timeframe / display date if it shifts.</p>
+          <p className="mb-2">Manage the hero/homepage images (URLs validated against the Vercel Blob host allow-list) and adjust the event timeframe / display date if it shifts.</p>
+          <ul className="list-disc pl-5 space-y-1 mb-2">
+            <li>Uploaded images become slides in the homepage <strong>hero carousel</strong>: the event details (title, countdown, CTA) are slide 1, then each uploaded photo follows in order.</li>
+            <li>The carousel auto-advances every 8s on the hero and 5s on each photo, then loops back to the hero. Visitors can swipe, click the dots, or hover/touch to pause.</li>
+            <li>Upload <strong>0 photos</strong> → no carousel; only the static hero shows. <strong>1+ photos</strong> → carousel activates. Up to 4 images supported.</li>
+            <li>The same images also feed the &quot;Event Highlights&quot; gallery further down the homepage.</li>
+          </ul>
         </div>
 
         <div>

@@ -413,7 +413,13 @@ export function AdminSectionVi() {
           <p>Gửi email nhắc lịch phỏng vấn cho mọi sinh viên hoặc mọi nhà tuyển dụng chỉ với một nút. Mỗi lần gửi đều ghi log thành công/lỗi cho từng người — xem bảng email-stats để theo dõi.</p>
 
           <h4 className="font-semibold mt-4 mb-2">9. Ảnh trang chủ &amp; Khung giờ</h4>
-          <p>Quản lý ảnh hero/trang chủ (URL được kiểm tra theo allow-list của Vercel Blob) và điều chỉnh khung giờ / ngày hiển thị nếu thay đổi.</p>
+          <p className="mb-2">Quản lý ảnh hero/trang chủ (URL được kiểm tra theo allow-list của Vercel Blob) và điều chỉnh khung giờ / ngày hiển thị nếu thay đổi.</p>
+          <ul className="list-disc pl-5 space-y-1 mb-2">
+            <li>Ảnh được tải lên sẽ trở thành các slide trong <strong>carousel hero</strong> ở trang chủ: thông tin sự kiện (tiêu đề, đồng hồ đếm ngược, nút CTA) là slide 1, sau đó là từng ảnh theo thứ tự.</li>
+            <li>Carousel tự chuyển sau 8 giây ở hero và 5 giây ở mỗi ảnh, rồi quay lại hero. Khách có thể vuốt, nhấn vào các chấm hoặc di chuột/chạm để tạm dừng.</li>
+            <li>Tải <strong>0 ảnh</strong> → không có carousel; chỉ hiện hero tĩnh. <strong>1 ảnh trở lên</strong> → kích hoạt carousel. Hỗ trợ tối đa 4 ảnh.</li>
+            <li>Cùng các ảnh này cũng được dùng cho mục &quot;Điểm nhấn sự kiện&quot; phía dưới trang chủ.</li>
+          </ul>
         </div>
 
         <div>
