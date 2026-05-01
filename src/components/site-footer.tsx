@@ -30,7 +30,9 @@ export function SiteFooter() {
               Tutorial
             </Link>
             <span className="opacity-40">&middot;</span>
-            <span>PIPA compliant</span>
+            <Link href="/about" className="underline hover:text-primary">
+              About TECXWORK
+            </Link>
           </div>
         </div>
       </div>
