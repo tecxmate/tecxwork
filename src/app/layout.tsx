@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { BackToTop } from "@/components/back-to-top";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { StudentLocaleProvider } from "@/components/student-locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -103,6 +104,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <StudentLocaleProvider initialLocale={studentLocale}>
             <RouteLoadingSignal />
+            <PwaFirstRunSplash />
             {children}
             <BackToTop />
             <Suspense fallback={null}>
