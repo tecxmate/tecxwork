@@ -102,7 +102,7 @@ export function MobileBottomNav({
   }
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[max(0.125rem,calc(env(safe-area-inset-bottom)-0.375rem))] md:hidden">
         <div
           className="mx-auto grid max-w-xl px-2 py-0.5"
           style={{
