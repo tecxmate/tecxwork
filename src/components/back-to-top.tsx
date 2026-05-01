@@ -59,7 +59,7 @@ export function BackToTop() {
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       className={cn(
-        "fixed bottom-20 z-40 flex h-12 w-12 cursor-pointer touch-none items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 active:scale-95 md:bottom-6",
+        "fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-40 flex h-12 w-12 cursor-pointer touch-none items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 active:scale-95 md:bottom-6",
         position === "right" ? "right-4" : "left-4"
       )}
       aria-label="Back to top"

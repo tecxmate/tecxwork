@@ -4,6 +4,7 @@ import { EB_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { BackToTop } from "@/components/back-to-top";
+import { BrandSplash } from "@/components/brand-splash";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
@@ -105,6 +106,7 @@ export default async function RootLayout({
           <StudentLocaleProvider initialLocale={studentLocale}>
             <RouteLoadingSignal />
             <PwaFirstRunSplash />
+            <BrandSplash />
             {children}
             <BackToTop />
             <Suspense fallback={null}>
