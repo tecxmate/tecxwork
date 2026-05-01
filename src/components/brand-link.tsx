@@ -5,35 +5,47 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 const MIN_SPLASH_MS = 280;
 const MAX_SPLASH_MS = 4000;
+const FADE_OUT_MS = 420;
 
 export function BrandLink({ href = "/" }: { href?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const [splash, setSplash] = useState(false);
+  const [closing, setClosing] = useState(false);
   const startedAt = useRef(0);
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
     startedAt.current = Date.now();
+    setClosing(false);
     setSplash(true);
     router.push(href);
   }
 
   useEffect(() => {
-    if (!splash) return;
+    if (!splash || closing) return;
     if (pathname !== href) return;
     const elapsed = Date.now() - startedAt.current;
     const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
-    const t = window.setTimeout(() => setSplash(false), remaining);
+    const t = window.setTimeout(() => setClosing(true), remaining);
     return () => window.clearTimeout(t);
-  }, [splash, pathname, href]);
+  }, [splash, closing, pathname, href]);
 
   useEffect(() => {
-    if (!splash) return;
-    const t = window.setTimeout(() => setSplash(false), MAX_SPLASH_MS);
+    if (!splash || closing) return;
+    const t = window.setTimeout(() => setClosing(true), MAX_SPLASH_MS);
     return () => window.clearTimeout(t);
-  }, [splash]);
+  }, [splash, closing]);
+
+  useEffect(() => {
+    if (!closing) return;
+    const t = window.setTimeout(() => {
+      setSplash(false);
+      setClosing(false);
+    }, FADE_OUT_MS);
+    return () => window.clearTimeout(t);
+  }, [closing]);
 
   return (
     <>
@@ -41,17 +53,22 @@ export function BrandLink({ href = "/" }: { href?: string }) {
         <img src="/icon.svg" alt="TECXWORK" className="h-8 w-8 rounded-md" />
         <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
       </a>
-      {splash ? <SplashOverlay /> : null}
+      {splash ? <SplashOverlay closing={closing} fadeOutMs={FADE_OUT_MS} /> : null}
     </>
   );
 }
 
-function SplashOverlay() {
+function SplashOverlay({ closing, fadeOutMs }: { closing: boolean; fadeOutMs: number }) {
   return (
     <div
       aria-hidden
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-white dark:bg-background"
-      style={{ animation: "tw-splash-fade 120ms ease-out" }}
+      style={{
+        animation: "tw-splash-fade 160ms ease-out",
+        opacity: closing ? 0 : 1,
+        transition: `opacity ${fadeOutMs}ms cubic-bezier(.4,0,.2,1)`,
+        willChange: "opacity",
+      }}
     >
       <style>{`
         @keyframes tw-splash-fade { from { opacity: 0 } to { opacity: 1 } }

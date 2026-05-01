@@ -1,14 +1,18 @@
 import { Metadata } from "next";
+import { AppTopBar } from "@/components/app-topbar";
 import { SiteFooter } from "@/components/site-footer";
+import { getSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Terms of Service | V-GEN TRIDENT",
   description: "Terms of Service for V-GEN TRIDENT",
 };
 
-export default function TermsOfServicePage() {
+export default async function TermsOfServicePage() {
+  const session = await getSession();
   return (
     <div className="flex min-h-full flex-1 flex-col">
+      <AppTopBar navRole={session?.role ?? "guest"} currentPath="/terms-of-service" />
       <main className="flex-1 max-w-3xl mx-auto px-4 py-12 w-full">
         <h1 className="text-3xl font-bold mb-6">TECXWORK Terms of Service</h1>        <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
 

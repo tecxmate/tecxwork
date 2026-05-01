@@ -1,14 +1,18 @@
 import { Metadata } from "next";
+import { AppTopBar } from "@/components/app-topbar";
 import { SiteFooter } from "@/components/site-footer";
+import { getSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | V-GEN TRIDENT",
   description: "Privacy Policy for V-GEN TRIDENT",
 };
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const session = await getSession();
   return (
     <div className="flex min-h-full flex-1 flex-col">
+      <AppTopBar navRole={session?.role ?? "guest"} currentPath="/privacy-policy" />
       <main className="flex-1 max-w-3xl mx-auto px-4 py-12 w-full">
         <h1 className="text-3xl font-bold mb-6">TECXWORK Privacy Policy</h1>        <p className="text-muted-foreground mb-8"><strong>Effective Date:</strong> April 30, 2026</p>
 
