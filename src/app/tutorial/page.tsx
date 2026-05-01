@@ -51,7 +51,7 @@ export default async function TutorialPage() {
         <h1 className="text-3xl font-bold mb-2">{ui.pageTitle}</h1>
         <p className="text-muted-foreground mb-8">{ui.pageSubtitle(isAdmin)}</p>
 
-        <div className="sticky top-[calc(env(safe-area-inset-top)+56px)] md:top-[64px] z-10 -mx-4 px-4 py-3 mb-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b">
+        <div className="tutorial-shortcut-bar sticky top-[calc(env(safe-area-inset-top)+56px)] md:top-[64px] z-10 -mx-4 px-4 py-3 mb-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b transition-opacity duration-150">
           <div className="flex gap-3 overflow-x-auto">
             <a
               href="#student-guide"

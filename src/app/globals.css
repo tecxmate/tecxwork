@@ -358,3 +358,8 @@ header.app-header::after {
     scroll-behavior: auto !important;
   }
 }
+
+body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
+  opacity: 0;
+  pointer-events: none;
+}

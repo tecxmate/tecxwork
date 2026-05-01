@@ -19,7 +19,7 @@ export function StudentSectionZh() {
         <div>
           <h3 className="text-xl font-semibold mb-2">概覽</h3>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>瀏覽</strong>參與企業、開放職缺及來自 1111 人力銀行的外部職缺</li>
+            <li><strong>瀏覽</strong>參與企業及其開放職缺</li>
             <li><strong>申請</strong>於指定時段面試 — 招募人員會審核您的履歷並確認</li>
             <li><strong>管理</strong>您的個人資料(技能、學校、工作經驗、證照、履歷、照片)</li>
             <li>當招募人員接受、拒絕或加入候補時,<strong>透過站內與電子郵件接收通知</strong></li>
@@ -60,8 +60,7 @@ export function StudentSectionZh() {
 
           <h4 className="font-semibold mt-4 mb-2">尋找企業與職缺</h4>
           <ul className="list-disc pl-5 space-y-1 mb-4">
-            <li><strong>企業分頁</strong> — 已註冊活動的招募人員與其開放職缺</li>
-            <li><strong>外部職缺分頁</strong> — 自動爬取自 1111 人力銀行的職缺,具中英文篩選</li>
+            <li><strong>企業</strong> — 已註冊活動的招募人員與其開放職缺</li>
             <li>搜尋列可依公司、職位或職缺名稱篩選</li>
             <li>產業篩選晶片可縮小企業列表</li>
           </ul>
@@ -311,7 +310,6 @@ export function AdminSectionZh() {
             <li><strong>職缺審核</strong> — 審查與核准/退回每筆招募人員張貼的職缺</li>
             <li><strong>用戶管理</strong> — 檢視、搜尋、排序、移除學生與招募人員</li>
             <li><strong>預約</strong> — 檢視所有預約;匯出 CSV</li>
-            <li><strong>外部職缺</strong> — 手動或透過 cron 觸發 1111 人力銀行爬蟲</li>
             <li><strong>提醒信</strong> — 活動前批次寄送行程給學生與招募人員</li>
             <li><strong>首頁圖片</strong> — 管理首頁顯示的主視覺圖片</li>
           </ul>
@@ -402,17 +400,10 @@ export function AdminSectionZh() {
           <h4 className="font-semibold mt-4 mb-2">6. 預約與匯出</h4>
           <p>預約面板顯示所有招募人員的所有面試,並有狀態篩選。點選 <strong>匯出 CSV</strong> 可下載含申請人、招募人員、時間、狀態與履歷連結的檔案 — 數值已預先轉義以防試算表公式注入。</p>
 
-          <h4 className="font-semibold mt-4 mb-2">7. 外部職缺爬蟲</h4>
-          <ul className="list-disc pl-5 space-y-1 mb-4">
-            <li>每日 18:00 UTC 透過 Vercel cron 執行,並以 <code>CRON_SECRET</code> 保護</li>
-            <li>也可從管理員後台手動觸發</li>
-            <li>從 1111 人力銀行抓取新職缺至公開站的「外部職缺」分頁</li>
-          </ul>
-
-          <h4 className="font-semibold mt-4 mb-2">8. 提醒信</h4>
+          <h4 className="font-semibold mt-4 mb-2">7. 提醒信</h4>
           <p>一鍵將活動前的面試行程提醒寄給所有學生或所有招募人員。每筆寄送都會記錄成功/失敗 — 於 email-stats 面板查看送達狀況。</p>
 
-          <h4 className="font-semibold mt-4 mb-2">9. 首頁圖片與時段</h4>
+          <h4 className="font-semibold mt-4 mb-2">8. 首頁圖片與時段</h4>
           <p className="mb-2">管理首頁主視覺圖片(URL 會依 Vercel Blob 主機白名單驗證),並於變動時調整活動時段 / 顯示日期。</p>
           <ul className="list-disc pl-5 space-y-1 mb-2">
             <li>上傳的圖片會成為首頁 <strong>主視覺輪播</strong> 的投影片:活動資訊(標題、倒數計時、CTA)為第 1 張,之後依序顯示每張上傳的照片。</li>
@@ -479,10 +470,6 @@ export function AdminSectionZh() {
             <div>
               <p className="font-semibold">「已核准的職缺沒有出現」</p>
               <p>→ 招募人員可能於核准後再次編輯,使其回到草稿。請重新審核佇列。</p>
-            </div>
-            <div>
-              <p className="font-semibold">「Cron 爬蟲沒執行」</p>
-              <p>→ 確認 <code>CRON_SECRET</code> 在 Vercel 專案設定與 <code>vercel.json</code> 一致;檢查 Vercel 的 Cron 紀錄。</p>
             </div>
           </div>
         </div>

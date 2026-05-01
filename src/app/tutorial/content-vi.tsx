@@ -19,7 +19,7 @@ export function StudentSectionVi() {
         <div>
           <h3 className="text-xl font-semibold mb-2">Tổng quan</h3>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Khám phá</strong> các công ty tham gia, vị trí đang tuyển và việc làm bên ngoài từ 1111 Job Bank</li>
+            <li><strong>Khám phá</strong> các công ty tham gia và vị trí đang tuyển</li>
             <li><strong>Đăng ký</strong> phỏng vấn vào khung giờ bạn chọn — nhà tuyển dụng sẽ xem CV và xác nhận</li>
             <li><strong>Quản lý</strong> hồ sơ cá nhân (kỹ năng, trường, kinh nghiệm, chứng chỉ, CV, ảnh)</li>
             <li><strong>Nhận thông báo</strong> trong ứng dụng và qua email khi nhà tuyển dụng chấp nhận, từ chối hoặc xếp danh sách chờ</li>
@@ -60,8 +60,7 @@ export function StudentSectionVi() {
 
           <h4 className="font-semibold mt-4 mb-2">Tìm công ty và việc làm</h4>
           <ul className="list-disc pl-5 space-y-1 mb-4">
-            <li><strong>Tab Công ty</strong> — các nhà tuyển dụng đã đăng ký sự kiện và vị trí của họ</li>
-            <li><strong>Tab Việc làm bên ngoài</strong> — việc làm tự động lấy từ 1111 Job Bank, có bộ lọc Anh/Trung</li>
+            <li><strong>Công ty</strong> — các nhà tuyển dụng đã đăng ký sự kiện và vị trí của họ</li>
             <li>Thanh tìm kiếm lọc theo công ty, vị trí hoặc tên việc làm</li>
             <li>Bộ lọc ngành nghề thu hẹp danh sách công ty</li>
           </ul>
@@ -311,7 +310,6 @@ export function AdminSectionVi() {
             <li><strong>Kiểm duyệt việc làm</strong> — xem &amp; duyệt/từ chối từng tin do nhà tuyển dụng đăng</li>
             <li><strong>Quản lý người dùng</strong> — xem, tìm, sắp xếp, gỡ sinh viên và nhà tuyển dụng</li>
             <li><strong>Đặt lịch</strong> — xem mọi đơn đặt; xuất CSV</li>
-            <li><strong>Việc làm bên ngoài</strong> — chạy crawler 1111 Job Bank thủ công hoặc qua cron</li>
             <li><strong>Email nhắc nhở</strong> — gửi hàng loạt lịch trình cho sinh viên và nhà tuyển dụng trước sự kiện</li>
             <li><strong>Ảnh trang chủ</strong> — quản lý ảnh hero hiển thị ở trang đích</li>
           </ul>
@@ -402,17 +400,10 @@ export function AdminSectionVi() {
           <h4 className="font-semibold mt-4 mb-2">6. Đặt lịch &amp; Xuất dữ liệu</h4>
           <p>Bảng đặt lịch hiển thị mọi cuộc phỏng vấn của tất cả nhà tuyển dụng kèm bộ lọc trạng thái. Nhấn <strong>Xuất CSV</strong> để tải xuống với ứng viên, nhà tuyển dụng, giờ, trạng thái và liên kết CV — các giá trị đã được escape để tránh chèn công thức.</p>
 
-          <h4 className="font-semibold mt-4 mb-2">7. Crawler việc làm bên ngoài</h4>
-          <ul className="list-disc pl-5 space-y-1 mb-4">
-            <li>Chạy hàng ngày lúc 18:00 UTC qua Vercel cron với khoá <code>CRON_SECRET</code></li>
-            <li>Bạn cũng có thể chạy thủ công từ bảng điều khiển admin</li>
-            <li>Lấy tin mới từ 1111 Job Bank vào tab Việc làm bên ngoài trên trang công khai</li>
-          </ul>
-
-          <h4 className="font-semibold mt-4 mb-2">8. Email nhắc nhở</h4>
+          <h4 className="font-semibold mt-4 mb-2">7. Email nhắc nhở</h4>
           <p>Gửi email nhắc lịch phỏng vấn cho mọi sinh viên hoặc mọi nhà tuyển dụng chỉ với một nút. Mỗi lần gửi đều ghi log thành công/lỗi cho từng người — xem bảng email-stats để theo dõi.</p>
 
-          <h4 className="font-semibold mt-4 mb-2">9. Ảnh trang chủ &amp; Khung giờ</h4>
+          <h4 className="font-semibold mt-4 mb-2">8. Ảnh trang chủ &amp; Khung giờ</h4>
           <p className="mb-2">Quản lý ảnh hero/trang chủ (URL được kiểm tra theo allow-list của Vercel Blob) và điều chỉnh khung giờ / ngày hiển thị nếu thay đổi.</p>
           <ul className="list-disc pl-5 space-y-1 mb-2">
             <li>Ảnh được tải lên sẽ trở thành các slide trong <strong>carousel hero</strong> ở trang chủ: thông tin sự kiện (tiêu đề, đồng hồ đếm ngược, nút CTA) là slide 1, sau đó là từng ảnh theo thứ tự.</li>
@@ -479,10 +470,6 @@ export function AdminSectionVi() {
             <div>
               <p className="font-semibold">&quot;Tin đã duyệt không hiển thị&quot;</p>
               <p>→ Có thể nhà tuyển dụng đã sửa sau khi duyệt, đưa tin trở lại nháp. Hãy xem lại hàng đợi.</p>
-            </div>
-            <div>
-              <p className="font-semibold">&quot;Cron crawler chưa chạy&quot;</p>
-              <p>→ Kiểm tra <code>CRON_SECRET</code> khớp giữa cài đặt Vercel và <code>vercel.json</code>; xem log Cron trong Vercel.</p>
             </div>
           </div>
         </div>

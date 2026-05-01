@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, type ReactNode, useState } from "react";
+import { Children, type ReactNode, useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 export function AppTopBarActions({
@@ -14,6 +14,18 @@ export function AppTopBarActions({
 }) {
   const [open, setOpen] = useState(false);
   const mobileItems = Children.toArray(mobileChildren);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (open) {
+      document.body.setAttribute("data-topbar-menu-open", "true");
+    } else {
+      document.body.removeAttribute("data-topbar-menu-open");
+    }
+    return () => {
+      document.body.removeAttribute("data-topbar-menu-open");
+    };
+  }, [open]);
 
   if (!mobileOverflow) {
     return (

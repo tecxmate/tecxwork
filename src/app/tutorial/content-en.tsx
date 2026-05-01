@@ -19,7 +19,7 @@ export function StudentSectionEn() {
         <div>
           <h3 className="text-xl font-semibold mb-2">Overview</h3>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Browse</strong> participating companies, their open positions, and external jobs from 1111 Job Bank</li>
+            <li><strong>Browse</strong> participating companies and their open positions</li>
             <li><strong>Apply</strong> for an interview at a chosen time — recruiters review your CV and confirm</li>
             <li><strong>Manage</strong> your own profile (skills, school, work experience, certifications, CV, photo)</li>
             <li><strong>Get notified</strong> in-app and via email when a recruiter accepts, rejects, or waitlists you</li>
@@ -60,8 +60,7 @@ export function StudentSectionEn() {
 
           <h4 className="font-semibold mt-4 mb-2">Finding Companies and Jobs</h4>
           <ul className="list-disc pl-5 space-y-1 mb-4">
-            <li><strong>Companies tab</strong> — recruiters who registered for the event and their open positions</li>
-            <li><strong>External Jobs tab</strong> — auto-crawled jobs from 1111 Job Bank, with English/Chinese filter</li>
+            <li><strong>Companies</strong> — recruiters who registered for the event and their open positions</li>
             <li>Search bar filters by company, position, or job title</li>
             <li>Industry filter chips narrow the company list</li>
           </ul>
@@ -311,7 +310,6 @@ export function AdminSectionEn() {
             <li><strong>Job moderation</strong> — review &amp; approve/reject every recruiter-posted job</li>
             <li><strong>People management</strong> — view, search, sort, remove students and recruiters</li>
             <li><strong>Bookings</strong> — view all bookings; export as CSV</li>
-            <li><strong>External jobs</strong> — trigger the 1111 Job Bank crawler manually or via cron</li>
             <li><strong>Email reminders</strong> — bulk-send schedules to students and recruiters before the event</li>
             <li><strong>Homepage images</strong> — manage hero images shown on the landing page</li>
           </ul>
@@ -402,17 +400,10 @@ export function AdminSectionEn() {
           <h4 className="font-semibold mt-4 mb-2">6. Bookings &amp; Export</h4>
           <p>The bookings panel shows every interview across all recruiters with status filters. Click <strong>Export CSV</strong> for a download with applicant, recruiter, time, status, and CV link — values are pre-escaped against spreadsheet formula injection.</p>
 
-          <h4 className="font-semibold mt-4 mb-2">7. External Jobs Crawler</h4>
-          <ul className="list-disc pl-5 space-y-1 mb-4">
-            <li>Runs daily at 18:00 UTC via Vercel cron with the <code>CRON_SECRET</code> guard</li>
-            <li>You can also trigger an ad-hoc run from the admin dashboard</li>
-            <li>Pulls new postings from 1111 Job Bank into the External Jobs tab on the public site</li>
-          </ul>
-
-          <h4 className="font-semibold mt-4 mb-2">8. Email Reminders</h4>
+          <h4 className="font-semibold mt-4 mb-2">7. Email Reminders</h4>
           <p>Send pre-event interview schedule reminders to all students or all recruiters with one click. Each send is logged with success/error per recipient — view the email-stats panel to see delivery health.</p>
 
-          <h4 className="font-semibold mt-4 mb-2">9. Homepage Images &amp; Timeframe</h4>
+          <h4 className="font-semibold mt-4 mb-2">8. Homepage Images &amp; Timeframe</h4>
           <p className="mb-2">Manage the hero/homepage images (URLs validated against the Vercel Blob host allow-list) and adjust the event timeframe / display date if it shifts.</p>
           <ul className="list-disc pl-5 space-y-1 mb-2">
             <li>Uploaded images become slides in the homepage <strong>hero carousel</strong>: the event details (title, countdown, CTA) are slide 1, then each uploaded photo follows in order.</li>
@@ -479,10 +470,6 @@ export function AdminSectionEn() {
             <div>
               <p className="font-semibold">&quot;Approved job not appearing&quot;</p>
               <p>→ Recruiter may have edited it after approval, sending it back to draft. Re-review the queue.</p>
-            </div>
-            <div>
-              <p className="font-semibold">&quot;Cron crawler hasn&apos;t run&quot;</p>
-              <p>→ Verify <code>CRON_SECRET</code> matches between Vercel project settings and <code>vercel.json</code>; check the Cron logs in Vercel.</p>
             </div>
           </div>
         </div>
