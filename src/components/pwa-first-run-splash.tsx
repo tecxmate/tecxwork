@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "tw-pwa-splash-seen";
 const VISIBLE_MS = 1100;
 const FADE_MS = 380;
 
@@ -19,20 +18,10 @@ export function PwaFirstRunSplash() {
 
   useEffect(() => {
     if (!isStandalone()) return;
-    try {
-      if (window.localStorage.getItem(STORAGE_KEY) === "1") return;
-    } catch {
-      return;
-    }
     setShow(true);
     const closeT = window.setTimeout(() => setClosing(true), VISIBLE_MS);
     const removeT = window.setTimeout(() => {
       setShow(false);
-      try {
-        window.localStorage.setItem(STORAGE_KEY, "1");
-      } catch {
-        // ignore
-      }
     }, VISIBLE_MS + FADE_MS);
     return () => {
       window.clearTimeout(closeT);
