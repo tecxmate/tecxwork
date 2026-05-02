@@ -9,12 +9,15 @@ const FADE_OUT_MS = 420;
 
 export const BRAND_SPLASH_EVENT = "tw:brand-splash";
 
-export type BrandSplashDetail = { href: string };
+export type BrandSplashVariant = "full" | "compact";
+
+export type BrandSplashDetail = { href: string; variant?: BrandSplashVariant };
 
 export function BrandSplash() {
   const pathname = usePathname();
   const [show, setShow] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [variant, setVariant] = useState<BrandSplashVariant>("full");
   const targetHref = useRef<string | null>(null);
   const startedAt = useRef(0);
 
@@ -23,6 +26,7 @@ export function BrandSplash() {
       const detail = (e as CustomEvent<BrandSplashDetail>).detail;
       targetHref.current = detail?.href ?? "/";
       startedAt.current = Date.now();
+      setVariant(detail?.variant ?? "full");
       setClosing(false);
       setShow(true);
     }
@@ -57,10 +61,16 @@ export function BrandSplash() {
 
   if (!show) return null;
 
+  const isCompact = variant === "compact";
+
   return (
     <div
       aria-hidden
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-white dark:bg-background"
+      className={
+        isCompact
+          ? "pointer-events-none fixed inset-0 z-[100] flex items-center justify-center"
+          : "fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-white dark:bg-background"
+      }
       style={{
         animation: "tw-splash-fade 160ms ease-out",
         opacity: closing ? 0 : 1,
@@ -91,6 +101,11 @@ export function BrandSplash() {
         viewBox="0 0 512 512"
         className="tw-pop h-28 w-28 rounded-3xl"
         xmlns="http://www.w3.org/2000/svg"
+        style={
+          isCompact
+            ? { boxShadow: "0 0 60px 30px rgba(255,255,255,0.95), 0 8px 32px rgba(0,0,0,0.18)" }
+            : undefined
+        }
       >
         <rect width="512" height="512" rx="104" fill="#8C52FF" />
         <rect
@@ -136,7 +151,9 @@ export function BrandSplash() {
           strokeLinecap="round"
         />
       </svg>
-      <span className="font-wordmark text-3xl text-primary italic">tecxwork</span>
+      {isCompact ? null : (
+        <span className="font-wordmark text-3xl text-primary italic">tecxwork</span>
+      )}
     </div>
   );
 }

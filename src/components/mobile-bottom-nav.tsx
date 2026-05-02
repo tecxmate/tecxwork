@@ -136,7 +136,7 @@ export function MobileBottomNav({
                   if (!SKELETON_TABS.has(item.href)) {
                     window.dispatchEvent(
                       new CustomEvent<BrandSplashDetail>(BRAND_SPLASH_EVENT, {
-                        detail: { href: item.href },
+                        detail: { href: item.href, variant: "compact" },
                       })
                     );
                   }

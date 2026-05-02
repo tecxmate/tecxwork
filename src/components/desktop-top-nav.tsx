@@ -95,7 +95,7 @@ export function DesktopTopNav({
               event.preventDefault();
               window.dispatchEvent(
                 new CustomEvent<BrandSplashDetail>(BRAND_SPLASH_EVENT, {
-                  detail: { href: item.href },
+                  detail: { href: item.href, variant: "compact" },
                 })
               );
               router.push(item.href);
