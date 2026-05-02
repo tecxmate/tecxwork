@@ -65,6 +65,18 @@ export async function getAdminDashboardData() {
       slotDuration: eventConfig.slotDurationMinutes,
       bufferMinutes: eventConfig.bufferMinutes,
       homepageImages: eventConfig.homepageImages,
+      eventName: eventConfig.eventName,
+      emailEventName: eventConfig.emailEventName,
+      tagline: eventConfig.tagline,
+      organizer: eventConfig.organizer,
+      organizerShort: eventConfig.organizerShort,
+      hostedAt: eventConfig.hostedAt,
+      hostedAtFull: eventConfig.hostedAtFull,
+      displayDate: eventConfig.displayDate,
+      displayYear: eventConfig.displayYear,
+      location: eventConfig.location,
+      eventDate: eventConfig.eventDate,
+      eventEndDate: eventConfig.eventEndDate,
     })
     .from(eventConfig)
     .limit(1);
@@ -165,5 +177,19 @@ export async function getAdminDashboardData() {
       bufferMinutes: config?.bufferMinutes ?? 0,
     },
     initialHomepageImages: config?.homepageImages ?? [],
+    initialBranding: {
+      eventName: config?.eventName ?? "",
+      emailEventName: config?.emailEventName ?? "",
+      tagline: config?.tagline ?? "",
+      organizer: config?.organizer ?? "",
+      organizerShort: config?.organizerShort ?? "",
+      hostedAt: config?.hostedAt ?? "",
+      hostedAtFull: config?.hostedAtFull ?? "",
+      displayDate: config?.displayDate ?? "",
+      displayYear: config?.displayYear ?? "",
+      location: config?.location ?? "",
+      eventDate: config?.eventDate?.toISOString() ?? null,
+      eventEndDate: config?.eventEndDate?.toISOString() ?? null,
+    },
   };
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applicantSlots } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { eq, count, inArray } from "drizzle-orm";
-import { EVENT_CONFIG } from "@/lib/data";
+import { getEventBranding } from "@/lib/event-branding";
 import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
 
 /**
@@ -125,6 +125,7 @@ export async function PUT(req: NextRequest) {
     // Send rescheduling emails to affected students
     const resend = getResend();
     if (resend) {
+      const branding = await getEventBranding();
       const emailPromises = applicants.map(async (applicant) => {
         try {
           await resend.emails.send({
@@ -135,7 +136,7 @@ export async function PUT(req: NextRequest) {
               <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
                 <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Rescheduled</h2>
                 <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-                  The event organizer has updated the interview time frame for the ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} Career Fair.
+                  The event organizer has updated the interview time frame for the ${branding.organizerShort} ${branding.displayYear} Career Fair.
                 </p>
 
                 <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
@@ -152,7 +153,7 @@ export async function PUT(req: NextRequest) {
                 </div>
 
                 <p style="font-size: 12px; color: #999; margin-top: 32px;">
-                  ${EVENT_CONFIG.name}<br>
+                  ${branding.name}<br>
                   Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
                 </p>
               </div>
@@ -197,7 +198,8 @@ export async function PUT(req: NextRequest) {
     .from(recruiters);
 
   // Format date correctly handling local timezone offset
-  const dateObj = EVENT_CONFIG.date;
+  const branding = await getEventBranding();
+  const dateObj = branding.date;
   const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
   let totalCreated = 0;
 

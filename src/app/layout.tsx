@@ -11,7 +11,7 @@ import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { StudentLocaleProvider } from "@/components/student-locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getSession } from "@/lib/auth";
-import { EVENT_CONFIG } from "@/lib/data";
+import { getEventBranding } from "@/lib/event-branding";
 import { getStudentLocale } from "@/lib/student-locale.server";
 
 const geistSans = Geist({
@@ -48,32 +48,33 @@ function getMetadataBase(): URL {
   }
 }
 
-export const metadata: Metadata = {
-  metadataBase: getMetadataBase(),
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "TECXWORK",
-  },
-  title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
-  description:
-    `Ngày Hội Việc Làm ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} — ${EVENT_CONFIG.tagline}. ${EVENT_CONFIG.displayDate} at ${EVENT_CONFIG.hostedAt}.`,
-  openGraph: {
-    title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
-    description:
-      `Ngày Hội Việc Làm ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} — ${EVENT_CONFIG.tagline}. Book your interview slot now.`,
-    type: "website",
-    locale: "en_US",
-    siteName: "TECXWORK",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `VSATW JOB FAIR 2026: V-GEN TRIDENT`,
-    description:
-      `Career fair for Vietnamese students in Taiwan. ${EVENT_CONFIG.displayDate} at ${EVENT_CONFIG.hostedAt}.`,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getEventBranding();
+  const titleLine = branding.name;
+  return {
+    metadataBase: getMetadataBase(),
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "TECXWORK",
+    },
+    title: titleLine,
+    description: `${branding.organizerShort} ${branding.displayYear} — ${branding.tagline}. ${branding.displayDate} at ${branding.hostedAt}.`,
+    openGraph: {
+      title: titleLine,
+      description: `${branding.organizerShort} ${branding.displayYear} — ${branding.tagline}. Book your interview slot now.`,
+      type: "website",
+      locale: "en_US",
+      siteName: "TECXWORK",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleLine,
+      description: `Career fair for Vietnamese students in Taiwan. ${branding.displayDate} at ${branding.hostedAt}.`,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

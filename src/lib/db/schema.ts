@@ -304,7 +304,24 @@ export const emailVerificationCodes = pgTable("email_verification_codes", {
 
 export const eventConfig = pgTable("event_config", {
   id: serial("id").primaryKey(),
-  eventName: text("event_name").notNull().default("V-GEN TRIDENT 2026"),
+  eventName: text("event_name").notNull().default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
+  emailEventName: text("email_event_name")
+    .notNull()
+    .default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
+  tagline: text("tagline")
+    .notNull()
+    .default("The Vietnamese Generation — Versatile in Talent, Value in Action"),
+  organizer: text("organizer")
+    .notNull()
+    .default("Vietnamese Student Association in Taiwan"),
+  organizerShort: text("organizer_short").notNull().default("VSATW"),
+  hostedAt: text("hosted_at").notNull().default("NTUT (Taipei Tech)"),
+  hostedAtFull: text("hosted_at_full")
+    .notNull()
+    .default("National Taipei University of Science and Technology"),
+  displayDate: text("display_date").notNull().default("June 6, 2026"),
+  displayYear: text("display_year").notNull().default("2026"),
+  eventEndDate: timestamp("event_end_date", { withTimezone: true }),
   eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
   location: text("location")
     .notNull()

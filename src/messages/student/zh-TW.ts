@@ -474,10 +474,3 @@ export const studentZhTwMessages = {
     },
   },
 } as const;
-: "已拒絕",
-        cancelled: "已取消",
-      },
-    },
-  },
-} as const;
-

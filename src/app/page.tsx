@@ -19,6 +19,7 @@ import { HeroCarousel } from "@/components/hero-carousel";
 import { LogoutButton } from "@/components/logout-button";
 import { HomepageImageEditor } from "@/components/homepage-image-editor";
 import { EVENT_CONFIG } from "@/lib/data";
+import { getEventBranding } from "@/lib/event-branding";
 import { getSession } from "@/lib/auth";
 import { db, recruiters, jobOpenings, users, eventConfig } from "@/lib/db";
 import { getStudentLocale } from "@/lib/student-locale.server";
@@ -121,13 +122,14 @@ export default async function LandingPage() {
         : "/browse"
     : null;
 
-  const [publicRecruiters, publicJobs, homepageImages] = await Promise.all([
+  const [publicRecruiters, publicJobs, homepageImages, branding] = await Promise.all([
     getPublicRecruiters(),
     getPublicJobs(),
     getHomepageImages(),
+    getEventBranding(),
   ]);
 
-  const formattedDate = EVENT_CONFIG.date.toLocaleDateString(
+  const formattedDate = branding.date.toLocaleDateString(
     locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US",
     {
     weekday: "long",
@@ -186,7 +188,7 @@ export default async function LandingPage() {
                 {messages.landing.heroTitle}
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-base italic text-muted-foreground sm:text-lg">
-                &ldquo;{EVENT_CONFIG.tagline}&rdquo;
+                &ldquo;{branding.tagline}&rdquo;
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground sm:text-base">
@@ -200,12 +202,12 @@ export default async function LandingPage() {
                 </span>
                 <span className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {EVENT_CONFIG.hostedAt}
+                  {branding.hostedAt}
                 </span>
               </div>
 
               <div className="mt-8 flex justify-center">
-                <Countdown target={EVENT_CONFIG.date} />
+                <Countdown target={branding.date} />
               </div>
 
               <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

@@ -163,6 +163,7 @@ export function AdminDashboard({
   initialLocked,
   timeFrame: initialTimeFrame,
   initialHomepageImages,
+  initialBranding,
   section,
 }: {
   recruiters: Recruiter[];
@@ -178,6 +179,20 @@ export function AdminDashboard({
   initialLocked: boolean;
   timeFrame: { startHour: number; startMinute: number; endHour: number; endMinute: number; slotDuration: number; bufferMinutes: number };
   initialHomepageImages: string[];
+  initialBranding: {
+    eventName: string;
+    emailEventName: string;
+    tagline: string;
+    organizer: string;
+    organizerShort: string;
+    hostedAt: string;
+    hostedAtFull: string;
+    displayDate: string;
+    displayYear: string;
+    location: string;
+    eventDate: string | null;
+    eventEndDate: string | null;
+  };
   section: AdminSection;
 }) {
   const { messages } = useStudentI18n();
@@ -207,6 +222,11 @@ export function AdminDashboard({
   const [hpSaved, setHpSaved] = useState(false);
   const [timeFrameOpen, setTimeFrameOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [brandingOpen, setBrandingOpen] = useState(false);
+  const [branding, setBranding] = useState(initialBranding);
+  const [brandingSaving, setBrandingSaving] = useState(false);
+  const [brandingSaved, setBrandingSaved] = useState(false);
+  const [brandingError, setBrandingError] = useState("");
   const [emailStats, setEmailStats] = useState<{
     today: { sent: number; failed: number; limit: number; remaining: number; percentUsed: number };
     month: { sent: number; limit: number; remaining: number; percentUsed: number };
@@ -574,6 +594,179 @@ export function AdminDashboard({
                   </CardContent>
                 </Card>
 
+              </div>
+
+              {/* Event Branding (admin-editable for next year's fair) */}
+              <div className="rounded-lg border bg-card">
+                <button
+                  type="button"
+                  onClick={() => setBrandingOpen(!brandingOpen)}
+                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
+                >
+                  <span className="flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    Event Branding
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", brandingOpen && "rotate-180")} />
+                </button>
+                {brandingOpen && (
+                  <div className="border-t px-4 py-4">
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        setBrandingSaving(true);
+                        setBrandingSaved(false);
+                        setBrandingError("");
+                        const payload: Record<string, string | null> = {
+                          eventName: branding.eventName,
+                          emailEventName: branding.emailEventName,
+                          tagline: branding.tagline,
+                          organizer: branding.organizer,
+                          organizerShort: branding.organizerShort,
+                          hostedAt: branding.hostedAt,
+                          hostedAtFull: branding.hostedAtFull,
+                          displayDate: branding.displayDate,
+                          displayYear: branding.displayYear,
+                          location: branding.location,
+                        };
+                        if (branding.eventDate) payload.eventDate = branding.eventDate;
+                        if (branding.eventEndDate) payload.eventEndDate = branding.eventEndDate;
+                        const res = await fetch("/api/admin/branding", {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(payload),
+                        });
+                        if (!res.ok) {
+                          const d = await res.json().catch(() => ({}));
+                          setBrandingError(d.error || "Failed to save");
+                        } else {
+                          setBrandingSaved(true);
+                          setTimeout(() => setBrandingSaved(false), 3000);
+                        }
+                        setBrandingSaving(false);
+                        router.refresh();
+                      }}
+                      className="space-y-3"
+                    >
+                      <p className="text-xs text-muted-foreground">
+                        These fields control the event name and surrounding branding shown in metadata, emails, and the homepage. Update them when running a new fair — no redeploy required.
+                      </p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Official event name</span>
+                          <Input
+                            value={branding.eventName}
+                            onChange={(e) => setBranding({ ...branding, eventName: e.target.value })}
+                            placeholder="VSATW JOB FAIR 2026: V-GEN TRIDENT"
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Email event name</span>
+                          <Input
+                            value={branding.emailEventName}
+                            onChange={(e) => setBranding({ ...branding, emailEventName: e.target.value })}
+                            placeholder="VSATW JOB FAIR 2026: V-GEN TRIDENT"
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs sm:col-span-2">
+                          <span className="font-medium">Tagline</span>
+                          <Input
+                            value={branding.tagline}
+                            onChange={(e) => setBranding({ ...branding, tagline: e.target.value })}
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Organizer</span>
+                          <Input
+                            value={branding.organizer}
+                            onChange={(e) => setBranding({ ...branding, organizer: e.target.value })}
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Organizer (short)</span>
+                          <Input
+                            value={branding.organizerShort}
+                            onChange={(e) => setBranding({ ...branding, organizerShort: e.target.value })}
+                            placeholder="VSATW"
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Host (short)</span>
+                          <Input
+                            value={branding.hostedAt}
+                            onChange={(e) => setBranding({ ...branding, hostedAt: e.target.value })}
+                            placeholder="NTUT (Taipei Tech)"
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Host (full)</span>
+                          <Input
+                            value={branding.hostedAtFull}
+                            onChange={(e) => setBranding({ ...branding, hostedAtFull: e.target.value })}
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Display date</span>
+                          <Input
+                            value={branding.displayDate}
+                            onChange={(e) => setBranding({ ...branding, displayDate: e.target.value })}
+                            placeholder="June 6, 2026"
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Display year</span>
+                          <Input
+                            value={branding.displayYear}
+                            onChange={(e) => setBranding({ ...branding, displayYear: e.target.value })}
+                            placeholder="2026"
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs sm:col-span-2">
+                          <span className="font-medium">Location</span>
+                          <Input
+                            value={branding.location}
+                            onChange={(e) => setBranding({ ...branding, location: e.target.value })}
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Event start (ISO)</span>
+                          <Input
+                            type="datetime-local"
+                            value={branding.eventDate ? branding.eventDate.slice(0, 16) : ""}
+                            onChange={(e) => setBranding({ ...branding, eventDate: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="font-medium">Event end (ISO)</span>
+                          <Input
+                            type="datetime-local"
+                            value={branding.eventEndDate ? branding.eventEndDate.slice(0, 16) : ""}
+                            onChange={(e) => setBranding({ ...branding, eventEndDate: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                            className="h-8 text-xs"
+                          />
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button type="submit" size="sm" disabled={brandingSaving}>
+                          {brandingSaving ? "Saving…" : "Save branding"}
+                        </Button>
+                        {brandingSaved && <span className="text-xs text-green-600">Saved</span>}
+                        {brandingError && <span className="text-xs text-red-600">{brandingError}</span>}
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-lg border bg-card">

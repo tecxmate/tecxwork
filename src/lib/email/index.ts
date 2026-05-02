@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { EVENT_CONFIG } from "@/lib/data";
+import { getEventBranding } from "@/lib/event-branding";
 import { db, emailLogs } from "@/lib/db";
 
 export function getResend(): Resend | null {
@@ -104,6 +105,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
     return;
   }
 
+  const branding = await getEventBranding();
   const timeStr = formatTime(data.slotStart);
   const bookedBy =
     data.direction === "applicant_books_recruiter"
@@ -127,13 +129,13 @@ export async function sendBookingEmails(data: BookingEmailData) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Confirmed</h2>
-          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">Your interview has been scheduled for the ${EVENT_CONFIG.emailEventName}.</p>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">Your interview has been scheduled for the ${branding.emailEventName}.</p>
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
               <tr><td style="padding: 6px 0; color: #666; width: 100px;">Company</td><td style="padding: 6px 0; font-weight: 600;">${safeCompany}</td></tr>
               <tr><td style="padding: 6px 0; color: #666;">When</td><td style="padding: 6px 0; font-weight: 600;">${timeStr}</td></tr>
-              <tr><td style="padding: 6px 0; color: #666;">Where</td><td style="padding: 6px 0;">${EVENT_CONFIG.location}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Where</td><td style="padding: 6px 0;">${branding.location}</td></tr>
               <tr><td style="padding: 6px 0; color: #666;">Duration</td><td style="padding: 6px 0;">15 minutes</td></tr>
             </table>
           </div>
@@ -148,7 +150,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
           </div>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            ${EVENT_CONFIG.name}<br>
+            ${branding.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
@@ -171,7 +173,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">New Interview Booking</h2>
-          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">A candidate has been booked for an interview at the ${EVENT_CONFIG.emailEventName}.</p>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">A candidate has been booked for an interview at the ${branding.emailEventName}.</p>
 
           <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
@@ -189,7 +191,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
           </div>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            ${EVENT_CONFIG.name}<br>
+            ${branding.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
@@ -228,6 +230,7 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
     return;
   }
 
+  const branding = await getEventBranding();
   const actionText = data.action === "rejected" ? "declined" : "cancelled";
   const subject = `Interview ${actionText} — ${data.company}`;
   const safeCompany = escapeHtml(data.company);
@@ -264,7 +267,7 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
           </div>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            ${EVENT_CONFIG.name}<br>
+            ${branding.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
@@ -288,6 +291,7 @@ export async function sendWaitlistEmail(data: WaitlistEmailData) {
     return;
   }
 
+  const branding = await getEventBranding();
   const subject = `Application waitlisted — ${data.company}`;
   const safeApplicantName = escapeHtml(data.applicantName);
   const safeCompany = escapeHtml(data.company);
@@ -319,7 +323,7 @@ export async function sendWaitlistEmail(data: WaitlistEmailData) {
           </div>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            ${EVENT_CONFIG.name}<br>
+            ${branding.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
@@ -353,7 +357,8 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
     return false;
   }
 
-  const subject = `Interview Reminder — ${EVENT_CONFIG.displayDate}`;
+  const branding = await getEventBranding();
+  const subject = `Interview Reminder — ${branding.displayDate}`;
   const interviewRows = data.interviews
     .map((i) => {
       const timeStr = i.time.toLocaleString("en-US", {
@@ -379,7 +384,7 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Reminder</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Hi ${escapeHtml(data.name)}, here's your interview schedule for the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
+            Hi ${escapeHtml(data.name)}, here's your interview schedule for the ${branding.emailEventName} on <strong>${branding.displayDate}</strong>.
           </p>
 
           <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
@@ -405,11 +410,11 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
           </div>
 
           <p style="font-size: 14px; color: #666;">
-            Location: <strong>${EVENT_CONFIG.location}</strong>
+            Location: <strong>${branding.location}</strong>
           </p>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            ${EVENT_CONFIG.name}<br>
+            ${branding.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
@@ -446,7 +451,8 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
     return false;
   }
 
-  const subject = `Interview Schedule — ${data.interviews.length} interviews on ${EVENT_CONFIG.displayDate}`;
+  const branding = await getEventBranding();
+  const subject = `Interview Schedule — ${data.interviews.length} interviews on ${branding.displayDate}`;
   const interviewRows = data.interviews
     .map((i) => {
       const timeStr = i.time.toLocaleString("en-US", {
@@ -473,7 +479,7 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 700px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Schedule</h2>
           <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
-            Hi ${escapeHtml(data.name)}, here's your interview schedule for <strong>${escapeHtml(data.company)}</strong> at the ${EVENT_CONFIG.emailEventName} on <strong>${EVENT_CONFIG.displayDate}</strong>.
+            Hi ${escapeHtml(data.name)}, here's your interview schedule for <strong>${escapeHtml(data.company)}</strong> at the ${branding.emailEventName} on <strong>${branding.displayDate}</strong>.
           </p>
 
           <div style="background: #30D158; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 16px; font-weight: 600;">
@@ -495,11 +501,11 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
           </table>
 
           <p style="font-size: 14px; color: #666;">
-            Location: <strong>${EVENT_CONFIG.location}</strong>
+            Location: <strong>${branding.location}</strong>
           </p>
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
-            ${EVENT_CONFIG.name}<br>
+            ${branding.name}<br>
             Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
           </p>
         </div>
