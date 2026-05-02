@@ -1157,3 +1157,118 @@ add TEST_DATABASE_URL for the new branch of test Neon db
   Next step on your side: run the migration against prod (pnpm tsx src/lib/db/add-event-branding-columns.ts   
   with DATABASE_URL set) before the deploy is rolled out, otherwise the new selects on missing columns will   
   throw. 
+
+❯ How far are we from making this system multi-tenant so it becomes a Monetizable SaaS that multiple events   
+  can run at the same time? What infrastructure would be required and what role in the engineering team would 
+   be needed?                                                                                                 
+                                                                                                              
+⏺ Multi-tenant SaaS — Gap Analysis                                                                            
+                                                                                                              
+  How far you are today                                                                                       
+   
+  Architecturally you're single-tenant — one row in event_config, one set of users, one set of                
+  recruiters/applicants/jobs/bookings/slots. Branding is now DB-backed (good first step), but every other
+  table is implicitly scoped to "the one event."                                                              
+                                                                                                              
+  What's already in your favor:                                                                               
+  - Next.js App Router on Vercel (Fluid Compute) — scales horizontally without changes.
+  - Neon Postgres on Vercel Marketplace — supports branching/scaling, easy to add a tenant column or move to  
+  schema-per-tenant.                                                                                        
+  - Drizzle ORM — adding a tenantId to every query is mechanical, not architectural.                          
+  - Clean server boundary (getEventBranding, getAdminSession) — easy to swap for a tenant-aware version.
+  - Resend for email, Vercel Blob for storage — both already multi-tenant friendly.                           
+                                                                                                              
+  Realistic estimate: 6–10 engineering weeks to ship a first paying tenant, assuming one senior + one mid     
+  full-stack working in parallel and you don't expand scope.                                                  
+                                                                                                              
+  What needs to change (in order of cost)                                                                     
+                                                                   
+  1. Data model (~2 weeks)                                                                                    
+                                                                   
+  - Add tenants table (id, slug, plan, billing_customer_id, created_at, status).                              
+  - Add tenant_id FK to every existing table: users, recruiters, applicant_profiles, bookings, slots,
+  applicant_slots, job_openings, event_config, email_logs, password_reset_codes, recruiter_email_approvals,   
+  allowed_domains, external_jobs, homepage_images, schools.        
+  - Decide isolation model:                                                                                   
+    - Row-level (single DB, tenant_id filter) — cheapest, what you have momentum for. Add Postgres RLS as
+  defense-in-depth.                                                                                           
+    - Schema-per-tenant — middling cost, cleaner blast radius for data leaks.
+    - DB-per-tenant (Neon project per tenant) — easiest mental model, easiest deletion/export, but ops cost   
+  grows linearly. Neon's branching makes this viable.                                                         
+  Recommended for your scale: row-level + RLS, revisit when you cross ~50 tenants.                            
+                                                                                                              
+  2. Tenant resolution & routing (~1 week)                                                                    
+                                                                                                              
+  - Subdomain routing (tsmc.tecxwork.com, vsatw.tecxwork.com) via Routing Middleware on Vercel — sets a       
+  x-tenant-id header from the host.                                
+  - Custom domain support per tenant (Vercel Domains API + verification flow) — paid-tier feature.            
+  - Wrap every server query with a tenant-scoped DB client (db.forTenant(id)) so you can't accidentally query 
+  across tenants.                                                                                             
+                                                                                                              
+  3. Auth & authorization (~1 week)                                                                           
+                                                                   
+  - Sessions need tenant_id. A user can belong to multiple tenants → introduce tenant_memberships (user_id,   
+  tenant_id, role).
+  - Admin role becomes per-tenant; introduce a separate "platform admin" role for you/Tecxmate.               
+  - Update getAdminSession() → getAdminSession(tenantId).                                                     
+                                                                                                              
+  4. Billing (~1–2 weeks)                                                                                     
+                                                                                                              
+  - Stripe (Checkout + Customer Portal + webhooks) — plans, seats, per-event pricing, or per-applicant        
+  pricing.                                     
+  - A cron Function (Fluid Compute) that downgrades/locks tenants on failed payment; an audit trail of plan   
+  changes.                                                                                                    
+  - Usage metering if you charge by emails sent / applicants / interviews booked — Vercel AI Gateway-style
+  metering pattern, or just count rows.                                                                       
+                                                                   
+  5. Onboarding self-serve (~1 week)                                                                          
+                                                                   
+  - "Create event" flow: tenant signup → seed event_config row → assign first admin → provision subdomain.    
+  - Tenant-level branding (logos, colors, copy) — extend the branding panel you just shipped.
+                                                                                                              
+  6. Operations (~1–2 weeks)                                                                                  
+                                                                                                              
+  - Per-tenant rate limits on email (Resend daily caps are global).                                           
+  - Per-tenant feature flags (paid plans unlock job moderation, custom domains, more email volume).
+  - Backups, exports, and deletion (GDPR/PIPA — tenant offboarding must purge).                               
+  - Logging/observability with tenant_id as a default tag (Vercel Log Drains → Datadog/Axiom).                
+  - Status page + on-call rotation once you have paying customers.                                            
+                                                                                                              
+  7. Things that get harder                                                                                   
+                                                                                                              
+  - Email reputation — one tenant's bad practices can hurt all of you. Per-tenant Resend domains or dedicated 
+  IPs at scale.                                                    
+  - Abuse / moderation — strangers can sign up; need T&S, abuse reporting, takedown flow.                     
+  - Support — even one paying customer means SLAs, a support inbox, refund policy.                            
+  - Pricing experiments — Stripe metered billing + plan changes are easy to break.                            
+                                                                                                              
+  Roles you'll want                                                                                           
+                                                                                                              
+  Minimum viable team to ship and operate this:                                                               
+                                                                   
+  1. Senior full-stack / tech lead (you, possibly) — owns the multi-tenant data model, RLS rollout, tenant    
+  resolution, code review. ~50% of the build.                      
+  2. Mid full-stack engineer — owns billing integration, onboarding flow, admin UI for platform operators,    
+  tenant settings. ~30%.                                                                                      
+  3. Platform/DevOps engineer (part-time or contractor for ~3 months) — Neon scaling, log drains, alerting,
+  custom-domain automation, backup/restore runbooks, SOC2-readiness if you sell to enterprises.               
+  4. Designer (contractor) — multi-tenant branding controls, marketing site for the SaaS itself, pricing page.
+  5. GTM / founding AE or PMM (later) — once you have 2–3 reference customers, sales motion + onboarding      
+  documentation become the bottleneck.                                                                        
+                                                                                                              
+  Not yet needed: dedicated SRE, security engineer, data engineer — Vercel + Neon absorb most of that until   
+  ~$1M ARR.                                                        
+                                                                                                              
+  My recommendation                                                
+                                               
+  Don't refactor everything at once. Sequence:                                                                
+   
+  1. Now → 2 weeks: add tenants + tenant_id to schema with a single seeded "VSATW" tenant. All queries get    
+  scoped. Keep one event running, prove no regressions.            
+  2. +2 weeks: subdomain routing + tenant-aware sessions. Internally test by creating a second fake tenant.   
+  3. +2 weeks: Stripe + onboarding + tenant-scoped admin. Onboard one design-partner customer at a steep      
+  discount.                                                                                                   
+  4. +2–4 weeks: custom domains, RLS, email reputation hardening, operational polish.                         
+                                                                                                              
+  The biggest risk is not the code — it's deciding pricing, ICP, and onboarding before you have customers.    
+  Spend a week on customer discovery (who would pay, how much, for what) before writing the tenant migration. 
