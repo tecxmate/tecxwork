@@ -569,3 +569,37 @@ If you are just starting, **do not build a full recruitment agency yet.** **Phas
 **Phase 2 (Scaling):** Once you have 10,000+ followers, register the company and apply for the license. At that point, you can charge employers to "feature" their jobs on your site.
 
 **Would you like me to find a list of law firms in Taipei that specialize in setting up companies for Southeast Asian investors?**
+
+✦ Based on a review of the layout, navigation, and top-level pages, there are a few areas where the UI/UX architecture and
+  code complexity could be streamlined:
+
+  1. Simplify Navigation Prefetching
+  Both DesktopTopNav and MobileBottomNav contain significant custom JavaScript to manually handle prefetching via
+  requestIdleCallback, window.setTimeout, and various mouse/touch events, while explicitly setting Next.js's <Link
+  prefetch={false}>. 
+   - Streamlining Opportunity: Next.js <Link> components natively handle viewport-based prefetching efficiently. Removing
+     this custom logic and trusting the framework's built-in behavior would significantly reduce code complexity, eliminate
+     edge cases with requestIdleCallback polyfills, and clean up the component lifecycle.
+
+  2. Consolidate Loading and Splash States
+  In src/app/layout.tsx, there are multiple layers of visual feedback during initialization and navigation:
+
+   1 <RouteLoadingSignal />
+   2 <PwaFirstRunSplash />
+   3 <BrandSplash />
+   - Streamlining Opportunity: Having BRAND_SPLASH_EVENT dispatchers woven into your navigation components adds tight
+     coupling. You could streamine the UX by consolidating these into a single, cohesive loading context (or relying on
+     Next.js loading.tsx boundaries) to prevent multiple visual transitions from competing during navigation.
+
+  3. Component Composition in AppTopBar
+  AppTopBar currently relies heavily on prop drilling for structural content (e.g., desktopActions, mobileActions,
+  showActionsOnMobile, accountLabels, notificationLabels).
+   - Streamlining Opportunity: Refactoring AppTopBar to utilize standard React children composition (e.g.,
+     <AppTopBar.Actions>, <AppTopBar.Notifications>) or moving data-fetching (like unread notifications or user session)
+     into Server Components/Context would reduce the prop-drilling overhead in top-level pages like /src/app/page.tsx.
+
+  4. Remove Legacy Query-Based Routing
+  src/app/dashboard/page.tsx exists purely to intercept query parameters (?tab=applicants) and redirect them to path-based
+  routes (/dashboard/applicants).
+   - Streamlining Opportunity: If the migration to path-based routing is complete and old links are no longer active, you
+     could delete this file entirely or replace it with a standard index page for the dashboard.

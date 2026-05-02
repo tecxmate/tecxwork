@@ -3,12 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BRAND_SPLASH_EVENT, type BrandSplashDetail } from "@/components/brand-splash";
 import { useStudentI18n } from "@/components/student-locale-provider";
 
 import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
-
-const SKELETON_TABS = new Set<string>(["/browse", "/jobs"]);
 
 export function MobileBottomNav({
   role,
@@ -49,39 +46,6 @@ export function MobileBottomNav({
     pathname === "/tutorial";
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
-
-    const win = window as Window & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-
-    let timeoutId: number | null = null;
-    let idleId: number | null = null;
-
-    const prefetchRoleTabs = () => {
-      for (const item of items) {
-        router.prefetch(item.href);
-      }
-    };
-
-    if (typeof win.requestIdleCallback === "function") {
-      idleId = win.requestIdleCallback(prefetchRoleTabs, { timeout: 1200 });
-    } else {
-      timeoutId = window.setTimeout(prefetchRoleTabs, 350);
-    }
-
-    return () => {
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-      }
-      if (idleId !== null && typeof win.cancelIdleCallback === "function") {
-        win.cancelIdleCallback(idleId);
-      }
-    };
-  }, [items, router]);
-
-  useEffect(() => {
     return () => {
       if (pendingResetRef.current) {
         window.clearTimeout(pendingResetRef.current);
@@ -120,26 +84,12 @@ export function MobileBottomNav({
               <Link
                 key={item.href}
                 href={item.href}
-                prefetch={false}
-                onTouchStart={() => {
-                  router.prefetch(item.href);
-                }}
-                onMouseDown={() => {
-                  router.prefetch(item.href);
-                }}
                 onClick={(event) => {
                   if (pathname === item.href && !search) {
                     return;
                   }
                   event.preventDefault();
                   markPending(item.href);
-                  if (!SKELETON_TABS.has(item.href)) {
-                    window.dispatchEvent(
-                      new CustomEvent<BrandSplashDetail>(BRAND_SPLASH_EVENT, {
-                        detail: { href: item.href, variant: "compact" },
-                      })
-                    );
-                  }
                   router.push(item.href);
                 }}
                 className={[
