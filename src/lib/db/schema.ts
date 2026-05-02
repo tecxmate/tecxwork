@@ -418,3 +418,29 @@ export const notifications = pgTable("notifications", {
   read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ---- Feedback / bug reports ----
+
+export const feedbackKindEnum = pgEnum("feedback_kind", ["bug", "feedback", "feature"]);
+export const feedbackSeverityEnum = pgEnum("feedback_severity", ["low", "med", "high"]);
+export const feedbackStatusEnum = pgEnum("feedback_status", ["open", "triaged", "resolved"]);
+
+export const feedbackReports = pgTable("feedback_reports", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  userRole: userRoleEnum("user_role"),
+  userEmail: text("user_email"),
+  kind: feedbackKindEnum("kind").notNull().default("bug"),
+  severity: feedbackSeverityEnum("severity").notNull().default("med"),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  pathname: text("pathname"),
+  userAgent: text("user_agent"),
+  viewport: text("viewport"),
+  appVersion: text("app_version"),
+  clientLogs: jsonb("client_logs").notNull().default([]),
+  screenshotUrl: text("screenshot_url"),
+  status: feedbackStatusEnum("status").notNull().default("open"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+});

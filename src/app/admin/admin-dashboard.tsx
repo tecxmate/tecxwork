@@ -149,6 +149,25 @@ const INDUSTRY_OPTIONS = [
 type OnboardingMode = (typeof ONBOARDING_MODE_VALUES)[number];
 type AdminSection = "overview" | "recruiters" | "applicants" | "jobs";
 
+type FeedbackReportRow = {
+  id: number;
+  userEmail: string | null;
+  userRole: string | null;
+  kind: string;
+  severity: string;
+  status: string;
+  subject: string;
+  body: string;
+  pathname: string | null;
+  userAgent: string | null;
+  viewport: string | null;
+  appVersion: string | null;
+  clientLogs: unknown;
+  screenshotUrl: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+};
+
 export function AdminDashboard({
   recruiters: initialRecruiters,
   applicants: initialApplicants,
@@ -227,6 +246,10 @@ export function AdminDashboard({
   const [brandingSaving, setBrandingSaving] = useState(false);
   const [brandingSaved, setBrandingSaved] = useState(false);
   const [brandingError, setBrandingError] = useState("");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackReports, setFeedbackReports] = useState<FeedbackReportRow[]>([]);
+  const [feedbackLoaded, setFeedbackLoaded] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
   const [emailStats, setEmailStats] = useState<{
     today: { sent: number; failed: number; limit: number; remaining: number; percentUsed: number };
     month: { sent: number; limit: number; remaining: number; percentUsed: number };
@@ -765,6 +788,74 @@ export function AdminDashboard({
                         {brandingError && <span className="text-xs text-red-600">{brandingError}</span>}
                       </div>
                     </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Feedback inbox */}
+              <div className="rounded-lg border bg-card">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = !feedbackOpen;
+                    setFeedbackOpen(next);
+                    if (next && !feedbackLoaded) {
+                      try {
+                        const res = await fetch("/api/admin/feedback");
+                        if (!res.ok) throw new Error("Failed to load");
+                        const data = await res.json();
+                        setFeedbackReports(data.reports ?? []);
+                        setFeedbackLoaded(true);
+                      } catch (err) {
+                        setFeedbackError(err instanceof Error ? err.message : "Failed");
+                      }
+                    }
+                  }}
+                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
+                >
+                  <span className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    Feedback &amp; bug reports
+                    {feedbackLoaded && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                        {feedbackReports.filter((r) => r.status === "open").length} open
+                      </span>
+                    )}
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", feedbackOpen && "rotate-180")} />
+                </button>
+                {feedbackOpen && (
+                  <div className="border-t px-4 py-4">
+                    {feedbackError && (
+                      <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                        {feedbackError}
+                      </p>
+                    )}
+                    {!feedbackLoaded ? (
+                      <p className="text-xs text-muted-foreground">Loading…</p>
+                    ) : feedbackReports.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No reports yet.</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {feedbackReports.map((r) => (
+                          <FeedbackRow
+                            key={r.id}
+                            report={r}
+                            onStatusChange={async (status) => {
+                              const res = await fetch(`/api/admin/feedback/${r.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ status }),
+                              });
+                              if (!res.ok) return;
+                              setFeedbackReports((prev) =>
+                                prev.map((x) => (x.id === r.id ? { ...x, status } : x))
+                              );
+                            }}
+                          />
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
               </div>
@@ -2145,5 +2236,159 @@ function RecruitersSection({
         </table>
       </div>
     </div>
+  );
+}
+
+function FeedbackRow({
+  report,
+  onStatusChange,
+}: {
+  report: FeedbackReportRow;
+  onStatusChange: (status: "open" | "triaged" | "resolved") => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  const kindStyle =
+    report.kind === "bug"
+      ? "bg-red-100 text-red-700"
+      : report.kind === "feature"
+        ? "bg-blue-100 text-blue-700"
+        : "bg-purple-100 text-purple-700";
+
+  const statusStyle =
+    report.status === "resolved"
+      ? "bg-green-100 text-green-700"
+      : report.status === "triaged"
+        ? "bg-yellow-100 text-yellow-700"
+        : "bg-orange-100 text-orange-700";
+
+  const createdAt = new Date(report.createdAt);
+  const logs = Array.isArray(report.clientLogs) ? report.clientLogs : [];
+
+  return (
+    <li className="rounded-lg border bg-background">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/30"
+      >
+        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", kindStyle)}>
+          {report.kind}
+        </span>
+        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", statusStyle)}>
+          {report.status}
+        </span>
+        <span className="flex-1 truncate text-sm font-medium">{report.subject}</span>
+        <span className="hidden text-[11px] text-muted-foreground sm:inline">
+          {report.userEmail ?? "—"}
+        </span>
+        <span className="text-[11px] text-muted-foreground tabular-nums">
+          {createdAt.toLocaleDateString()} {createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        </span>
+        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", expanded && "rotate-180")} />
+      </button>
+      {expanded && (
+        <div className="space-y-3 border-t px-3 py-3 text-xs">
+          <div className="whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm leading-relaxed">
+            {report.body}
+          </div>
+
+          <dl className="grid gap-1 sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">From</dt>
+              <dd>{report.userEmail ?? "anonymous"} ({report.userRole ?? "—"})</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Page</dt>
+              <dd>
+                <code className="break-all rounded bg-muted px-1 py-0.5">{report.pathname ?? "—"}</code>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Severity</dt>
+              <dd>{report.severity}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Viewport</dt>
+              <dd>{report.viewport ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">App version</dt>
+              <dd>
+                <code className="rounded bg-muted px-1 py-0.5">{report.appVersion ?? "dev"}</code>
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground">User agent</dt>
+              <dd className="break-all">{report.userAgent ?? "—"}</dd>
+            </div>
+          </dl>
+
+          {report.screenshotUrl && (
+            <div>
+              <p className="mb-1 text-muted-foreground">Screenshot</p>
+              <a href={report.screenshotUrl} target="_blank" rel="noopener noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={report.screenshotUrl}
+                  alt="User screenshot"
+                  className="max-h-72 w-auto rounded-md border border-border object-contain"
+                />
+              </a>
+            </div>
+          )}
+
+          {logs.length > 0 && (
+            <details className="rounded-md border border-border bg-muted/30 p-2">
+              <summary className="cursor-pointer text-muted-foreground">
+                Recent client errors ({logs.length})
+              </summary>
+              <ol className="mt-2 space-y-2">
+                {logs.map((entry, i) => {
+                  const e = entry as Record<string, unknown>;
+                  return (
+                    <li key={i} className="rounded bg-background p-2 font-mono text-[11px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold">{String(e.type ?? "error")}</span>
+                        <span className="text-muted-foreground">
+                          {typeof e.ts === "number" ? new Date(e.ts).toLocaleTimeString() : ""}
+                        </span>
+                      </div>
+                      <div className="mt-1 break-all">{String(e.message ?? "")}</div>
+                      {e.source ? <div className="text-muted-foreground">{String(e.source)}</div> : null}
+                      {e.stack ? (
+                        <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap text-[10px] text-muted-foreground">
+                          {String(e.stack)}
+                        </pre>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ol>
+            </details>
+          )}
+
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-muted-foreground">Mark as</span>
+            {(["open", "triaged", "resolved"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onStatusChange(s)}
+                disabled={s === report.status}
+                className={cn(
+                  "h-7 rounded-full border px-3 text-[11px] capitalize",
+                  s === report.status
+                    ? "cursor-default border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background hover:border-primary/50"
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </li>
   );
 }

@@ -33,6 +33,10 @@ export function SiteFooter() {
             <Link href="/about" className="underline hover:text-primary">
               About TECXWORK
             </Link>
+            <span className="opacity-40">&middot;</span>
+            <Link href="/feedback" className="underline hover:text-primary">
+              Feedback
+            </Link>
           </div>
         </div>
       </div>

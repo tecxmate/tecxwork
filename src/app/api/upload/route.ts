@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!type || !["avatar", "logo", "gallery", "homepage"].includes(type)) {
+  if (!type || !["avatar", "logo", "gallery", "homepage", "feedback"].includes(type)) {
     return NextResponse.json(
-      { error: "Invalid type. Must be 'avatar', 'logo', 'gallery', or 'homepage'" },
+      { error: "Invalid type. Must be 'avatar', 'logo', 'gallery', 'homepage', or 'feedback'" },
       { status: 400 }
     );
   }
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     logo: "logos",
     gallery: "gallery",
     homepage: "homepage",
+    feedback: "feedback",
   };
   const folder = folders[type];
   const ext = file.name.split(".").pop() || "jpg";
