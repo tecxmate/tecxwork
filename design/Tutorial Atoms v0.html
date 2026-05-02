@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TECXWORK — Tutorial Atoms v0</title>
+  <!-- Style reference: existing TECXWORK design system. Tokens lifted directly from src/app/globals.css. -->
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --fg: #1D1D1F;
+      --card: #FFFFFF;
+      --primary: #8C52FF;
+      --primary-soft: #F3EEFF;
+      --muted: #F5F5F7;
+      --muted-fg: #6E6E73;
+      --border: #E5E5E7;
+      --radius: 0.5rem;
+      --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-snappy: cubic-bezier(0.2, 0.9, 0.2, 1);
+      --duration-base: 320ms;
+      --duration-slow: 520ms;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: "Geist", -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    .page {
+      max-width: 1280px; margin: 0 auto; padding: 56px 32px 96px;
+    }
+    header.intro h1 {
+      font-family: "EB Garamond", "Instrument Serif", Georgia, serif;
+      font-weight: 600; font-size: 44px; letter-spacing: -0.02em; margin: 0 0 12px;
+    }
+    header.intro p { color: var(--muted-fg); margin: 0; max-width: 640px; line-height: 1.55; font-size: 15px; }
+    .row {
+      display: grid; gap: 32px; margin-top: 56px;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px; min-height: 100%;
+    }
+    .panel h2 {
+      font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted-fg); margin: 0 0 6px;
+    }
+    .panel h3 {
+      font-family: "EB Garamond", Georgia, serif; font-size: 28px; font-weight: 600;
+      letter-spacing: -0.01em; margin: 0 0 10px;
+    }
+    .panel p.lede { color: var(--muted-fg); margin: 0 0 24px; font-size: 14px; line-height: 1.55; max-width: 44ch; }
+
+    /* ========= phone frame ========= */
+    .stage {
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 0 8px;
+    }
+    .phone {
+      position: relative;
+      width: 360px; height: 760px;
+      background: #0A0A0A; border-radius: 48px;
+      box-shadow:
+        0 40px 80px -32px rgba(140, 82, 255, 0.25),
+        0 24px 48px -24px rgba(0,0,0,0.25),
+        0 0 0 2px #1F1F1F;
+      padding: 8px;
+    }
+    .phone-screen {
+      position: relative;
+      width: 100%; height: 100%;
+      border-radius: 40px; overflow: hidden;
+      background: var(--bg);
+      isolation: isolate;
+    }
+    .status-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 48px; z-index: 5;
+      display: flex; align-items: flex-end; justify-content: space-between;
+      padding: 0 28px 8px; font-size: 14px; font-weight: 600; color: var(--fg);
+      pointer-events: none;
+    }
+    .status-bar .right { display: inline-flex; gap: 6px; align-items: center; opacity: 0.85; }
+    .dynamic-island {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      width: 116px; height: 32px; background: #000; border-radius: 999px; z-index: 6;
+    }
+    .home-indicator {
+      position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+      width: 130px; height: 5px; background: #1D1D1F; border-radius: 999px; z-index: 6; opacity: 0.55;
+    }
+    /* app chrome */
+    .app-top {
+      position: absolute; top: 48px; left: 0; right: 0; height: 56px; z-index: 4;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.85);
+      backdrop-filter: saturate(140%) blur(12px);
+    }
+    .brand {
+      font-family: "EB Garamond", Georgia, serif; font-weight: 700; font-size: 19px; letter-spacing: -0.01em;
+    }
+    .brand .accent { color: var(--primary); }
+    .app-top .icons { display: inline-flex; gap: 12px; color: var(--muted-fg); }
+    .icon-dot { width: 30px; height: 30px; border-radius: 999px; background: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
+
+    .app-bottom {
+      position: absolute; bottom: 18px; left: 0; right: 0; height: 64px; z-index: 4;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border); background: rgba(255,255,255,0.92);
+      backdrop-filter: saturate(140%) blur(12px);
+    }
+    .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: var(--muted-fg); }
+    .tab.active { color: var(--primary); }
+    .tab .glyph { width: 22px; height: 22px; border-radius: 6px; background: currentColor; opacity: 0.85; }
+    .tab.active .glyph { opacity: 1; }
+
+    .content {
+      position: absolute; top: 104px; bottom: 80px; left: 0; right: 0; padding: 12px 16px 24px;
+      overflow: hidden;
+    }
+    .search {
+      height: 44px; border-radius: 12px; background: var(--muted); display: flex; align-items: center;
+      padding: 0 14px; color: var(--muted-fg); font-size: 14px; gap: 10px;
+    }
+    .search::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; }
+    .filter-row { display: flex; gap: 8px; margin-top: 12px; overflow: hidden; }
+    .chip {
+      height: 30px; padding: 0 12px; border-radius: 999px; background: var(--card);
+      border: 1px solid var(--border); display: inline-flex; align-items: center; font-size: 12.5px;
+      color: var(--fg); white-space: nowrap;
+    }
+    .chip.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .company {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; display: flex; gap: 12px; align-items: center;
+      transition: transform var(--duration-base) var(--ease-fluid),
+                  box-shadow var(--duration-base) var(--ease-fluid),
+                  border-color var(--duration-base) var(--ease-fluid);
+    }
+    .logo {
+      width: 40px; height: 40px; border-radius: 10px; flex: 0 0 40px;
+      background: var(--muted);
+    }
+    .logo.target { background: var(--primary-soft); }
+    .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .bar { background: var(--muted); border-radius: 4px; height: 10px; }
+    .bar.lg { height: 12px; width: 58%; }
+    .bar.md { height: 9px; width: 42%; opacity: 0.7; }
+    .bar.sm { height: 8px; width: 30%; opacity: 0.6; }
+    .company.target .bar.lg { background: color-mix(in srgb, var(--primary) 35%, var(--muted)); }
+    .pill { width: 32px; height: 18px; border-radius: 999px; background: var(--muted); }
+    .company.target .pill { background: var(--primary-soft); }
+
+    /* spotlight + callout */
+    .spotlight {
+      position: absolute; pointer-events: none; z-index: 10;
+      box-shadow:
+        0 0 0 9999px rgba(10,10,10,0.55),
+        0 0 0 4px rgba(140,82,255,0.85);
+      border-radius: 16px;
+      transition: all var(--duration-slow) var(--ease-snappy);
+    }
+    .callout {
+      position: absolute; z-index: 11; max-width: 220px;
+      background: #0A0A0A; color: #fff; padding: 12px 14px;
+      border-radius: 12px; font-size: 13px; line-height: 1.4;
+      box-shadow: 0 12px 32px -12px rgba(0,0,0,0.45);
+    }
+    .callout strong { color: #C9B3FF; font-weight: 600; }
+    .callout::after {
+      content: ""; position: absolute; width: 12px; height: 12px;
+      background: #0A0A0A; transform: rotate(45deg);
+    }
+    .callout.below::after { top: -5px; left: 28px; }
+    .callout.above::after { bottom: -5px; left: 28px; }
+    .step-tag {
+      display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: #C9B3FF; margin-bottom: 4px;
+    }
+
+    /* finger tap */
+    .finger {
+      position: absolute; z-index: 12; width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(140,82,255,0.18); border: 2px solid rgba(140,82,255,0.95);
+      pointer-events: none;
+    }
+    .finger::after {
+      content: ""; position: absolute; inset: -8px; border-radius: 50%;
+      border: 2px solid rgba(140,82,255,0.6); animation: ripple 1.4s var(--ease-fluid) infinite;
+    }
+    @keyframes ripple {
+      0% { transform: scale(0.6); opacity: 1; }
+      80% { transform: scale(1.6); opacity: 0; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* sequence-driven states */
+    .stage[data-step="1"] .company.target { transform: translateX(-2px); border-color: var(--primary); box-shadow: 0 8px 24px -12px rgba(140,82,255,0.45); }
+    .stage[data-step="2"] .toast { opacity: 1; transform: translate(-50%, 0); }
+    .stage[data-step="2"] .company.target .pill { background: #d1fae5; }
+
+    .toast {
+      position: absolute; left: 50%; top: 124px; transform: translate(-50%, -8px);
+      background: #0A0A0A; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13px;
+      display: inline-flex; align-items: center; gap: 8px; opacity: 0; z-index: 8;
+      transition: opacity var(--duration-base) var(--ease-fluid), transform var(--duration-base) var(--ease-fluid);
+      box-shadow: 0 12px 32px -12px rgba(0,0,0,0.45);
+    }
+    .toast .check { width: 16px; height: 16px; border-radius: 50%; background: #30D158; display: inline-block; position: relative; }
+    .toast .check::after {
+      content: ""; position: absolute; left: 4px; top: 7px; width: 7px; height: 3px;
+      border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg);
+    }
+
+    /* atom catalog */
+    .catalog {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 32px;
+    }
+    @media (max-width: 800px) { .catalog { grid-template-columns: repeat(2, 1fr); } }
+    .swatch {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+      display: flex; flex-direction: column; gap: 10px; min-height: 140px;
+    }
+    .swatch h4 { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted-fg); letter-spacing: 0.08em; text-transform: uppercase; }
+    .swatch .demo { flex: 1; position: relative; border-radius: 8px; background: var(--muted); overflow: hidden; }
+    .swatch p { margin: 0; font-size: 12.5px; color: var(--muted-fg); line-height: 1.5; }
+
+    /* atom: callout sample */
+    .demo .mini-callout {
+      position: absolute; left: 16px; top: 16px;
+      background: #0A0A0A; color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 12px;
+    }
+    /* atom: spotlight sample */
+    .demo .mini-spot {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: 90px; height: 30px; border-radius: 8px;
+      box-shadow: 0 0 0 9999px rgba(10,10,10,0.55), 0 0 0 3px var(--primary);
+    }
+    /* atom: tap sample */
+    .demo .mini-tap {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(140,82,255,0.18); border: 2px solid var(--primary);
+    }
+    .demo .mini-tap::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(140,82,255,0.6); animation: ripple 1.4s var(--ease-fluid) infinite; }
+    /* atom: sequencer sample */
+    .demo .mini-seq {
+      position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 6px;
+    }
+    .demo .mini-seq i {
+      width: 18px; height: 4px; border-radius: 2px; background: var(--border); display: inline-block;
+    }
+    .demo .mini-seq i.on { background: var(--primary); width: 28px; }
+
+    /* controls */
+    .controls {
+      display: inline-flex; gap: 8px; margin-top: 12px;
+    }
+    button.btn {
+      height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--fg); font-size: 13px; cursor: pointer;
+      font-family: inherit;
+      transition: background var(--duration-base) var(--ease-fluid), border-color var(--duration-base) var(--ease-fluid);
+    }
+    button.btn:hover { border-color: var(--primary); }
+    button.btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .step-readout { font-size: 12.5px; color: var(--muted-fg); align-self: center; padding: 0 4px; }
+
+    .legend {
+      display: inline-flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted-fg);
+      margin-top: 16px;
+    }
+    .legend .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: inline-block; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="intro">
+      <h1>Tutorial atoms — direction check</h1>
+      <p>One phone, one looping sequence (browse → tap company → confirmation), and a labeled catalog of the primitives below it. If this direction reads right, I'll expand to the full Applicant + Recruiter flows and split the atoms into reusable React components for the live app.</p>
+    </header>
+
+    <div class="row">
+      <!-- Left: live phone -->
+      <section class="panel">
+        <h2>Live preview</h2>
+        <h3>Applicant — book an interview</h3>
+        <p class="lede">Three-beat loop showing structure only: search field, listed cards, target card, confirmation. No real names or logos — just skeleton blocks where real content lives in production. Tokens (palette, radii, easing, bottom-nav layout) lifted from <code style="font-family:'Geist Mono',ui-monospace,monospace; font-size:12.5px;">globals.css</code>.</p>
+
+        <div class="stage" id="stage" data-step="0">
+          <div class="phone">
+            <div class="phone-screen">
+              <!-- iOS chrome -->
+              <div class="dynamic-island"></div>
+              <div class="status-bar">
+                <span>9:41</span>
+                <span class="right">
+                  <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.5"/><rect x="4" y="4" width="3" height="7" rx="0.5"/><rect x="8" y="2" width="3" height="9" rx="0.5"/><rect x="12" y="0" width="3" height="11" rx="0.5"/></svg>
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 4.5 C 4 1.5, 10 1.5, 13 4.5"/><path d="M3 6.5 C 5 4.5, 9 4.5, 11 6.5"/><circle cx="7" cy="8.5" r="1" fill="currentColor"/></svg>
+                  <span style="display:inline-flex; align-items:center; gap:3px;">
+                    <span style="width:22px; height:11px; border:1px solid currentColor; border-radius:3px; padding:1px; display:inline-flex;">
+                      <span style="background:currentColor; width:80%; border-radius:1px;"></span>
+                    </span>
+                  </span>
+                </span>
+              </div>
+
+              <!-- top app bar (skeleton) -->
+              <div class="app-top">
+                <div class="bar lg" style="width: 88px; height: 14px;"></div>
+                <div class="icons">
+                  <span class="icon-dot"></span>
+                  <span class="icon-dot"></span>
+                </div>
+              </div>
+
+              <!-- main content -->
+              <div class="content">
+                <div id="search" class="search"></div>
+                <div class="filter-row">
+                  <span class="chip on"></span>
+                  <span class="chip"></span>
+                  <span class="chip"></span>
+                  <span class="chip"></span>
+                </div>
+                <div class="list">
+                  <div class="company">
+                    <div class="logo"></div>
+                    <div class="meta">
+                      <div class="bar lg"></div>
+                      <div class="bar md"></div>
+                    </div>
+                    <span class="pill"></span>
+                  </div>
+                  <div id="card-target" class="company target">
+                    <div class="logo target"></div>
+                    <div class="meta">
+                      <div class="bar lg"></div>
+                      <div class="bar md"></div>
+                    </div>
+                    <span class="pill"></span>
+                  </div>
+                  <div class="company">
+                    <div class="logo"></div>
+                    <div class="meta">
+                      <div class="bar lg"></div>
+                      <div class="bar md"></div>
+                    </div>
+                    <span class="pill"></span>
+                  </div>
+                  <div class="company">
+                    <div class="logo"></div>
+                    <div class="meta">
+                      <div class="bar lg"></div>
+                      <div class="bar md"></div>
+                    </div>
+                    <span class="pill"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- toast -->
+              <div class="toast" id="toast"><span class="check"></span> Slot booked</div>
+
+              <!-- bottom tab bar (skeleton) -->
+              <div class="app-bottom">
+                <div class="tab active"><span class="glyph"></span></div>
+                <div class="tab"><span class="glyph"></span></div>
+                <div class="tab"><span class="glyph"></span></div>
+                <div class="tab"><span class="glyph"></span></div>
+              </div>
+              <div class="home-indicator"></div>
+
+              <!-- spotlight + callout (positioned dynamically by JS) -->
+              <div class="spotlight" id="spotlight" style="opacity:0"></div>
+              <div class="callout" id="callout" style="opacity:0">
+                <span class="step-tag" id="step-tag">Step 1 of 3</span>
+                <div id="callout-body">Tap the search to filter by industry.</div>
+              </div>
+              <div class="finger" id="finger" style="opacity:0"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="prev">← Prev</button>
+          <button class="btn primary" id="play">Play loop</button>
+          <button class="btn" id="next">Next →</button>
+          <span class="step-readout" id="readout">Step 1 / 3</span>
+        </div>
+        <div class="legend"><span class="dot"></span> Easing curves &amp; durations match <code style="font-family:'Geist Mono', ui-monospace, monospace; font-size:12px;">--ease-fluid</code> from globals.css</div>
+      </section>
+
+      <!-- Right: atom catalog -->
+      <section class="panel">
+        <h2>Atom catalog</h2>
+        <h3>Primitives that feed every destination</h3>
+        <p class="lede">Each atom is one self-contained primitive. In code these become React components: <code style="font-family:'Geist Mono',ui-monospace,monospace; font-size:12.5px;">&lt;PhoneFrame&gt;</code>, <code style="font-family:'Geist Mono',ui-monospace,monospace; font-size:12.5px;">&lt;Spotlight&gt;</code>, <code style="font-family:'Geist Mono',ui-monospace,monospace; font-size:12.5px;">&lt;Callout&gt;</code>, <code style="font-family:'Geist Mono',ui-monospace,monospace; font-size:12.5px;">&lt;FingerTap&gt;</code>, <code style="font-family:'Geist Mono',ui-monospace,monospace; font-size:12.5px;">&lt;Sequencer&gt;</code>. Same primitives drive coachmarks, marketing hero, and /tutorial pages.</p>
+
+        <div class="catalog">
+          <div class="swatch">
+            <h4>Spotlight</h4>
+            <div class="demo"><div class="mini-spot"></div></div>
+            <p>Cuts a hole through a 0.55-alpha overlay with a 3px primary ring. Animates between target rects.</p>
+          </div>
+          <div class="swatch">
+            <h4>Callout</h4>
+            <div class="demo"><div class="mini-callout">Tap to filter</div></div>
+            <p>Dark pill above/below the spotlight. Holds a step tag, a body line, and an optional CTA.</p>
+          </div>
+          <div class="swatch">
+            <h4>Finger tap</h4>
+            <div class="demo"><div class="mini-tap"></div></div>
+            <p>Soft purple disc with rippling outer ring. Used to cue the next interaction the user should make.</p>
+          </div>
+          <div class="swatch">
+            <h4>Sequencer</h4>
+            <div class="demo">
+              <div class="mini-seq"><i class="on"></i><i></i><i></i></div>
+            </div>
+            <p>Drives step state with a single index. Marketing version auto-loops, in-app version is user-controlled.</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px; padding: 14px 16px; background: var(--primary-soft); border-radius: 12px; font-size: 13px; color: var(--fg); line-height: 1.55;">
+          <strong style="color: var(--primary);">What I need from you:</strong> does the phone styling, callout voice, and tap rhythm feel like TECXWORK? Or do you want a different direction (denser, more illustrated, more cinematic)? Once you sign off, I'll expand to the full Applicant + Recruiter flows and split into reusable React components.
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const stage = document.getElementById('stage');
+    const screenEl = stage.querySelector('.phone-screen');
+    const search = document.getElementById('search');
+    const card = document.getElementById('card-target');
+    const spot = document.getElementById('spotlight');
+    const callout = document.getElementById('callout');
+    const finger = document.getElementById('finger');
+    const calloutBody = document.getElementById('callout-body');
+    const stepTag = document.getElementById('step-tag');
+    const readout = document.getElementById('readout');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const playBtn = document.getElementById('play');
+
+    const STEPS = [
+      {
+        target: () => search.getBoundingClientRect(),
+        text: "Search or filter to find a company hiring for your major.",
+        side: 'below',
+      },
+      {
+        target: () => card.getBoundingClientRect(),
+        text: "Tap a company to see open slots and recruiter info.",
+        side: 'below',
+      },
+      {
+        target: () => card.getBoundingClientRect(),
+        text: "Pick a time — your CV link is shared only with that recruiter.",
+        side: 'above',
+      },
+    ];
+
+    let idx = 0;
+    let timer = null;
+    let playing = false;
+
+    function place(el, rect, screenRect) {
+      el.style.left = (rect.left - screenRect.left - 6) + 'px';
+      el.style.top = (rect.top - screenRect.top - 6) + 'px';
+      el.style.width = (rect.width + 12) + 'px';
+      el.style.height = (rect.height + 12) + 'px';
+      el.style.opacity = 1;
+    }
+
+    function placeCallout(rect, screenRect, side, body, tag) {
+      callout.querySelector('#step-tag').textContent = `Step ${tag} of ${STEPS.length}`;
+      calloutBody.innerHTML = body;
+      callout.classList.toggle('below', side === 'below');
+      callout.classList.toggle('above', side === 'above');
+      const calloutLeft = rect.left - screenRect.left;
+      const calloutTop = side === 'below'
+        ? (rect.bottom - screenRect.top + 12)
+        : (rect.top - screenRect.top - callout.offsetHeight - 12);
+      callout.style.left = Math.max(12, Math.min(calloutLeft, screenRect.width - 232)) + 'px';
+      callout.style.top = calloutTop + 'px';
+      callout.style.opacity = 1;
+    }
+
+    function placeFinger(rect, screenRect) {
+      finger.style.left = (rect.left - screenRect.left + rect.width/2 - 22) + 'px';
+      finger.style.top = (rect.top - screenRect.top + rect.height/2 - 22) + 'px';
+      finger.style.opacity = 1;
+    }
+
+    function render() {
+      const screenRect = screenEl.getBoundingClientRect();
+      const step = STEPS[idx];
+      const rect = step.target();
+      stage.dataset.step = String(idx);
+
+      place(spot, rect, screenRect);
+      placeCallout(rect, screenRect, step.side, step.text, idx + 1);
+      placeFinger(rect, screenRect);
+      readout.textContent = `Step ${idx + 1} / ${STEPS.length}`;
+    }
+
+    function next() { idx = (idx + 1) % STEPS.length; render(); }
+    function prev() { idx = (idx - 1 + STEPS.length) % STEPS.length; render(); }
+
+    nextBtn.addEventListener('click', () => { stop(); next(); });
+    prevBtn.addEventListener('click', () => { stop(); prev(); });
+    playBtn.addEventListener('click', () => { playing ? stop() : play(); });
+
+    function play() {
+      playing = true;
+      playBtn.textContent = 'Pause';
+      timer = setInterval(next, 2400);
+    }
+    function stop() {
+      playing = false;
+      playBtn.textContent = 'Play loop';
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    // First paint after layout settles
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      render();
+      play();
+    }));
+
+    window.addEventListener('resize', render);
+  })();
+  </script>
+</body>
+</html>

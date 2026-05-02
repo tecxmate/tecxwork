@@ -1,8 +1,8 @@
-# Technical Notes — V-GEN TRIDENT Career Fair
+# Technical Notes — TECXWORK by TECXMATE
 
 ## Overview
 
-The V-GEN platform is built on a modern, distributed architecture designed to ensure reliability, scale smoothly under high traffic, and maintain strict data integrity. This document provides a high-level overview of the system's technical design.
+TECXWORK platform is built by TECXMATE.COM on a modern, distributed architecture designed to ensure reliability, scale smoothly under high traffic, and maintain strict data integrity. This document provides a high-level overview of the system's technical design.
 
 ## Architecture Highlights
 
@@ -17,4 +17,4 @@ The V-GEN platform is built on a modern, distributed architecture designed to en
 
 **Designed & Developed by**: [TECXMATE.COM](https://tecxmate.com)
 
-For more information, collaborations, or partnership inquiries, please contact us at [official@tecxmate.com](mailto:official@tecxmate.com).
+For more information or partnership inquiries, please contact us at [official@tecxmate.com](mailto:official@tecxmate.com).
