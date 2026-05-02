@@ -71,7 +71,7 @@ export function StudentSectionVi() {
             <li>Chọn vị trí bạn quan tâm</li>
             <li>Dùng mũi tên ngày để tìm ngày sự kiện ({EVENT_CONFIG.displayDate}) và chọn khung giờ trống</li>
             <li>Xác nhận liên kết CV chính xác (bạn có thể ghi đè cho lần đăng ký này)</li>
-            <li>Đánh dấu đồng ý PIPA và nhấn <strong>Đăng ký</strong></li>
+            <li>Đánh dấu đồng ý Đạo luật Bảo vệ Dữ liệu Cá nhân (PIPA) và nhấn <strong>Đăng ký</strong></li>
           </ol>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
             Việc đăng ký <em>không</em> giữ chỗ ngay. Nhà tuyển dụng sẽ xem CV và nhấn &quot;Chấp nhận&quot; — khi đó một slot phỏng vấn sẽ được khoá nguyên tử và cả hai bên nhận email xác nhận.
@@ -447,7 +447,7 @@ export function AdminSectionVi() {
           <h4 className="font-semibold mt-4 mb-2">Sau sự kiện 2 ngày</h4>
           <ul className="list-none pl-0 space-y-1 mb-4">
             <li><input type="checkbox" readOnly className="mr-2" /> Xuất CSV cuối cùng cho mọi đơn đặt</li>
-            <li><input type="checkbox" readOnly className="mr-2" /> Xoá dữ liệu người dùng để tuân thủ PIPA (admin Người dùng → xoá tất cả)</li>
+            <li><input type="checkbox" readOnly className="mr-2" /> Xoá dữ liệu người dùng để tuân thủ Đạo luật Bảo vệ Dữ liệu Cá nhân (PIPA) (admin Người dùng → xoá tất cả)</li>
             <li><input type="checkbox" readOnly className="mr-2" /> Thông báo cho nhà tuyển dụng dữ liệu đã được xoá</li>
           </ul>
         </div>

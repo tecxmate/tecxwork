@@ -71,7 +71,7 @@ export function StudentSectionZh() {
             <li>選擇您感興趣的職缺</li>
             <li>使用日期箭頭找到活動日({EVENT_CONFIG.displayDate}),挑選可用時段</li>
             <li>確認履歷連結正確(此次申請可覆寫)</li>
-            <li>勾選 PIPA 同意並點選 <strong>申請</strong></li>
+            <li>勾選 個人資料保護法 (PIPA) 同意並點選 <strong>申請</strong></li>
           </ol>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
             申請<em>不會</em>立即保留時段。招募人員須先審核履歷並點選「接受」 — 屆時會原子地鎖定面試官時段,雙方都會收到確認郵件。
@@ -447,7 +447,7 @@ export function AdminSectionZh() {
           <h4 className="font-semibold mt-4 mb-2">活動後 2 天</h4>
           <ul className="list-none pl-0 space-y-1 mb-4">
             <li><input type="checkbox" readOnly className="mr-2" /> 最終匯出所有預約 CSV</li>
-            <li><input type="checkbox" readOnly className="mr-2" /> 依 PIPA 刪除使用者資料(管理員「用戶」→ 全部移除)</li>
+            <li><input type="checkbox" readOnly className="mr-2" /> 依個人資料保護法 (PIPA) 刪除使用者資料(管理員「用戶」→ 全部移除)</li>
             <li><input type="checkbox" readOnly className="mr-2" /> 通知招募人員資料已清除</li>
           </ul>
         </div>

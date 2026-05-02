@@ -61,7 +61,7 @@ After registration, you'll be redirected to the **Company Directory**.
 4. Click an available time slot (green = available)
 5. Review your profile info (auto-filled from your account)
 6. Optionally update the **CV Link** for this specific interview
-7. Check the **PIPA consent** checkbox
+7. Check the **Personal Data Protection Act (PIPA) consent** checkbox
 8. Click **"Confirm Booking"**
 
 ### After Booking

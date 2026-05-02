@@ -100,7 +100,7 @@ export const studentViMessages = {
     badge: "Danh sách công ty",
     title: "Công ty tham gia",
     subtitle: "Khám phá các nhà tuyển dụng tham gia hội chợ việc làm và tìm vị trí mở.",
-    pipaTitle: "Thông báo bảo vệ dữ liệu (PIPA)",
+    pipaTitle: "Thông báo bảo vệ dữ liệu (Đạo luật Bảo vệ Dữ liệu Cá nhân - PIPA)",
     pipaBody:
       "Liên kết CV của bạn chỉ được chia sẻ với nhà tuyển dụng bạn đặt lịch. Chúng tôi duy trì hồ sơ của bạn để tối ưu hóa trải nghiệm cho các sự kiện trong tương lai, nhưng bạn có thể yêu cầu xóa bất kỳ lúc nào.",
     guestHint:
@@ -220,7 +220,7 @@ export const studentViMessages = {
     aboutYou: "Giới thiệu bản thân",
     cvLink: "Link CV (Google Drive)",
     consentText:
-      "Tôi đồng ý chia sẻ hồ sơ, thông tin học vấn và liên kết CV của mình cho các nhà tuyển dụng trong sự kiện này theo Đạo luật Bảo vệ Dữ liệu Cá nhân của Đài Loan, và tôi đồng ý với Điều khoản Nền tảng cùng Chính sách Bảo mật.",
+      "Tôi đồng ý chia sẻ hồ sơ, thông tin học vấn và liên kết CV của mình cho các nhà tuyển dụng trong sự kiện này theo Đạo luật Bảo vệ Dữ liệu Cá nhân (PIPA) của Đài Loan, và tôi đồng ý với Điều khoản Nền tảng cùng Chính sách Bảo mật.",
     registering: "Đang đăng ký...",
     alreadyHaveAccount: "Đã có tài khoản?",
     searchSchoolPlaceholder: "Tìm theo tên trường, thành phố hoặc mã trường",

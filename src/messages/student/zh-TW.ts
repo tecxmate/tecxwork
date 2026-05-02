@@ -109,7 +109,7 @@ export const studentZhTwMessages = {
     badge: "公司名錄",
     title: "參展公司",
     subtitle: "探索參加就業博覽會的招募企業，發現開放職缺。",
-    pipaTitle: "資料保護聲明 (PIPA)",
+    pipaTitle: "資料保護聲明 (個人資料保護法 - PIPA)",
     pipaBody:
       "您的履歷連結僅會分享給您預約的招募方。我們會保留您的個人資料，以優化您未來參與活動的體驗，但您可以隨時要求刪除。",
     guestHint:
@@ -223,6 +223,8 @@ export const studentZhTwMessages = {
     skills: "技能",
     aboutYou: "自我介紹",
     cvLink: "CV 連結 (Google Drive)",
+    consentText:
+      "我同意依照台灣個人資料保護法 (PIPA) 的規定，在此次招募活動中向招募方公開我的個人資料、學歷資訊與履歷連結，並同意平台服務條款與隱私權政策。",
     registering: "註冊中...",
     alreadyHaveAccount: "已有帳號？",
     searchSchoolPlaceholder: "以學校名稱、城市或代碼搜尋",
@@ -292,7 +294,7 @@ export const studentZhTwMessages = {
     positionApplyingFor: "投遞職位",
     cvLink: "履歷連結",
     consent:
-      "我同意依照台灣 PIPA 的規定，將我的個人資料分享給 {company} 以應徵 {position} 職位。",
+      "我同意依照台灣個人資料保護法 (PIPA) 的規定，將我的個人資料分享給 {company} 以應徵 {position} 職位。",
     requestBooking: "送出預約申請",
     booking: "送出中...",
   },
@@ -478,3 +480,4 @@ export const studentZhTwMessages = {
     },
   },
 } as const;
+

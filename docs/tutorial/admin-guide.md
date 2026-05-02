@@ -119,7 +119,7 @@ Two tabs: **Recruiters** and **Students**
 
 ### Post-event wrap up
 - [ ] Export all booking data (admin bookings page or direct DB export)
-- [ ] Process any user deletion requests to comply with PIPA
+- [ ] Process any user deletion requests to comply with the Personal Data Protection Act (PIPA)
 - [ ] Maintain active profiles to optimize the experience for future events
 
 ---

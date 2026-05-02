@@ -71,7 +71,7 @@ export function StudentSectionEn() {
             <li>Pick the job you&apos;re interested in</li>
             <li>Use the date arrows to find the event day ({EVENT_CONFIG.displayDate}) and pick an available time slot</li>
             <li>Confirm your CV link is correct (you can override it for this specific application)</li>
-            <li>Tick PIPA consent and click <strong>Apply</strong></li>
+            <li>Tick Personal Data Protection Act (PIPA) consent and click <strong>Apply</strong></li>
           </ol>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
             Applying does <em>not</em> immediately reserve the slot. The recruiter has to review your CV and click &quot;Accept&quot; — at which point an interviewer slot is locked atomically and you both get a confirmation email.
@@ -447,7 +447,7 @@ export function AdminSectionEn() {
           <h4 className="font-semibold mt-4 mb-2">2 days after</h4>
           <ul className="list-none pl-0 space-y-1 mb-4">
             <li><input type="checkbox" readOnly className="mr-2" /> Final CSV export of all bookings</li>
-            <li><input type="checkbox" readOnly className="mr-2" /> Delete user data to comply with PIPA (admin People → remove all)</li>
+            <li><input type="checkbox" readOnly className="mr-2" /> Delete user data to comply with the Personal Data Protection Act (PIPA) (admin People → remove all)</li>
             <li><input type="checkbox" readOnly className="mr-2" /> Notify recruiters that data has been purged</li>
           </ul>
         </div>

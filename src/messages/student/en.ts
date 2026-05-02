@@ -66,7 +66,7 @@ export const studentEnMessages = {
     title: "Participating Companies",
     subtitle:
       "Explore recruiters attending the career fair and discover open positions.",
-    pipaTitle: "Data Protection Notice (PIPA)",
+    pipaTitle: "Data Protection Notice (Personal Data Protection Act - PIPA)",
     pipaBody:
       "Your CV link is shared only with the recruiter you book with. We maintain your profile to optimize your experience for future events, but you can request deletion at any time.",
     guestHint:
@@ -372,7 +372,7 @@ export const studentEnMessages = {
     cvLink: "CV Link",
     cvShareOnly: "Share only with {email}.",
     consent:
-      "I consent to sharing my profile with {company} for the {position} position in accordance with Taiwan's PIPA.",
+      "I consent to sharing my profile with {company} for the {position} position in accordance with Taiwan's Personal Data Protection Act (PIPA).",
     requestBooking: "Request Booking",
     booking: "Booking...",
   },
