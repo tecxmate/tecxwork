@@ -43,7 +43,7 @@ export const studentViMessages = {
   },
   landing: {
     ...studentEnMessages.landing,
-    heroTitle: "Ngày hội việc làm - V-GEN TRIDENT",
+    heroTitle: "VSATW JOB FAIR 2026: V-GEN TRIDENT",
     eventHighlightsTitle: "Điểm nhấn sự kiện",
     companiesTitle: "Công ty tham gia",
     jobsTitle: "Vị trí đang mở",

@@ -43,7 +43,7 @@ export const studentZhTwMessages = {
   },
   landing: {
     ...studentEnMessages.landing,
-    heroTitle: "就業博覽會 - V-GEN TRIDENT",
+    heroTitle: "VSATW JOB FAIR 2026: V-GEN TRIDENT",
     eventHighlightsTitle: "活動精選",
     companiesTitle: "參展公司",
     jobsTitle: "開放職缺",

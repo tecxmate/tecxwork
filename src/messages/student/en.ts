@@ -38,8 +38,8 @@ export const studentEnMessages = {
     viewSite: "View Site",
   },
   landing: {
-    heroBadge: "VSATW 2026",
-    heroTitle: "Job Fair - V-GEN TRIDENT",
+    heroBadge: "VSATW JOB FAIR 2026",
+    heroTitle: "V-GEN TRIDENT",
     eventHighlightsTitle: "Event Highlights",
     eventHighlightsSubtitle: "Moments from our career fair events",
     companiesTitle: "Participating Companies",
