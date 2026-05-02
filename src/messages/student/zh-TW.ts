@@ -291,6 +291,8 @@ export const studentZhTwMessages = {
     viewOtherPositions: "查看其他職缺",
     positionApplyingFor: "投遞職位",
     cvLink: "履歷連結",
+    consent:
+      "我同意依照台灣 PIPA 的規定，將我的個人資料分享給 {company} 以應徵 {position} 職位。",
     requestBooking: "送出預約申請",
     booking: "送出中...",
   },
@@ -465,6 +467,12 @@ export const studentZhTwMessages = {
         accepted: "已接受",
         waitlisted: "候補",
         rejected: "已拒絕",
+        cancelled: "已取消",
+      },
+    },
+  },
+} as const;
+: "已拒絕",
         cancelled: "已取消",
       },
     },

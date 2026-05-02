@@ -219,6 +219,8 @@ export const studentViMessages = {
     skills: "Kỹ năng",
     aboutYou: "Giới thiệu bản thân",
     cvLink: "Link CV (Google Drive)",
+    consentText:
+      "Tôi đồng ý chia sẻ hồ sơ, thông tin học vấn và liên kết CV của mình cho các nhà tuyển dụng trong sự kiện này theo Đạo luật Bảo vệ Dữ liệu Cá nhân của Đài Loan, và tôi đồng ý với Điều khoản Nền tảng cùng Chính sách Bảo mật.",
     registering: "Đang đăng ký...",
     alreadyHaveAccount: "Đã có tài khoản?",
     searchSchoolPlaceholder: "Tìm theo tên trường, thành phố hoặc mã trường",
