@@ -1118,3 +1118,42 @@ add TEST_DATABASE_URL for the new branch of test Neon db
                                                                                                                    
   Skip k6 entirely if your event will have <100 simultaneous users — at that scale Neon + Vercel handle it without 
   tuning.      
+
+
+  Pushed 5cf58fa. Summary of what landed:              
+                                                                                                            
+  Schema + migration                                                                                          
+  - src/lib/db/schema.ts adds emailEventName, tagline, organizer, organizerShort, hostedAt, hostedAtFull,
+  displayDate, displayYear, eventEndDate columns on event_config (with sensible defaults from current         
+  branding).                                                                                         
+  - src/lib/db/add-event-branding-columns.ts runs ALTER TABLE … ADD COLUMN IF NOT EXISTS for all of them. Run 
+  it once on each environment with tsx src/lib/db/add-event-branding-columns.ts.                              
+                                                                                                              
+  Server helper                                                                        
+  - src/lib/event-branding.ts exports getEventBranding() (React-cache, server-only). Overlays DB values on the
+   static EVENT_CONFIG defaults so non-DB fields like timezone/slotDuration still come through.               
+                                                                                               
+  Wired surfaces (read DB-backed branding)                                                                    
+  - src/app/layout.tsx → generateMetadata() (title, description, OG, Twitter)                                 
+  - src/app/page.tsx → hero tagline, host name, countdown target, formatted date                              
+  - src/lib/email/index.ts → booking confirm, recruiter notify, rejection, waitlist, student reminder,        
+  recruiter reminder                                                                                          
+  - src/app/api/auth/forgot-password/route.ts → reset code email subject + body                               
+  - src/app/api/admin/timeframe/route.ts → forced-reschedule email + slot regen date                          
+                                                                                                              
+  Static-only (intentionally left): opengraph-image.tsx (edge runtime), tutorial content, slot-pickers — these
+   read static fields that don't need to change between fairs.                                                
+                                                                                                              
+  Admin UI + API                                                                                              
+  - src/app/api/admin/branding/route.ts (GET + PUT) with per-field validation, length limits, and ISO datetime
+   parsing.                                                                                                   
+  - New collapsible "Event Branding" panel in the admin overview (src/app/admin/admin-dashboard.tsx) with
+  inputs for all editable fields, save button, and saved/error feedback.                                      
+                                                                                                              
+  Bonus                                                                                
+  - Removed a stale duplicate block at the bottom of src/messages/student/zh-TW.ts that was breaking tsc      
+  --noEmit.                                                                                                   
+                                                                                                              
+  Next step on your side: run the migration against prod (pnpm tsx src/lib/db/add-event-branding-columns.ts   
+  with DATABASE_URL set) before the deploy is rolled out, otherwise the new selects on missing columns will   
+  throw. 
