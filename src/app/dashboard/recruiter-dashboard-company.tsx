@@ -221,11 +221,6 @@ export function RecruiterCompanyTab({
       .finally(() => setLoadingJobs(false));
   }, [section]);
 
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-  }
-
   async function handleSaveCompany(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -671,18 +666,6 @@ export function RecruiterCompanyTab({
     <div className="space-y-6">
       {section === "company" ? (
         <>
-          <Card className="md:hidden">
-            <CardContent className="space-y-3 p-4">
-              <Button
-                variant="outline"
-                className="h-11 w-full"
-                onClick={handleLogout}
-              >
-                {messages.common.logout}
-              </Button>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <h2 className="font-heading text-lg font-semibold">
