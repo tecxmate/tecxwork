@@ -138,13 +138,3 @@ Two tabs: **Recruiters** and **Students**
 **"The mode accidentally changed during the event"**
 → That's what mode lock prevents. If it happens, switch back and lock it immediately.
 
----
-
-## Technical Notes
-
-- **Platform**: Next.js on Vercel (auto-scaling, handles 1,000+ concurrent users)
-- **Database**: Neon Postgres (serverless, auto-scaling connections)
-- **Auth**: JWT cookies, bcrypt password hashing
-- **Booking**: Atomic slot locking — no double-bookings possible
-- **PIPA**: All data can be purged by clearing the database after the event
-- **Designed & Developed by**: [TECXMATE.COM](https://tecxmate.com)
