@@ -364,14 +364,18 @@ body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
   pointer-events: none;
 }
 
-/* Android PWA: env(safe-area-inset-bottom) is 0, so the nav hugs the gesture bar.
-   Add a floor of extra padding when running standalone on non-iOS UAs. */
+/* Android PWA: env(safe-area-inset-bottom) is 0, so the nav hugs the gesture bar
+   and the page footer's second line gets clipped. Add a floor of extra padding
+   when running standalone on non-iOS UAs. */
 @media (display-mode: standalone) {
   .mobile-bottom-nav {
     padding-bottom: max(
       0.75rem,
       calc(env(safe-area-inset-bottom) - 0.375rem)
     );
+  }
+  .site-footer {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
   }
 }
 @supports (-webkit-touch-callout: none) {
@@ -382,5 +386,13 @@ body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
         calc(env(safe-area-inset-bottom) - 0.375rem)
       );
     }
+    .site-footer {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 3.875rem);
+    }
+  }
+}
+@media (display-mode: standalone) and (min-width: 768px) {
+  .site-footer {
+    padding-bottom: 0.75rem;
   }
 }
