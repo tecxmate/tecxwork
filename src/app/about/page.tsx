@@ -88,11 +88,12 @@ export default async function AboutPage() {
             <h2 className="text-xl font-semibold mb-2">Privacy &amp; data handling</h2>
             <p>
               TECXWORK is designed to comply with Taiwan&apos;s Personal Data Protection
-              Act (PIPA / PDPA) and Vietnam&apos;s Decree 13/2023/ND-CP. Personal data
-              collected during an event is exported by the admin and permanently deleted
-              within 2 days after the event closes. For the full details on what is
-              collected, how it&apos;s used, and the rights you have over your data, see
-              the{" "}
+              Act (PIPA / PDPA) and Vietnam&apos;s Decree 13/2023/ND-CP. To provide you
+              with ongoing career support and optimize your experience for future events,
+              we maintain your profile so you don&apos;t have to rebuild it. You always
+              maintain full control and can request permanent deletion at any time. For
+              full details on what is collected, how it&apos;s used, and the rights you
+              have over your data, see the{" "}
               <Link href="/privacy-policy" className="text-primary hover:underline">
                 Privacy Policy
               </Link>

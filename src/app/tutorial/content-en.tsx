@@ -287,7 +287,7 @@ export function RecruiterSectionEn() {
             </div>
             <div>
               <p className="font-semibold">Q: What happens to data after the event?</p>
-              <p>A: All booking and personal data is exported by admin, then permanently deleted within 2 days to comply with Taiwan&apos;s PIPA.</p>
+              <p>A: We maintain your profile to optimize your experience and provide long-term career support for future events. You can request permanent deletion at any time to comply with Taiwan&apos;s PIPA.</p>
             </div>
           </div>
         </div>

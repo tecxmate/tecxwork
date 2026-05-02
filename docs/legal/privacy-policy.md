@@ -59,8 +59,9 @@ We implement stringent technical safeguards and strict access controls to ensure
 
 ## 5. Data Retention
 
-* **Single-Event Model:** If the Platform is utilized strictly for a single event, your personal data (including profile and booking records) will be permanently deleted from our active databases within **30 days** after the conclusion of the event, unless you explicitly opt-in to keep your account active for future events ("Talent Passport").
-* **Talent Passport:** If you opt-in to persistent storage, we will retain your account and profile data until you manually delete your account.
+To provide you with the best possible long-term career support, we maintain your V-GEN profile beyond single events. By keeping your account active, we optimize your experience, allowing you to seamlessly connect with new recruiters, participate in future career fairs, and continuously discover new job opportunities without needing to rebuild your profile.
+
+We retain your personal data to facilitate these ongoing connections and to operate the Platform effectively. While we do not automatically purge your data after a specific event concludes—ensuring your profile remains a lasting asset in your career journey—you always maintain full control over your personal information. You may exercise your right to request the permanent deletion of your account and associated personal data at any time, in accordance with applicable laws, by contacting us as detailed in Section 6.
 
 ## 6. Your Rights (Taiwan PDPA Article 3)
 

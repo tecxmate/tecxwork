@@ -287,7 +287,7 @@ export function RecruiterSectionZh() {
             </div>
             <div>
               <p className="font-semibold">問:活動結束後資料會如何處理?</p>
-              <p>答:管理員會匯出所有預約與個人資料,於 2 天內永久刪除以符合台灣 PIPA。</p>
+              <p>答:我們會保留您的個人資料，以優化體驗並為未來的活動提供長期的職涯支援。您可以隨時要求永久刪除，以符合台灣 PIPA 的規定。</p>
             </div>
           </div>
         </div>

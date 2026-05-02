@@ -91,4 +91,4 @@ A: Students share their Google Drive CV link exclusively with your contact email
 A: Yes — anyone with an email on the allowed domain can create their own recruiter account. Each gets their own set of interview slots.
 
 **Q: What happens after the event?**
-A: All booking data is exported for records, then permanently deleted within 2 days to comply with Taiwan's Personal Data Protection Act (PIPA).
+A: We maintain user profiles to optimize their experience and provide long-term career support for future events. Users can request permanent deletion at any time to comply with Taiwan's Personal Data Protection Act (PIPA).

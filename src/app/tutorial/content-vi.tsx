@@ -287,7 +287,7 @@ export function RecruiterSectionVi() {
             </div>
             <div>
               <p className="font-semibold">H: Sau sự kiện dữ liệu sẽ ra sao?</p>
-              <p>Đ: Toàn bộ dữ liệu đặt lịch và cá nhân được quản trị viên xuất ra rồi xoá vĩnh viễn trong vòng 2 ngày để tuân thủ PIPA của Đài Loan.</p>
+              <p>Đ: Chúng tôi duy trì hồ sơ của bạn để tối ưu hóa trải nghiệm và hỗ trợ nghề nghiệp lâu dài cho các sự kiện trong tương lai. Bạn có thể yêu cầu xóa vĩnh viễn bất kỳ lúc nào để tuân thủ PIPA của Đài Loan.</p>
             </div>
           </div>
         </div>

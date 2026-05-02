@@ -68,7 +68,7 @@ export const studentEnMessages = {
       "Explore recruiters attending the career fair and discover open positions.",
     pipaTitle: "Data Protection Notice (PIPA)",
     pipaBody:
-      "Your CV link is shared only with the recruiter you book with. All booking data is purged within 2 days after the event.",
+      "Your CV link is shared only with the recruiter you book with. We maintain your profile to optimize your experience for future events, but you can request deletion at any time.",
     guestHint:
       "Guests can browse participating companies. Log in when you are ready to apply and book an interview.",
   },

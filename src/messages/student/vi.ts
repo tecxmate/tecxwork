@@ -102,7 +102,7 @@ export const studentViMessages = {
     subtitle: "Khám phá các nhà tuyển dụng tham gia hội chợ việc làm và tìm vị trí mở.",
     pipaTitle: "Thông báo bảo vệ dữ liệu (PIPA)",
     pipaBody:
-      "Liên kết CV của bạn chỉ được chia sẻ với nhà tuyển dụng bạn đặt lịch. Tất cả dữ liệu đặt lịch sẽ được xóa trong vòng 2 ngày sau sự kiện.",
+      "Liên kết CV của bạn chỉ được chia sẻ với nhà tuyển dụng bạn đặt lịch. Chúng tôi duy trì hồ sơ của bạn để tối ưu hóa trải nghiệm cho các sự kiện trong tương lai, nhưng bạn có thể yêu cầu xóa bất kỳ lúc nào.",
     guestHint:
       "Khách có thể xem danh sách công ty tham gia. Đăng nhập khi bạn sẵn sàng ứng tuyển và đặt lịch phỏng vấn.",
   },

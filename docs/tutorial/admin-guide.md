@@ -117,10 +117,10 @@ Two tabs: **Recruiters** and **Students**
 - [ ] Be available for support (password resets, account issues)
 - [ ] Watch for any recruiters who haven't received bookings — may need troubleshooting
 
-### 2 days after
+### Post-event wrap up
 - [ ] Export all booking data (admin bookings page or direct DB export)
-- [ ] Delete all user data to comply with PIPA
-- [ ] Notify recruiters that data has been purged
+- [ ] Process any user deletion requests to comply with PIPA
+- [ ] Maintain active profiles to optimize the experience for future events
 
 ---
 
