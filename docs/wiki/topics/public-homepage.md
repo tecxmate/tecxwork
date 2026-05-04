@@ -1,6 +1,6 @@
 ---
 title: Public homepage
-type: entity
+type: topic
 slug: public-homepage
 role: area
 date: 2026-05-04

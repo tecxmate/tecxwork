@@ -13,10 +13,10 @@ This repo maintains a persistent, LLM-curated wiki at `docs/wiki/`. It captures 
 
 1. Read `docs/wiki/llm-wiki-guide.md` for the schema and frontmatter conventions before writing.
 2. Append a one-line entry to `docs/wiki/log.md` with the standard prefix (see guide).
-3. Create or update the relevant page(s) under `docs/wiki/decisions/`, `docs/wiki/entities/`, or `docs/wiki/topics/` with proper frontmatter (`attributed_to`, `belongs_to`, `source`, `date`).
+3. Create or update the relevant page(s) under `docs/wiki/decisions/`, `docs/wiki/stakeholders/`, or `docs/wiki/topics/` with proper frontmatter (`attributed_to`, `belongs_to`, `source`, `date`).
 4. Update `docs/wiki/index.md` if you added a new page.
 
-**Tag every claim** with who said it and who it belongs to. Stakeholder taxonomy lives in `docs/wiki/entities/`. If a stakeholder is missing, create the entity page.
+**Stakeholders are things that can make decisions** — people, teams, organizations, regulators, LLM agents. They live in `docs/wiki/stakeholders/`. **Topics** (areas of the codebase, products, events, syntheses) live in `docs/wiki/topics/` and don't make decisions. **Tag every claim** with `attributed_to` (must be a stakeholder slug) and `belongs_to` (stakeholder or topic slug). If a referenced stakeholder is missing, create the page in the same turn.
 
 Don't ask permission to maintain the wiki — treat it like committing code. If the user explicitly says "don't write to the wiki," skip it for that turn only.
 <!-- END:project-wiki-rules -->

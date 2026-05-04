@@ -1,6 +1,6 @@
 ---
 title: Claude Code (Opus 4.7, 1M context)
-type: entity
+type: stakeholder
 slug: claude-code
 role: agent
 date: 2026-05-04

@@ -1,6 +1,6 @@
 ---
 title: Admin panel
-type: entity
+type: topic
 slug: admin-panel
 role: area
 date: 2026-05-04

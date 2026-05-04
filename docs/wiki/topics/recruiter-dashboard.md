@@ -1,6 +1,6 @@
 ---
 title: Recruiter dashboard
-type: entity
+type: topic
 slug: recruiter-dashboard
 role: area
 date: 2026-05-04

@@ -1,6 +1,6 @@
 ---
 title: tecxwork web app
-type: entity
+type: topic
 slug: tecxwork
 role: product
 date: 2026-05-04

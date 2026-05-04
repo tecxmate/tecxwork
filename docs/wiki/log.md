@@ -45,3 +45,17 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - llm-wiki-guide.md upgraded to schema + portable master plan
 - entities/, decisions/, topics/ skeletons created and backfilled from this session
 - AGENTS.md amended with project-wiki-rules block requiring agents to maintain the wiki
+
+## [2026-05-04] ingest | Documentation Consolidation
+attributed_to: [gemini]   belongs_to: [tecxwork, tecxmate]
+- Compiled all legacy documentation from docs/ subfolders into the wiki structure.
+- Created entities: tecxmate, vsatw, v-gen-trident-2026, taiwan-mol, gemini, gpt.
+- Created topics: saas-strategy, taiwan-compliance, architecture-overview, design-system, recruitment-workflows, data-privacy.
+- Created historical decisions: 2026-04-20-custom-booking-engine, 2026-04-24-job-moderation-toggle, 2026-04-28-double-booking-prevention, 2026-04-28-force-timeframe-override, 2026-04-30-navigation-consolidation.
+- Updated index.md to catalog all new pages.
+
+## [2026-05-04] decision | Rename entities/ → stakeholders/; topics absorb non-deciders
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Per [niko]: "stakeholders are things that can make decisions". Folder renamed; type frontmatter updated.
+- Moved non-stakeholder pages (tecxwork, admin-panel, recruiter-dashboard, public-homepage, v-gen-trident-2026) into topics/.
+- Schema doc, index, and AGENTS.md updated to reflect the stricter distinction: attributed_to must point at a stakeholder; belongs_to may point at either.

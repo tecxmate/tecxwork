@@ -1,6 +1,6 @@
 ---
 title: Niko (project owner)
-type: entity
+type: stakeholder
 slug: niko
 role: owner
 date: 2026-05-04
