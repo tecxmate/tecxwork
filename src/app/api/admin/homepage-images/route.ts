@@ -18,11 +18,15 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  // Only accept https URLs from our blob host. Blocks javascript:/data:
-  // URLs from being stored and rendered later in <img src>/<a href>.
+  // Slots are positional (index 0 = en, 1 = vi, 2 = zh-TW). Preserve empty
+  // strings so the locale mapping stays intact. Only accept https URLs from
+  // our blob host — blocks javascript:/data: URLs from being stored.
   const sanitized: string[] = [];
-  for (const raw of homepageImages.slice(0, 4)) {
-    if (typeof raw !== "string") continue;
+  for (const raw of homepageImages.slice(0, 3)) {
+    if (typeof raw !== "string" || raw.trim() === "") {
+      sanitized.push("");
+      continue;
+    }
     const trimmed = raw.trim();
     try {
       const u = new URL(trimmed);
@@ -31,10 +35,12 @@ export async function PUT(req: NextRequest) {
         u.hostname.endsWith(".public.blob.vercel-storage.com")
       ) {
         sanitized.push(trimmed);
+        continue;
       }
     } catch {
-      // not a valid URL — skip
+      // not a valid URL — fall through
     }
+    sanitized.push("");
   }
 
   const [config] = await db.select({ id: eventConfig.id }).from(eventConfig).limit(1);

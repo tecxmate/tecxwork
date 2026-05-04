@@ -81,6 +81,8 @@ export function ImageUpload({
     ? "h-24 w-24 rounded-full"
     : type === "logo"
     ? "h-24 w-24 rounded-lg"
+    : type === "homepage"
+    ? "h-48 w-36 rounded-lg"
     : "h-32 w-48 rounded-lg";
 
   return (
@@ -128,9 +130,11 @@ export function ImageUpload({
         </button>
       )}
 
-      <p className="mt-1 max-w-xs text-[11px] leading-snug text-muted-foreground">
-        {hint ?? UPLOAD_GUIDELINES[type]}
-      </p>
+      {(hint ?? UPLOAD_GUIDELINES[type]) ? (
+        <p className="mt-1 max-w-xs text-[11px] leading-snug text-muted-foreground">
+          {hint ?? UPLOAD_GUIDELINES[type]}
+        </p>
+      ) : null}
 
       {error && (
         <p className="mt-1 text-xs text-destructive">{error}</p>

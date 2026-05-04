@@ -114,12 +114,21 @@ export default async function LandingPage() {
         : "/browse"
     : null;
 
-  const [publicRecruiters, publicJobs, homepageImages, branding] = await Promise.all([
+  const [publicRecruiters, publicJobs, allHomepageImages, branding] = await Promise.all([
     getPublicRecruiters(),
     getPublicJobs(),
     getHomepageImages(),
     getEventBranding(),
   ]);
+
+  // Slot order matches admin uploader: 0 = en, 1 = vi, 2 = zh-TW.
+  // Fall back to any other locale's image if the matched slot is empty.
+  const localeSlot: Record<string, number> = { en: 0, vi: 1, "zh-TW": 2 };
+  const slotIndex = localeSlot[locale] ?? 0;
+  const matched = allHomepageImages[slotIndex];
+  const fallback = allHomepageImages.find((url): url is string => Boolean(url));
+  const heroImage = matched || fallback || "";
+  const homepageImages = heroImage ? [heroImage] : [];
 
   const formattedDate = branding.date.toLocaleDateString(
     locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US",

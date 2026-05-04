@@ -44,7 +44,7 @@ const QRCard = dynamic(() => import("@/components/qr-code").then((m) => m.QRCard
   ssr: false,
   loading: () => <div className="h-[120px] w-[120px] animate-pulse rounded-lg bg-muted" />,
 });
-import { MultiImageUpload } from "@/components/image-upload";
+import { ImageUpload } from "@/components/image-upload";
 import { AppTopBar } from "@/components/app-topbar";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
@@ -1081,27 +1081,47 @@ export function AdminDashboard({
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-muted-foreground">Homepage Hero Images</label>
-                      <MultiImageUpload
-                        hint="Hero carousel photos. Vertical / portrait (3:4). Recommended 1200×1600px. JPG, PNG, or WebP. Max 4MB each."
-                        values={homepageImages}
-                        onChange={async (urls) => {
-                          setHomepageImages(urls);
-                          setHpSaving(true);
-                          try {
-                            await fetch("/api/admin/homepage-images", {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ homepageImages: urls }),
-                            });
-                            setHpSaved(true);
-                            setTimeout(() => setHpSaved(false), 2000);
-                          } finally {
-                            setHpSaving(false);
-                          }
-                        }}
-                        type="homepage"
-                        max={4}
-                      />
+                      <p className="text-[11px] leading-snug text-muted-foreground">
+                        One photo per language. Visitors see the slot matching their site language.
+                        Vertical / portrait (3:4). Recommended 1200×1600px. JPG, PNG, or WebP. Max 4MB.
+                      </p>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        {([
+                          { locale: "en" as const, label: "English (EN)" },
+                          { locale: "vi" as const, label: "Tiếng Việt (VI)" },
+                          { locale: "zh-TW" as const, label: "繁體中文 (中文)" },
+                        ]).map(({ locale, label }, slotIndex) => (
+                          <div key={locale} className="space-y-1.5">
+                            <p className="text-[11px] font-medium text-foreground">{label}</p>
+                            <ImageUpload
+                              type="homepage"
+                              hint=""
+                              value={homepageImages[slotIndex] || undefined}
+                              onChange={async (url) => {
+                                const next = [
+                                  homepageImages[0] ?? "",
+                                  homepageImages[1] ?? "",
+                                  homepageImages[2] ?? "",
+                                ];
+                                next[slotIndex] = url ?? "";
+                                setHomepageImages(next);
+                                setHpSaving(true);
+                                try {
+                                  await fetch("/api/admin/homepage-images", {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ homepageImages: next }),
+                                  });
+                                  setHpSaved(true);
+                                  setTimeout(() => setHpSaved(false), 2000);
+                                } finally {
+                                  setHpSaving(false);
+                                }
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
                       {hpSaving && <p className="text-[10px] text-muted-foreground">Saving...</p>}
                       {hpSaved && <p className="text-[10px] text-green-600">Saved!</p>}
                     </div>
