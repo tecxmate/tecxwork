@@ -197,10 +197,18 @@ export async function PUT(req: NextRequest) {
     .select({ id: recruiters.id, interviewerCount: recruiters.interviewerCount })
     .from(recruiters);
 
-  // Format date correctly handling local timezone offset
+  // Format the event day in Asia/Taipei explicitly. Vercel runs in UTC,
+  // so dateObj.getDate() can return the previous day for early-morning
+  // Taipei start times. sv-SE returns "YYYY-MM-DD HH:mm:ss".
   const branding = await getEventBranding();
-  const dateObj = branding.date;
-  const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+  const eventDate = branding.date
+    .toLocaleString("sv-SE", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .slice(0, 10);
   let totalCreated = 0;
 
   for (const rec of allRecruiters) {

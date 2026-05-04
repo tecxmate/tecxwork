@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, recruiters, slots, bookings } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
 import { eq, and, sql } from "drizzle-orm";
+import { getEventBranding } from "@/lib/event-branding";
 
 /** PUT /api/me/recruiter — recruiter updates their own company profile */
-import { EVENT_CONFIG } from "@/lib/data";
 
 export async function PUT(req: NextRequest) {
   const auth = await getRecruiterFromSession();
@@ -77,9 +77,19 @@ export async function PUT(req: NextRequest) {
       )
     );
 
-    // Regenerate slots for all interviewer numbers
-    const dateObj = EVENT_CONFIG.date;
-    const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+    // Regenerate slots for all interviewer numbers. Use the live event
+    // branding (matches /api/admin/timeframe) and Asia/Taipei date format
+    // so an early-morning Taipei start doesn't roll back a day on UTC.
+    const branding = await getEventBranding();
+    const eventDate = branding.date
+      .toLocaleString("sv-SE", {
+        timeZone: "Asia/Taipei",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+      .slice(0, 10);
+
     const newSlots: {
       recruiterId: number;
       startTime: Date;
@@ -87,29 +97,27 @@ export async function PUT(req: NextRequest) {
       interviewerNumber: number;
     }[] = [];
 
-    const sH = EVENT_CONFIG.startHour as number;
-    const eH = EVENT_CONFIG.endHour as number;
-    const eM = EVENT_CONFIG.endMinutes as number;
-    const dur = EVENT_CONFIG.slotDuration as number;
+    const dur = branding.slotDuration;
+    const startMinutes = branding.startHour * 60;
+    const endMinutes = branding.endHour * 60 + branding.endMinutes;
 
-    for (let h = sH; h <= eH; h++) {
-      for (let m = 0; m < 60; m += dur) {
-        if (h === eH && m >= eM) break;
-        const start = new Date(
-          `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
-        );
-        const end = new Date(start.getTime() + EVENT_CONFIG.slotDuration * 60 * 1000);
+    for (let t = startMinutes; t + dur <= endMinutes; t += dur) {
+      const h = Math.floor(t / 60);
+      const m = t % 60;
+      const start = new Date(
+        `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
+      );
+      const end = new Date(start.getTime() + dur * 60 * 1000);
 
-        for (let i = 1; i <= newCount; i++) {
-          const key = `${start.toISOString()}_${i}`;
-          if (!bookedSet.has(key)) {
-            newSlots.push({
-              recruiterId: current.id,
-              startTime: start,
-              endTime: end,
-              interviewerNumber: i,
-            });
-          }
+      for (let i = 1; i <= newCount; i++) {
+        const key = `${start.toISOString()}_${i}`;
+        if (!bookedSet.has(key)) {
+          newSlots.push({
+            recruiterId: current.id,
+            startTime: start,
+            endTime: end,
+            interviewerNumber: i,
+          });
         }
       }
     }

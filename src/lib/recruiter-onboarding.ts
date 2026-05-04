@@ -1,34 +1,39 @@
 import { count, eq } from "drizzle-orm";
 
-import { EVENT_CONFIG } from "@/lib/data";
 import { db, slots } from "@/lib/db";
+import { getEventBranding } from "@/lib/event-branding";
 
-function buildDefaultSlotValues(recruiterId: number) {
-  const dateObj = EVENT_CONFIG.date;
-  const eventDate = `${dateObj.getFullYear()}-${String(
-    dateObj.getMonth() + 1
-  ).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+async function buildDefaultSlotValues(recruiterId: number) {
+  // Use the live event branding (matches /api/admin/timeframe) and format
+  // the event day in Asia/Taipei so an early-morning Taipei start doesn't
+  // roll back a day on UTC.
+  const branding = await getEventBranding();
+  const eventDate = branding.date
+    .toLocaleString("sv-SE", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .slice(0, 10);
+
   const slotValues: { recruiterId: number; startTime: Date; endTime: Date }[] =
     [];
-  const startHour: number = EVENT_CONFIG.startHour;
-  const endHour: number = EVENT_CONFIG.endHour;
-  const endMinutes: number = EVENT_CONFIG.endMinutes;
-  const slotDuration: number = EVENT_CONFIG.slotDuration;
+  const dur = branding.slotDuration;
+  const startMinutes = branding.startHour * 60;
+  const endMinutes = branding.endHour * 60 + branding.endMinutes;
 
-  for (let h = startHour; h < endHour + 1; h++) {
-    for (let m = 0; m < 60; m += slotDuration) {
-      if (h === endHour && m >= endMinutes) break;
-      if (h > endHour) break;
-
-      const start = new Date(
-        `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(
-          2,
-          "0"
-        )}:00+08:00`
-      );
-      const end = new Date(start.getTime() + slotDuration * 60 * 1000);
-      slotValues.push({ recruiterId, startTime: start, endTime: end });
-    }
+  for (let t = startMinutes; t + dur <= endMinutes; t += dur) {
+    const h = Math.floor(t / 60);
+    const m = t % 60;
+    const start = new Date(
+      `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(
+        2,
+        "0"
+      )}:00+08:00`
+    );
+    const end = new Date(start.getTime() + dur * 60 * 1000);
+    slotValues.push({ recruiterId, startTime: start, endTime: end });
   }
 
   return slotValues;
@@ -44,7 +49,7 @@ export async function ensureDefaultRecruiterSlots(recruiterId: number) {
     return;
   }
 
-  const slotValues = buildDefaultSlotValues(recruiterId);
+  const slotValues = await buildDefaultSlotValues(recruiterId);
   if (slotValues.length > 0) {
     await db.insert(slots).values(slotValues);
   }

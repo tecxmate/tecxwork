@@ -168,6 +168,31 @@ type FeedbackReportRow = {
   resolvedAt: string | null;
 };
 
+// Round-trip a UTC ISO string through a <input type="datetime-local"> in
+// Asia/Taipei. The input is timezone-naive, so we explicitly format and
+// parse against UTC+8 instead of the browser's local zone.
+function isoToTaipeiLocal(iso: string | null): string {
+  if (!iso) return "";
+  // sv-SE gives "YYYY-MM-DD HH:mm:ss" — drop seconds, swap space for "T".
+  const parts = new Date(iso).toLocaleString("sv-SE", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return parts.replace(" ", "T");
+}
+
+function taipeiLocalToIso(local: string): string | null {
+  if (!local) return null;
+  const d = new Date(`${local}:00+08:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
 export function AdminDashboard({
   recruiters: initialRecruiters,
   applicants: initialApplicants,
@@ -762,20 +787,20 @@ export function AdminDashboard({
                           />
                         </label>
                         <label className="flex flex-col gap-1 text-xs">
-                          <span className="font-medium">Event start (ISO)</span>
+                          <span className="font-medium">Event start (Taipei time)</span>
                           <Input
                             type="datetime-local"
-                            value={branding.eventDate ? branding.eventDate.slice(0, 16) : ""}
-                            onChange={(e) => setBranding({ ...branding, eventDate: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                            value={isoToTaipeiLocal(branding.eventDate)}
+                            onChange={(e) => setBranding({ ...branding, eventDate: taipeiLocalToIso(e.target.value) })}
                             className="h-8 text-xs"
                           />
                         </label>
                         <label className="flex flex-col gap-1 text-xs">
-                          <span className="font-medium">Event end (ISO)</span>
+                          <span className="font-medium">Event end (Taipei time)</span>
                           <Input
                             type="datetime-local"
-                            value={branding.eventEndDate ? branding.eventEndDate.slice(0, 16) : ""}
-                            onChange={(e) => setBranding({ ...branding, eventEndDate: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                            value={isoToTaipeiLocal(branding.eventEndDate)}
+                            onChange={(e) => setBranding({ ...branding, eventEndDate: taipeiLocalToIso(e.target.value) })}
                             className="h-8 text-xs"
                           />
                         </label>
