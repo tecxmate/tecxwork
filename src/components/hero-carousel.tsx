@@ -89,14 +89,14 @@ export function HeroCarousel({
         {images.map((url, i) => (
           <div
             key={`${url}-${i}`}
-            className="relative snap-start shrink-0 basis-full"
+            className="relative snap-start shrink-0 basis-full bg-background"
             aria-roledescription="slide"
           >
             <img
               src={url}
               alt=""
               aria-hidden
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-contain"
               loading={i === 0 ? "eager" : "lazy"}
             />
           </div>
