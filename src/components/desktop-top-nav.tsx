@@ -81,8 +81,16 @@ export function DesktopTopNav({
             key={item.href}
             href={item.href}
             prefetch={false}
-            onMouseEnter={() => router.prefetch(item.href)}
-            onFocus={() => router.prefetch(item.href)}
+            onMouseEnter={
+              process.env.NODE_ENV === "production"
+                ? () => router.prefetch(item.href)
+                : undefined
+            }
+            onFocus={
+              process.env.NODE_ENV === "production"
+                ? () => router.prefetch(item.href)
+                : undefined
+            }
             className={[
               "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               active

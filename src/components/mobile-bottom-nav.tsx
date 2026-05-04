@@ -118,12 +118,20 @@ export function MobileBottomNav({
                 key={item.href}
                 href={item.href}
                 prefetch={false}
-                onTouchStart={() => {
-                  router.prefetch(item.href);
-                }}
-                onMouseDown={() => {
-                  router.prefetch(item.href);
-                }}
+                onTouchStart={
+                  process.env.NODE_ENV === "production"
+                    ? () => {
+                        router.prefetch(item.href);
+                      }
+                    : undefined
+                }
+                onMouseDown={
+                  process.env.NODE_ENV === "production"
+                    ? () => {
+                        router.prefetch(item.href);
+                      }
+                    : undefined
+                }
                 onClick={(event) => {
                   if (pathname === item.href && !search) {
                     return;
