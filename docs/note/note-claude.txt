@@ -1272,3 +1272,19 @@ add TEST_DATABASE_URL for the new branch of test Neon db
                                                                                                               
   The biggest risk is not the code — it's deciding pricing, ICP, and onboarding before you have customers.    
   Spend a week on customer discovery (who would pay, how much, for what) before writing the tenant migration. 
+
+
+    - src/app/page.tsx — Removed the "Event Photos / Activity Photos" section entirely from the homepage (no
+  placeholder, no admin uploader on homepage).
+  - src/components/image-upload.tsx — ImageUpload and MultiImageUpload now display per-type guideline text
+  (size, format, aspect ratio) below the upload control, with an optional hint override.
+    - avatar: 1:1, 400×400px
+    - logo: 1:1, 400×400px
+    - gallery: 3:2, 1200×800px
+    - homepage: 3:4 vertical, 1200×1600px
+  - src/components/homepage-image-editor.tsx — Updated to 3:4 vertical hero (placeholder grid, recommended
+  1200×1600px, min 900×1200px, ratio check 0.7–0.8, copy and confirm dialog).
+  - src/app/admin/admin-dashboard.tsx — Hero uploader now labeled "Homepage Hero Images" with explicit 3:4
+  vertical hint.
+  - src/app/profile/page.tsx / src/app/dashboard/recruiter-dashboard-company.tsx — Removed redundant inline
+  hints; the component now self-documents (gallery uploader uses an explicit override).

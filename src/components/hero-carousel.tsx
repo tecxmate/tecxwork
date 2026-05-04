@@ -14,6 +14,8 @@ export function HeroCarousel({
 }) {
   const slideCount = 1 + images.length;
   const trackRef = useRef<HTMLDivElement>(null);
+  const touchingRef = useRef(false);
+  const userScrollUntilRef = useRef(0);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -39,6 +41,7 @@ export function HeroCarousel({
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
+    if (touchingRef.current || Date.now() < userScrollUntilRef.current) return;
     const target = track.children[index] as HTMLElement | undefined;
     if (!target) return;
     track.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
@@ -48,6 +51,7 @@ export function HeroCarousel({
     const track = trackRef.current;
     if (!track) return;
     let raf = 0;
+    let settleTimer = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
@@ -57,10 +61,28 @@ export function HeroCarousel({
         setIndex((prev) => (prev === i ? prev : i));
       });
     };
+    const onTouchStart = () => {
+      touchingRef.current = true;
+      setPaused(true);
+      window.clearTimeout(settleTimer);
+    };
+    const onTouchEnd = () => {
+      touchingRef.current = false;
+      userScrollUntilRef.current = Date.now() + 600;
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => setPaused(false), 1200);
+    };
     track.addEventListener("scroll", onScroll, { passive: true });
+    track.addEventListener("touchstart", onTouchStart, { passive: true });
+    track.addEventListener("touchend", onTouchEnd, { passive: true });
+    track.addEventListener("touchcancel", onTouchEnd, { passive: true });
     return () => {
       track.removeEventListener("scroll", onScroll);
+      track.removeEventListener("touchstart", onTouchStart);
+      track.removeEventListener("touchend", onTouchEnd);
+      track.removeEventListener("touchcancel", onTouchEnd);
       cancelAnimationFrame(raf);
+      window.clearTimeout(settleTimer);
     };
   }, []);
 
@@ -73,14 +95,12 @@ export function HeroCarousel({
       className="relative border-b bg-gradient-to-b from-primary/5 to-background"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
       <div
         ref={trackRef}
-        className="hero-carousel-track flex w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth"
+        className="hero-carousel-track flex w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch]"
         aria-roledescription="carousel"
       >
         <div className="snap-start shrink-0 basis-full" aria-roledescription="slide">
