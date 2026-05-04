@@ -877,7 +877,6 @@ export default function ProfilePage() {
                     />
                     <div>
                       <p className="text-sm font-medium">Profile Photo</p>
-                      <p className="text-xs text-muted-foreground">Max 4MB. JPEG, PNG, WebP, or GIF.</p>
                     </div>
                   </div>
                 </section>

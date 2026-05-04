@@ -4,12 +4,22 @@ import { useState, useRef } from "react";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+type UploadType = "avatar" | "logo" | "gallery" | "homepage";
+
+const UPLOAD_GUIDELINES: Record<UploadType, string> = {
+  avatar: "Square (1:1). Recommended 400×400px. JPG, PNG, WebP, or GIF. Max 4MB.",
+  logo: "Square (1:1). Recommended 400×400px, transparent background preferred. JPG, PNG, WebP, or GIF. Max 4MB.",
+  gallery: "Landscape (3:2). Recommended 1200×800px. JPG, PNG, WebP, or GIF. Max 4MB.",
+  homepage: "Vertical / portrait (3:4). Recommended 1200×1600px. JPG, PNG, or WebP. Max 4MB.",
+};
+
 type ImageUploadProps = {
   value?: string;
   onChange: (url: string | null) => void;
-  type: "avatar" | "logo" | "gallery" | "homepage";
+  type: UploadType;
   className?: string;
   disabled?: boolean;
+  hint?: string;
 };
 
 export function ImageUpload({
@@ -18,6 +28,7 @@ export function ImageUpload({
   type,
   className = "",
   disabled = false,
+  hint,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -117,6 +128,10 @@ export function ImageUpload({
         </button>
       )}
 
+      <p className="mt-1 max-w-xs text-[11px] leading-snug text-muted-foreground">
+        {hint ?? UPLOAD_GUIDELINES[type]}
+      </p>
+
       {error && (
         <p className="mt-1 text-xs text-destructive">{error}</p>
       )}
@@ -131,6 +146,7 @@ type MultiImageUploadProps = {
   max?: number;
   className?: string;
   disabled?: boolean;
+  hint?: string;
 };
 
 export function MultiImageUpload({
@@ -140,6 +156,7 @@ export function MultiImageUpload({
   max = 4,
   className = "",
   disabled = false,
+  hint,
 }: MultiImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -242,6 +259,10 @@ export function MultiImageUpload({
           </>
         )}
       </div>
+
+      <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+        {hint ?? UPLOAD_GUIDELINES[type]} Up to {max} photos.
+      </p>
 
       {error && (
         <p className="mt-2 text-xs text-destructive">{error}</p>

@@ -12,10 +12,10 @@ type Props = {
 };
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
-const RECOMMENDED_WIDTH = 1920;
-const RECOMMENDED_HEIGHT = 1080;
-const MIN_WIDTH = 1280;
-const MIN_HEIGHT = 720;
+const RECOMMENDED_WIDTH = 1200;
+const RECOMMENDED_HEIGHT = 1600;
+const MIN_WIDTH = 900;
+const MIN_HEIGHT = 1200;
 
 async function readImageDimensions(
   file: File
@@ -55,7 +55,7 @@ export function HomepageImageEditor({ images, isAdmin, placeholders }: Props) {
       const { width, height } = await readImageDimensions(file);
       const ratio = width / height;
       const tooSmall = width < MIN_WIDTH || height < MIN_HEIGHT;
-      const wrongRatio = ratio < 1.5 || ratio > 2.1;
+      const wrongRatio = ratio < 0.7 || ratio > 0.8;
       if (tooSmall || wrongRatio) {
         const reasons: string[] = [];
         if (tooSmall) {
@@ -65,11 +65,11 @@ export function HomepageImageEditor({ images, isAdmin, placeholders }: Props) {
         }
         if (wrongRatio) {
           reasons.push(
-            `aspect ratio is ${ratio.toFixed(2)}:1 (recommended 16:9, ~1.78:1)`
+            `aspect ratio is ${ratio.toFixed(2)}:1 (recommended 3:4 vertical, ~0.75:1)`
           );
         }
         const proceed = confirm(
-          `Heads up — this photo may not look great in the hero carousel:\n\n• ${reasons.join("\n• ")}\n\nRecommended: ${RECOMMENDED_WIDTH}×${RECOMMENDED_HEIGHT}px, 16:9, under 4MB.\n\nUpload anyway?`
+          `Heads up — this photo may not look great in the hero carousel:\n\n• ${reasons.join("\n• ")}\n\nRecommended: ${RECOMMENDED_WIDTH}×${RECOMMENDED_HEIGHT}px, 3:4 vertical, JPG/PNG/WebP, under 4MB.\n\nUpload anyway?`
         );
         if (!proceed) return;
       }
@@ -155,13 +155,13 @@ export function HomepageImageEditor({ images, isAdmin, placeholders }: Props) {
           <ul className="list-disc space-y-0.5 pl-5">
             <li>
               Recommended size: <strong>{RECOMMENDED_WIDTH}×{RECOMMENDED_HEIGHT}px</strong>{" "}
-              (16:9, landscape) — fills the hero carousel without cropping.
+              (<strong>3:4 vertical / portrait</strong>) — fills the hero carousel without cropping.
             </li>
             <li>
               Minimum size: {MIN_WIDTH}×{MIN_HEIGHT}px. Smaller images look soft on large
               screens.
             </li>
-            <li>Max file size: 4MB. JPG or PNG. Up to 4 photos.</li>
+            <li>Format: JPG, PNG, or WebP. Max file size: 4MB. Up to 4 photos.</li>
           </ul>
         </div>
       ) : null}
@@ -174,7 +174,7 @@ export function HomepageImageEditor({ images, isAdmin, placeholders }: Props) {
           <div
             key={photo.id}
             className={cn(
-              "group relative aspect-[4/3] overflow-hidden rounded-xl bg-secondary",
+              "group relative aspect-[3/4] overflow-hidden rounded-xl bg-secondary",
               isAdmin && "cursor-pointer"
             )}
             onClick={() => {

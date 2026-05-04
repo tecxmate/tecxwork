@@ -688,12 +688,12 @@ export function RecruiterCompanyTab({
 
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Gallery Photos</label>
-                  <p className="text-xs text-muted-foreground">Upload up to 4 photos to showcase your company</p>
                   <MultiImageUpload
                     values={galleryUrls}
                     onChange={setGalleryUrls}
                     type="gallery"
                     max={4}
+                    hint="Photos showcasing your company. Landscape (3:2). Recommended 1200×800px. JPG, PNG, WebP, or GIF. Max 4MB each."
                   />
                 </div>
 

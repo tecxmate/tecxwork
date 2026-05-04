@@ -17,7 +17,6 @@ import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import { HeroCarousel } from "@/components/hero-carousel";
 import { LogoutButton } from "@/components/logout-button";
-import { HomepageImageEditor } from "@/components/homepage-image-editor";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getEventBranding } from "@/lib/event-branding";
 import { getSession } from "@/lib/auth";
@@ -25,13 +24,6 @@ import { db, recruiters, jobOpenings, users, eventConfig } from "@/lib/db";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
 import { eq } from "drizzle-orm";
-
-const EVENT_PHOTO_PLACEHOLDERS = [
-  { id: 1, alt: "Career fair networking" },
-  { id: 2, alt: "Interview session" },
-  { id: 3, alt: "Company presentations" },
-  { id: 4, alt: "Student registration" },
-];
 
 async function getPublicRecruiters() {
   const recruiterList = await db
@@ -228,25 +220,6 @@ export default async function LandingPage() {
             </div>
           </div>
         </HeroCarousel>
-
-        {/* Event Photos Section */}
-        <section className="border-b px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-8 text-center">
-              <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                {messages.landing.eventHighlightsTitle}
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                {messages.landing.eventHighlightsSubtitle}
-              </p>
-            </div>
-            <HomepageImageEditor
-              images={homepageImages}
-              isAdmin={session?.role === "admin"}
-              placeholders={EVENT_PHOTO_PLACEHOLDERS}
-            />
-          </div>
-        </section>
 
         {/* Recruiters Section */}
         <section id="companies" className="border-b px-4 py-12 sm:px-6 sm:py-16">

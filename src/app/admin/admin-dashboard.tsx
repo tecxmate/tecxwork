@@ -1080,8 +1080,9 @@ export function AdminDashboard({
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Homepage Images</label>
+                      <label className="text-xs font-medium text-muted-foreground">Homepage Hero Images</label>
                       <MultiImageUpload
+                        hint="Hero carousel photos. Vertical / portrait (3:4). Recommended 1200×1600px. JPG, PNG, or WebP. Max 4MB each."
                         values={homepageImages}
                         onChange={async (urls) => {
                           setHomepageImages(urls);
