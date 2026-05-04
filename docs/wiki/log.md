@@ -49,10 +49,11 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 ## [2026-05-04] ingest | Documentation Consolidation
 attributed_to: [gemini]   belongs_to: [tecxwork, tecxmate]
 - Compiled all legacy documentation from docs/ subfolders into the wiki structure.
-- Created entities: tecxmate, vsatw, v-gen-trident-2026, taiwan-mol, gemini, gpt.
-- Created topics: saas-strategy, taiwan-compliance, architecture-overview, design-system, recruitment-workflows, data-privacy.
+- Created stakeholders: tecxmate, vsatw, taiwan-mol, gemini, gpt.
+- Created topics: saas-strategy, taiwan-compliance, architecture-overview, design-system, recruitment-workflows, data-privacy, tecxwork, v-gen-trident-2026.
 - Created historical decisions: 2026-04-20-custom-booking-engine, 2026-04-24-job-moderation-toggle, 2026-04-28-double-booking-prevention, 2026-04-28-force-timeframe-override, 2026-04-30-navigation-consolidation.
-- Updated index.md to catalog all new pages.
+- Refactored wiki to strictly align with the original LLM Wiki Master Plan (renamed entities to stakeholders, moved non-deciding entities to topics).
+- Updated index.md and log.md.
 
 ## [2026-05-04] decision | Rename entities/ → stakeholders/; topics absorb non-deciders
 attributed_to: [niko]   belongs_to: [tecxwork]

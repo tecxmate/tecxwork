@@ -33,10 +33,10 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 *Areas, products, events, and synthesised concepts. Topics don't make decisions; stakeholders do.*
 
 - [tecxwork web app](topics/tecxwork.md) — the product itself (area: full stack)
+- [V-GEN TRIDENT 2026](topics/v-gen-trident-2026.md) — flagship career fair event
 - [Admin panel](topics/admin-panel.md) — area: event-config + uploads
 - [Recruiter dashboard](topics/recruiter-dashboard.md) — area: company profile + slots
 - [Public homepage](topics/public-homepage.md) — area: landing page + hero
-- [V-GEN TRIDENT 2026](topics/v-gen-trident-2026.md) — flagship career fair event
 - [Hero carousel](topics/hero-carousel.md) — homepage hero section: localization, aspect ratio, touch behavior
 - [Photo uploads](topics/photo-uploads.md) — `ImageUpload` / `MultiImageUpload`, per-type guidelines, `homepageImages` schema
 - [Event time configuration](topics/event-time-config.md) — admin time form, slot regeneration, Asia/Taipei roundtrip
