@@ -225,27 +225,33 @@ export async function PUT(req: NextRequest) {
     }[] = [];
 
     const slotInterval = slotDuration + bufferMinutes;
-    for (let h = startHour; h <= endHour; h++) {
-      const minStart = h === startHour ? startMinute : 0;
-      for (let m = minStart; m < 60; m += slotInterval) {
-        if (h === endHour && m >= endMinute) break;
-        if (h > endHour) break;
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
 
-        const start = new Date(
-          `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
-        );
-        const end = new Date(start.getTime() + slotDuration * 60 * 1000);
+    // Iterate in absolute minutes so non-60-dividing slot durations
+    // (e.g., 45 min) keep a consistent cadence across hour boundaries,
+    // and a slot is only created if it ends within the event window.
+    for (
+      let t = startMinutes;
+      t + slotDuration <= endMinutes;
+      t += slotInterval
+    ) {
+      const h = Math.floor(t / 60);
+      const m = t % 60;
+      const start = new Date(
+        `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
+      );
+      const end = new Date(start.getTime() + slotDuration * 60 * 1000);
 
-        for (let i = 1; i <= rec.interviewerCount; i++) {
-          const key = `${start.toISOString()}_${i}`;
-          if (!bookedSet.has(key)) {
-            newSlots.push({
-              recruiterId: rec.id,
-              startTime: start,
-              endTime: end,
-              interviewerNumber: i,
-            });
-          }
+      for (let i = 1; i <= rec.interviewerCount; i++) {
+        const key = `${start.toISOString()}_${i}`;
+        if (!bookedSet.has(key)) {
+          newSlots.push({
+            recruiterId: rec.id,
+            startTime: start,
+            endTime: end,
+            interviewerNumber: i,
+          });
         }
       }
     }
