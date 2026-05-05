@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-05-05 — CV sharing hint → "Anyone with the link"](decisions/2026-05-05-cv-anyone-with-link.md) — student-form hint updated in en/vi/zh-TW to remove access-request friction
 - [2026-05-04 — Photo upload guidelines per type](decisions/2026-05-04-photo-upload-guidelines.md) — size/format/aspect hints in `ImageUpload`; hero set to 3:4 vertical; activity-photos section removed
 - [2026-05-04 — Hero photo localization (one slot per language)](decisions/2026-05-04-hero-photo-localization.md) — admin slots EN/VI/中文; visitor sees their locale
 - [2026-05-04 — Clear orphan homepage blob files](decisions/2026-05-04-clear-orphan-blobs.md) — drop pre-localization images from blob and DB

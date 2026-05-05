@@ -60,3 +60,10 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Per [niko]: "stakeholders are things that can make decisions". Folder renamed; type frontmatter updated.
 - Moved non-stakeholder pages (tecxwork, admin-panel, recruiter-dashboard, public-homepage, v-gen-trident-2026) into topics/.
 - Schema doc, index, and AGENTS.md updated to reflect the stricter distinction: attributed_to must point at a stakeholder; belongs_to may point at either.
+
+## [2026-05-05] decision | CV sharing hint → "Anyone with the link"
+attributed_to: [niko]   belongs_to: [recruitment-workflows, data-privacy]
+- Per [niko]: per-application private Drive shares to HR email caused drop-off; recruiters hit "request access" → fewer interviews.
+- Changed `cvShareOnly` student-form hint in en/vi/zh-TW to instruct "Anyone with the link" (Viewer).
+- Apply-only visibility model on recruiter side unchanged. PIPA/consent text unchanged.
+- See: decisions/2026-05-05-cv-anyone-with-link.md

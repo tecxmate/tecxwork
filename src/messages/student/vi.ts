@@ -292,6 +292,7 @@ export const studentViMessages = {
     viewOtherPositions: "Xem vị trí khác",
     positionApplyingFor: "Vị trí ứng tuyển",
     cvLink: "Link CV",
+    cvShareOnly: "Đặt chia sẻ \"Bất kỳ ai có liên kết\" (Người xem) để {email} mở được mà không cần yêu cầu quyền truy cập.",
     requestBooking: "Gửi yêu cầu đặt lịch",
     booking: "Đang đặt lịch...",
   },

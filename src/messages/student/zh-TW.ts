@@ -293,6 +293,7 @@ export const studentZhTwMessages = {
     viewOtherPositions: "查看其他職缺",
     positionApplyingFor: "投遞職位",
     cvLink: "履歷連結",
+    cvShareOnly: "請將共用權限設為「知道連結的任何人」（檢視者），{email} 才能直接開啟而不需要申請存取權。",
     consent:
       "我同意依照台灣個人資料保護法 (PIPA) 的規定，將我的個人資料分享給 {company} 以應徵 {position} 職位。",
     requestBooking: "送出預約申請",
