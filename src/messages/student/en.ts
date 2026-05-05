@@ -251,7 +251,7 @@ export const studentEnMessages = {
     aboutYou: "About You",
     cvLink: "CV Link (Google Drive)",
     cvHint:
-      "Share a public or recruiter-accessible Google Drive CV link so companies can review it.",
+      "Share your CV via Google Drive and set access to \"Anyone with the link can view\" so companies can open it.",
     consentText:
       "I consent to making my profile, education information, and CV link visible to recruiters for this recruitment event in accordance with Taiwan's Personal Data Protection Act, and I agree to the Platform Terms and Privacy Policy.",
     legalNotice:
