@@ -82,7 +82,7 @@ export function StudentSectionZh() {
             <li>狀態最初為<strong>待審核</strong>。招募人員會在後台看到。</li>
             <li>當招募人員處理時,您會收到站內通知(鈴鐺圖示)與電子郵件:
               <ul className="list-disc pl-5 mt-1">
-                <li><strong>接受</strong> — 面試已確認;將 Google Drive 履歷分享給對方郵件</li>
+                <li><strong>接受</strong> — 面試已確認;招募人員會打開您的 Google Drive 履歷連結</li>
                 <li><strong>候補</strong> — 時段已滿,但若有空缺仍可能受邀</li>
                 <li><strong>拒絕</strong> — 對方未錄取;郵件可能含個人化訊息</li>
               </ul>
@@ -90,7 +90,7 @@ export function StudentSectionZh() {
             <li>可在預約頁取消任何待審或已接受的申請 — 釋出時段給其他人</li>
           </ul>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
-            <strong>重要:</strong>被接受後,只能將 Google Drive 履歷<em>分享給</em>確認信中顯示的招募人員郵件。請勿將連結設為「擁有連結的任何人」。
+            <strong>重要:</strong>請將履歷透過 Google Drive 分享,並把權限設為「知道連結的任何人都能檢視」,這樣公司才能打開你的履歷。
           </div>
         </div>
 

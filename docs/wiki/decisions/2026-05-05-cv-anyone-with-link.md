@@ -24,7 +24,9 @@ Change the on-form hint to instruct students to set the Drive link to **"Anyone 
 - Alternatives considered: (a) keep both options in the hint, (b) move to direct upload on the platform (Vercel Blob). Both deferred — option 1 is a one-line copy change with the highest ROI for current event.
 
 ## Consequences
-- Student-side hint copy updated in three locales.
+- Student-side hint copy rewritten in three locales (en/vi/zh-TW) to instruct "Anyone with the link can view".
+- Tutorial warning boxes (vi/en/zh-TW) rewritten to match — previous text told students NOT to use "Anyone with the link", now reversed.
+- New `cvShareConfirm` checkbox added to `BookingForm`: students must tick "I confirm I have set access to 'Anyone with the link can view'" before Apply is enabled (`canSubmit` gating).
 - PIPA/consent text unchanged (sharing scope is still student-initiated).
 - Future work may revisit direct upload if link-leak incidents occur.
 

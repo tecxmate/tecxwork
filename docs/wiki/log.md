@@ -67,3 +67,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows, data-privacy]
 - Changed `cvShareOnly` student-form hint in en/vi/zh-TW to instruct "Anyone with the link" (Viewer).
 - Apply-only visibility model on recruiter side unchanged. PIPA/consent text unchanged.
 - See: decisions/2026-05-05-cv-anyone-with-link.md
+
+## [2026-05-05] update | CV share: rewrite tutorial + add mandatory confirm checkbox
+attributed_to: [niko]   belongs_to: [recruitment-workflows, tecxwork]
+- Hint copy rewritten in en/vi/zh-TW: "Chia sẻ link CV trên Google Drive và cài đặt quyền truy cập là 'Bất kỳ ai có đường link đều có thể xem'..."
+- Tutorial warning boxes (vi/en/zh-TW) reversed from old "do NOT set Anyone-with-link" to new "set Anyone-with-link can view".
+- BookingForm: new `cvShareConfirm` checkbox required before Apply ("bạn đã share quyền truy cập... chọn có mới được apply").

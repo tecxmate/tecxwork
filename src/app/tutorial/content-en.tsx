@@ -82,7 +82,7 @@ export function StudentSectionEn() {
             <li>Status starts as <strong>Pending</strong>. The recruiter sees it in their dashboard.</li>
             <li>You&apos;ll get an in-app notification (bell icon) and an email when they:
               <ul className="list-disc pl-5 mt-1">
-                <li><strong>Accept</strong> — interview is confirmed; share your Google Drive CV with their email</li>
+                <li><strong>Accept</strong> — interview is confirmed; the recruiter will open your Google Drive CV link</li>
                 <li><strong>Waitlist</strong> — slot is full, but they may invite you if it opens up</li>
                 <li><strong>Reject</strong> — they&apos;ve passed; the email may include a personalized note</li>
               </ul>
@@ -90,7 +90,7 @@ export function StudentSectionEn() {
             <li>Cancel any pending or accepted application from your bookings page — releases the slot for someone else</li>
           </ul>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
-            <strong>Important:</strong> Once accepted, share your Google Drive CV <em>only</em> with the recruiter&apos;s email shown in the confirmation. Do NOT set the link to &quot;Anyone with the link.&quot;
+            <strong>Important:</strong> Share your CV via Google Drive and set access to &quot;Anyone with the link can view&quot; so companies can open your CV.
           </div>
         </div>
 

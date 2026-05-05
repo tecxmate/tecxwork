@@ -370,7 +370,8 @@ export const studentEnMessages = {
     multiplePositionHint:
       "You can apply for multiple positions at different time slots.",
     cvLink: "CV Link",
-    cvShareOnly: "Set sharing to \"Anyone with the link\" (Viewer) so {email} can open it without requesting access.",
+    cvShareOnly: "Share your CV via Google Drive and set access to \"Anyone with the link can view\" so companies can open your CV.",
+    cvShareConfirm: "I confirm I have set access to \"Anyone with the link can view\".",
     consent:
       "I consent to sharing my profile with {company} for the {position} position in accordance with Taiwan's Personal Data Protection Act (PIPA).",
     requestBooking: "Request Booking",

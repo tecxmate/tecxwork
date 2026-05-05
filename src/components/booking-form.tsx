@@ -56,6 +56,7 @@ export function BookingForm({
   const [position, setPosition] = useState(positions[0] ?? "");
   const [cvLink, setCvLink] = useState("");
   const [pipaConsent, setPipaConsent] = useState(false);
+  const [shareConfirm, setShareConfirm] = useState(false);
   const [state, setState] = useState<BookingState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -76,7 +77,7 @@ export function BookingForm({
 
   const slotDate = new Date(slot.startTime);
   const formattedTime = format(slotDate, "EEEE, MMMM d 'at' HH:mm");
-  const canSubmit = !!profile && !!position && cvLink.trim() && pipaConsent;
+  const canSubmit = !!profile && !!position && cvLink.trim() && pipaConsent && shareConfirm;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -248,6 +249,16 @@ export function BookingForm({
                 email: contactEmail,
               })}
             </p>
+            <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-xs leading-relaxed text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={shareConfirm}
+                onChange={(e) => setShareConfirm(e.target.checked)}
+                className="mt-0.5 h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                required
+              />
+              <span>{messages.bookingForm.cvShareConfirm}</span>
+            </label>
           </div>
 
           <Separator />

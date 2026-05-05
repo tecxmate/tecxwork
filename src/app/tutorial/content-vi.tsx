@@ -82,7 +82,7 @@ export function StudentSectionVi() {
             <li>Trạng thái ban đầu là <strong>Đang chờ</strong>. Nhà tuyển dụng sẽ thấy trong bảng điều khiển.</li>
             <li>Bạn sẽ nhận thông báo trong ứng dụng (biểu tượng chuông) và email khi họ:
               <ul className="list-disc pl-5 mt-1">
-                <li><strong>Chấp nhận</strong> — phỏng vấn được xác nhận; chia sẻ CV Google Drive với email của họ</li>
+                <li><strong>Chấp nhận</strong> — phỏng vấn được xác nhận; nhà tuyển dụng sẽ mở link CV Google Drive của bạn</li>
                 <li><strong>Đưa vào danh sách chờ</strong> — slot đã đầy nhưng họ có thể mời lại nếu có chỗ trống</li>
                 <li><strong>Từ chối</strong> — họ đã không chọn; email có thể kèm lời nhắn cá nhân</li>
               </ul>
@@ -90,7 +90,7 @@ export function StudentSectionVi() {
             <li>Bạn có thể huỷ đơn đăng ký đang chờ hoặc đã được chấp nhận trên trang đặt lịch — slot sẽ được giải phóng cho người khác</li>
           </ul>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
-            <strong>Quan trọng:</strong> Khi đã được chấp nhận, chỉ chia sẻ CV Google Drive <em>với</em> email của nhà tuyển dụng được hiển thị trong xác nhận. KHÔNG đặt liên kết là &quot;Bất kỳ ai có liên kết.&quot;
+            <strong>Quan trọng:</strong> Chia sẻ link CV trên Google Drive và cài đặt quyền truy cập là &quot;Bất kỳ ai có đường link đều có thể xem&quot;, để các công ty có thể xem CV của bạn.
           </div>
         </div>
 
