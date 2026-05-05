@@ -184,7 +184,6 @@ export default async function LandingPage() {
         <HeroCarousel images={homepageImages}>
           <div className="px-4 py-12 sm:px-6 sm:py-20 lg:py-28">
             <div className="mx-auto max-w-4xl text-center">
-              <Badge className="mb-4">{messages.landing.heroBadge}</Badge>
               <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 {messages.landing.heroTitle}
               </h1>

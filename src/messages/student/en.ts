@@ -302,7 +302,7 @@ export const studentEnMessages = {
     cvQrSubtitle:
       "Show this to recruiters at the event - they scan to view your CV",
     cvHint:
-      "Update this link to regenerate the QR code above. Use a public, anyone-can-view CV link.",
+      "Update this link to regenerate the QR code above. Your CV link on Drive is public and will be explicitly used to send to recruiters for recruiting purposes.",
     profileUpdated: "Profile updated!",
     title: "My Profile",
     saveFailed: "Save failed",
