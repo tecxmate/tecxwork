@@ -50,6 +50,7 @@ export async function GET() {
       location: eventConfig.location,
       eventDate: eventConfig.eventDate,
       eventEndDate: eventConfig.eventEndDate,
+      heroOverlayEnabled: eventConfig.heroOverlayEnabled,
     })
     .from(eventConfig)
     .limit(1);
@@ -112,6 +113,10 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Invalid eventEndDate" }, { status: 400 });
     }
     update.eventEndDate = d;
+  }
+
+  if (typeof body.heroOverlayEnabled === "boolean") {
+    (update as Record<string, unknown>).heroOverlayEnabled = body.heroOverlayEnabled;
   }
 
   if (Object.keys(update).length === 0) {

@@ -12,7 +12,8 @@ export function HeroCarousel({
   images: string[];
   children: ReactNode;
 }) {
-  const slideCount = 1 + images.length;
+  const hasOverlay = Boolean(children);
+  const slideCount = (hasOverlay ? 1 : 0) + images.length;
   const trackRef = useRef<HTMLDivElement>(null);
   const touchingRef = useRef(false);
   const userScrollUntilRef = useRef(0);
@@ -87,7 +88,7 @@ export function HeroCarousel({
   }, []);
 
   if (slideCount <= 1) {
-    return <>{children}</>;
+    return hasOverlay ? <>{children}</> : null;
   }
 
   return (
@@ -103,9 +104,11 @@ export function HeroCarousel({
         className="hero-carousel-track flex w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch]"
         aria-roledescription="carousel"
       >
-        <div className="snap-start shrink-0 basis-full" aria-roledescription="slide">
-          {children}
-        </div>
+        {hasOverlay && (
+          <div className="snap-start shrink-0 basis-full" aria-roledescription="slide">
+            {children}
+          </div>
+        )}
         {images.map((url, i) => (
           <div
             key={`${url}-${i}`}
@@ -128,7 +131,7 @@ export function HeroCarousel({
           <button
             key={i}
             type="button"
-            aria-label={i === 0 ? "Show event details" : `Show photo ${i}`}
+            aria-label={hasOverlay && i === 0 ? "Show event details" : `Show photo ${hasOverlay ? i : i + 1}`}
             aria-current={i === index}
             onClick={() => setIndex(i)}
             className={`pointer-events-auto h-2 rounded-full transition-all ${

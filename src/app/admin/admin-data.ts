@@ -77,6 +77,7 @@ export async function getAdminDashboardData() {
       location: eventConfig.location,
       eventDate: eventConfig.eventDate,
       eventEndDate: eventConfig.eventEndDate,
+      heroOverlayEnabled: eventConfig.heroOverlayEnabled,
     })
     .from(eventConfig)
     .limit(1);
@@ -190,6 +191,7 @@ export async function getAdminDashboardData() {
       location: config?.location ?? "",
       eventDate: config?.eventDate?.toISOString() ?? null,
       eventEndDate: config?.eventEndDate?.toISOString() ?? null,
+      heroOverlayEnabled: config?.heroOverlayEnabled ?? true,
     },
   };
 }

@@ -236,6 +236,7 @@ export function AdminDashboard({
     location: string;
     eventDate: string | null;
     eventEndDate: string | null;
+    heroOverlayEnabled: boolean;
   };
   section: AdminSection;
 }) {
@@ -665,7 +666,7 @@ export function AdminDashboard({
                         setBrandingSaving(true);
                         setBrandingSaved(false);
                         setBrandingError("");
-                        const payload: Record<string, string | null> = {
+                        const payload: Record<string, string | boolean | null> = {
                           eventName: branding.eventName,
                           emailEventName: branding.emailEventName,
                           tagline: branding.tagline,
@@ -676,6 +677,7 @@ export function AdminDashboard({
                           displayDate: branding.displayDate,
                           displayYear: branding.displayYear,
                           location: branding.location,
+                          heroOverlayEnabled: branding.heroOverlayEnabled,
                         };
                         if (branding.eventDate) payload.eventDate = branding.eventDate;
                         if (branding.eventEndDate) payload.eventEndDate = branding.eventEndDate;
@@ -804,6 +806,18 @@ export function AdminDashboard({
                             className="h-8 text-xs"
                           />
                         </label>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/20 px-3 py-2">
+                        <div className="text-xs">
+                          <p className="font-medium">Hero overlay (title, countdown, CTAs)</p>
+                          <p className="text-muted-foreground">
+                            Turn off to show only the homepage photos in the hero carousel.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={branding.heroOverlayEnabled}
+                          onCheckedChange={(v) => setBranding({ ...branding, heroOverlayEnabled: v })}
+                        />
                       </div>
                       <div className="flex items-center gap-2">
                         <Button type="submit" size="sm" disabled={brandingSaving}>

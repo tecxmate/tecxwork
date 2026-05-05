@@ -341,6 +341,7 @@ export const eventConfig = pgTable("event_config", {
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),
   homepageImages: text("homepage_images").array().notNull().default([]),
+  heroOverlayEnabled: boolean("hero_overlay_enabled").notNull().default(true),
 });
 
 // ---- External job listings (crawled from 104/1111) ----

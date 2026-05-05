@@ -73,3 +73,11 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows, tecxwork]
 - Hint copy rewritten in en/vi/zh-TW: "Chia sẻ link CV trên Google Drive và cài đặt quyền truy cập là 'Bất kỳ ai có đường link đều có thể xem'..."
 - Tutorial warning boxes (vi/en/zh-TW) reversed from old "do NOT set Anyone-with-link" to new "set Anyone-with-link can view".
 - BookingForm: new `cvShareConfirm` checkbox required before Apply ("bạn đã share quyền truy cập... chọn có mới được apply").
+
+## [2026-05-06] decision | Admin toggle: hero overlay on/off
+attributed_to: [niko]   belongs_to: [public-homepage, admin-panel]
+- Per [niko]: an admin wanted to display the photo carousel only, without the title/tagline/countdown/CTA overlay.
+- Added `event_config.hero_overlay_enabled` (default true), wired through getEventBranding, branding API, and admin Event Branding UI (Switch).
+- HeroCarousel now treats falsy children as "no overlay" — no empty first slide, no extra indicator dot.
+- Migration applied locally; prod run needed: `npm run db:update:hero-overlay-toggle`.
+- See: decisions/2026-05-06-hero-overlay-toggle.md

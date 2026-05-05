@@ -23,6 +23,7 @@ export type EventBranding = {
   endHour: number;
   endMinutes: number;
   enableNewsletterOptIn: boolean;
+  heroOverlayEnabled: boolean;
 };
 
 /**
@@ -49,14 +50,16 @@ export const getEventBranding = cache(async (): Promise<EventBranding> => {
         eventDate: eventConfig.eventDate,
         eventEndDate: eventConfig.eventEndDate,
         location: eventConfig.location,
+        heroOverlayEnabled: eventConfig.heroOverlayEnabled,
       })
       .from(eventConfig)
       .limit(1);
 
-    if (!row) return { ...EVENT_CONFIG };
+    if (!row) return { ...EVENT_CONFIG, heroOverlayEnabled: true };
 
     return {
       ...EVENT_CONFIG,
+      heroOverlayEnabled: row.heroOverlayEnabled ?? true,
       name: row.eventName ?? EVENT_CONFIG.name,
       emailEventName: row.emailEventName ?? EVENT_CONFIG.emailEventName,
       tagline: row.tagline ?? EVENT_CONFIG.tagline,
@@ -72,6 +75,6 @@ export const getEventBranding = cache(async (): Promise<EventBranding> => {
     };
   } catch (err) {
     console.error("getEventBranding: falling back to static EVENT_CONFIG", err);
-    return { ...EVENT_CONFIG };
+    return { ...EVENT_CONFIG, heroOverlayEnabled: true };
   }
 });
