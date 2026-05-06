@@ -1,7 +1,7 @@
 export const studentEnMessages = {
   language: {
     english: "EN",
-    vietnamese: "VI",
+    vietnamese: "VN",
     chineseTraditional: "中",
     switchLabel: "App language",
   },

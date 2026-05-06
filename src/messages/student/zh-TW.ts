@@ -5,7 +5,7 @@ export const studentZhTwMessages = {
   language: {
     ...studentEnMessages.language,
     english: "EN",
-    vietnamese: "VI",
+    vietnamese: "VN",
     chineseTraditional: "中",
     switchLabel: "介面語言",
   },
