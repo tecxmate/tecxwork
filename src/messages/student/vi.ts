@@ -4,8 +4,8 @@ export const studentViMessages = {
   ...studentEnMessages,
   language: {
     ...studentEnMessages.language,
-    english: "Tiếng Anh",
-    vietnamese: "Tiếng Việt",
+    english: "EN",
+    vietnamese: "VI",
     chineseTraditional: "中",
     switchLabel: "Ngôn ngữ ứng dụng",
   },
