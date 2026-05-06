@@ -81,3 +81,12 @@ attributed_to: [niko]   belongs_to: [public-homepage, admin-panel]
 - HeroCarousel now treats falsy children as "no overlay" — no empty first slide, no extra indicator dot.
 - Migration applied locally; prod run needed: `npm run db:update:hero-overlay-toggle`.
 - See: decisions/2026-05-06-hero-overlay-toggle.md
+
+## [2026-05-06] decision | Mobile bottom nav → floating pill with sliding indicator
+attributed_to: [niko]   belongs_to: [design-system, public-homepage]
+- Per [niko]: shared iOS Telegram/Facebook tabbar references; asked for floating pill with smooth selector. Chose single-pill layout.
+- Refactored `mobile-bottom-nav.tsx`: floating centered pill, single absolutely-positioned indicator animating transform+width via refs/ResizeObserver. First paint unanimated to avoid (0,0) slide-in.
+- Bumped `site-footer` mobile bottom padding (~0.875rem) across browser/Android-PWA/iOS-PWA so footer links clear the pill.
+- Pre-existing /jobs URL-bar wobble: anchored pill with `bottom: calc(100dvh - 100svh + safe-area)` for Android stability; iOS scoped via `@supports (-webkit-touch-callout: none)` to plain safe-area offset since the calc pushed the pill too high on iOS.
+- Implementing commits: `546a6ba`, `3b037b2`. Branch `feat/ui/navpill` merged ff into main and deleted.
+- See: decisions/2026-05-06-mobile-nav-pill.md

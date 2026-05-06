@@ -44,6 +44,11 @@ export function MobileBottomNav({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
   const [animateIndicator, setAnimateIndicator] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  useEffect(() => {
+    setIsAndroid(/Android/i.test(navigator.userAgent));
+  }, []);
 
   const measure = useCallback(() => {
     const container = containerRef.current;
@@ -143,7 +148,14 @@ export function MobileBottomNav({
   }
 
   return (
-    <nav className="mobile-bottom-nav mobile-bottom-nav-pill pointer-events-none fixed inset-x-0 z-50 flex justify-center px-3 md:hidden">
+    <nav
+      className="mobile-bottom-nav pointer-events-none fixed inset-x-0 z-50 flex justify-center px-3 md:hidden"
+      style={{
+        bottom: isAndroid
+          ? "calc(100dvh - 100svh + max(0.5rem, env(safe-area-inset-bottom)))"
+          : "max(0.5rem, env(safe-area-inset-bottom))",
+      }}
+    >
       <div
         ref={containerRef}
         className="pointer-events-auto relative grid w-full max-w-xl gap-0 rounded-full border border-border/60 bg-background/90 px-1.5 py-1 shadow-[0_8px_28px_-8px_rgba(0,0,0,0.25)] backdrop-blur-md"
