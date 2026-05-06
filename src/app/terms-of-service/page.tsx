@@ -2,11 +2,15 @@ import { Metadata } from "next";
 import { AppTopBar } from "@/components/app-topbar";
 import { SiteFooter } from "@/components/site-footer";
 import { getSession } from "@/lib/auth";
+import { getEventBranding } from "@/lib/event-branding";
 
-export const metadata: Metadata = {
-  title: "Terms of Service | V-GEN TRIDENT",
-  description: "Terms of Service for V-GEN TRIDENT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getEventBranding();
+  return {
+    title: `Terms of Service | ${branding.name}`,
+    description: `Terms of Service for ${branding.name}`,
+  };
+}
 
 export default async function TermsOfServicePage() {
   const session = await getSession();

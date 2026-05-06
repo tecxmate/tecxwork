@@ -2,11 +2,15 @@ import { Metadata } from "next";
 import { AppTopBar } from "@/components/app-topbar";
 import { SiteFooter } from "@/components/site-footer";
 import { getSession } from "@/lib/auth";
+import { getEventBranding } from "@/lib/event-branding";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy | V-GEN TRIDENT",
-  description: "Privacy Policy for V-GEN TRIDENT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getEventBranding();
+  return {
+    title: `Privacy Policy | ${branding.name}`,
+    description: `Privacy Policy for ${branding.name}`,
+  };
+}
 
 export default async function PrivacyPolicyPage() {
   const session = await getSession();

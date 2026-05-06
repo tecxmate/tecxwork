@@ -186,7 +186,7 @@ export default async function LandingPage() {
           <div className="px-4 py-12 sm:px-6 sm:py-20 lg:py-28">
             <div className="mx-auto max-w-4xl text-center">
               <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                {messages.landing.heroTitle}
+                {branding.name}
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-base italic text-muted-foreground sm:text-lg">
                 &ldquo;{branding.tagline}&rdquo;

@@ -10,12 +10,16 @@ import { eq, desc } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
+import { getEventBranding } from "@/lib/event-branding";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Job Opportunities | V-GEN TRIDENT",
-  description:
-    "Browse openings posted by participating recruiters",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getEventBranding();
+  return {
+    title: `Job Opportunities | ${branding.name}`,
+    description: "Browse openings posted by participating recruiters",
+  };
+}
 
 async function getRecruiterPostedJobs() {
   return db
