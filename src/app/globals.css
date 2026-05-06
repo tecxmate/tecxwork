@@ -364,6 +364,19 @@ body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
   pointer-events: none;
 }
 
+/* Floating mobile nav pill: anchor against the small viewport so it stays put
+   while the URL bar collapses/expands on Android Chrome. iOS Safari's
+   bottom toolbar behavior makes this calc push the pill too high, so on iOS
+   we fall back to a plain safe-area-aware bottom offset. */
+.mobile-bottom-nav-pill {
+  bottom: calc(100dvh - 100svh + max(0.5rem, env(safe-area-inset-bottom)));
+}
+@supports (-webkit-touch-callout: none) {
+  .mobile-bottom-nav-pill {
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
 /* Android PWA: env(safe-area-inset-bottom) is 0, so the nav hugs the gesture bar
    and the page footer's second line gets clipped. Add a floor of extra padding
    when running standalone on non-iOS UAs. */
