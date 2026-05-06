@@ -368,31 +368,12 @@ body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
    stabilizes Android Chrome's URL-bar wobble is applied conditionally in JS
    (see mobile-bottom-nav.tsx) so it never trips on macOS Safari. */
 
-/* Android PWA: env(safe-area-inset-bottom) is 0, so the nav hugs the gesture bar
-   and the page footer's second line gets clipped. Add a floor of extra padding
-   when running standalone on non-iOS UAs. */
+/* Standalone PWA: the floating pill already accounts for safe-area via its
+   own bottom offset, so no extra padding on the nav itself. Footer keeps
+   matching the breathing room used in browser mode. */
 @media (display-mode: standalone) {
-  .mobile-bottom-nav {
-    padding-bottom: max(
-      0.75rem,
-      calc(env(safe-area-inset-bottom) - 0.375rem)
-    );
-  }
   .site-footer {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 6.25rem);
-  }
-}
-@supports (-webkit-touch-callout: none) {
-  @media (display-mode: standalone) {
-    .mobile-bottom-nav {
-      padding-bottom: max(
-        0.125rem,
-        calc(env(safe-area-inset-bottom) - 0.375rem)
-      );
-    }
-    .site-footer {
-      padding-bottom: calc(env(safe-area-inset-bottom) + 4.75rem);
-    }
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4.75rem);
   }
 }
 @media (display-mode: standalone) and (min-width: 768px) {
