@@ -15,6 +15,22 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  try {
+    return await handlePut(req);
+  } catch (err) {
+    console.error("PUT /api/admin/timeframe failed:", err);
+    return NextResponse.json(
+      {
+        error: `Failed to save time frame: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+async function handlePut(req: NextRequest) {
   const body = await req.json();
   const { forceOverride } = body;
   const { startHour, startMinute = 0, endHour, endMinute, slotDuration, bufferMinutes = 0 } = body;
@@ -188,9 +204,21 @@ export async function PUT(req: NextRequest) {
     })
     .where(eq(eventConfig.id, config.id));
 
-  // Regenerate unbooked slots for all recruiters
-  // Delete available (unbooked) slots
-  await db.delete(slots).where(eq(slots.status, "available"));
+  // Regenerate unbooked slots for all recruiters.
+  // Cancelled/rejected bookings can still hold FK references to
+  // available slots, which blocks the delete. Null those refs first.
+  const availableSlotRows = await db
+    .select({ id: slots.id })
+    .from(slots)
+    .where(eq(slots.status, "available"));
+  const availableSlotIds = availableSlotRows.map((r) => r.id);
+  if (availableSlotIds.length > 0) {
+    await db
+      .update(bookings)
+      .set({ slotId: null })
+      .where(inArray(bookings.slotId, availableSlotIds));
+    await db.delete(slots).where(inArray(slots.id, availableSlotIds));
+  }
 
   // Get all recruiters
   const allRecruiters = await db
