@@ -375,7 +375,7 @@ body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
     );
   }
   .site-footer {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 6.25rem);
   }
 }
 @supports (-webkit-touch-callout: none) {
@@ -387,7 +387,7 @@ body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
       );
     }
     .site-footer {
-      padding-bottom: calc(env(safe-area-inset-bottom) + 3.875rem);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 4.75rem);
     }
   }
 }

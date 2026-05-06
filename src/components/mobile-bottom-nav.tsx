@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useStudentI18n } from "@/components/student-locale-provider";
@@ -39,6 +39,21 @@ export function MobileBottomNav({
   const currentActiveHref =
     items.find((item) => isNavItemActive(pathname, search, item))?.href ?? null;
   const displayActiveHref = pendingHref ?? currentActiveHref;
+
+  const itemRefs = useRef(new Map<string, HTMLAnchorElement | null>());
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
+  const [animateIndicator, setAnimateIndicator] = useState(false);
+
+  const measure = useCallback(() => {
+    const container = containerRef.current;
+    if (!container || !displayActiveHref) return;
+    const el = itemRefs.current.get(displayActiveHref);
+    if (!el) return;
+    const cRect = container.getBoundingClientRect();
+    const eRect = el.getBoundingClientRect();
+    setIndicator({ x: eRect.left - cRect.left, w: eRect.width });
+  }, [displayActiveHref]);
   const shouldHide =
     pathname.startsWith("/api") ||
     pathname === "/terms-of-service" ||
@@ -86,6 +101,32 @@ export function MobileBottomNav({
     };
   }, []);
 
+  useLayoutEffect(() => {
+    measure();
+  }, [measure, items.length]);
+
+  useEffect(() => {
+    if (indicator && !animateIndicator) {
+      const id = window.requestAnimationFrame(() => setAnimateIndicator(true));
+      return () => window.cancelAnimationFrame(id);
+    }
+  }, [indicator, animateIndicator]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(container);
+    for (const el of itemRefs.current.values()) {
+      if (el) ro.observe(el);
+    }
+    window.addEventListener("orientationchange", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, [measure]);
+
   function markPending(href: string) {
     setPendingHref(href);
     if (pendingResetRef.current) {
@@ -102,69 +143,85 @@ export function MobileBottomNav({
   }
 
   return (
-    <nav className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[max(0.125rem,calc(env(safe-area-inset-bottom)-0.375rem))] md:hidden">
-        <div
-          className="mx-auto grid max-w-xl px-2 py-0.5"
-          style={{
-            gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
-          }}
-        >
-          {items.map((item) => {
-            const active = displayActiveHref === item.href;
-            const Icon = item.icon;
+    <nav
+      className="mobile-bottom-nav pointer-events-none fixed inset-x-0 z-50 flex justify-center px-3 md:hidden"
+      style={{ bottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+    >
+      <div
+        ref={containerRef}
+        className="pointer-events-auto relative grid w-full max-w-xl gap-0 rounded-full border border-border/60 bg-background/90 px-1.5 py-1 shadow-[0_8px_28px_-8px_rgba(0,0,0,0.25)] backdrop-blur-md"
+        style={{
+          gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
+        }}
+      >
+        {indicator && (
+          <span
+            aria-hidden
+            className={[
+              "pointer-events-none absolute top-1 bottom-1 rounded-full bg-primary/10",
+              animateIndicator
+                ? "transition-[transform,width] duration-300 ease-out"
+                : "",
+            ].join(" ")}
+            style={{
+              transform: `translateX(${indicator.x}px)`,
+              width: indicator.w,
+              left: 0,
+            }}
+          />
+        )}
+        {items.map((item) => {
+          const active = displayActiveHref === item.href;
+          const Icon = item.icon;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={false}
-                onTouchStart={
-                  process.env.NODE_ENV === "production"
-                    ? () => {
-                        router.prefetch(item.href);
-                      }
-                    : undefined
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={false}
+              ref={(el) => {
+                itemRefs.current.set(item.href, el);
+              }}
+              onTouchStart={
+                process.env.NODE_ENV === "production"
+                  ? () => {
+                      router.prefetch(item.href);
+                    }
+                  : undefined
+              }
+              onMouseDown={
+                process.env.NODE_ENV === "production"
+                  ? () => {
+                      router.prefetch(item.href);
+                    }
+                  : undefined
+              }
+              onClick={(event) => {
+                if (pathname === item.href && !search) {
+                  return;
                 }
-                onMouseDown={
-                  process.env.NODE_ENV === "production"
-                    ? () => {
-                        router.prefetch(item.href);
-                      }
-                    : undefined
-                }
-                onClick={(event) => {
-                  if (pathname === item.href && !search) {
-                    return;
-                  }
-                  event.preventDefault();
-                  markPending(item.href);
-                  router.push(item.href);
-                }}
+                event.preventDefault();
+                markPending(item.href);
+                router.push(item.href);
+              }}
+              className={[
+                "relative z-10 flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1 text-[11px] font-medium transition-colors",
+                active
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              ].join(" ")}
+            >
+              <Icon
                 className={[
-                  "group flex min-h-11.5 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 text-[11px] font-medium transition-premium",
-                  active
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground",
+                  "h-[18px] w-[18px] transition-colors",
+                  active ? "text-primary" : "text-current",
                 ].join(" ")}
-              >
-                <span
-                  className={[
-                    "flex h-7.5 w-7.5 items-center justify-center rounded-full transition-premium",
-                    active ? "bg-primary/10" : "bg-transparent",
-                  ].join(" ")}
-                >
-                  <Icon
-                    className={[
-                      "h-[18px] w-[18px] transition-premium",
-                      active ? "text-primary" : "text-current",
-                    ].join(" ")}
-                  />
-                </span>
-                <span>{getLabel(item.href, item.label)}</span>
-              </Link>
-            );
-          })}
-        </div>
+              />
+              <span>{getLabel(item.href, item.label)}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
