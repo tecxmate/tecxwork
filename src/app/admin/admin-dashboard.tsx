@@ -1904,7 +1904,7 @@ function BookingsTable({
                   <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">
                     {b.position || admin.people.emptyValue}
                   </td>
-                  <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell">
+                  <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell" suppressHydrationWarning>
                     {b.requestedTime
                       ? new Date(b.requestedTime).toLocaleString(localeTag, {
                         month: "short",
