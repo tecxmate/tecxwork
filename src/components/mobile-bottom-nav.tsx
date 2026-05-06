@@ -158,7 +158,7 @@ export function MobileBottomNav({
     >
       <div
         ref={containerRef}
-        className="pointer-events-auto relative grid w-full max-w-xl gap-0 rounded-full border border-border/60 bg-background/90 px-1.5 py-1 shadow-[0_8px_28px_-8px_rgba(0,0,0,0.25)] backdrop-blur-md"
+        className="pointer-events-auto relative grid w-full max-w-xl gap-0 rounded-full border border-border/40 bg-background/75 px-1.5 py-1 shadow-[0_8px_28px_-8px_rgba(0,0,0,0.18)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-background/65"
         style={{
           gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
         }}
