@@ -38,7 +38,8 @@ export function AppTopBar({
   const showNotifications = Boolean(navRole && navRole !== "guest");
   const isGuest = !navRole || navRole === "guest";
   const mobileOverflow = true;
-  const brandHref = navItems[0]?.href ?? href;
+  const brandHref =
+    navRole === "admin" ? "/" : navItems[0]?.href ?? href;
 
   return (
     <header className="app-header sticky top-0 z-10 border-b bg-white dark:bg-card">
