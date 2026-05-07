@@ -98,10 +98,11 @@ export async function PUT(req: NextRequest) {
     }[] = [];
 
     const dur = branding.slotDuration;
-    const startMinutes = branding.startHour * 60;
-    const endMinutes = branding.endHour * 60 + branding.endMinutes;
+    const slotInterval = dur + branding.bufferMinutes;
+    const startMinutes = branding.startHour * 60 + branding.startMinute;
+    const endMinutes = branding.endHour * 60 + branding.endMinute;
 
-    for (let t = startMinutes; t + dur <= endMinutes; t += dur) {
+    for (let t = startMinutes; t + dur <= endMinutes; t += slotInterval) {
       const h = Math.floor(t / 60);
       const m = t % 60;
       const start = new Date(

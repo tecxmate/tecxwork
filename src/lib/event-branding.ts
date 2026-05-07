@@ -19,8 +19,12 @@ export type EventBranding = {
   location: string;
   timezone: string;
   slotDuration: number;
+  bufferMinutes: number;
   startHour: number;
+  startMinute: number;
   endHour: number;
+  endMinute: number;
+  /** @deprecated alias of endMinute, kept for backwards compatibility */
   endMinutes: number;
   enableNewsletterOptIn: boolean;
   heroOverlayEnabled: boolean;
@@ -51,15 +55,36 @@ export const getEventBranding = cache(async (): Promise<EventBranding> => {
         eventEndDate: eventConfig.eventEndDate,
         location: eventConfig.location,
         heroOverlayEnabled: eventConfig.heroOverlayEnabled,
+        startHour: eventConfig.startHour,
+        startMinute: eventConfig.startMinute,
+        endHour: eventConfig.endHour,
+        endMinute: eventConfig.endMinute,
+        slotDurationMinutes: eventConfig.slotDurationMinutes,
+        bufferMinutes: eventConfig.bufferMinutes,
       })
       .from(eventConfig)
       .limit(1);
 
-    if (!row) return { ...EVENT_CONFIG, heroOverlayEnabled: true };
+    if (!row) {
+      return {
+        ...EVENT_CONFIG,
+        heroOverlayEnabled: true,
+        startMinute: 0,
+        endMinute: EVENT_CONFIG.endMinutes,
+        bufferMinutes: 0,
+      };
+    }
 
     return {
       ...EVENT_CONFIG,
       heroOverlayEnabled: row.heroOverlayEnabled ?? true,
+      startHour: row.startHour ?? EVENT_CONFIG.startHour,
+      startMinute: row.startMinute ?? 0,
+      endHour: row.endHour ?? EVENT_CONFIG.endHour,
+      endMinute: row.endMinute ?? EVENT_CONFIG.endMinutes,
+      endMinutes: row.endMinute ?? EVENT_CONFIG.endMinutes,
+      slotDuration: row.slotDurationMinutes ?? EVENT_CONFIG.slotDuration,
+      bufferMinutes: row.bufferMinutes ?? 0,
       name: row.eventName ?? EVENT_CONFIG.name,
       emailEventName: row.emailEventName ?? EVENT_CONFIG.emailEventName,
       tagline: row.tagline ?? EVENT_CONFIG.tagline,
@@ -75,6 +100,12 @@ export const getEventBranding = cache(async (): Promise<EventBranding> => {
     };
   } catch (err) {
     console.error("getEventBranding: falling back to static EVENT_CONFIG", err);
-    return { ...EVENT_CONFIG, heroOverlayEnabled: true };
+    return {
+      ...EVENT_CONFIG,
+      heroOverlayEnabled: true,
+      startMinute: 0,
+      endMinute: EVENT_CONFIG.endMinutes,
+      bufferMinutes: 0,
+    };
   }
 });
