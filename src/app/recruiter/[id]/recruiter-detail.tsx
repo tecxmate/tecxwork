@@ -133,7 +133,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
   const [step, setStep] = useState<Step>("positions");
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
-  const [infoExpanded, setInfoExpanded] = useState(false);
+  const [infoExpanded, setInfoExpanded] = useState(true);
   const [jobs] = useState<JobOpening[]>(initialJobs);
   const [appliedPositions, setAppliedPositions] = useState<
     { position: string; requestedTime: string; status: string }[]
