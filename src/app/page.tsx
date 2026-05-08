@@ -32,6 +32,7 @@ async function getPublicRecruiters() {
       company: recruiters.company,
       industry: recruiters.industry,
       description: recruiters.description,
+      logoUrl: recruiters.logoUrl,
     })
     .from(recruiters)
     .innerJoin(users, eq(recruiters.userId, users.id))
@@ -83,6 +84,7 @@ async function getPublicJobs() {
       description: jobOpenings.description,
       company: recruiters.company,
       industry: recruiters.industry,
+      logoUrl: recruiters.logoUrl,
     })
     .from(jobOpenings)
     .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
@@ -262,8 +264,16 @@ export default async function LandingPage() {
                   >
                     <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-200 ease-out group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] group-hover:-translate-y-0.5 sm:p-5">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary sm:h-12 sm:w-12">
-                          <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary sm:h-12 sm:w-12">
+                          {recruiter.logoUrl ? (
+                            <img
+                              src={recruiter.logoUrl}
+                              alt={`${recruiter.company} logo`}
+                              className="h-full w-full object-contain"
+                            />
+                          ) : (
+                            <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+                          )}
                         </div>
                         <Badge variant="secondary" className="shrink-0 text-xs">
                           {recruiter.industry}

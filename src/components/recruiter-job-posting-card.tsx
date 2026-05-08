@@ -29,6 +29,7 @@ export type RecruiterJobPosting = {
   id: number;
   title: string;
   company?: string;
+  logoUrl?: string | null;
   jdLink: string | null;
   location: string;
   employmentType: string;
@@ -171,7 +172,16 @@ export function RecruiterJobPostingCard({
             </h3>
             {job.company ? (
               <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                {job.logoUrl ? (
+                  <img
+                    src={job.logoUrl}
+                    alt=""
+                    aria-hidden
+                    className="h-4 w-4 shrink-0 rounded object-contain"
+                  />
+                ) : (
+                  <Building2 className="h-3.5 w-3.5 shrink-0" />
+                )}
                 <span className="line-clamp-1">{job.company}</span>
               </p>
             ) : null}

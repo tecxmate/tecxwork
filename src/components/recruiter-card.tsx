@@ -12,6 +12,7 @@ export type RecruiterCardData = {
   positions: string[];
   contactEmail: string;
   jdAvailable: boolean;
+  logoUrl: string | null;
 };
 
 export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
@@ -25,8 +26,16 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
       <Card className="flex h-full cursor-pointer flex-col gap-4 p-4 group-focus-visible:ring-2 group-focus-visible:ring-ring sm:p-5">
         {/* Top row: logo + industry */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary sm:h-12 sm:w-12">
-            <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary sm:h-12 sm:w-12">
+            {recruiter.logoUrl ? (
+              <img
+                src={recruiter.logoUrl}
+                alt={`${recruiter.company} logo`}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+            )}
           </div>
           <Badge variant="secondary" className="shrink-0 text-xs">
             {recruiter.industry}

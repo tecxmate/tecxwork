@@ -87,8 +87,11 @@ export function HeroCarousel({
     };
   }, []);
 
-  if (slideCount <= 1) {
-    return hasOverlay ? <>{children}</> : null;
+  if (slideCount === 0) {
+    return null;
+  }
+  if (slideCount === 1 && hasOverlay) {
+    return <>{children}</>;
   }
 
   return (

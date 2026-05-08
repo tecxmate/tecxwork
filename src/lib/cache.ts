@@ -46,6 +46,7 @@ async function fetchRecruiters() {
       industry: recruiters.industry,
       description: recruiters.description,
       contactEmail: recruiters.contactEmail,
+      logoUrl: recruiters.logoUrl,
     })
     .from(recruiters)
     .innerJoin(users, eq(recruiters.userId, users.id))

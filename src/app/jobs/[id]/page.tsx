@@ -44,6 +44,7 @@ async function getJob(id: number) {
       createdAt: jobOpenings.createdAt,
       recruiterId: recruiters.id,
       company: recruiters.company,
+      logoUrl: recruiters.logoUrl,
     })
     .from(jobOpenings)
     .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
