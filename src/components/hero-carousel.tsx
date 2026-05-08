@@ -115,7 +115,9 @@ export function HeroCarousel({
         {images.map((url, i) => (
           <div
             key={`${url}-${i}`}
-            className="relative snap-start shrink-0 basis-full bg-background"
+            className={`relative snap-start shrink-0 basis-full bg-background ${
+              hasOverlay ? "" : "aspect-[16/9] sm:aspect-[21/9]"
+            }`}
             aria-roledescription="slide"
           >
             <img
