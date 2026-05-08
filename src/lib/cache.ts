@@ -26,7 +26,7 @@ export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
  * Cached recruiters list - 5 minute TTL
  */
 export async function getCachedRecruiters() {
-  const key = "recruiters:list";
+  const key = "recruiters:list:v2";
   const cached = await cache.get(key);
 
   if (cached) {
