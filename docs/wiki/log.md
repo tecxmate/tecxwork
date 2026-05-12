@@ -31,6 +31,12 @@ attributed_to: [niko]   belongs_to: [public-homepage]
 - created decisions/2026-05-04-hero-image-contain.md
 - updated topics/hero-carousel.md
 
+## [2026-05-12] decision | LinkedIn-style job detail apply flow
+attributed_to: [niko]   belongs_to: [recruitment-workflows, public-homepage]
+- Per [niko]: job clicks should show an immediate apply button instead of sending students to the company page.
+- Company logos/names on job listings now own navigation to `/recruiter/[id]` for all-company jobs browsing.
+- Created decisions/2026-05-12-linkedin-style-job-apply-flow.md and updated topics/recruitment-workflows.md.
+
 ## [2026-05-04] ingest | Time-setting bug fixes
 attributed_to: [niko]   belongs_to: [admin-panel, tecxwork]
 - slot-regen loop iterates absolute minutes and bounds slot end by event end (fixes 45-min cadence drift and end overflow)

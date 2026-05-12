@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-05-12 — LinkedIn-style job detail apply flow](decisions/2026-05-12-linkedin-style-job-apply-flow.md) — job clicks open immediate apply; company logo/name opens company page
 - [2026-05-06 — Mobile bottom nav → floating pill](decisions/2026-05-06-mobile-nav-pill.md) — sliding indicator; `dvh-svh` URL-bar stabilizer on Android, plain safe-area on iOS
 - [2026-05-06 — Admin toggle for hero overlay](decisions/2026-05-06-hero-overlay-toggle.md) — admin can hide title/countdown/CTAs to show only the photo carousel
 - [2026-05-05 — CV sharing hint → "Anyone with the link"](decisions/2026-05-05-cv-anyone-with-link.md) — student-form hint updated in en/vi/zh-TW to remove access-request friction

@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -27,6 +28,7 @@ import {
 
 export type RecruiterJobPosting = {
   id: number;
+  recruiterId?: number;
   title: string;
   company?: string;
   logoUrl?: string | null;
@@ -171,7 +173,7 @@ export function RecruiterJobPostingCard({
               {job.title}
             </h3>
             {job.company ? (
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 {job.logoUrl ? (
                   <img
                     src={job.logoUrl}
@@ -182,8 +184,17 @@ export function RecruiterJobPostingCard({
                 ) : (
                   <Building2 className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <span className="line-clamp-1">{job.company}</span>
-              </p>
+                {job.recruiterId ? (
+                  <Link
+                    href={`/recruiter/${job.recruiterId}`}
+                    className="line-clamp-1 hover:text-primary hover:underline"
+                  >
+                    {job.company}
+                  </Link>
+                ) : (
+                  <span className="line-clamp-1">{job.company}</span>
+                )}
+              </div>
             ) : null}
           </div>
           {status}

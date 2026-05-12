@@ -87,16 +87,16 @@ function JobTeaserCard({
   const preview = getPreviewText(job);
 
   return (
-    <Link
-      href={`/jobs/${job.id}`}
-      className="group relative flex h-full w-full flex-col rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]"
-    >
+    <article className="group relative flex h-full w-full flex-col rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h3 className="line-clamp-2 text-base font-semibold leading-tight">
+          <Link
+            href={`/jobs/${job.id}`}
+            className="line-clamp-2 text-base font-semibold leading-tight hover:text-primary"
+          >
             {job.title}
-          </h3>
-          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          </Link>
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             {job.logoUrl ? (
               <img
                 src={job.logoUrl}
@@ -107,8 +107,13 @@ function JobTeaserCard({
             ) : (
               <Building2 className="h-3.5 w-3.5 shrink-0" />
             )}
-            <span className="line-clamp-1">{job.company}</span>
-          </p>
+            <Link
+              href={`/recruiter/${job.recruiterId}`}
+              className="line-clamp-1 hover:text-primary hover:underline"
+            >
+              {job.company}
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -138,11 +143,14 @@ function JobTeaserCard({
       ) : null}
 
       <div className="mt-auto flex items-end justify-end pt-4">
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+        <Link
+          href={`/jobs/${job.id}`}
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
           {labels.viewDetails}
-        </span>
+        </Link>
       </div>
-    </Link>
+    </article>
   );
 }
 

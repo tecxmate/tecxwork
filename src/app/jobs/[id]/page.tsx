@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { AppTopBar } from "@/components/app-topbar";
-import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
+import { JobDetailApply } from "@/components/job-detail-apply";
 import { SiteFooter } from "@/components/site-footer";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { eq } from "drizzle-orm";
@@ -44,6 +43,7 @@ async function getJob(id: number) {
       createdAt: jobOpenings.createdAt,
       recruiterId: recruiters.id,
       company: recruiters.company,
+      contactEmail: recruiters.contactEmail,
       logoUrl: recruiters.logoUrl,
     })
     .from(jobOpenings)
@@ -56,7 +56,10 @@ async function getJob(id: number) {
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const job = await getJob(parseInt(id));
+  const jobId = parseInt(id);
+  if (isNaN(jobId)) notFound();
+
+  const job = await getJob(jobId);
 
   if (!job) notFound();
 
@@ -81,30 +84,11 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-4xl">
-          <RecruiterJobPostingCard
+          <JobDetailApply
             job={job}
             locale={locale}
-            className="border-0 bg-transparent p-0 shadow-none hover:border-transparent hover:bg-transparent hover:shadow-none"
-            labels={{
-              seniority: messages.jobsPage.card.seniority,
-              languageRequirement: messages.jobsPage.card.languageRequirement,
-              visaSupport: messages.jobsPage.card.visaSupport,
-              applicationDeadline: messages.jobsPage.card.applicationDeadline,
-              description: messages.jobsPage.card.description,
-              responsibilities: messages.jobsPage.card.responsibilities,
-              requirements: messages.jobsPage.card.requirements,
-              benefits: messages.jobsPage.card.benefits,
-              viewJd: messages.jobsPage.card.viewJd,
-              noJd: messages.jobsPage.card.noJd,
-            }}
-            action={
-              <Link
-                href={`/recruiter/${job.recruiterId}`}
-                className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                {messages.jobsPage.viewCompany}
-              </Link>
-            }
+            messages={messages}
+            isApplicant={session?.role === "applicant"}
           />
         </div>
       </main>
