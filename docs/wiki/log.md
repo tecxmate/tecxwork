@@ -205,3 +205,9 @@ attributed_to: [niko]   belongs_to: [recruiter-dashboard]
 - Clarified that the new-job CTA is the `Add` button and should have the same duplicate-submit guard and visual feedback as edit.
 - Added create-path state: `Add` becomes `Saving...` during POST, then disabled gray `Saved` after success on the reset form; typing the next draft clears it back to `Add`.
 - Updated `docs/wiki/topics/recruiter-dashboard.md`.
+
+## [2026-05-13] decision | Admin interview moderation page + Overview→Settings demotion
+attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
+- New /admin/interviews with status filter chips, per-row soft cancel, and bulk-cancel by email substring (walks the existing DELETE /api/bookings/[id] so the cancellation email + slot release + waitlist promotion all run unchanged). Admin top nav now: Recruiters · Jobs · Applicants · Interviews.
+- Overview content moved to /admin/settings, reachable via a gear icon in the desktop topbar and a Settings entry in the mobile hamburger. /admin 307-redirects to /admin/interviews.
+- Hard delete deliberately kept out of the UI — audit trail preserved. Decision: docs/wiki/decisions/2026-05-13-admin-interview-moderation.md. Commit `15bd038`.
