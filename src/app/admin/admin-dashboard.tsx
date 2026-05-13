@@ -1231,9 +1231,6 @@ function JobModerationSection({
   const localeTag =
     locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
   const [query, setQuery] = useState("");
-  const [notesById, setNotesById] = useState<Record<number, string>>(
-    Object.fromEntries(jobs.map((job) => [job.id, job.moderationNotes ?? ""]))
-  );
 
   const filteredJobs = jobs
     .filter((job) => {
@@ -1327,146 +1324,85 @@ function JobModerationSection({
   }
 
   function renderJobItem(job: JobOpening) {
-    const isPending = job.moderationStatus === "pending_review";
     const isApproved = job.moderationStatus === "approved";
     const isRejected = job.moderationStatus === "rejected";
-    const notes = notesById[job.id] ?? job.moderationNotes ?? "";
+    const notes = job.moderationNotes ?? "";
 
     return (
-      <div
+      <Link
         key={job.id}
+        href={`/admin/jobs/${job.id}`}
         className={cn(
-          "flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-muted/30",
+          "flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-sm transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between",
           statusBorderColor[job.moderationStatus] ?? ""
         )}
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
-            {job.jdLink ? (
-              <a
-                href={job.jdLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-                title={admin.moderation.viewJd}
-              >
-                <FileText className="h-4 w-4" />
-                JD
-              </a>
-            ) : (
-              <div
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-muted-foreground"
-                title={admin.moderation.noJd}
-              >
-                <FileText className="h-4 w-4 opacity-40" />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="truncate text-sm font-semibold">{job.title}</p>
-                <Badge variant="outline" className="text-[10px] h-4 px-1.5 py-0">
-                  {job.company}
-                </Badge>
-                <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
-                  {statusLabels[job.moderationStatus] ??
-                    job.moderationStatus.replace("_", " ")}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3 shrink-0" /> {job.location}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 shrink-0" /> {job.employmentType}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3 shrink-0" />
-                  {interpolate(admin.moderation.createdOn, {
-                    date: new Date(job.createdAt).toLocaleDateString(localeTag),
-                  })}
-                </span>
-              </div>
-            </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="truncate text-sm font-semibold">{job.title}</span>
+            <Badge variant="outline" className="h-4 px-1.5 py-0 text-[10px]">
+              {job.company}
+            </Badge>
+            <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
+              {statusLabels[job.moderationStatus] ??
+                job.moderationStatus.replace("_", " ")}
+            </span>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
-            <Button
-              size="sm"
-              onClick={() => onModerate(job.id, "approve", notes)}
-              aria-pressed={isApproved}
-              className={cn(
-                "h-8",
-                isApproved
-                  ? "border border-emerald-600 bg-background text-emerald-600 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
-                  : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
-              )}
-            >
-              <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-              {isApproved ? admin.moderation.approved : admin.moderation.approve}
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => onModerate(job.id, "reject", notes)}
-              aria-pressed={isRejected}
-              className={cn(
-                "h-8 border",
-                isRejected
-                  ? "border-destructive bg-background text-destructive hover:bg-destructive/10"
-                  : "border-destructive/30 bg-transparent text-destructive hover:bg-destructive/10"
-              )}
-            >
-              <Trash2 className="mr-1 h-3.5 w-3.5" />
-              {isRejected ? admin.moderation.rejected : admin.moderation.reject}
-            </Button>
-            {!isPending && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onModerate(job.id, "reset", notes)}
-                className="h-8 text-muted-foreground"
-              >
-                {admin.moderation.resetToDraft}
-              </Button>
-            )}
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate">{job.location}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3 shrink-0" /> {job.employmentType}
+            </span>
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3 shrink-0" />
+              {new Date(job.createdAt).toLocaleDateString(localeTag)}
+            </span>
           </div>
         </div>
 
-        <div className="grid gap-4 pt-2 border-t border-border/40 lg:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {admin.moderation.adminNotes}
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) =>
-                setNotesById((current) => ({
-                  ...current,
-                  [job.id]: e.target.value,
-                }))
-              }
-              rows={2}
-              placeholder={admin.moderation.notesPlaceholder}
-              className="w-full rounded-lg border border-input bg-muted/30 px-3 py-2 text-sm transition-colors focus:bg-background"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Quick Details
-            </label>
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground bg-muted/20 rounded-lg p-2.5">
-              <div>
-                <span className="font-medium text-foreground/70">Level:</span> {job.seniority}
-              </div>
-              <div>
-                <span className="font-medium text-foreground/70">Salary:</span> {job.salaryMin ? `${job.salaryMin}-${job.salaryMax} ${job.salaryCurrency}` : "N/A"}
-              </div>
-              <div className="col-span-2">
-                <span className="font-medium text-foreground/70">Requirements:</span> <span className="line-clamp-1 inline">{job.requirements}</span>
-              </div>
-            </div>
-          </div>
+        <div
+          className="flex flex-wrap items-center gap-2 sm:shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault();
+              onModerate(job.id, "approve", notes);
+            }}
+            aria-pressed={isApproved}
+            className={cn(
+              "h-8",
+              isApproved
+                ? "border border-emerald-600 bg-background text-emerald-600 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+            )}
+          >
+            <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+            {isApproved ? admin.moderation.approved : admin.moderation.approve}
+          </Button>
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault();
+              onModerate(job.id, "reject", notes);
+            }}
+            aria-pressed={isRejected}
+            className={cn(
+              "h-8 border",
+              isRejected
+                ? "border-destructive bg-background text-destructive hover:bg-destructive/10"
+                : "border-destructive/30 bg-transparent text-destructive hover:bg-destructive/10"
+            )}
+          >
+            <Trash2 className="mr-1 h-3.5 w-3.5" />
+            {isRejected ? admin.moderation.rejected : admin.moderation.reject}
+          </Button>
         </div>
-      </div>
+      </Link>
     );
   }
 
