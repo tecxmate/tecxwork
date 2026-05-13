@@ -1,8 +1,5 @@
-import { AdminDashboard } from "./admin-dashboard";
-import { getAdminDashboardData } from "./admin-data";
+import { redirect } from "next/navigation";
 
-export default async function AdminPage() {
-  const data = await getAdminDashboardData();
-
-  return <AdminDashboard {...data} section="overview" />;
+export default function AdminPage() {
+  redirect("/admin/interviews");
 }

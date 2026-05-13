@@ -148,7 +148,12 @@ const INDUSTRY_OPTIONS = [
 ] as const;
 
 type OnboardingMode = (typeof ONBOARDING_MODE_VALUES)[number];
-type AdminSection = "overview" | "recruiters" | "applicants" | "jobs";
+type AdminSection =
+  | "settings"
+  | "recruiters"
+  | "applicants"
+  | "jobs"
+  | "interviews";
 
 type FeedbackReportRow = {
   id: number;
@@ -478,7 +483,7 @@ export function AdminDashboard({
     }
   }
 
-  async function handleCancelBooking(b: AdminBooking) {
+  async function handleCancelBooking(b: AdminBooking, note?: string) {
     if (
       !confirm(
         interpolate(admin.bookings.cancelConfirm, {
@@ -488,11 +493,38 @@ export function AdminDashboard({
       )
     )
       return;
-    const res = await fetch(`/api/bookings/${b.id}`, { method: "DELETE" });
+    const body = note?.trim() ? JSON.stringify({ note: note.trim() }) : undefined;
+    const res = await fetch(`/api/bookings/${b.id}`, {
+      method: "DELETE",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body,
+    });
     if (res.ok) {
-      setAdminBookings(adminBookings.map((x) => (x.id === b.id ? { ...x, status: "cancelled" } : x)));
+      setAdminBookings((current) =>
+        current.map((x) => (x.id === b.id ? { ...x, status: "cancelled" } : x))
+      );
       router.refresh();
     }
+  }
+
+  async function handleBulkCancelBookings(ids: number[], note?: string) {
+    const cancelled = new Set<number>();
+    const body = note?.trim() ? JSON.stringify({ note: note.trim() }) : undefined;
+    for (const id of ids) {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "DELETE",
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body,
+      });
+      if (res.ok) cancelled.add(id);
+    }
+    setAdminBookings((current) =>
+      current.map((x) =>
+        cancelled.has(x.id) ? { ...x, status: "cancelled" } : x
+      )
+    );
+    router.refresh();
+    return cancelled.size;
   }
 
   async function handleDeleteApplicant(a: Applicant) {
@@ -540,13 +572,15 @@ export function AdminDashboard({
         href="/"
         navRole="admin"
         currentPath={
-          section === "overview"
-            ? "/admin"
+          section === "settings"
+            ? "/admin/settings"
             : section === "recruiters"
               ? "/admin/recruiters"
               : section === "applicants"
                 ? "/admin/applicants"
-                : "/admin/jobs"
+                : section === "interviews"
+                  ? "/admin/interviews"
+                  : "/admin/jobs"
         }
         desktopActions={
           <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -558,7 +592,7 @@ export function AdminDashboard({
 
       <main className="w-full min-w-0 max-w-full flex-1 px-4 py-6 sm:px-6 sm:py-8">
         <div className="mx-auto w-full min-w-0 max-w-6xl space-y-8">
-          {section === "overview" ? (
+          {section === "settings" ? (
             <>
               {/* Stats + Quick Actions Row */}
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1193,6 +1227,12 @@ export function AdminDashboard({
               }
               initialTab="applicants"
               showTabs={false}
+            />
+          ) : section === "interviews" ? (
+            <InterviewsSection
+              bookings={adminBookings}
+              onCancel={handleCancelBooking}
+              onBulkCancel={handleBulkCancelBookings}
             />
           ) : (
             <JobModerationSection jobs={jobs} onModerate={handleJobModeration} />
@@ -2541,5 +2581,182 @@ function FeedbackRow({
         </div>
       )}
     </li>
+  );
+}
+
+// ------------------------------------------------------------------
+// Interviews Section — flat admin view of all bookings with bulk cancel
+// ------------------------------------------------------------------
+
+function InterviewsSection({
+  bookings,
+  onCancel,
+  onBulkCancel,
+}: {
+  bookings: AdminBooking[];
+  onCancel: (b: AdminBooking, note?: string) => void;
+  onBulkCancel: (ids: number[], note?: string) => Promise<number>;
+}) {
+  const { messages } = useStudentI18n();
+  const admin = messages.admin;
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"active" | "cancelled" | "all">("active");
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkEmail, setBulkEmail] = useState("");
+  const [bulkNote, setBulkNote] = useState("");
+  const [bulkRunning, setBulkRunning] = useState(false);
+
+  const isActive = (s: string) =>
+    s === "pending" || s === "accepted" || s === "waitlisted";
+
+  const filtered = bookings.filter((b) => {
+    if (filter === "active") return isActive(b.status);
+    if (filter === "cancelled")
+      return b.status === "cancelled" || b.status === "rejected";
+    return true;
+  });
+
+  const counts = {
+    active: bookings.filter((b) => isActive(b.status)).length,
+    cancelled: bookings.filter(
+      (b) => b.status === "cancelled" || b.status === "rejected"
+    ).length,
+    all: bookings.length,
+  };
+
+  async function runBulkCancel() {
+    const target = bulkEmail.trim().toLowerCase();
+    if (!target) return;
+    const matches = bookings.filter(
+      (b) =>
+        isActive(b.status) && b.applicantEmail.toLowerCase().includes(target)
+    );
+    if (matches.length === 0) {
+      alert(`No active bookings match "${target}".`);
+      return;
+    }
+    if (
+      !confirm(
+        `Cancel ${matches.length} booking${matches.length === 1 ? "" : "s"} matching "${target}"? Applicants will be notified.`
+      )
+    )
+      return;
+    setBulkRunning(true);
+    try {
+      const cancelled = await onBulkCancel(
+        matches.map((m) => m.id),
+        bulkNote
+      );
+      alert(`Cancelled ${cancelled} of ${matches.length} bookings.`);
+      setBulkEmail("");
+      setBulkNote("");
+      setBulkOpen(false);
+    } finally {
+      setBulkRunning(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center gap-2">
+        <Calendar className="h-5 w-5 text-muted-foreground" />
+        <h2 className="font-heading text-lg font-semibold">
+          {admin.people.tabs.bookings}
+        </h2>
+        <Badge variant="secondary" className="ml-1">
+          {counts.all}
+        </Badge>
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {(["active", "cancelled", "all"] as const).map((key) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={cn(
+              "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              filter === key
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
+          >
+            {key === "active"
+              ? "Active"
+              : key === "cancelled"
+                ? "Cancelled / Rejected"
+                : "All"}
+            <span className="ml-1.5 opacity-70">{counts[key]}</span>
+          </button>
+        ))}
+        <div className="ml-auto">
+          <Button
+            size="sm"
+            variant={bulkOpen ? "outline" : "default"}
+            onClick={() => setBulkOpen((v) => !v)}
+          >
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            Bulk cancel by email
+          </Button>
+        </div>
+      </div>
+
+      {bulkOpen && (
+        <Card className="mb-3">
+          <CardContent className="py-4">
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Cancels every <strong>active</strong> booking whose applicant
+                email contains the text below. Soft-cancel: rows are kept,
+                slots released, applicants notified via email.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                <Input
+                  type="text"
+                  placeholder="applicant email or substring (e.g. niko.tecx@)"
+                  value={bulkEmail}
+                  onChange={(e) => setBulkEmail(e.target.value)}
+                />
+                <Input
+                  type="text"
+                  placeholder="Note to applicants (optional)"
+                  value={bulkNote}
+                  onChange={(e) => setBulkNote(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={runBulkCancel}
+                  disabled={bulkRunning || !bulkEmail.trim()}
+                >
+                  {bulkRunning ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Cancel matching
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="relative mb-3 max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder={admin.people.searchBookingsPlaceholder}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      <BookingsTable
+        bookings={filtered}
+        query={query}
+        onCancel={(b) => onCancel(b)}
+      />
+    </div>
   );
 }

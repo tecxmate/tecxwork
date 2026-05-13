@@ -2,8 +2,8 @@ import type { ComponentType } from "react";
 import {
   BriefcaseBusiness,
   Building2,
+  CalendarClock,
   Home,
-  Shield,
   User,
   Users,
 } from "lucide-react";
@@ -76,13 +76,6 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
   ],
   admin: [
     {
-      href: "/admin",
-      label: "Overview",
-      icon: Shield,
-      matches: ["/admin"],
-      exactMatch: true,
-    },
-    {
       href: "/admin/recruiters",
       label: "Recruiters",
       icon: Building2,
@@ -99,6 +92,12 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Applicants",
       icon: Users,
       matches: ["/admin/applicants"],
+    },
+    {
+      href: "/admin/interviews",
+      label: "Interviews",
+      icon: CalendarClock,
+      matches: ["/admin/interviews"],
     },
   ],
 };

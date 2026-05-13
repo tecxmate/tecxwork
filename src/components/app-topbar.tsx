@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { Settings } from "lucide-react";
+
 import {
   AppTopBarAccountActions,
   type AppTopBarAccountLabels,
@@ -65,6 +68,16 @@ export function AppTopBar({
               desktopChildren={
                 <>
                   {!isGuest ? desktopActions : null}
+                  {navRole === "admin" ? (
+                    <Link
+                      href="/admin/settings"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label="Admin settings"
+                      title="Admin settings"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Link>
+                  ) : null}
                   {showNotifications ? <NotificationBell labels={notificationLabels} /> : null}
                   <ThemeToggle />
                   {showStudentLanguageSwitcher ? <StudentLanguageSwitcher className="sm:w-48" /> : null}
