@@ -14,6 +14,7 @@ import {
   users,
   jobOpenings,
 } from "@/lib/db";
+import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 
 export type AdminOnboardingMode = "minimal" | "full";
 
@@ -78,6 +79,7 @@ export async function getAdminDashboardData() {
       eventDate: eventConfig.eventDate,
       eventEndDate: eventConfig.eventEndDate,
       heroOverlayEnabled: eventConfig.heroOverlayEnabled,
+      salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
     })
     .from(eventConfig)
     .limit(1);
@@ -168,6 +170,9 @@ export async function getAdminDashboardData() {
     currentMode: config?.mode ?? "both",
     initialOnboardingMode: onboardingMode,
     initialJobModerationEnabled: config?.jobModerationEnabled ?? true,
+    initialSalaryCurrencyOptions: normalizeSalaryCurrencyOptions(
+      config?.salaryCurrencyOptions
+    ),
     initialLocked: config?.locked ?? false,
     timeFrame: {
       startHour: config?.startHour ?? 10,

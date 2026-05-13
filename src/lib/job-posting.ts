@@ -19,6 +19,170 @@ export const SALARY_PERIOD_OPTIONS = [
   { value: "year", label: "per year" },
 ] as const;
 
+export const SALARY_CURRENCY_CODES = [
+  "TWD",
+  "VND",
+  "USD",
+  "AED",
+  "AFN",
+  "ALL",
+  "AMD",
+  "ANG",
+  "AOA",
+  "ARS",
+  "AUD",
+  "AWG",
+  "AZN",
+  "BAM",
+  "BBD",
+  "BDT",
+  "BGN",
+  "BHD",
+  "BIF",
+  "BMD",
+  "BND",
+  "BOB",
+  "BRL",
+  "BSD",
+  "BTN",
+  "BWP",
+  "BYN",
+  "BZD",
+  "CAD",
+  "CDF",
+  "CHF",
+  "CLP",
+  "CNY",
+  "COP",
+  "CRC",
+  "CUC",
+  "CUP",
+  "CVE",
+  "CZK",
+  "DJF",
+  "DKK",
+  "DOP",
+  "DZD",
+  "EGP",
+  "ERN",
+  "ETB",
+  "EUR",
+  "FJD",
+  "FKP",
+  "GBP",
+  "GEL",
+  "GHS",
+  "GIP",
+  "GMD",
+  "GNF",
+  "GTQ",
+  "GYD",
+  "HKD",
+  "HNL",
+  "HTG",
+  "HUF",
+  "IDR",
+  "ILS",
+  "INR",
+  "IQD",
+  "IRR",
+  "ISK",
+  "JMD",
+  "JOD",
+  "JPY",
+  "KES",
+  "KGS",
+  "KHR",
+  "KMF",
+  "KPW",
+  "KRW",
+  "KWD",
+  "KYD",
+  "KZT",
+  "LAK",
+  "LBP",
+  "LKR",
+  "LRD",
+  "LSL",
+  "LYD",
+  "MAD",
+  "MDL",
+  "MGA",
+  "MKD",
+  "MMK",
+  "MNT",
+  "MOP",
+  "MRU",
+  "MUR",
+  "MVR",
+  "MWK",
+  "MXN",
+  "MYR",
+  "MZN",
+  "NAD",
+  "NGN",
+  "NIO",
+  "NOK",
+  "NPR",
+  "NZD",
+  "OMR",
+  "PAB",
+  "PEN",
+  "PGK",
+  "PHP",
+  "PKR",
+  "PLN",
+  "PYG",
+  "QAR",
+  "RON",
+  "RSD",
+  "RUB",
+  "RWF",
+  "SAR",
+  "SBD",
+  "SCR",
+  "SDG",
+  "SEK",
+  "SGD",
+  "SHP",
+  "SLE",
+  "SLL",
+  "SOS",
+  "SRD",
+  "SSP",
+  "STN",
+  "SVC",
+  "SYP",
+  "SZL",
+  "THB",
+  "TJS",
+  "TMT",
+  "TND",
+  "TOP",
+  "TRY",
+  "TTD",
+  "TZS",
+  "UAH",
+  "UGX",
+  "UYU",
+  "UZS",
+  "VED",
+  "VES",
+  "VUV",
+  "WST",
+  "XAF",
+  "XCD",
+  "XCG",
+  "XOF",
+  "XPF",
+  "YER",
+  "ZAR",
+  "ZMW",
+  "ZWG",
+  "ZWL",
+] as const;
+export const DEFAULT_SALARY_CURRENCY_CODES = ["TWD", "VND", "USD"] as const;
+
 export const SENIORITY_OPTIONS = [
   { value: "entry_level", label: "Entry level" },
   { value: "associate", label: "Associate" },
@@ -46,6 +210,7 @@ export const LANGUAGE_REQUIREMENT_OPTIONS = [
 export type EmploymentTypeValue = (typeof EMPLOYMENT_TYPE_OPTIONS)[number]["value"];
 export type WorkplaceTypeValue = (typeof WORKPLACE_TYPE_OPTIONS)[number]["value"];
 export type SalaryPeriodValue = (typeof SALARY_PERIOD_OPTIONS)[number]["value"];
+export type SalaryCurrencyCode = (typeof SALARY_CURRENCY_CODES)[number];
 export type SeniorityValue = (typeof SENIORITY_OPTIONS)[number]["value"];
 export type VisaSupportValue = (typeof VISA_SUPPORT_OPTIONS)[number]["value"];
 export type LanguageRequirementValue =
@@ -59,6 +224,9 @@ export const WORKPLACE_TYPE_VALUES: ReadonlySet<string> = new Set(
 );
 export const SALARY_PERIOD_VALUES: ReadonlySet<string> = new Set(
   SALARY_PERIOD_OPTIONS.map((option) => option.value)
+);
+export const SALARY_CURRENCY_VALUES: ReadonlySet<string> = new Set(
+  SALARY_CURRENCY_CODES
 );
 export const SENIORITY_VALUES: ReadonlySet<string> = new Set(
   SENIORITY_OPTIONS.map((option) => option.value)
@@ -231,6 +399,64 @@ export function getSalaryPeriodOptions(locale?: JobPostingLocale) {
     ...option,
     label: salaryPeriodLabel(option.value, locale) || option.label,
   }));
+}
+
+export function normalizeSalaryCurrencyOptions(
+  values: readonly string[] | null | undefined
+) {
+  const normalized = Array.from(
+    new Set(
+      (values ?? DEFAULT_SALARY_CURRENCY_CODES)
+        .map((value) => value.trim().toUpperCase())
+        .filter((value) => SALARY_CURRENCY_VALUES.has(value))
+    )
+  );
+
+  return normalized.length > 0 ? normalized : [...DEFAULT_SALARY_CURRENCY_CODES];
+}
+
+export function normalizeSalaryCurrency(
+  value: string | null | undefined,
+  allowedValues?: readonly string[] | null
+) {
+  const allowed = normalizeSalaryCurrencyOptions(allowedValues);
+  const normalized = (value || "TWD").trim().toUpperCase();
+  return allowed.includes(normalized) ? normalized : allowed[0];
+}
+
+export function getSalaryCurrencyOptions(
+  locale?: JobPostingLocale,
+  enabledCodes?: readonly string[] | null
+) {
+  return buildSalaryCurrencyOptions(
+    normalizeSalaryCurrencyOptions(enabledCodes),
+    locale
+  );
+}
+
+export function getAllSalaryCurrencyOptions(locale?: JobPostingLocale) {
+  return buildSalaryCurrencyOptions(SALARY_CURRENCY_CODES, locale);
+}
+
+function buildSalaryCurrencyOptions(
+  codes: readonly string[],
+  locale?: JobPostingLocale
+) {
+  const displayLocale =
+    locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
+  const displayNames =
+    typeof Intl.DisplayNames === "function"
+      ? new Intl.DisplayNames([displayLocale], { type: "currency" })
+      : null;
+
+  return codes.map((code) => {
+    const label = displayNames?.of(code) || code;
+
+    return {
+      value: code,
+      label: `${code} - ${label}`,
+    };
+  });
 }
 
 export function getSeniorityOptions(locale?: JobPostingLocale) {

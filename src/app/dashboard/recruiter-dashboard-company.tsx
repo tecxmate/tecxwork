@@ -14,9 +14,11 @@ import { Input } from "@/components/ui/input";
 import {
   getEmploymentTypeOptions,
   getLanguageRequirementOptions,
+  getSalaryCurrencyOptions,
   getSalaryPeriodOptions,
   getSeniorityOptions,
   LANGUAGE_REQUIREMENT_VALUES,
+  normalizeSalaryCurrency,
   parseLanguageRequirementTokens,
   serializeLanguageRequirements,
   getVisaSupportOptions,
@@ -110,7 +112,7 @@ function toNullableInt(value: string) {
   return rounded >= 0 ? rounded : null;
 }
 
-function toDraft(job: JobOpening): JobDraft {
+function toDraft(job: JobOpening, salaryCurrencyOptions?: string[]): JobDraft {
   return {
     title: job.title ?? "",
     jdLink: job.jdLink ?? "",
@@ -119,7 +121,10 @@ function toDraft(job: JobOpening): JobDraft {
     workplaceType: job.workplaceType ?? "",
     salaryMin: job.salaryMin !== null ? String(job.salaryMin) : "",
     salaryMax: job.salaryMax !== null ? String(job.salaryMax) : "",
-    salaryCurrency: job.salaryCurrency || "TWD",
+    salaryCurrency: normalizeSalaryCurrency(
+      job.salaryCurrency,
+      salaryCurrencyOptions
+    ),
     salaryPeriod: job.salaryPeriod || "month",
     seniority: job.seniority ?? "",
     languageRequirement: job.languageRequirement ?? "",
@@ -132,7 +137,7 @@ function toDraft(job: JobOpening): JobDraft {
   };
 }
 
-function buildJobPayload(draft: JobDraft) {
+function buildJobPayload(draft: JobDraft, salaryCurrencyOptions?: string[]) {
   return {
     title: draft.title.trim(),
     jdLink: draft.jdLink.trim() || null,
@@ -141,7 +146,10 @@ function buildJobPayload(draft: JobDraft) {
     workplaceType: draft.workplaceType,
     salaryMin: toNullableInt(draft.salaryMin),
     salaryMax: toNullableInt(draft.salaryMax),
-    salaryCurrency: draft.salaryCurrency.trim().toUpperCase() || "TWD",
+    salaryCurrency: normalizeSalaryCurrency(
+      draft.salaryCurrency,
+      salaryCurrencyOptions
+    ),
     salaryPeriod: draft.salaryPeriod,
     seniority: draft.seniority,
     languageRequirement: draft.languageRequirement.trim(),
@@ -154,8 +162,8 @@ function buildJobPayload(draft: JobDraft) {
   };
 }
 
-function serializeJobDraft(draft: JobDraft) {
-  return JSON.stringify(buildJobPayload(draft));
+function serializeJobDraft(draft: JobDraft, salaryCurrencyOptions?: string[]) {
+  return JSON.stringify(buildJobPayload(draft, salaryCurrencyOptions));
 }
 
 function getSelectedLanguageValues(value: string, locale: "en" | "zh-TW") {
@@ -175,10 +183,12 @@ export function RecruiterCompanyTab({
   recruiter,
   section = "company",
   jobModerationEnabled = true,
+  salaryCurrencyOptions,
 }: {
   recruiter: Recruiter;
   section?: "company" | "jobs";
   jobModerationEnabled?: boolean;
+  salaryCurrencyOptions?: string[];
 }) {
   const { messages, locale } = useRecruiterI18n();
   const router = useRouter();
@@ -222,11 +232,11 @@ export function RecruiterCompanyTab({
         setJobs(nextJobs);
         if (nextJobs.length > 0) {
           setSelectedJobId(nextJobs[0].id);
-          setEditJobDraft(toDraft(nextJobs[0]));
+          setEditJobDraft(toDraft(nextJobs[0], salaryCurrencyOptions));
         }
       })
       .finally(() => setLoadingJobs(false));
-  }, [section]);
+  }, [salaryCurrencyOptions, section]);
 
   async function handleSaveCompany(e: React.FormEvent) {
     e.preventDefault();
@@ -264,7 +274,7 @@ export function RecruiterCompanyTab({
     e.preventDefault();
     if (addingJob) return;
 
-    const payload = buildJobPayload(newJobDraft);
+    const payload = buildJobPayload(newJobDraft, salaryCurrencyOptions);
     if (!payload.title || !payload.location || !payload.employmentType) {
       setJobError("Please fill in title, location, and employment type.");
       return;
@@ -299,7 +309,7 @@ export function RecruiterCompanyTab({
   }
 
   async function handleUpdateJob(id: number) {
-    const payload = buildJobPayload(editJobDraft);
+    const payload = buildJobPayload(editJobDraft, salaryCurrencyOptions);
     if (!payload.title || !payload.location || !payload.employmentType) {
       setJobError("Please fill in title, location, and employment type.");
       return;
@@ -325,7 +335,7 @@ export function RecruiterCompanyTab({
         cachedRecruiterJobs = nextJobs;
         return nextJobs;
       });
-      setEditJobDraft(toDraft(data.job));
+      setEditJobDraft(toDraft(data.job, salaryCurrencyOptions));
     } finally {
       setUpdatingJobId(null);
     }
@@ -401,6 +411,10 @@ export function RecruiterCompanyTab({
   }) {
     const companyMessages = messages.dashboard.company;
     const languageOptions = getLanguageRequirementOptions(locale);
+    const salaryCurrencySelectOptions = getSalaryCurrencyOptions(
+      locale,
+      salaryCurrencyOptions
+    );
     const selectedLanguageValues = new Set(
       getSelectedLanguageValues(draft.languageRequirement, locale)
     );
@@ -494,11 +508,17 @@ export function RecruiterCompanyTab({
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.salaryCurrency}
           </label>
-          <Input
+          <select
             value={draft.salaryCurrency}
             onChange={(e) => onChange("salaryCurrency", e.target.value)}
-            placeholder={companyMessages.salaryCurrencyPlaceholder}
-          />
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+          >
+            {salaryCurrencySelectOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
@@ -904,7 +924,7 @@ export function RecruiterCompanyTab({
                     key={job.id}
                     onClick={() => {
                       setSelectedJobId(job.id);
-                      setEditJobDraft(toDraft(job));
+                      setEditJobDraft(toDraft(job, salaryCurrencyOptions));
                       setJobError("");
                     }}
                     className={cn(
@@ -967,7 +987,11 @@ export function RecruiterCompanyTab({
               (() => {
                 const selectedJob = jobs.find((j) => j.id === selectedJobId);
                 const isEditJobSaved = selectedJob
-                  ? serializeJobDraft(editJobDraft) === serializeJobDraft(toDraft(selectedJob))
+                  ? serializeJobDraft(editJobDraft, salaryCurrencyOptions) ===
+                    serializeJobDraft(
+                      toDraft(selectedJob, salaryCurrencyOptions),
+                      salaryCurrencyOptions
+                    )
                   : false;
 
                 return (

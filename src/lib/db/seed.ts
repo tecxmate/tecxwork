@@ -108,6 +108,7 @@ async function seed() {
       eventDate: new Date("2026-06-06T09:00:00+08:00"),
       location: "National Taiwan University, Taipei",
       slotDurationMinutes: 15,
+      salaryCurrencyOptions: ["TWD", "VND", "USD"],
     })
     .onConflictDoNothing();
 

@@ -206,6 +206,18 @@ attributed_to: [niko]   belongs_to: [recruiter-dashboard]
 - Added create-path state: `Add` becomes `Saving...` during POST, then disabled gray `Saved` after success on the reset form; typing the next draft clears it back to `Add`.
 - Updated `docs/wiki/topics/recruiter-dashboard.md`.
 
+## [2026-05-13] fix | Recruiter salary currency allowlist
+attributed_to: [niko]   belongs_to: [recruiter-dashboard]
+- Recruiter job salary currency is no longer arbitrary text. The form now renders a currency select with TWD, VND, and USD first.
+- Added shared salary currency options in `src/lib/job-posting.ts`; create/update API routes reject unknown currency codes.
+- Updated `docs/wiki/topics/recruiter-dashboard.md`.
+
+## [2026-05-13] fix | Event-configured recruiter salary currencies
+attributed_to: [niko]   belongs_to: [recruiter-dashboard, admin-panel]
+- For this event, recruiter job forms should only show TWD, VND, and USD by default.
+- Added `event_config.salary_currency_options` with default `[TWD,VND,USD]`, admin controls in `/admin/settings`, and recruiter/API filtering so hidden currencies cannot be saved.
+- Ran `npm run db:update:salary-currency-options` against the configured database.
+
 ## [2026-05-13] decision | Admin interview moderation page + Overview→Settings demotion
 attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 - New /admin/interviews with status filter chips, per-row soft cancel, and bulk-cancel by email substring (walks the existing DELETE /api/bookings/[id] so the cancellation email + slot release + waitlist promotion all run unchanged). Admin top nav now: Recruiters · Jobs · Applicants · Interviews.

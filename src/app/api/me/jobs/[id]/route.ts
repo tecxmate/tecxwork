@@ -5,6 +5,8 @@ import { eq, and } from "drizzle-orm";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 import {
   EMPLOYMENT_TYPE_VALUES,
+  normalizeSalaryCurrencyOptions,
+  SALARY_CURRENCY_VALUES,
   SALARY_PERIOD_VALUES,
   SENIORITY_VALUES,
   VISA_SUPPORT_VALUES,
@@ -54,10 +56,16 @@ export async function PUT(
   const jobId = parseInt(id);
 
   const [config] = await db
-    .select({ jobModerationEnabled: eventConfig.jobModerationEnabled })
+    .select({
+      jobModerationEnabled: eventConfig.jobModerationEnabled,
+      salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
+    })
     .from(eventConfig)
     .limit(1);
   const moderationEnabled = config?.jobModerationEnabled ?? true;
+  const enabledSalaryCurrencies = normalizeSalaryCurrencyOptions(
+    config?.salaryCurrencyOptions
+  );
 
   const body = await req.json();
   const [existing] = await db
@@ -211,8 +219,17 @@ export async function PUT(
   }
 
   if ("salaryCurrency" in body) {
-    const salaryCurrency = toCleanString(body.salaryCurrency) || "TWD";
-    updates.salaryCurrency = salaryCurrency.toUpperCase().slice(0, 8);
+    const salaryCurrency = toCleanString(body.salaryCurrency).toUpperCase() || "TWD";
+    if (
+      !SALARY_CURRENCY_VALUES.has(salaryCurrency) ||
+      !enabledSalaryCurrencies.includes(salaryCurrency)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid salary currency" },
+        { status: 400 }
+      );
+    }
+    updates.salaryCurrency = salaryCurrency;
   }
 
   if ("salaryPeriod" in body) {

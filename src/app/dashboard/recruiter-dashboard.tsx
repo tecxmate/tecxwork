@@ -77,12 +77,14 @@ export function RecruiterDashboard({
   bookings,
   section,
   jobModerationEnabled,
+  salaryCurrencyOptions,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
   section: Section;
   showApplicants: boolean;
   jobModerationEnabled: boolean;
+  salaryCurrencyOptions: string[];
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -174,12 +176,14 @@ export function RecruiterDashboard({
               recruiter={recruiter}
               section="jobs"
               jobModerationEnabled={jobModerationEnabled}
+              salaryCurrencyOptions={salaryCurrencyOptions}
             />
           ) : (
             <RecruiterCompanyTab
               recruiter={recruiter}
               section="company"
               jobModerationEnabled={jobModerationEnabled}
+              salaryCurrencyOptions={salaryCurrencyOptions}
             />
           )}
         </div>

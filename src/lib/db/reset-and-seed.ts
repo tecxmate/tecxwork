@@ -107,6 +107,7 @@ async function resetAndSeed() {
     location: "NTUT (Taipei Tech), Taipei",
     slotDurationMinutes: 15,
     mode: "both",
+    salaryCurrencyOptions: ["TWD", "VND", "USD"],
   });
 
   console.log("Seed complete!");

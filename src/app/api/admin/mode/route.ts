@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 
 export async function GET() {
   const [config] = await db
@@ -9,6 +10,7 @@ export async function GET() {
       mode: eventConfig.mode,
       onboardingMode: eventConfig.onboardingMode,
       jobModerationEnabled: eventConfig.jobModerationEnabled,
+      salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
       locked: eventConfig.modeLocked,
     })
     .from(eventConfig)
@@ -18,6 +20,9 @@ export async function GET() {
     mode: config?.mode ?? "both",
     onboardingMode: config?.onboardingMode ?? "full",
     jobModerationEnabled: config?.jobModerationEnabled ?? true,
+    salaryCurrencyOptions: normalizeSalaryCurrencyOptions(
+      config?.salaryCurrencyOptions
+    ),
     locked: config?.locked ?? false,
   });
 }
@@ -28,7 +33,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { mode, onboardingMode, jobModerationEnabled, lock } = body;
+  const { mode, onboardingMode, jobModerationEnabled, salaryCurrencyOptions, lock } = body;
 
   const [config] = await db
     .select({ id: eventConfig.id, locked: eventConfig.modeLocked })
@@ -55,6 +60,16 @@ export async function PUT(req: NextRequest) {
       .where(eq(eventConfig.id, config.id));
 
     return NextResponse.json({ jobModerationEnabled });
+  }
+
+  if (Array.isArray(salaryCurrencyOptions)) {
+    const normalized = normalizeSalaryCurrencyOptions(salaryCurrencyOptions);
+    await db
+      .update(eventConfig)
+      .set({ salaryCurrencyOptions: normalized })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ salaryCurrencyOptions: normalized });
   }
 
   // Mode change — blocked if currently locked

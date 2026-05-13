@@ -49,6 +49,11 @@ import { ImageUpload } from "@/components/image-upload";
 import { AppTopBar } from "@/components/app-topbar";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
+import {
+  DEFAULT_SALARY_CURRENCY_CODES,
+  getAllSalaryCurrencyOptions,
+  normalizeSalaryCurrencyOptions,
+} from "@/lib/job-posting";
 
 type Recruiter = {
   id: number;
@@ -210,6 +215,7 @@ export function AdminDashboard({
   currentMode,
   initialOnboardingMode,
   initialJobModerationEnabled,
+  initialSalaryCurrencyOptions,
   initialLocked,
   timeFrame: initialTimeFrame,
   initialHomepageImages,
@@ -226,6 +232,7 @@ export function AdminDashboard({
   currentMode: string;
   initialOnboardingMode: OnboardingMode;
   initialJobModerationEnabled: boolean;
+  initialSalaryCurrencyOptions: string[];
   initialLocked: boolean;
   timeFrame: { startHour: number; startMinute: number; endHour: number; endMinute: number; slotDuration: number; bufferMinutes: number };
   initialHomepageImages: string[];
@@ -254,6 +261,13 @@ export function AdminDashboard({
   const [jobModerationEnabled, setJobModerationEnabled] = useState(
     initialJobModerationEnabled
   );
+  const [salaryCurrencyOptions, setSalaryCurrencyOptions] = useState(() =>
+    normalizeSalaryCurrencyOptions(initialSalaryCurrencyOptions)
+  );
+  const [currencyToAdd, setCurrencyToAdd] = useState("");
+  const [currencySaving, setCurrencySaving] = useState(false);
+  const [currencySaved, setCurrencySaved] = useState(false);
+  const [currencyError, setCurrencyError] = useState("");
   const [locked, setLocked] = useState(initialLocked);
   const [saving, setSaving] = useState(false);
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
@@ -339,6 +353,10 @@ export function AdminDashboard({
   ];
 
   const bookedSlots = stats.totalSlots - stats.availableSlots;
+  const allSalaryCurrencyOptions = getAllSalaryCurrencyOptions();
+  const addableSalaryCurrencyOptions = allSalaryCurrencyOptions.filter(
+    (option) => !salaryCurrencyOptions.includes(option.value)
+  );
   const statsCards = [
     { label: admin.stats.recruiters, value: stats.totalRecruiters, icon: Users },
     { label: admin.stats.students, value: stats.totalApplicants, icon: GraduationCap },
@@ -414,6 +432,34 @@ export function AdminDashboard({
     }
     setSaving(false);
     router.refresh();
+  }
+
+  async function saveSalaryCurrencyOptions(nextOptions: string[]) {
+    const normalized = normalizeSalaryCurrencyOptions(nextOptions);
+    const previous = salaryCurrencyOptions;
+
+    setCurrencySaving(true);
+    setCurrencySaved(false);
+    setCurrencyError("");
+    setSalaryCurrencyOptions(normalized);
+
+    const res = await fetch("/api/admin/mode", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ salaryCurrencyOptions: normalized }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setSalaryCurrencyOptions(previous);
+      setCurrencyError(data.error || "Failed to save currency options");
+    } else {
+      setCurrencySaved(true);
+      setTimeout(() => setCurrencySaved(false), 2500);
+      router.refresh();
+    }
+
+    setCurrencySaving(false);
   }
 
   async function handleAddDomain(e: React.FormEvent) {
@@ -674,6 +720,93 @@ export function AdminDashboard({
                         onCheckedChange={handleJobModerationToggle}
                         disabled={saving}
                       />
+                    </div>
+                    {/* Salary currencies */}
+                    <div className="space-y-2 rounded-md border bg-muted/20 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium">Recruiter salary currencies</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Controls which currency choices appear in recruiter job forms.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="xs"
+                          disabled={currencySaving}
+                          onClick={() =>
+                            void saveSalaryCurrencyOptions([
+                              ...DEFAULT_SALARY_CURRENCY_CODES,
+                            ])
+                          }
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {salaryCurrencyOptions.map((code) => (
+                          <span
+                            key={code}
+                            className="inline-flex items-center gap-1 rounded-full border bg-background px-2 py-1 text-xs font-medium"
+                          >
+                            {code}
+                            <button
+                              type="button"
+                              className="text-muted-foreground hover:text-destructive disabled:pointer-events-none disabled:opacity-40"
+                              disabled={currencySaving || salaryCurrencyOptions.length <= 1}
+                              onClick={() =>
+                                void saveSalaryCurrencyOptions(
+                                  salaryCurrencyOptions.filter((item) => item !== code)
+                                )
+                              }
+                              aria-label={`Remove ${code}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={currencyToAdd}
+                          onChange={(e) => setCurrencyToAdd(e.target.value)}
+                          disabled={currencySaving || addableSalaryCurrencyOptions.length === 0}
+                          className="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Add currency...</option>
+                          {addableSalaryCurrencyOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          type="button"
+                          size="xs"
+                          disabled={currencySaving || !currencyToAdd}
+                          onClick={() => {
+                            const nextCurrency = currencyToAdd;
+                            setCurrencyToAdd("");
+                            void saveSalaryCurrencyOptions([
+                              ...salaryCurrencyOptions,
+                              nextCurrency,
+                            ]);
+                          }}
+                        >
+                          <Plus className="mr-1 h-3 w-3" />
+                          Add
+                        </Button>
+                      </div>
+                      <div className="min-h-4">
+                        {currencySaving ? (
+                          <span className="text-[10px] text-muted-foreground">Saving...</span>
+                        ) : currencySaved ? (
+                          <span className="text-[10px] text-green-600">Saved</span>
+                        ) : currencyError ? (
+                          <span className="text-[10px] text-destructive">{currencyError}</span>
+                        ) : null}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

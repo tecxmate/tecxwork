@@ -343,6 +343,10 @@ export const eventConfig = pgTable("event_config", {
   fallbackUrl: text("fallback_url"),
   homepageImages: text("homepage_images").array().notNull().default([]),
   heroOverlayEnabled: boolean("hero_overlay_enabled").notNull().default(true),
+  salaryCurrencyOptions: text("salary_currency_options")
+    .array()
+    .notNull()
+    .default(["TWD", "VND", "USD"]),
 });
 
 // ---- External job listings (crawled from 104/1111) ----

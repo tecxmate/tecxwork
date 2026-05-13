@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/auth";
 import { db, recruiters, bookings, eventConfig, slots, applicantSlots } from "@/lib/db";
+import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 import { getRecruiterLocale } from "@/lib/recruiter-locale.server";
 
 export type RecruiterDashboardSection =
@@ -65,6 +66,7 @@ export async function getRecruiterDashboardData() {
     .select({
       mode: eventConfig.mode,
       jobModerationEnabled: eventConfig.jobModerationEnabled,
+      salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
     })
     .from(eventConfig)
     .limit(1);
@@ -79,5 +81,8 @@ export async function getRecruiterDashboardData() {
     bookings: allBookings,
     showApplicants,
     jobModerationEnabled: config?.jobModerationEnabled ?? true,
+    salaryCurrencyOptions: normalizeSalaryCurrencyOptions(
+      config?.salaryCurrencyOptions
+    ),
   };
 }

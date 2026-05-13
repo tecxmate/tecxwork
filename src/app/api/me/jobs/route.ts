@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 import {
   EMPLOYMENT_TYPE_VALUES,
+  normalizeSalaryCurrencyOptions,
+  SALARY_CURRENCY_VALUES,
   SALARY_PERIOD_VALUES,
   SENIORITY_VALUES,
   VISA_SUPPORT_VALUES,
@@ -81,10 +83,16 @@ export async function POST(req: NextRequest) {
   }
 
   const [config] = await db
-    .select({ jobModerationEnabled: eventConfig.jobModerationEnabled })
+    .select({
+      jobModerationEnabled: eventConfig.jobModerationEnabled,
+      salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
+    })
     .from(eventConfig)
     .limit(1);
   const moderationEnabled = config?.jobModerationEnabled ?? true;
+  const enabledSalaryCurrencies = normalizeSalaryCurrencyOptions(
+    config?.salaryCurrencyOptions
+  );
 
   const body = await req.json();
   const title = toCleanString(body.title);
@@ -96,7 +104,8 @@ export async function POST(req: NextRequest) {
   const benefits = toCleanString(body.benefits);
   const employmentType = toCleanString(body.employmentType);
   const workplaceType = toCleanString(body.workplaceType);
-  const salaryCurrency = toCleanString(body.salaryCurrency) || "TWD";
+  const rawSalaryCurrency = toCleanString(body.salaryCurrency).toUpperCase();
+  const salaryCurrency = rawSalaryCurrency || "TWD";
   const salaryPeriod = toCleanString(body.salaryPeriod) || "month";
   const seniority = toCleanString(body.seniority);
   const languageRequirement = toCleanString(body.languageRequirement);
@@ -126,6 +135,15 @@ export async function POST(req: NextRequest) {
   if (!SALARY_PERIOD_VALUES.has(salaryPeriod)) {
     return NextResponse.json(
       { error: "Invalid salary period" },
+      { status: 400 }
+    );
+  }
+  if (
+    !SALARY_CURRENCY_VALUES.has(salaryCurrency) ||
+    !enabledSalaryCurrencies.includes(salaryCurrency)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid salary currency" },
       { status: 400 }
     );
   }
@@ -181,7 +199,7 @@ export async function POST(req: NextRequest) {
       workplaceType,
       salaryMin,
       salaryMax,
-      salaryCurrency: salaryCurrency.toUpperCase().slice(0, 8),
+      salaryCurrency,
       salaryPeriod,
       seniority,
       languageRequirement,

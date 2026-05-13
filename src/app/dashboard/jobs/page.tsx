@@ -13,6 +13,7 @@ export default async function RecruiterJobsPage() {
         section="jobs"
         showApplicants={data.showApplicants}
         jobModerationEnabled={data.jobModerationEnabled}
+        salaryCurrencyOptions={data.salaryCurrencyOptions}
       />
     </RecruiterLocaleProvider>
   );

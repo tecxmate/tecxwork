@@ -4,7 +4,9 @@ type: topic
 slug: admin-panel
 role: area
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-13
+attributed_to: [claude-code]
+belongs_to: [tecxwork]
 source: code
 status: active
 tags: [area, admin]
@@ -22,3 +24,4 @@ Admin-only area for configuring the event: branding, time frame, slots, homepage
 ## Active concerns
 - Time-frame form — see [topics/event-time-config.md](../topics/event-time-config.md).
 - Hero photo localization — see [topics/hero-carousel.md](../topics/hero-carousel.md).
+- Recruiter salary currencies are event-configured from `/admin/settings`; default is TWD, VND, USD.
