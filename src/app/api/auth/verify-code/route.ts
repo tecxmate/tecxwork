@@ -15,17 +15,26 @@ const MAX_FAILED_ATTEMPTS = 5;
 export async function POST(req: NextRequest) {
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { success, remaining, reset } = await rateLimit(ip, "auth", "verify-code");
-  if (!success) {
+
+  const ipLimit = await rateLimit(ip, "api", "verify-code-ip");
+  if (!ipLimit.success) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
-      { status: 429, headers: rateLimitHeaders(remaining, reset) }
+      { status: 429, headers: rateLimitHeaders(ipLimit.remaining, ipLimit.reset) }
     );
   }
 
   const parsed = await parseJsonBody(req, verifyCodeSchema);
   if (!parsed.ok) return parsed.response;
   const { email, code } = parsed.data;
+
+  const accountLimit = await rateLimit(email, "auth", "verify-code");
+  if (!accountLimit.success) {
+    return NextResponse.json(
+      { error: "Too many attempts for this account. Please try again later." },
+      { status: 429, headers: rateLimitHeaders(accountLimit.remaining, accountLimit.reset) }
+    );
+  }
 
   // Find the most recent unexpired, unused code for this email (do NOT match on
   // code in the query — we need to count failed attempts on the active code).

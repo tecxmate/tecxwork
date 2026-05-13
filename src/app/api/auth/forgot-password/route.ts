@@ -16,17 +16,26 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 export async function POST(req: NextRequest) {
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { success, remaining, reset } = await rateLimit(ip, "auth", "forgot-password");
-  if (!success) {
+
+  const ipLimit = await rateLimit(ip, "api", "forgot-password-ip");
+  if (!ipLimit.success) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
-      { status: 429, headers: rateLimitHeaders(remaining, reset) }
+      { status: 429, headers: rateLimitHeaders(ipLimit.remaining, ipLimit.reset) }
     );
   }
 
   const parsed = await parseJsonBody(req, forgotPasswordSchema);
   if (!parsed.ok) return parsed.response;
   const { email } = parsed.data;
+
+  const accountLimit = await rateLimit(email, "auth", "forgot-password");
+  if (!accountLimit.success) {
+    return NextResponse.json(
+      { error: "Too many requests for this account. Please try again later." },
+      { status: 429, headers: rateLimitHeaders(accountLimit.remaining, accountLimit.reset) }
+    );
+  }
 
   // Check user exists
   const [user] = await db

@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-05-13 — Event-day burst hardening](decisions/2026-05-13-event-day-burst-hardening.md) — SKIP LOCKED slot claim; two-tier auth rate limit (IP + email)
 - [2026-05-13 — Password-reset brute-force fix](decisions/2026-05-13-password-reset-brute-force-fix.md) — `failed_attempts` cap + rate limit on verify-code; CSPRNG for codes
 - [2026-05-12 — LinkedIn-style job detail apply flow](decisions/2026-05-12-linkedin-style-job-apply-flow.md) — job clicks open immediate apply; company logo/name opens company page
 - [2026-05-06 — Mobile bottom nav → floating pill](decisions/2026-05-06-mobile-nav-pill.md) — sliding indicator; `dvh-svh` URL-bar stabilizer on Android, plain safe-area on iOS

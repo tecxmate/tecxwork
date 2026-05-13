@@ -165,25 +165,29 @@ export async function PUT(req: NextRequest) {
       };
     }
 
-    // Find a random available slot at the requested time
-    const [randomSlot] = await tx
-      .select({
-        id: slots.id,
-        startTime: slots.startTime,
-        endTime: slots.endTime,
-      })
-      .from(slots)
-      .where(
-        and(
-          eq(slots.recruiterId, recruiter.id),
-          eq(slots.startTime, booking.requestedTime!),
-          eq(slots.status, "available")
-        )
+    // Claim an available interviewer slot atomically. SKIP LOCKED is the
+    // Postgres job-queue pattern: two concurrent acceptances pick different
+    // rows, so we never spuriously report "no slot" when a free one exists.
+    const claimed = await tx.execute<{
+      id: number;
+      start_time: Date;
+      end_time: Date;
+    }>(sql`
+      UPDATE slots SET status = 'booked'
+      WHERE id = (
+        SELECT id FROM slots
+        WHERE recruiter_id = ${recruiter.id}
+          AND start_time = ${booking.requestedTime!}
+          AND status = 'available'
+        ORDER BY random()
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
       )
-      .orderBy(sql`random()`)
-      .limit(1);
+      RETURNING id, start_time, end_time
+    `);
 
-    if (!randomSlot) {
+    const claimedRow = claimed.rows?.[0];
+    if (!claimedRow) {
       return {
         ok: false as const,
         status: 409,
@@ -192,20 +196,11 @@ export async function PUT(req: NextRequest) {
       };
     }
 
-    // Atomic lock the slot
-    const updated = await tx
-      .update(slots)
-      .set({ status: "booked" })
-      .where(and(eq(slots.id, randomSlot.id), eq(slots.status, "available")))
-      .returning({ id: slots.id });
-
-    if (!updated.length) {
-      return {
-        ok: false as const,
-        status: 409,
-        error: "Slot was just taken. Try again.",
-      };
-    }
+    const randomSlot = {
+      id: claimedRow.id,
+      startTime: claimedRow.start_time,
+      endTime: claimedRow.end_time,
+    };
 
     // Update booking: assign slot, mark accepted
     const accepted = await tx

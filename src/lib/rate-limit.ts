@@ -7,7 +7,7 @@ interface RateLimitConfig {
 
 const DEFAULTS: Record<string, RateLimitConfig> = {
   api: { limit: 60, window: 60 }, // 60 req/min for general API
-  auth: { limit: 5, window: 60 }, // 5 req/min for auth endpoints
+  auth: { limit: 5, window: 60 }, // 5 req/min — per-account auth bucket
 };
 
 /**

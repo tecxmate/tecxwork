@@ -107,24 +107,28 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const [recruiterSlot] = await tx
-      .select({
-        id: slots.id,
-        startTime: slots.startTime,
-        endTime: slots.endTime,
-      })
-      .from(slots)
-      .where(
-        and(
-          eq(slots.recruiterId, recruiter.id),
-          eq(slots.startTime, applicantSlot.startTime),
-          eq(slots.status, "available")
-        )
+    // Claim an interviewer slot atomically. SKIP LOCKED avoids spurious "slot
+    // taken" errors when other free slots exist at the same time.
+    const claimed = await tx.execute<{
+      id: number;
+      start_time: Date;
+      end_time: Date;
+    }>(sql`
+      UPDATE slots SET status = 'booked'
+      WHERE id = (
+        SELECT id FROM slots
+        WHERE recruiter_id = ${recruiter.id}
+          AND start_time = ${applicantSlot.startTime}
+          AND status = 'available'
+        ORDER BY random()
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
       )
-      .orderBy(sql`random()`)
-      .limit(1);
+      RETURNING id, start_time, end_time
+    `);
 
-    if (!recruiterSlot) {
+    const claimedRow = claimed.rows?.[0];
+    if (!claimedRow) {
       return {
         ok: false as const,
         status: 409,
@@ -132,6 +136,12 @@ export async function POST(req: NextRequest) {
           "No available interviewer slots at this time. All interviewers are booked.",
       };
     }
+
+    const recruiterSlot = {
+      id: claimedRow.id,
+      startTime: claimedRow.start_time,
+      endTime: claimedRow.end_time,
+    };
 
     const updatedApplicantSlot = await tx
       .update(applicantSlots)
@@ -145,24 +155,15 @@ export async function POST(req: NextRequest) {
       .returning({ id: applicantSlots.id });
 
     if (!updatedApplicantSlot.length) {
+      // Roll back the recruiter slot we just claimed so it doesn't leak.
+      await tx
+        .update(slots)
+        .set({ status: "available" })
+        .where(eq(slots.id, recruiterSlot.id));
       return {
         ok: false as const,
         status: 409,
         error: "This slot is no longer available.",
-      };
-    }
-
-    const updatedRecruiterSlot = await tx
-      .update(slots)
-      .set({ status: "booked" })
-      .where(and(eq(slots.id, recruiterSlot.id), eq(slots.status, "available")))
-      .returning({ id: slots.id });
-
-    if (!updatedRecruiterSlot.length) {
-      return {
-        ok: false as const,
-        status: 409,
-        error: "Interviewer slot was just taken. Try another time.",
       };
     }
 

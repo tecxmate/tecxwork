@@ -7,18 +7,29 @@ import { loginSchema, parseJsonBody } from "@/lib/validation";
 export async function POST(req: NextRequest) {
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { success, remaining, reset } = await rateLimit(ip, "auth");
 
-  if (!success) {
+  // Outer ring: per-IP cap stops runaway scripts but is generous enough that a
+  // shared venue NAT (200 students on one wifi) won't lock everyone out.
+  const ipLimit = await rateLimit(ip, "api", "auth-ip");
+  if (!ipLimit.success) {
     return NextResponse.json(
       { error: "Too many login attempts. Please try again later." },
-      { status: 429, headers: rateLimitHeaders(remaining, reset) }
+      { status: 429, headers: rateLimitHeaders(ipLimit.remaining, ipLimit.reset) }
     );
   }
 
   const parsed = await parseJsonBody(req, loginSchema);
   if (!parsed.ok) return parsed.response;
   const body = parsed.data;
+
+  // Inner ring: per-account cap is the actual brute-force defense.
+  const accountLimit = await rateLimit(body.email, "auth", "login");
+  if (!accountLimit.success) {
+    return NextResponse.json(
+      { error: "Too many login attempts for this account. Please try again later." },
+      { status: 429, headers: rateLimitHeaders(accountLimit.remaining, accountLimit.reset) }
+    );
+  }
 
   const result = await login(body.email, body.password);
 
