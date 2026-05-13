@@ -89,16 +89,16 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       matches: ["/admin/recruiters"],
     },
     {
-      href: "/admin/applicants",
-      label: "Applicants",
-      icon: Users,
-      matches: ["/admin/applicants"],
-    },
-    {
       href: "/admin/jobs",
       label: "Jobs",
       icon: BriefcaseBusiness,
       matches: ["/admin/jobs"],
+    },
+    {
+      href: "/admin/applicants",
+      label: "Applicants",
+      icon: Users,
+      matches: ["/admin/applicants"],
     },
   ],
 };
