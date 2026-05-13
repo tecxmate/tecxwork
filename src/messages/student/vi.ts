@@ -499,7 +499,9 @@ export const studentViMessages = {
         benefits: "Phúc lợi",
       },
       approve: "Duyệt",
+      approved: "Đã duyệt",
       reject: "Từ chối",
+      rejected: "Đã từ chối",
       resetToDraft: "Đưa về bản nháp",
       status: {
         ...studentEnMessages.admin.moderation.status,

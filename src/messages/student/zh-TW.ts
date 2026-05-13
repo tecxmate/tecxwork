@@ -503,7 +503,9 @@ export const studentZhTwMessages = {
         benefits: "福利",
       },
       approve: "通過",
+      approved: "已通過",
       reject: "退回",
+      rejected: "已退回",
       resetToDraft: "重設為草稿",
       status: {
         ...studentEnMessages.admin.moderation.status,

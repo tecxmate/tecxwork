@@ -510,7 +510,9 @@ export const studentEnMessages = {
         benefits: "Benefits",
       },
       approve: "Approve",
+      approved: "Approved",
       reject: "Reject",
+      rejected: "Rejected",
       resetToDraft: "Reset to Draft",
       status: {
         draft: "draft",

@@ -1402,7 +1402,7 @@ function JobModerationSection({
               )}
             >
               <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-              {admin.moderation.approve}
+              {isApproved ? admin.moderation.approved : admin.moderation.approve}
             </Button>
             <Button
               size="sm"
@@ -1416,7 +1416,7 @@ function JobModerationSection({
               )}
             >
               <Trash2 className="mr-1 h-3.5 w-3.5" />
-              {admin.moderation.reject}
+              {isRejected ? admin.moderation.rejected : admin.moderation.reject}
             </Button>
             {!isPending && (
               <Button
