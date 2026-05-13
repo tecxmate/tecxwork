@@ -1328,6 +1328,8 @@ function JobModerationSection({
 
   function renderJobItem(job: JobOpening) {
     const isPending = job.moderationStatus === "pending_review";
+    const isApproved = job.moderationStatus === "approved";
+    const isRejected = job.moderationStatus === "rejected";
     const notes = notesById[job.id] ?? job.moderationNotes ?? "";
 
     return (
@@ -1391,16 +1393,27 @@ function JobModerationSection({
             <Button
               size="sm"
               onClick={() => onModerate(job.id, "approve", notes)}
-              className="h-8 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+              aria-pressed={isApproved}
+              className={cn(
+                "h-8",
+                isApproved
+                  ? "border border-emerald-600 bg-background text-emerald-600 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                  : "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+              )}
             >
               <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
               {admin.moderation.approve}
             </Button>
             <Button
               size="sm"
-              variant="outline"
               onClick={() => onModerate(job.id, "reject", notes)}
-              className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10"
+              aria-pressed={isRejected}
+              className={cn(
+                "h-8",
+                isRejected
+                  ? "border border-destructive bg-background text-destructive hover:bg-destructive/10"
+                  : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              )}
             >
               <Trash2 className="mr-1 h-3.5 w-3.5" />
               {admin.moderation.reject}
