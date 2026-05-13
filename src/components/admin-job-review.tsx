@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle2, Loader2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { SiteFooter } from "@/components/site-footer";
 import {
   RecruiterJobPostingCard,
   type RecruiterJobPosting,
@@ -77,37 +78,38 @@ export function AdminJobReview({
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-      <Link
-        href="/admin/jobs"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {labels.back}
-      </Link>
+    <div className="flex flex-1 flex-col">
+      <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        <Link
+          href="/admin/jobs"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {labels.back}
+        </Link>
 
-      <RecruiterJobPostingCard
-        job={job}
-        locale={locale as JobPostingLocale}
-        labels={labels.card}
-      />
+        <RecruiterJobPostingCard
+          job={job}
+          locale={locale as JobPostingLocale}
+          labels={labels.card}
+        />
 
-      <Card>
-        <CardContent className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {labels.adminNotes}
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              placeholder={labels.notesPlaceholder}
-              className="w-full rounded-lg border border-input bg-muted/30 px-3 py-2 text-sm transition-colors focus:bg-background"
-            />
-          </div>
+        <Card>
+          <CardContent className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {labels.adminNotes}
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder={labels.notesPlaceholder}
+                className="w-full rounded-lg border border-input bg-muted/30 px-3 py-2 text-sm transition-colors focus:bg-background"
+              />
+            </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
               onClick={() => moderate("approve")}
@@ -158,8 +160,10 @@ export function AdminJobReview({
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
-    </main>
+          </CardContent>
+        </Card>
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
