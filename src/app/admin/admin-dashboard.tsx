@@ -1169,17 +1169,6 @@ export function AdminDashboard({
                 </div>
                 )}
               </div>
-
-              <PeopleSection
-                recruiters={recruiters}
-                applicants={applicants}
-                bookings={adminBookings}
-                onDeleteRecruiter={handleDeleteRecruiter}
-                onDeleteApplicant={handleDeleteApplicant}
-                onCancelBooking={handleCancelBooking}
-                initialTab="bookings"
-                showTabs={false}
-              />
             </>
           ) : section === "recruiters" ? (
             <RecruitersSection
