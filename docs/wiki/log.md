@@ -188,3 +188,8 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, admin-dashboard]
 - Use case: applicants who can't complete email verification (deliverability issues, school filters). Admin creates account on their behalf.
 - POST /api/admin/applicants (admin-only) takes { email, name, password }. Validates: email format, name non-empty, password meets min length. Rejects duplicates. Single transaction: insert user (role=applicant, hashed password) + applicantProfile (cvLink empty, pipaConsent true on behalf of user).
 - UI: AddApplicantPanel collapsible card on /admin/applicants. Three inputs + Create button. Password shown in plain text input by design so admin can copy-share offline.
+
+## [2026-05-13] ingest | Email copy now matches "Anyone with the link" CV-sharing policy
+attributed_to: [niko]   belongs_to: [recruitment-workflows, data-privacy]
+- Confirmation email's "Important — CV Sharing" box and the applicant reminder bullet (src/lib/email/index.ts) were still warning students NOT to set their Drive link to "Anyone can view" — the opposite of what the booking form now tells them. Reversed to match.
+- Extends decision `docs/wiki/decisions/2026-05-05-cv-anyone-with-link.md`. Commit `a6e32d8`.

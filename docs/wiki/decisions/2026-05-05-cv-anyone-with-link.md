@@ -33,3 +33,4 @@ Change the on-form hint to instruct students to set the Drive link to **"Anyone 
 ## Provenance
 - Discussed 2026-05-05 between [niko] (owner) and [claude-code] (agent).
 - Files touched: `src/messages/student/en.ts`, `src/messages/student/vi.ts`, `src/messages/student/zh-TW.ts`.
+- 2026-05-13: Propagated to transactional emails. Confirmation email's "Important — CV Sharing" box and the applicant reminder bullet were still telling students *not* to use "Anyone can view" — reversed to match the booking-form copy. Commit `a6e32d8`; file `src/lib/email/index.ts`.
