@@ -50,6 +50,12 @@ attributed_to: [niko]   belongs_to: [design-system, public-homepage]
 - Removed `viewport-fit=cover` from the root viewport so Android Chromium uses the normal layout viewport instead of letting the `/jobs` sticky shell sit under browser/system controls.
 - Updated decisions/2026-05-06-mobile-nav-pill.md.
 
+## [2026-05-13] fix | Restore iPhone viewport-fit behavior
+attributed_to: [niko]   belongs_to: [design-system, public-homepage]
+- Niko reported the Android Chromium `/jobs` viewport experiment broke iPhone rendering.
+- Restored `viewport-fit=cover`; Android `/jobs` needs a page-level fix that does not remove iOS safe-area behavior.
+- Updated decisions/2026-05-06-mobile-nav-pill.md.
+
 ## [2026-05-04] ingest | Time-setting bug fixes
 attributed_to: [niko]   belongs_to: [admin-panel, tecxwork]
 - slot-regen loop iterates absolute minutes and bounds slot end by event end (fixes 45-min cadence drift and end overflow)
