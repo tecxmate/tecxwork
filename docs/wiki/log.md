@@ -193,3 +193,15 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, admin-dashboard]
 attributed_to: [niko]   belongs_to: [recruitment-workflows, data-privacy]
 - Confirmation email's "Important — CV Sharing" box and the applicant reminder bullet (src/lib/email/index.ts) were still warning students NOT to set their Drive link to "Anyone can view" — the opposite of what the booking form now tells them. Reversed to match.
 - Extends decision `docs/wiki/decisions/2026-05-05-cv-anyone-with-link.md`. Commit `a6e32d8`.
+
+## [2026-05-13] fix | Recruiter job save button feedback
+attributed_to: [niko]   belongs_to: [recruiter-dashboard]
+- Recruiter reported that job edits save successfully but the button stays as `Save`, making the result feel uncertain.
+- Updated the job editor so the button shows in-flight `Saving...`, then disabled gray `Saved` when the current draft matches the persisted job; any edit re-enables `Save`.
+- Updated `docs/wiki/topics/recruiter-dashboard.md`.
+
+## [2026-05-13] fix | Recruiter new-job add button feedback
+attributed_to: [niko]   belongs_to: [recruiter-dashboard]
+- Clarified that the new-job CTA is the `Add` button and should have the same duplicate-submit guard and visual feedback as edit.
+- Added create-path state: `Add` becomes `Saving...` during POST, then disabled gray `Saved` after success on the reset form; typing the next draft clears it back to `Add`.
+- Updated `docs/wiki/topics/recruiter-dashboard.md`.

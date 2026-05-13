@@ -2,6 +2,7 @@ export const recruiterZhTwMessages = {
   common: {
     back: "返回",
     save: "儲存",
+    saved: "已儲存",
     cancel: "取消",
     continue: "繼續",
     loading: "載入中...",

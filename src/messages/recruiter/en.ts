@@ -2,6 +2,7 @@ export const recruiterEnMessages = {
   common: {
     back: "Back",
     save: "Save",
+    saved: "Saved",
     cancel: "Cancel",
     continue: "Continue",
     loading: "Loading...",

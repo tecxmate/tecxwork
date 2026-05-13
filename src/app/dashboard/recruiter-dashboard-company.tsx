@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Building2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Building2, CheckCircle2, Loader2, Plus, Trash2 } from "lucide-react";
 
-import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { ImageUpload, MultiImageUpload } from "@/components/image-upload";
 import { BulletTextarea } from "@/components/bullet-textarea";
@@ -155,6 +154,10 @@ function buildJobPayload(draft: JobDraft) {
   };
 }
 
+function serializeJobDraft(draft: JobDraft) {
+  return JSON.stringify(buildJobPayload(draft));
+}
+
 function getSelectedLanguageValues(value: string, locale: "en" | "zh-TW") {
   return parseLanguageRequirementTokens(value, locale)
     .filter((item) => item.preset && LANGUAGE_REQUIREMENT_VALUES.has(item.key))
@@ -192,8 +195,11 @@ export function RecruiterCompanyTab({
   const [jobs, setJobs] = useState<JobOpening[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [newJobDraft, setNewJobDraft] = useState<JobDraft>(EMPTY_JOB_DRAFT);
+  const [addingJob, setAddingJob] = useState(false);
+  const [newJobSaved, setNewJobSaved] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<number | "new" | null>("new");
   const [editJobDraft, setEditJobDraft] = useState<JobDraft>(EMPTY_JOB_DRAFT);
+  const [updatingJobId, setUpdatingJobId] = useState<number | null>(null);
   const [jobError, setJobError] = useState("");
 
   useEffect(() => {
@@ -256,6 +262,8 @@ export function RecruiterCompanyTab({
 
   async function handleAddJob(e: React.FormEvent) {
     e.preventDefault();
+    if (addingJob) return;
+
     const payload = buildJobPayload(newJobDraft);
     if (!payload.title || !payload.location || !payload.employmentType) {
       setJobError("Please fill in title, location, and employment type.");
@@ -263,12 +271,20 @@ export function RecruiterCompanyTab({
     }
 
     setJobError("");
-    const res = await fetch("/api/me/jobs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
+    setNewJobSaved(false);
+    setAddingJob(true);
+    try {
+      const res = await fetch("/api/me/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setJobError(data.error || "Failed to create job");
+        return;
+      }
+
       const data = await res.json();
       setJobs((current) => {
         const nextJobs = [...current, data.job];
@@ -276,9 +292,9 @@ export function RecruiterCompanyTab({
         return nextJobs;
       });
       setNewJobDraft(EMPTY_JOB_DRAFT);
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setJobError(data.error || "Failed to create job");
+      setNewJobSaved(true);
+    } finally {
+      setAddingJob(false);
     }
   }
 
@@ -290,21 +306,28 @@ export function RecruiterCompanyTab({
     }
 
     setJobError("");
-    const res = await fetch(`/api/me/jobs/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
+    setUpdatingJobId(id);
+    try {
+      const res = await fetch(`/api/me/jobs/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setJobError(data.error || "Failed to update job");
+        return;
+      }
+
       const data = await res.json();
       setJobs((current) => {
         const nextJobs = current.map((job) => (job.id === id ? data.job : job));
         cachedRecruiterJobs = nextJobs;
         return nextJobs;
       });
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setJobError(data.error || "Failed to update job");
+      setEditJobDraft(toDraft(data.job));
+    } finally {
+      setUpdatingJobId(null);
     }
   }
 
@@ -364,6 +387,8 @@ export function RecruiterCompanyTab({
     onSubmit,
     submitButtonType = "button",
     showPlusIcon = true,
+    isSubmitting = false,
+    isSaved = false,
   }: {
     draft: JobDraft;
     onChange: (field: keyof JobDraft, value: string) => void;
@@ -371,6 +396,8 @@ export function RecruiterCompanyTab({
     onSubmit?: () => void;
     submitButtonType?: "button" | "submit";
     showPlusIcon?: boolean;
+    isSubmitting?: boolean;
+    isSaved?: boolean;
   }) {
     const companyMessages = messages.dashboard.company;
     const languageOptions = getLanguageRequirementOptions(locale);
@@ -652,16 +679,36 @@ export function RecruiterCompanyTab({
         <Button
           type={submitButtonType}
           size="sm"
-          className="mt-4 sm:col-span-2"
+          variant={isSaved ? "outline" : "default"}
+          className={cn(
+            "mt-4 sm:col-span-2",
+            isSaved && "border-border bg-muted text-muted-foreground"
+          )}
           disabled={
+            isSubmitting ||
+            isSaved ||
             !draft.title.trim() ||
             !draft.location.trim() ||
             !draft.employmentType
           }
           onClick={onSubmit}
         >
-          {showPlusIcon ? <Plus className="mr-1 h-3.5 w-3.5" /> : null}
-          {submitLabel}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              {companyMessages.saving}
+            </>
+          ) : isSaved ? (
+            <>
+              <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+              {messages.common.saved}
+            </>
+          ) : (
+            <>
+              {showPlusIcon ? <Plus className="mr-1 h-3.5 w-3.5" /> : null}
+              {submitLabel}
+            </>
+          )}
         </Button>
       </div>
     );
@@ -838,6 +885,7 @@ export function RecruiterCompanyTab({
               onClick={() => {
                 setSelectedJobId("new");
                 setNewJobDraft(EMPTY_JOB_DRAFT);
+                setNewJobSaved(false);
                 setJobError("");
               }}
             >
@@ -902,25 +950,35 @@ export function RecruiterCompanyTab({
                 <form onSubmit={handleAddJob}>
                   {renderJobForm({
                     draft: newJobDraft,
-                    onChange: (field, value) =>
-                      setNewJobDraft((current) => ({ ...current, [field]: value })),
+                    onChange: (field, value) => {
+                      setNewJobSaved(false);
+                      setNewJobDraft((current) => ({ ...current, [field]: value }));
+                    },
                     submitLabel: messages.dashboard.company.add,
                     submitButtonType: "submit",
                     showPlusIcon: true,
+                    isSubmitting: addingJob,
+                    isSaved: newJobSaved,
                   })}
                 </form>
                 {jobError ? <p className="mt-2 text-xs text-destructive">{jobError}</p> : null}
               </div>
             ) : typeof selectedJobId === "number" ? (
+              (() => {
+                const selectedJob = jobs.find((j) => j.id === selectedJobId);
+                const isEditJobSaved = selectedJob
+                  ? serializeJobDraft(editJobDraft) === serializeJobDraft(toDraft(selectedJob))
+                  : false;
+
+                return (
               <div className="space-y-4">
                 <div className="mb-4 flex items-center justify-between gap-4 border-b pb-4">
                   <h2 className="truncate text-lg font-semibold">
-                    Edit {jobs.find((j) => j.id === selectedJobId)?.title}
+                    Edit {selectedJob?.title}
                   </h2>
                   <div className="flex shrink-0 items-center gap-2">
                     {jobModerationEnabled &&
-                    jobs.find((j) => j.id === selectedJobId)?.moderationStatus !==
-                      "pending_review" ? (
+                    selectedJob?.moderationStatus !== "pending_review" ? (
                       <Button
                         size="sm"
                         variant="outline"
@@ -940,12 +998,12 @@ export function RecruiterCompanyTab({
                   </div>
                 </div>
 
-                {jobs.find((j) => j.id === selectedJobId)?.moderationNotes ? (
+                {selectedJob?.moderationNotes ? (
                   <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
                     <span className="font-semibold">
                       {messages.dashboard.company.adminNotePrefix}
                     </span>{" "}
-                    {jobs.find((j) => j.id === selectedJobId)?.moderationNotes}
+                    {selectedJob.moderationNotes}
                   </div>
                 ) : null}
 
@@ -957,9 +1015,13 @@ export function RecruiterCompanyTab({
                   onSubmit: () => void handleUpdateJob(selectedJobId),
                   submitButtonType: "button",
                   showPlusIcon: false,
+                  isSubmitting: updatingJobId === selectedJobId,
+                  isSaved: isEditJobSaved,
                 })}
                 {jobError ? <p className="mt-2 text-xs text-destructive">{jobError}</p> : null}
               </div>
+                );
+              })()
             ) : (
               <div className="flex h-40 items-center justify-center text-muted-foreground">
                 Select a job to edit, or create a new one.
