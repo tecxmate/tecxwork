@@ -559,6 +559,19 @@ export const studentEnMessages = {
       removeConfirm:
         "Remove applicant account for {name} ({email})? This cannot be undone.",
     },
+    addApplicant: {
+      title: "Add applicant manually",
+      subtitle:
+        "Skips email verification. Share the password with the applicant.",
+      addButton: "Add applicant",
+      close: "Close",
+      emailPlaceholder: "Email",
+      namePlaceholder: "Full name",
+      passwordPlaceholder: "Initial password",
+      submit: "Create account",
+      errorFallback: "Could not create applicant",
+      success: "Created applicant {email}",
+    },
     bookings: {
       cancelConfirm:
         "Cancel booking for {name} with {company}? This cannot be undone.",

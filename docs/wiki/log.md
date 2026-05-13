@@ -176,3 +176,9 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, admin-dashboard]
 - Restructured: list rows are now compact, one row per job — title, company badge, status pill, location/type/created-date, approve+reject buttons. Whole row is a <Link> to /admin/jobs/[id]; the action buttons stop propagation so quick approve/reject still works inline.
 - New /admin/jobs/[id] page (src/app/admin/jobs/[id]/page.tsx) reuses RecruiterJobPostingCard so admins see the exact same layout students see on /jobs/[id], with an approve/reject + admin-notes card below in place of the apply CTA.
 - Notes textarea moved to detail page only. List-row approve/reject re-uses the job's persisted moderationNotes.
+
+## [2026-05-13] feat | Admin can manually add applicants
+attributed_to: [claude-code]   belongs_to: [tecxwork, admin-dashboard]
+- Use case: applicants who can't complete email verification (deliverability issues, school filters). Admin creates account on their behalf.
+- POST /api/admin/applicants (admin-only) takes { email, name, password }. Validates: email format, name non-empty, password meets min length. Rejects duplicates. Single transaction: insert user (role=applicant, hashed password) + applicantProfile (cvLink empty, pipaConsent true on behalf of user).
+- UI: AddApplicantPanel collapsible card on /admin/applicants. Three inputs + Create button. Password shown in plain text input by design so admin can copy-share offline.

@@ -556,6 +556,18 @@ export const studentZhTwMessages = {
       ...studentEnMessages.admin.applicants,
       removeConfirm: "要移除 {name} ({email}) 的候選人帳號嗎？此動作無法復原。",
     },
+    addApplicant: {
+      title: "手動新增候選人",
+      subtitle: "略過 Email 驗證。請將密碼提供給候選人。",
+      addButton: "新增候選人",
+      close: "關閉",
+      emailPlaceholder: "Email",
+      namePlaceholder: "姓名",
+      passwordPlaceholder: "初始密碼",
+      submit: "建立帳號",
+      errorFallback: "無法建立候選人",
+      success: "已建立候選人 {email}",
+    },
     bookings: {
       ...studentEnMessages.admin.bookings,
       cancelConfirm: "要取消 {name} 與 {company} 的預約嗎？此動作無法復原。",

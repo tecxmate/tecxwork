@@ -1199,6 +1199,9 @@ export function AdminDashboard({
               onDeleteRecruiter={handleDeleteRecruiter}
               onDeleteApplicant={handleDeleteApplicant}
               onCancelBooking={handleCancelBooking}
+              onApplicantCreated={(a) =>
+                setApplicants((current) => [...current, a])
+              }
               initialTab="applicants"
               showTabs={false}
             />
@@ -1461,6 +1464,7 @@ function PeopleSection({
   onDeleteRecruiter,
   onDeleteApplicant,
   onCancelBooking,
+  onApplicantCreated,
   initialTab,
   showTabs,
 }: {
@@ -1470,6 +1474,7 @@ function PeopleSection({
   onDeleteRecruiter: (r: Recruiter) => void;
   onDeleteApplicant: (a: Applicant) => void;
   onCancelBooking: (b: AdminBooking) => void;
+  onApplicantCreated?: (a: Applicant) => void;
   initialTab: "recruiters" | "applicants" | "bookings";
   showTabs: boolean;
 }) {
@@ -1714,6 +1719,10 @@ function PeopleSection({
           </table>
         </div>
       ) : tab === "applicants" ? (
+        <div className="space-y-3">
+        {onApplicantCreated ? (
+          <AddApplicantPanel onCreated={onApplicantCreated} />
+        ) : null}
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
@@ -1759,9 +1768,133 @@ function PeopleSection({
             </tbody>
           </table>
         </div>
+        </div>
       ) : (
         <BookingsTable bookings={bookings} query={query} onCancel={onCancelBooking} />
       )}
+    </div>
+  );
+}
+
+function AddApplicantPanel({
+  onCreated,
+}: {
+  onCreated: (a: Applicant) => void;
+}) {
+  const { messages } = useStudentI18n();
+  const labels = messages.admin.addApplicant;
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  function reset() {
+    setEmail("");
+    setName("");
+    setPassword("");
+    setError(null);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/applicants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error ?? labels.errorFallback);
+        return;
+      }
+      onCreated(data.applicant);
+      setSuccess(labels.success.replace("{email}", data.applicant.email));
+      reset();
+      setOpen(false);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border bg-card">
+      <div className="flex items-center justify-between gap-3 px-3 py-2">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{labels.title}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {labels.subtitle}
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant={open ? "ghost" : "outline"}
+          onClick={() => {
+            setOpen((v) => !v);
+            setError(null);
+            setSuccess(null);
+          }}
+        >
+          {open ? labels.close : (
+            <>
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              {labels.addButton}
+            </>
+          )}
+        </Button>
+      </div>
+      {success && !open ? (
+        <p className="border-t border-border/60 px-3 py-2 text-xs text-emerald-600 dark:text-emerald-400">
+          {success}
+        </p>
+      ) : null}
+      {open ? (
+        <form
+          onSubmit={handleSubmit}
+          className="grid gap-2 border-t border-border/60 px-3 py-3 sm:grid-cols-3"
+        >
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={labels.emailPlaceholder}
+            autoComplete="off"
+            required
+          />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={labels.namePlaceholder}
+            autoComplete="off"
+            required
+          />
+          <Input
+            type="text"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={labels.passwordPlaceholder}
+            autoComplete="new-password"
+            required
+          />
+          {error ? (
+            <p className="text-xs text-destructive sm:col-span-3">{error}</p>
+          ) : null}
+          <div className="flex justify-end sm:col-span-3">
+            <Button type="submit" size="sm" disabled={submitting}>
+              {submitting ? (
+                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              ) : null}
+              {labels.submit}
+            </Button>
+          </div>
+        </form>
+      ) : null}
     </div>
   );
 }

@@ -552,6 +552,18 @@ export const studentViMessages = {
       ...studentEnMessages.admin.applicants,
       removeConfirm: "Xóa tài khoản ứng viên cho {name} ({email})? Không thể hoàn tác hành động này.",
     },
+    addApplicant: {
+      title: "Tạo ứng viên thủ công",
+      subtitle: "Bỏ qua xác minh email. Hãy gửi mật khẩu cho ứng viên.",
+      addButton: "Thêm ứng viên",
+      close: "Đóng",
+      emailPlaceholder: "Email",
+      namePlaceholder: "Họ và tên",
+      passwordPlaceholder: "Mật khẩu khởi tạo",
+      submit: "Tạo tài khoản",
+      errorFallback: "Không thể tạo ứng viên",
+      success: "Đã tạo ứng viên {email}",
+    },
     bookings: {
       ...studentEnMessages.admin.bookings,
       cancelConfirm: "Hủy lịch hẹn cho {name} với {company}? Không thể hoàn tác hành động này.",
