@@ -44,6 +44,12 @@ attributed_to: [niko]   belongs_to: [design-system, public-homepage]
 - `mobile-bottom-nav.tsx` keeps the Android `dvh-svh` URL-bar stabilizer only outside standalone display mode.
 - Updated decisions/2026-05-06-mobile-nav-pill.md and topics/design-system.md.
 
+## [2026-05-13] fix | Android Chromium /jobs viewport framing
+attributed_to: [niko]   belongs_to: [design-system, public-homepage]
+- Niko clarified the framing bug persists in fresh Android Chromium browsers, only on `/jobs`; iOS and other pages are fine.
+- Removed `viewport-fit=cover` from the root viewport so Android Chromium uses the normal layout viewport instead of letting the `/jobs` sticky shell sit under browser/system controls.
+- Updated decisions/2026-05-06-mobile-nav-pill.md.
+
 ## [2026-05-04] ingest | Time-setting bug fixes
 attributed_to: [niko]   belongs_to: [admin-panel, tecxwork]
 - slot-regen loop iterates absolute minutes and bounds slot end by event end (fixes 45-min cadence drift and end overflow)
