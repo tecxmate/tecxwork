@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
               This code expires in 10 minutes. If you didn't request this, ignore this email.
             </p>
             <p style="font-size: 12px; color: #bbb; margin-top: 24px;">
-              Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+              Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
             </p>
           </div>
         `,

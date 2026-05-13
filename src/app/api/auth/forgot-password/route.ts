@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
             </p>
             <p style="font-size: 12px; color: #bbb; margin-top: 24px;">
               ${branding.name}<br>
-              Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+              Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
             </p>
           </div>
         `,

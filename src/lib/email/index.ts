@@ -152,7 +152,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             ${branding.name}<br>
-            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
           </p>
         </div>
       `,
@@ -193,7 +193,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             ${branding.name}<br>
-            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
           </p>
         </div>
       `,
@@ -269,7 +269,7 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             ${branding.name}<br>
-            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
           </p>
         </div>
       `,
@@ -325,7 +325,7 @@ export async function sendWaitlistEmail(data: WaitlistEmailData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             ${branding.name}<br>
-            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
           </p>
         </div>
       `,
@@ -416,7 +416,7 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             ${branding.name}<br>
-            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
           </p>
         </div>
       `,
@@ -507,7 +507,7 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
 
           <p style="font-size: 12px; color: #999; margin-top: 32px;">
             ${branding.name}<br>
-            Powered by <a href="https://tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXMATE.COM</a>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
           </p>
         </div>
       `,
