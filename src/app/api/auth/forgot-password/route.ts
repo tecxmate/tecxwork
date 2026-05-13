@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { randomInt } from "crypto";
 import { db, users, passwordResetCodes } from "@/lib/db";
 import { eq, and, gte } from "drizzle-orm";
 import { getResend, EMAIL_FROM } from "@/lib/email";
 import { getEventBranding } from "@/lib/event-branding";
 import { forgotPasswordSchema, parseJsonBody } from "@/lib/validation";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 /**
  * POST /api/auth/forgot-password
@@ -11,6 +14,16 @@ import { forgotPasswordSchema, parseJsonBody } from "@/lib/validation";
  * Generates a 6-digit code, stores it, emails it. Expires in 10 minutes.
  */
 export async function POST(req: NextRequest) {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { success, remaining, reset } = await rateLimit(ip, "auth", "forgot-password");
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: rateLimitHeaders(remaining, reset) }
+    );
+  }
+
   const parsed = await parseJsonBody(req, forgotPasswordSchema);
   if (!parsed.ok) return parsed.response;
   const { email } = parsed.data;
@@ -45,8 +58,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Generate 6-digit code
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  // Generate 6-digit code with a CSPRNG so it isn't predictable
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   await db.insert(passwordResetCodes).values({

@@ -281,6 +281,7 @@ export const passwordResetCodes = pgTable("password_reset_codes", {
   code: text("code").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   used: boolean("used").notNull().default(false),
+  failedAttempts: integer("failed_attempts").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
