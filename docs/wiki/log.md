@@ -56,6 +56,12 @@ attributed_to: [niko]   belongs_to: [design-system, public-homepage]
 - Restored `viewport-fit=cover`; Android `/jobs` needs a page-level fix that does not remove iOS safe-area behavior.
 - Updated decisions/2026-05-06-mobile-nav-pill.md.
 
+## [2026-05-13] ingest | Remove Codex Zenshin test recruiter accounts
+attributed_to: [niko]   belongs_to: [tecxwork, recruiter-dashboard]
+- Removed recruiter test users `codex.zenfa.1778505900@zenshin.com.tw` and `codex.zenfa.1778505800@zenshin.com.tw`.
+- Cascade cleanup deleted 1 booking, 18 recruiter slots, 2 recruiter profiles, and 2 user rows.
+- Verification query found no remaining `codex.%@zenshin.com.tw` users.
+
 ## [2026-05-04] ingest | Time-setting bug fixes
 attributed_to: [niko]   belongs_to: [admin-panel, tecxwork]
 - slot-regen loop iterates absolute minutes and bounds slot end by event end (fixes 45-min cadence drift and end overflow)

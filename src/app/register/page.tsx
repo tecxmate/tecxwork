@@ -9,7 +9,6 @@ import {
   Loader2,
   ShieldCheck,
   AlertCircle,
-  UserPlus,
   X,
   Mail,
   Save,
@@ -921,9 +920,11 @@ export default function RegisterPage() {
         <div className="mx-auto max-w-3xl">
           <Card>
             <CardHeader className="items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                <UserPlus className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <img
+                src="/icon.svg"
+                alt="TECXWORK"
+                className="h-12 w-12 rounded-lg"
+              />
               <h1 className="font-heading text-xl font-bold">
                 {messages.register.title}
               </h1>
