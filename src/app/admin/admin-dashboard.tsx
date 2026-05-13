@@ -1719,9 +1719,12 @@ function PeopleSection({
           </table>
         </div>
       ) : tab === "applicants" ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
         {onApplicantCreated ? (
-          <AddApplicantPanel onCreated={onApplicantCreated} />
+          <AddApplicantPanel
+            count={applicants.length}
+            onCreated={onApplicantCreated}
+          />
         ) : null}
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
@@ -1777,125 +1780,146 @@ function PeopleSection({
 }
 
 function AddApplicantPanel({
+  count,
   onCreated,
 }: {
+  count: number;
   onCreated: (a: Applicant) => void;
 }) {
   const { messages } = useStudentI18n();
   const labels = messages.admin.addApplicant;
+  const peopleLabels = messages.admin.people;
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  function reset() {
-    setEmail("");
-    setName("");
-    setPassword("");
-    setError(null);
-  }
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setSubmitting(true);
+    setError("");
     try {
       const res = await fetch("/api/admin/applicants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, password }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          name: name.trim(),
+          password,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data?.error ?? labels.errorFallback);
-        return;
+        throw new Error(data?.error ?? labels.errorFallback);
       }
       onCreated(data.applicant);
-      setSuccess(labels.success.replace("{email}", data.applicant.email));
-      reset();
+      setEmail("");
+      setName("");
+      setPassword("");
       setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : labels.errorFallback);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="rounded-lg border bg-card">
-      <div className="flex items-center justify-between gap-3 px-3 py-2">
-        <div className="min-w-0">
-          <p className="text-sm font-medium">{labels.title}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {labels.subtitle}
-          </p>
+    <>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          <h2 className="font-heading text-lg font-semibold">
+            {peopleLabels.tabs.students}
+          </h2>
+          <Badge variant="secondary" className="ml-1">
+            {count}
+          </Badge>
         </div>
         <Button
           size="sm"
-          variant={open ? "ghost" : "outline"}
-          onClick={() => {
-            setOpen((v) => !v);
-            setError(null);
-            setSuccess(null);
-          }}
+          variant={open ? "outline" : "default"}
+          onClick={() => setOpen((v) => !v)}
         >
-          {open ? labels.close : (
-            <>
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              {labels.addButton}
-            </>
-          )}
+          <Plus className="mr-1.5 h-4 w-4" />
+          {labels.addButton}
         </Button>
       </div>
-      {success && !open ? (
-        <p className="border-t border-border/60 px-3 py-2 text-xs text-emerald-600 dark:text-emerald-400">
-          {success}
-        </p>
-      ) : null}
-      {open ? (
-        <form
-          onSubmit={handleSubmit}
-          className="grid gap-2 border-t border-border/60 px-3 py-3 sm:grid-cols-3"
-        >
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={labels.emailPlaceholder}
-            autoComplete="off"
-            required
-          />
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={labels.namePlaceholder}
-            autoComplete="off"
-            required
-          />
-          <Input
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={labels.passwordPlaceholder}
-            autoComplete="new-password"
-            required
-          />
-          {error ? (
-            <p className="text-xs text-destructive sm:col-span-3">{error}</p>
-          ) : null}
-          <div className="flex justify-end sm:col-span-3">
-            <Button type="submit" size="sm" disabled={submitting}>
-              {submitting ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+
+      {open && (
+        <Card>
+          <CardContent className="py-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {labels.emailLabel}
+                  </label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={labels.emailPlaceholder}
+                    autoComplete="off"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {labels.nameLabel}
+                  </label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={labels.namePlaceholder}
+                    autoComplete="off"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {labels.passwordLabel}
+                  </label>
+                  <Input
+                    type="text"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={labels.passwordPlaceholder}
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+              </div>
+              {error ? (
+                <p className="text-sm text-destructive">{error}</p>
               ) : null}
-              {labels.submit}
-            </Button>
-          </div>
-        </form>
-      ) : null}
-    </div>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={submitting} size="sm">
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                      {labels.submitting}
+                    </>
+                  ) : (
+                    labels.submit
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setOpen(false)}
+                >
+                  {labels.cancel}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+    </>
   );
 }
 
