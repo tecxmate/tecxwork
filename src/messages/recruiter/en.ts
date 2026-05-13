@@ -151,6 +151,7 @@ export const recruiterEnMessages = {
         "Required skills, experience, language, or degree expectations",
       benefitsPlaceholder:
         "Extra perks, bonus structure, training, flexibility, or travel support",
+      bulletedList: "Bulleted list",
       languageRequirementPlaceholder:
         "Other language note, score target, or proficiency note",
       locationPlaceholder: "e.g. Taipei, Taiwan",

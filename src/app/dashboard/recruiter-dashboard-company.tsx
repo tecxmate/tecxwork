@@ -8,6 +8,7 @@ import { Building2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { ImageUpload, MultiImageUpload } from "@/components/image-upload";
+import { BulletTextarea } from "@/components/bullet-textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -600,48 +601,52 @@ export function RecruiterCompanyTab({
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.summary}
           </label>
-          <textarea
+          <BulletTextarea
             value={draft.description}
-            onChange={(e) => onChange("description", e.target.value)}
+            onChange={(next) => onChange("description", next)}
             placeholder={companyMessages.descriptionPlaceholder}
-            rows={3}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            ariaLabel={companyMessages.summary}
+            toggleLabel={companyMessages.bulletedList}
+            rows={4}
           />
         </div>
         <div className="space-y-1 sm:col-span-2">
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.responsibilities}
           </label>
-          <textarea
+          <BulletTextarea
             value={draft.responsibilities}
-            onChange={(e) => onChange("responsibilities", e.target.value)}
+            onChange={(next) => onChange("responsibilities", next)}
             placeholder={companyMessages.responsibilitiesPlaceholder}
-            rows={3}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            ariaLabel={companyMessages.responsibilities}
+            toggleLabel={companyMessages.bulletedList}
+            rows={4}
           />
         </div>
         <div className="space-y-1 sm:col-span-2">
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.requirements}
           </label>
-          <textarea
+          <BulletTextarea
             value={draft.requirements}
-            onChange={(e) => onChange("requirements", e.target.value)}
+            onChange={(next) => onChange("requirements", next)}
             placeholder={companyMessages.requirementsPlaceholder}
-            rows={3}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            ariaLabel={companyMessages.requirements}
+            toggleLabel={companyMessages.bulletedList}
+            rows={4}
           />
         </div>
         <div className="space-y-1 sm:col-span-2">
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.benefits}
           </label>
-          <textarea
+          <BulletTextarea
             value={draft.benefits}
-            onChange={(e) => onChange("benefits", e.target.value)}
+            onChange={(next) => onChange("benefits", next)}
             placeholder={companyMessages.benefitsPlaceholder}
-            rows={3}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            ariaLabel={companyMessages.benefits}
+            toggleLabel={companyMessages.bulletedList}
+            rows={4}
           />
         </div>
         <Button

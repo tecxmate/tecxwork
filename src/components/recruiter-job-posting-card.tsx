@@ -76,12 +76,60 @@ const defaultLabels: JobCardLabels = {
   noJd: "No JD link",
 };
 
-function splitTextItems(value: string) {
-  return value
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => line.replace(/^[-*•]\s*/, "").trim());
+type ContentBlock =
+  | { type: "list"; items: string[] }
+  | { type: "paragraph"; text: string };
+
+function parseContent(value: string): ContentBlock[] {
+  const lines = value.split(/\r?\n/);
+  const hasMarkers = lines.some((l) => /^\s*[-*•]\s/.test(l));
+  const blocks: ContentBlock[] = [];
+  let currentList: string[] | null = null;
+  const flushList = () => {
+    if (currentList && currentList.length) blocks.push({ type: "list", items: currentList });
+    currentList = null;
+  };
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushList();
+      continue;
+    }
+    const markerMatch = line.match(/^[-*•]\s+(.*)$/);
+    if (markerMatch) {
+      currentList ??= [];
+      currentList.push(markerMatch[1].trim());
+    } else if (!hasMarkers) {
+      currentList ??= [];
+      currentList.push(line);
+    } else {
+      flushList();
+      blocks.push({ type: "paragraph", text: line });
+    }
+  }
+  flushList();
+  return blocks;
+}
+
+function countBlockItems(blocks: ContentBlock[]) {
+  return blocks.reduce((sum, b) => sum + (b.type === "list" ? b.items.length : 1), 0);
+}
+
+function limitBlocks(blocks: ContentBlock[], max: number): ContentBlock[] {
+  const limited: ContentBlock[] = [];
+  let used = 0;
+  for (const b of blocks) {
+    if (used >= max) break;
+    if (b.type === "paragraph") {
+      limited.push(b);
+      used += 1;
+    } else {
+      const take = Math.min(b.items.length, max - used);
+      limited.push({ type: "list", items: b.items.slice(0, take) });
+      used += take;
+    }
+  }
+  return limited;
 }
 
 function TextBlock({
@@ -93,37 +141,50 @@ function TextBlock({
   value: string;
   compact?: boolean;
 }) {
-  const items = splitTextItems(value);
+  const blocks = parseContent(value);
+  if (blocks.length === 0) return null;
 
-  if (items.length === 0) return null;
-
-  if (items.length === 1) {
+  const total = countBlockItems(blocks);
+  if (total === 1 && blocks[0].type === "paragraph") {
     return (
       <div className="space-y-1">
         <p className="text-[11px] font-semibold uppercase text-muted-foreground">
           {label}
         </p>
         <p className={cn("text-sm text-muted-foreground whitespace-pre-wrap", compact ? "line-clamp-2" : "")}>
-          {items[0]}
+          {blocks[0].text}
         </p>
       </div>
     );
   }
 
-  const visibleItems = compact ? items.slice(0, 3) : items;
+  const visible = compact ? limitBlocks(blocks, 3) : blocks;
 
   return (
     <div className="space-y-1">
       <p className="text-[11px] font-semibold uppercase text-muted-foreground">
         {label}
       </p>
-      <ul className="space-y-1 pl-6 text-sm text-muted-foreground marker:text-muted-foreground">
-        {visibleItems.map((item, index) => (
-          <li key={`${label}-${index}`} className="list-disc">
-            {item}
-          </li>
-        ))}
-      </ul>
+      <div className="space-y-2 text-sm text-muted-foreground">
+        {visible.map((block, idx) =>
+          block.type === "list" ? (
+            <ul
+              key={`${label}-list-${idx}`}
+              className="space-y-1 pl-6 marker:text-muted-foreground"
+            >
+              {block.items.map((item, i) => (
+                <li key={`${label}-${idx}-${i}`} className="list-disc">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p key={`${label}-p-${idx}`} className="whitespace-pre-wrap">
+              {block.text}
+            </p>
+          )
+        )}
+      </div>
     </div>
   );
 }

@@ -80,12 +80,39 @@ type JobOpening = {
   benefits: string;
 };
 
-function splitTextItems(value: string) {
-  return value
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => line.replace(/^[-*•]\s*/, "").trim());
+type DetailContentBlock =
+  | { type: "list"; items: string[] }
+  | { type: "paragraph"; text: string };
+
+function parseDetailContent(value: string): DetailContentBlock[] {
+  const lines = value.split(/\r?\n/);
+  const hasMarkers = lines.some((l) => /^\s*[-*•]\s/.test(l));
+  const blocks: DetailContentBlock[] = [];
+  let currentList: string[] | null = null;
+  const flushList = () => {
+    if (currentList && currentList.length) blocks.push({ type: "list", items: currentList });
+    currentList = null;
+  };
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushList();
+      continue;
+    }
+    const m = line.match(/^[-*•]\s+(.*)$/);
+    if (m) {
+      currentList ??= [];
+      currentList.push(m[1].trim());
+    } else if (!hasMarkers) {
+      currentList ??= [];
+      currentList.push(line);
+    } else {
+      flushList();
+      blocks.push({ type: "paragraph", text: line });
+    }
+  }
+  flushList();
+  return blocks;
 }
 
 function DetailTextBlock({
@@ -95,26 +122,46 @@ function DetailTextBlock({
   label: string;
   value: string;
 }) {
-  const items = splitTextItems(value);
+  const blocks = parseDetailContent(value);
+  if (blocks.length === 0) return null;
 
-  if (items.length === 0) return null;
+  const total = blocks.reduce((s, b) => s + (b.type === "list" ? b.items.length : 1), 0);
+  if (total === 1 && blocks[0].type === "paragraph") {
+    return (
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </h3>
+        <p className="mt-1 whitespace-pre-wrap text-sm">{blocks[0].text}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </h3>
-      {items.length === 1 ? (
-        <p className="mt-1 whitespace-pre-wrap text-sm">{items[0]}</p>
-      ) : (
-        <ul className="mt-1 space-y-1 pl-6 text-sm marker:text-muted-foreground">
-          {items.map((item, index) => (
-            <li key={`${label}-${index}`} className="list-disc">
-              {item}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="mt-1 space-y-2 text-sm">
+        {blocks.map((block, idx) =>
+          block.type === "list" ? (
+            <ul
+              key={`${label}-list-${idx}`}
+              className="space-y-1 pl-6 marker:text-muted-foreground"
+            >
+              {block.items.map((item, i) => (
+                <li key={`${label}-${idx}-${i}`} className="list-disc">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p key={`${label}-p-${idx}`} className="whitespace-pre-wrap">
+              {block.text}
+            </p>
+          )
+        )}
+      </div>
     </div>
   );
 }
