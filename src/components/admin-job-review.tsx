@@ -135,10 +135,10 @@ export function AdminJobReview({
               disabled={pending !== null}
               aria-pressed={isRejected}
               className={cn(
-                "h-9 border",
+                "h-9",
                 isRejected
-                  ? "border-destructive bg-background text-destructive hover:bg-destructive/10"
-                  : "border-destructive/30 bg-transparent text-destructive hover:bg-destructive/10"
+                  ? "border border-red-500 bg-background text-red-500 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/10"
+                  : "bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600"
               )}
             >
               {pending === "reject" ? (

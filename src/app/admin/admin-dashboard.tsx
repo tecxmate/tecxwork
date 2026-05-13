@@ -1392,10 +1392,10 @@ function JobModerationSection({
             }}
             aria-pressed={isRejected}
             className={cn(
-              "h-8 border",
+              "h-8",
               isRejected
-                ? "border-destructive bg-background text-destructive hover:bg-destructive/10"
-                : "border-destructive/30 bg-transparent text-destructive hover:bg-destructive/10"
+                ? "border border-red-500 bg-background text-red-500 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/10"
+                : "bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600"
             )}
           >
             <Trash2 className="mr-1 h-3.5 w-3.5" />
