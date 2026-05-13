@@ -3,7 +3,7 @@ title: Tecxmate Design System
 type: topic
 slug: design-system
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-13
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -28,6 +28,7 @@ related: [tecxmate]
 - **The "Glow" Card**: Interactive cards use a subtle colored border and ambient shadow on hover, rather than elevation.
 - **Book-a-call Pill**: A signature high-contrast pill-shaped button for the primary CTA.
 - **Status Badges**: Rounded-full tokens for status (Live, Beta, Success) using Apple's system colors.
+- **Android PWA frame**: Standalone PWA chrome should match the light app canvas (`#FAFAFA`). Do not let OS dark preference force a black status/navigation frame around the light UI.
 
 ## The Wordmark
 - **Style**: Always lowercase `tecxmate`.

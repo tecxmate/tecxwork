@@ -7,6 +7,15 @@ import { useStudentI18n } from "@/components/student-locale-provider";
 
 import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
 
+function getStandaloneDisplayMode() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator &&
+      (navigator as Navigator & { standalone?: boolean }).standalone === true)
+  );
+}
+
 export function MobileBottomNav({
   role,
 }: {
@@ -44,11 +53,10 @@ export function MobileBottomNav({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
   const [animateIndicator, setAnimateIndicator] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
-
-  useEffect(() => {
-    setIsAndroid(/Android/i.test(navigator.userAgent));
-  }, []);
+  const [isAndroid] = useState(
+    () => typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent),
+  );
+  const [isStandalone] = useState(getStandaloneDisplayMode);
 
   const measure = useCallback(() => {
     const container = containerRef.current;
@@ -151,7 +159,7 @@ export function MobileBottomNav({
     <nav
       className="mobile-bottom-nav pointer-events-none fixed inset-x-0 z-50 flex justify-center px-3 md:hidden"
       style={{
-        bottom: isAndroid
+        bottom: isAndroid && !isStandalone
           ? "calc(100dvh - 100svh + max(0.5rem, env(safe-area-inset-bottom)))"
           : "max(0.5rem, env(safe-area-inset-bottom))",
       }}

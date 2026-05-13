@@ -18,12 +18,13 @@ export function PwaFirstRunSplash() {
 
   useEffect(() => {
     if (!isStandalone()) return;
-    setShow(true);
+    const showT = window.setTimeout(() => setShow(true), 0);
     const closeT = window.setTimeout(() => setClosing(true), VISIBLE_MS);
     const removeT = window.setTimeout(() => {
       setShow(false);
     }, VISIBLE_MS + FADE_MS);
     return () => {
+      window.clearTimeout(showT);
       window.clearTimeout(closeT);
       window.clearTimeout(removeT);
     };

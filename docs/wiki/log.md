@@ -37,6 +37,13 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows, public-homepage]
 - Company logos/names on job listings now own navigation to `/recruiter/[id]` for all-company jobs browsing.
 - Created decisions/2026-05-12-linkedin-style-job-apply-flow.md and updated topics/recruitment-workflows.md.
 
+## [2026-05-13] fix | Android standalone PWA viewport frame
+attributed_to: [niko]   belongs_to: [design-system, public-homepage]
+- Niko shared an Android PWA screenshot with black system frame bars around a light app shell.
+- Root viewport and manifest now use light app-frame color `#FAFAFA`; `colorScheme` is light.
+- `mobile-bottom-nav.tsx` keeps the Android `dvh-svh` URL-bar stabilizer only outside standalone display mode.
+- Updated decisions/2026-05-06-mobile-nav-pill.md and topics/design-system.md.
+
 ## [2026-05-04] ingest | Time-setting bug fixes
 attributed_to: [niko]   belongs_to: [admin-panel, tecxwork]
 - slot-regen loop iterates absolute minutes and bounds slot end by event end (fixes 45-min cadence drift and end overflow)

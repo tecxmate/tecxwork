@@ -3,6 +3,7 @@ title: Mobile bottom nav → floating pill with sliding indicator
 type: decision
 slug: 2026-05-06-mobile-nav-pill
 date: 2026-05-06
+updated: 2026-05-13
 attributed_to: [niko]
 belongs_to: [design-system, public-homepage]
 source: chat
@@ -28,6 +29,7 @@ Refactor `src/components/mobile-bottom-nav.tsx` into a centered floating pill co
 - `site-footer` mobile bottom padding bumped by ~0.875rem across browser, Android PWA, and iOS PWA so footer links clear the floating pill.
 - Pre-existing /jobs route-change wobble (the bar moving down then snapping back up during URL-bar collapse/expand) became more visible with the floating layout. Mitigated by anchoring with `bottom: calc(100dvh - 100svh + max(0.5rem, env(safe-area-inset-bottom)))` so the pill stays put while Android Chrome's URL bar animates.
 - iOS Safari's bottom-toolbar behavior makes that calc push the pill too high (large gap below it on scrolled state), so iOS falls back via `@supports (-webkit-touch-callout: none)` to plain `bottom: max(0.5rem, env(safe-area-inset-bottom))`. Niko confirmed Android works great and asked iOS sit lower.
+- On 2026-05-13, Niko shared an Android standalone-PWA screenshot where the system frame rendered black while the app shell was light. The Android `dvh-svh` bottom offset is now scoped to non-standalone browser mode only, because standalone mode has no URL bar to stabilize. PWA viewport/manifest theme color is now the app background (`#FAFAFA`) and `colorScheme` is light, preventing OS dark preference from forcing a black Android PWA frame around the light UI.
 
 ## Provenance
 - Discussed on 2026-05-06 between [niko] (owner) and [claude-code] (agent).
