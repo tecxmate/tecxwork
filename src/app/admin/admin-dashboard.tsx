@@ -1409,10 +1409,10 @@ function JobModerationSection({
               onClick={() => onModerate(job.id, "reject", notes)}
               aria-pressed={isRejected}
               className={cn(
-                "h-8",
+                "h-8 border",
                 isRejected
-                  ? "border border-destructive bg-background text-destructive hover:bg-destructive/10"
-                  : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  ? "border-destructive bg-background text-destructive hover:bg-destructive/10"
+                  : "border-destructive/30 bg-transparent text-destructive hover:bg-destructive/10"
               )}
             >
               <Trash2 className="mr-1 h-3.5 w-3.5" />
