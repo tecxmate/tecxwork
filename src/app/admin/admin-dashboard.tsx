@@ -32,6 +32,7 @@ import {
   FileText,
   MapPin,
   CheckCircle2,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -1338,17 +1339,12 @@ function JobModerationSection({
         )}
       >
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="truncate text-sm font-semibold">{job.title}</span>
-            <Badge variant="outline" className="h-4 px-1.5 py-0 text-[10px]">
-              {job.company}
-            </Badge>
-            <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
-              {statusLabels[job.moderationStatus] ??
-                job.moderationStatus.replace("_", " ")}
-            </span>
-          </div>
+          <div className="truncate text-sm font-semibold">{job.title}</div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Building2 className="h-3 w-3 shrink-0" />
+              <span className="truncate">{job.company}</span>
+            </span>
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3 shrink-0" />
               <span className="truncate">{job.location}</span>
