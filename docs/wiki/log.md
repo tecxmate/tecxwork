@@ -150,3 +150,9 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, recruitment-workflows]
 - Reverse-route side effect: previous code updated the applicant slot to booked BEFORE the recruiter slot CAS; if the CAS lost the race, `return { ok:false }` committed the applicant-slot-booked state with no matching booking. New flow claims recruiter slot first, then applicant slot, with explicit revert on applicant-slot failure.
 - Auth rate limit: `rateLimit(ip, "auth")` = 5/min/IP would lock out an entire venue NAT. Switched to two-tier: outer `api` bucket (60/min/IP) + inner `auth` bucket (5/min per email) on `login`, `verify-code`, `forgot-password`.
 - See: decisions/2026-05-13-event-day-burst-hardening.md
+
+## [2026-05-13] fix | Android jobs page horizontal overflow
+attributed_to: [claude-code]   belongs_to: [tecxwork, jobs-page]
+- Report: /jobs on Android Chromium had dead space / horizontal overflow on the right; iOS Safari was fine.
+- Root cause: `<select>` elements in `RecruiterJobsBrowser` size to their longest `<option>` on Android Chromium. Long location strings (full addresses) made the location select wider than the viewport, pushing the flex-wrap row past the screen edge.
+- Fix: added `min-w-0 max-w-full` to each filter `<select>` and `shrink-0` on the Filter icon (src/components/recruiter-jobs-browser.tsx). `min-w-0` overrides flex item default `min-width: auto`; `max-w-full` caps intrinsic width at parent width.

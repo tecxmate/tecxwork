@@ -255,12 +255,12 @@ export function RecruiterJobsBrowser({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+        <div className="flex w-full max-w-full flex-wrap items-center gap-2">
+          <Filter className="h-4 w-4 shrink-0 text-muted-foreground" />
           <select
             value={locationFilter}
             onChange={(e) => handleFilterChange(setLocationFilter)(e.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">{filterLabels.location}: {filterLabels.all}</option>
             {uniqueLocations.map((loc) => (
@@ -270,7 +270,7 @@ export function RecruiterJobsBrowser({
           <select
             value={companyFilter}
             onChange={(e) => handleFilterChange(setCompanyFilter)(e.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">{filterLabels.company}: {filterLabels.all}</option>
             {uniqueCompanies.map((c) => (
@@ -280,7 +280,7 @@ export function RecruiterJobsBrowser({
           <select
             value={employmentFilter}
             onChange={(e) => handleFilterChange(setEmploymentFilter)(e.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">{filterLabels.employmentType}: {filterLabels.all}</option>
             {uniqueEmploymentTypes.map((t) => (
