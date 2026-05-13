@@ -1391,7 +1391,7 @@ function JobModerationSection({
               "h-8",
               isRejected
                 ? "border border-red-500 bg-background text-red-500 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/10"
-                : "bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600"
+                : "bg-red-400 text-white hover:bg-red-500 dark:bg-red-400 dark:hover:bg-red-500"
             )}
           >
             <Trash2 className="mr-1 h-3.5 w-3.5" />
