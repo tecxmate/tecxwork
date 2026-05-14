@@ -50,9 +50,11 @@ export function MobileBottomNav({
   const displayActiveHref = pendingHref ?? currentActiveHref;
 
   const itemRefs = useRef(new Map<string, HTMLAnchorElement | null>());
+  const labelMeasureRefs = useRef(new Map<string, HTMLSpanElement | null>());
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
   const [animateIndicator, setAnimateIndicator] = useState(false);
+  const [iconOnlyHrefs, setIconOnlyHrefs] = useState<Set<string>>(() => new Set());
   const [isAndroid] = useState(
     () => typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent),
   );
@@ -67,6 +69,33 @@ export function MobileBottomNav({
     const eRect = el.getBoundingClientRect();
     setIndicator({ x: eRect.left - cRect.left, w: eRect.width });
   }, [displayActiveHref]);
+  const measureLabelFit = useCallback(() => {
+    const next = new Set<string>();
+
+    for (const item of items) {
+      const link = itemRefs.current.get(item.href);
+      const label = labelMeasureRefs.current.get(item.href);
+      if (!link || !label) continue;
+
+      const computed = window.getComputedStyle(link);
+      const available =
+        link.clientWidth -
+        Number.parseFloat(computed.paddingLeft || "0") -
+        Number.parseFloat(computed.paddingRight || "0");
+
+      if (label.scrollWidth > Math.max(0, available)) {
+        next.add(item.href);
+      }
+    }
+
+    setIconOnlyHrefs((current) => {
+      if (current.size !== next.size) return next;
+      for (const href of current) {
+        if (!next.has(href)) return next;
+      }
+      return current;
+    });
+  }, [items]);
   const shouldHide =
     pathname.startsWith("/api") ||
     pathname === "/terms-of-service" ||
@@ -119,6 +148,11 @@ export function MobileBottomNav({
   }, [measure, items.length]);
 
   useEffect(() => {
+    const id = window.requestAnimationFrame(measureLabelFit);
+    return () => window.cancelAnimationFrame(id);
+  }, [measureLabelFit, messages]);
+
+  useEffect(() => {
     if (indicator && !animateIndicator) {
       const id = window.requestAnimationFrame(() => setAnimateIndicator(true));
       return () => window.cancelAnimationFrame(id);
@@ -139,6 +173,21 @@ export function MobileBottomNav({
       window.removeEventListener("orientationchange", measure);
     };
   }, [measure]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const ro = new ResizeObserver(() => measureLabelFit());
+    ro.observe(container);
+    for (const el of itemRefs.current.values()) {
+      if (el) ro.observe(el);
+    }
+    window.addEventListener("orientationchange", measureLabelFit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", measureLabelFit);
+    };
+  }, [measureLabelFit]);
 
   function markPending(href: string) {
     setPendingHref(href);
@@ -190,11 +239,14 @@ export function MobileBottomNav({
         {items.map((item) => {
           const active = displayActiveHref === item.href;
           const Icon = item.icon;
+          const label = getLabel(item.href, item.label);
+          const iconOnly = iconOnlyHrefs.size > 0;
 
           return (
             <Link
               key={item.href}
               href={item.href}
+              aria-label={label}
               prefetch={false}
               ref={(el) => {
                 itemRefs.current.set(item.href, el);
@@ -236,7 +288,20 @@ export function MobileBottomNav({
                   active ? "text-primary" : "text-current",
                 ].join(" ")}
               />
-              <span>{getLabel(item.href, item.label)}</span>
+              {!iconOnly && (
+                <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                  {label}
+                </span>
+              )}
+              <span
+                ref={(el) => {
+                  labelMeasureRefs.current.set(item.href, el);
+                }}
+                aria-hidden
+                className="pointer-events-none absolute -z-10 whitespace-nowrap opacity-0"
+              >
+                {label}
+              </span>
             </Link>
           );
         })}

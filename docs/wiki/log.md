@@ -286,3 +286,13 @@ attributed_to: [niko]   belongs_to: [recruiter-dashboard]
 attributed_to: [niko]   belongs_to: [recruiter-dashboard]
 - Removed the single card wrapper around the My Company editor so the form uses page-level space; description leads, uploads sit in a side column on wide screens.
 - Updated `docs/wiki/topics/recruiter-dashboard.md`.
+
+## [2026-05-15] chat | Mobile nav long-label behavior
+attributed_to: [niko]   belongs_to: [design-system, public-homepage]
+- Niko clarified from a mobile nav screenshot that a tab title should never wrap to a second line; when there is not enough width, hide the title and show only the icon.
+- Updated `docs/wiki/decisions/2026-05-06-mobile-nav-pill.md`.
+
+## [2026-05-15] chat | Mobile nav all-or-nothing labels
+attributed_to: [niko]   belongs_to: [design-system, public-homepage]
+- Niko clarified that mobile nav labels should hide as a group; mixed icon-only and labeled tabs are not acceptable.
+- Updated `docs/wiki/decisions/2026-05-06-mobile-nav-pill.md`.
