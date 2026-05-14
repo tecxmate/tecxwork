@@ -223,7 +223,7 @@ export function RecruiterJobPostingCard({
   return (
     <Card
       className={cn(
-        "border-border/70 p-4 transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]",
+        "min-w-0 border-border/70 p-4 transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]",
         className
       )}
     >
@@ -261,11 +261,11 @@ export function RecruiterJobPostingCard({
           {status}
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex min-w-0 max-w-full flex-wrap gap-1.5">
           {job.location ? (
-            <Badge variant="secondary" className="max-w-full shrink gap-1 text-[10px]">
+            <Badge variant="secondary" className="min-w-0 max-w-full !shrink gap-1 text-[10px]">
               <MapPin className="h-3 w-3 shrink-0" />
-              <span className="truncate">{job.location}</span>
+              <span className="block truncate">{job.location}</span>
             </Badge>
           ) : null}
           <Badge variant="secondary" className="gap-1 text-[10px]">

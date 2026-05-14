@@ -21,7 +21,7 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
   return (
     <Link
       href={`/recruiter/${recruiter.id}`}
-      className="group block h-full focus-visible:outline-none"
+      className="group block h-full min-w-0 focus-visible:outline-none"
     >
       <Card className="flex h-full cursor-pointer flex-col gap-4 p-4 group-focus-visible:ring-2 group-focus-visible:ring-ring sm:p-5">
         {/* Top row: logo + industry */}
@@ -57,14 +57,14 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
           <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
             {messages.recruiterCard.openPositions}
           </p>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex min-w-0 max-w-full flex-wrap gap-1">
             {recruiter.positions.slice(0, 3).map((pos) => (
               <Badge
                 key={pos}
                 variant="outline"
-                className="max-w-full shrink text-[10px] font-normal sm:text-xs"
+                className="min-w-0 max-w-full !shrink text-[10px] font-normal sm:text-xs"
               >
-                <span className="truncate">{pos}</span>
+                <span className="block truncate">{pos}</span>
               </Badge>
             ))}
             {recruiter.positions.length > 3 && (

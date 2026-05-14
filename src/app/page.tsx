@@ -260,7 +260,7 @@ export default async function LandingPage() {
                   <Link
                     key={recruiter.id}
                     href={`/recruiter/${recruiter.id}`}
-                    className="group block"
+                    className="group block min-w-0"
                   >
                     <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-200 ease-out group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] group-hover:-translate-y-0.5 sm:p-5">
                       <div className="flex items-start justify-between gap-3">
@@ -288,14 +288,14 @@ export default async function LandingPage() {
                         </p>
                       </div>
                       {recruiter.positions.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex min-w-0 max-w-full flex-wrap gap-1">
                           {recruiter.positions.slice(0, 2).map((pos) => (
                             <Badge
                               key={pos}
                               variant="outline"
-                              className="max-w-full shrink text-[10px] font-normal sm:text-xs"
+                              className="min-w-0 max-w-full !shrink text-[10px] font-normal sm:text-xs"
                             >
-                              <span className="truncate">{pos}</span>
+                              <span className="block truncate">{pos}</span>
                             </Badge>
                           ))}
                           {recruiter.positions.length > 2 && (
