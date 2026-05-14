@@ -62,9 +62,9 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
               <Badge
                 key={pos}
                 variant="outline"
-                className="text-[10px] font-normal sm:text-xs"
+                className="max-w-full shrink text-[10px] font-normal sm:text-xs"
               >
-                {pos}
+                <span className="truncate">{pos}</span>
               </Badge>
             ))}
             {recruiter.positions.length > 3 && (

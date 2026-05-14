@@ -81,6 +81,8 @@ type JobDraft = {
   benefits: string;
 };
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 const EMPTY_JOB_DRAFT: JobDraft = {
   title: "",
   jdLink: "",
@@ -166,6 +168,28 @@ function serializeJobDraft(draft: JobDraft, salaryCurrencyOptions?: string[]) {
   return JSON.stringify(buildJobPayload(draft, salaryCurrencyOptions));
 }
 
+function serializeCompanyDraft({
+  description,
+  websiteUrl,
+  interviewerCount,
+  logoUrl,
+  galleryUrls,
+}: {
+  description: string;
+  websiteUrl: string;
+  interviewerCount: number;
+  logoUrl: string | null;
+  galleryUrls: string[];
+}) {
+  return JSON.stringify({
+    description: description.trim(),
+    websiteUrl: websiteUrl.trim() || null,
+    interviewerCount,
+    logoUrl,
+    galleryUrls,
+  });
+}
+
 function getSelectedLanguageValues(value: string, locale: "en" | "zh-TW") {
   return parseLanguageRequirementTokens(value, locale)
     .filter((item) => item.preset && LANGUAGE_REQUIREMENT_VALUES.has(item.key))
@@ -202,6 +226,17 @@ export function RecruiterCompanyTab({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [lastSavedCompanyDraft, setLastSavedCompanyDraft] = useState(() =>
+    serializeCompanyDraft({
+      description: recruiter.description,
+      websiteUrl: recruiter.websiteUrl ?? "",
+      interviewerCount: recruiter.interviewerCount,
+      logoUrl: recruiter.logoUrl,
+      galleryUrls: recruiter.galleryUrls ?? [],
+    })
+  );
+  const [companyStatus, setCompanyStatus] = useState<SaveStatus>("idle");
+  const [companyStatusMessage, setCompanyStatusMessage] = useState("");
   const [jobs, setJobs] = useState<JobOpening[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [newJobDraft, setNewJobDraft] = useState<JobDraft>(EMPTY_JOB_DRAFT);
@@ -210,6 +245,10 @@ export function RecruiterCompanyTab({
   const [selectedJobId, setSelectedJobId] = useState<number | "new" | null>("new");
   const [editJobDraft, setEditJobDraft] = useState<JobDraft>(EMPTY_JOB_DRAFT);
   const [updatingJobId, setUpdatingJobId] = useState<number | null>(null);
+  const [submittingJobId, setSubmittingJobId] = useState<number | null>(null);
+  const [deletingJobId, setDeletingJobId] = useState<number | null>(null);
+  const [jobStatus, setJobStatus] = useState<SaveStatus>("idle");
+  const [jobStatusMessage, setJobStatusMessage] = useState("");
   const [jobError, setJobError] = useState("");
 
   useEffect(() => {
@@ -243,6 +282,8 @@ export function RecruiterCompanyTab({
     setSaving(true);
     setSaved(false);
     setError("");
+    setCompanyStatus("saving");
+    setCompanyStatusMessage(messages.dashboard.company.saving);
     try {
       const res = await fetch("/api/me/recruiter", {
         method: "PUT",
@@ -256,15 +297,31 @@ export function RecruiterCompanyTab({
         }),
       });
       if (!res.ok) throw new Error(messages.dashboard.company.saveFailed);
+      setLastSavedCompanyDraft(
+        serializeCompanyDraft({
+          description,
+          websiteUrl,
+          interviewerCount,
+          logoUrl,
+          galleryUrls,
+        })
+      );
       setSaved(true);
+      setCompanyStatus("saved");
+      setCompanyStatusMessage(messages.dashboard.company.saved);
       router.refresh();
-      setTimeout(() => setSaved(false), 3000);
+      setTimeout(() => {
+        setSaved(false);
+        setCompanyStatus("idle");
+      }, 3000);
     } catch (err) {
-      setError(
+      const nextError =
         err instanceof Error
           ? err.message
-          : messages.dashboard.company.errorFallback
-      );
+          : messages.dashboard.company.errorFallback;
+      setError(nextError);
+      setCompanyStatus("error");
+      setCompanyStatusMessage(nextError);
     } finally {
       setSaving(false);
     }
@@ -277,12 +334,16 @@ export function RecruiterCompanyTab({
     const payload = buildJobPayload(newJobDraft, salaryCurrencyOptions);
     if (!payload.title || !payload.location || !payload.employmentType) {
       setJobError("Please fill in title, location, and employment type.");
+      setJobStatus("error");
+      setJobStatusMessage("Please fill in title, location, and employment type.");
       return;
     }
 
     setJobError("");
     setNewJobSaved(false);
     setAddingJob(true);
+    setJobStatus("saving");
+    setJobStatusMessage("Adding job...");
     try {
       const res = await fetch("/api/me/jobs", {
         method: "POST",
@@ -291,7 +352,10 @@ export function RecruiterCompanyTab({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setJobError(data.error || "Failed to create job");
+        const nextError = data.error || "Failed to create job";
+        setJobError(nextError);
+        setJobStatus("error");
+        setJobStatusMessage(nextError);
         return;
       }
 
@@ -303,6 +367,9 @@ export function RecruiterCompanyTab({
       });
       setNewJobDraft(EMPTY_JOB_DRAFT);
       setNewJobSaved(true);
+      setJobStatus("saved");
+      setJobStatusMessage("Job added.");
+      setTimeout(() => setJobStatus("idle"), 3000);
     } finally {
       setAddingJob(false);
     }
@@ -312,11 +379,15 @@ export function RecruiterCompanyTab({
     const payload = buildJobPayload(editJobDraft, salaryCurrencyOptions);
     if (!payload.title || !payload.location || !payload.employmentType) {
       setJobError("Please fill in title, location, and employment type.");
+      setJobStatus("error");
+      setJobStatusMessage("Please fill in title, location, and employment type.");
       return;
     }
 
     setJobError("");
     setUpdatingJobId(id);
+    setJobStatus("saving");
+    setJobStatusMessage("Saving job...");
     try {
       const res = await fetch(`/api/me/jobs/${id}`, {
         method: "PUT",
@@ -325,7 +396,10 @@ export function RecruiterCompanyTab({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setJobError(data.error || "Failed to update job");
+        const nextError = data.error || "Failed to update job";
+        setJobError(nextError);
+        setJobStatus("error");
+        setJobStatusMessage(nextError);
         return;
       }
 
@@ -336,6 +410,9 @@ export function RecruiterCompanyTab({
         return nextJobs;
       });
       setEditJobDraft(toDraft(data.job, salaryCurrencyOptions));
+      setJobStatus("saved");
+      setJobStatusMessage("Job saved.");
+      setTimeout(() => setJobStatus("idle"), 3000);
     } finally {
       setUpdatingJobId(null);
     }
@@ -343,7 +420,20 @@ export function RecruiterCompanyTab({
 
   async function handleDeleteJob(id: number) {
     if (!confirm(messages.dashboard.company.removePositionConfirm)) return;
-    await fetch(`/api/me/jobs/${id}`, { method: "DELETE" });
+    setJobError("");
+    setDeletingJobId(id);
+    setJobStatus("saving");
+    setJobStatusMessage("Deleting job...");
+    const res = await fetch(`/api/me/jobs/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const nextError = data.error || "Failed to delete job";
+      setJobError(nextError);
+      setJobStatus("error");
+      setJobStatusMessage(nextError);
+      setDeletingJobId(null);
+      return;
+    }
     setJobs((current) => {
       const nextJobs = current.filter((job) => job.id !== id);
       cachedRecruiterJobs = nextJobs;
@@ -353,10 +443,17 @@ export function RecruiterCompanyTab({
       setSelectedJobId("new");
       setNewJobDraft(EMPTY_JOB_DRAFT);
     }
+    setDeletingJobId(null);
+    setJobStatus("saved");
+    setJobStatusMessage("Job deleted.");
+    setTimeout(() => setJobStatus("idle"), 3000);
   }
 
   async function handleSubmitJob(id: number) {
     setJobError("");
+    setSubmittingJobId(id);
+    setJobStatus("saving");
+    setJobStatusMessage("Submitting job for review...");
     const res = await fetch(`/api/me/jobs/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -369,10 +466,19 @@ export function RecruiterCompanyTab({
         cachedRecruiterJobs = nextJobs;
         return nextJobs;
       });
+      setJobStatus("saved");
+      setJobStatusMessage(
+        jobModerationEnabled ? "Job submitted for review." : "Job published."
+      );
+      setTimeout(() => setJobStatus("idle"), 3000);
     } else {
       const data = await res.json().catch(() => ({}));
-      setJobError(data.error || "Failed to submit job");
+      const nextError = data.error || "Failed to submit job";
+      setJobError(nextError);
+      setJobStatus("error");
+      setJobStatusMessage(nextError);
     }
+    setSubmittingJobId(null);
   }
 
   const statusLabel: Record<string, string> = {
@@ -389,6 +495,100 @@ export function RecruiterCompanyTab({
     approved: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
     rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
   };
+  const selectedJob =
+    typeof selectedJobId === "number"
+      ? jobs.find((job) => job.id === selectedJobId)
+      : null;
+  const isCurrentEditJobSaved = selectedJob
+    ? serializeJobDraft(editJobDraft, salaryCurrencyOptions) ===
+      serializeJobDraft(toDraft(selectedJob, salaryCurrencyOptions), salaryCurrencyOptions)
+    : false;
+  const hasNewJobDraftChanges =
+    serializeJobDraft(newJobDraft, salaryCurrencyOptions) !==
+    serializeJobDraft(EMPTY_JOB_DRAFT, salaryCurrencyOptions);
+  const hasUnsavedJobChanges =
+    selectedJobId === "new"
+      ? hasNewJobDraftChanges && !newJobSaved
+      : typeof selectedJobId === "number"
+        ? !isCurrentEditJobSaved
+        : false;
+  const currentCompanyDraft = serializeCompanyDraft({
+    description,
+    websiteUrl,
+    interviewerCount,
+    logoUrl,
+    galleryUrls,
+  });
+  const hasUnsavedCompanyChanges = currentCompanyDraft !== lastSavedCompanyDraft;
+
+  const statusStrip =
+    section === "jobs"
+      ? {
+          status: jobError ? "error" : jobStatus,
+          label: jobError
+            ? "Some changes failed"
+            : jobStatus === "saving"
+              ? "Saving changes..."
+              : jobStatus === "saved"
+                ? "Changes saved"
+                : hasUnsavedJobChanges
+                  ? "Unsaved changes"
+                  : "All changes saved",
+          detail: jobError || jobStatusMessage,
+        }
+      : {
+          status: error ? "error" : companyStatus,
+          label: error
+            ? "Some changes failed"
+            : companyStatus === "saving"
+              ? "Saving changes..."
+              : companyStatus === "saved"
+                ? "Changes saved"
+                : hasUnsavedCompanyChanges
+                  ? "Unsaved changes"
+                  : "All changes saved",
+          detail: error || companyStatusMessage,
+        };
+
+  function renderStatusStrip() {
+    const statusClassName =
+      statusStrip.status === "error"
+        ? "border-destructive/30 bg-destructive/10 text-destructive"
+        : statusStrip.status === "saving"
+          ? "border-primary/30 bg-primary/10 text-primary"
+          : statusStrip.label === "Unsaved changes"
+            ? "border-[#FF9500]/30 bg-[#FF9500]/10 text-[#9a5a00]"
+            : "border-[#30D158]/30 bg-[#30D158]/10 text-[#1f8f3a]";
+
+    return (
+      <div
+        className={cn(
+          "sticky top-3 z-20 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80",
+          statusClassName
+        )}
+        role="status"
+        aria-live="polite"
+      >
+        <span className="flex min-w-0 items-center gap-2 font-medium">
+          {statusStrip.status === "saving" ? (
+            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+          ) : statusStrip.status === "error" ? (
+            <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
+          ) : statusStrip.label === "Unsaved changes" ? (
+            <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
+          ) : (
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+          )}
+          <span className="truncate">{statusStrip.label}</span>
+        </span>
+        {statusStrip.detail ? (
+          <span className="hidden min-w-0 truncate text-right opacity-80 sm:block">
+            {statusStrip.detail}
+          </span>
+        ) : null}
+      </div>
+    );
+  }
 
   function renderJobForm({
     draft,
@@ -736,6 +936,7 @@ export function RecruiterCompanyTab({
 
   return (
     <div className="space-y-6">
+      {renderStatusStrip()}
       {section === "company" ? (
         <>
           <Card>
@@ -985,15 +1186,6 @@ export function RecruiterCompanyTab({
               </div>
             ) : typeof selectedJobId === "number" ? (
               (() => {
-                const selectedJob = jobs.find((j) => j.id === selectedJobId);
-                const isEditJobSaved = selectedJob
-                  ? serializeJobDraft(editJobDraft, salaryCurrencyOptions) ===
-                    serializeJobDraft(
-                      toDraft(selectedJob, salaryCurrencyOptions),
-                      salaryCurrencyOptions
-                    )
-                  : false;
-
                 return (
               <div className="space-y-4">
                 <div className="mb-4 flex items-center justify-between gap-4 border-b pb-4">
@@ -1006,8 +1198,12 @@ export function RecruiterCompanyTab({
                       <Button
                         size="sm"
                         variant="outline"
+                        disabled={submittingJobId === selectedJobId}
                         onClick={() => handleSubmitJob(selectedJobId)}
                       >
+                        {submittingJobId === selectedJobId ? (
+                          <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                        ) : null}
                         {messages.dashboard.company.submitForReview}
                       </Button>
                     ) : null}
@@ -1015,9 +1211,14 @@ export function RecruiterCompanyTab({
                       size="sm"
                       variant="outline"
                       className="text-destructive hover:bg-destructive/10"
+                      disabled={deletingJobId === selectedJobId}
                       onClick={() => handleDeleteJob(selectedJobId)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {deletingJobId === selectedJobId ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -1040,7 +1241,7 @@ export function RecruiterCompanyTab({
                   submitButtonType: "button",
                   showPlusIcon: false,
                   isSubmitting: updatingJobId === selectedJobId,
-                  isSaved: isEditJobSaved,
+                  isSaved: isCurrentEditJobSaved,
                 })}
                 {jobError ? <p className="mt-2 text-xs text-destructive">{jobError}</p> : null}
               </div>

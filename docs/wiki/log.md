@@ -218,6 +218,12 @@ attributed_to: [niko]   belongs_to: [recruiter-dashboard, admin-panel]
 - Added `event_config.salary_currency_options` with default `[TWD,VND,USD]`, admin controls in `/admin/settings`, and recruiter/API filtering so hidden currencies cannot be saved.
 - Ran `npm run db:update:salary-currency-options` against the configured database.
 
+## [2026-05-15] fix | Recruiter editor save feedback
+attributed_to: [niko]   belongs_to: [recruiter-dashboard]
+- Added a sticky save-status strip to recruiter company/jobs editing surfaces.
+- The strip distinguishes all saved, unsaved changes, saving, saved, and failed states; job submit/delete buttons now show spinners while requests are in flight.
+- Updated `docs/wiki/topics/recruiter-dashboard.md`.
+
 ## [2026-05-13] decision | Admin interview moderation page + Overview→Settings demotion
 attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 - New /admin/interviews with status filter chips, per-row soft cancel, and bulk-cancel by email substring (walks the existing DELETE /api/bookings/[id] so the cancellation email + slot release + waitlist promotion all run unchanged). Admin top nav now: Recruiters · Jobs · Applicants · Interviews.

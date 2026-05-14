@@ -99,7 +99,7 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
-      <body className="flex min-h-[100dvh] flex-col bg-background">
+      <body className="flex min-h-[100dvh] flex-col overflow-x-clip bg-background">
         <ThemeProvider>
           <StudentLocaleProvider initialLocale={studentLocale}>
             <RouteLoadingSignal />

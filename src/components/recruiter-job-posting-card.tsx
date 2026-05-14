@@ -263,9 +263,9 @@ export function RecruiterJobPostingCard({
 
         <div className="flex flex-wrap gap-1.5">
           {job.location ? (
-            <Badge variant="secondary" className="gap-1 text-[10px]">
-              <MapPin className="h-3 w-3" />
-              {job.location}
+            <Badge variant="secondary" className="max-w-full shrink gap-1 text-[10px]">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate">{job.location}</span>
             </Badge>
           ) : null}
           <Badge variant="secondary" className="gap-1 text-[10px]">
