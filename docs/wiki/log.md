@@ -276,3 +276,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Removed the separate floating Back-to-top button and made tapping the active mobile bottom-nav pill smoothly scroll the current page to top.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-15] fix | Recruiter company description editor size
+attributed_to: [niko]   belongs_to: [recruiter-dashboard]
+- Expanded the recruiter company profile description editor into a taller adaptive textarea and grouped smaller company fields below it.
+- Updated `docs/wiki/topics/recruiter-dashboard.md`.

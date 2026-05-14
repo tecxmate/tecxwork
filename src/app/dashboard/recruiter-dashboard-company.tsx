@@ -949,7 +949,7 @@ export function RecruiterCompanyTab({
               </p>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSaveCompany} className="space-y-4">
+              <form onSubmit={handleSaveCompany} className="space-y-5">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Company Logo</label>
                   <ImageUpload
@@ -1022,48 +1022,50 @@ export function RecruiterCompanyTab({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder={messages.dashboard.company.whatDoesCompanyDo}
-                    rows={3}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                    rows={8}
+                    className="min-h-48 w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="website" className="text-sm font-medium">
-                    {messages.dashboard.company.websiteUrl}
-                  </label>
-                  <Input
-                    id="website"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="https://company.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="ic" className="text-sm font-medium">
-                    {messages.dashboard.company.interviewerCount}
-                  </label>
-                  <Input
-                    id="ic"
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={interviewerCount}
-                    onChange={(e) =>
-                      setInterviewerCount(
-                        Math.max(1, Math.min(10, parseInt(e.target.value) || 1))
-                      )
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {messages.dashboard.company.interviewerHintPrefix}
-                    {interviewerCount}
-                    {messages.dashboard.company.interviewerHintMiddle}
-                    {interviewerCount > 1
-                      ? messages.dashboard.company.interviewerHintPlural
-                      : ""}
-                    {messages.dashboard.company.interviewerHintSuffix}
-                    {interviewerCount}
-                    {messages.dashboard.company.interviewerHintTail}
-                  </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="website" className="text-sm font-medium">
+                      {messages.dashboard.company.websiteUrl}
+                    </label>
+                    <Input
+                      id="website"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      placeholder="https://company.com"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="ic" className="text-sm font-medium">
+                      {messages.dashboard.company.interviewerCount}
+                    </label>
+                    <Input
+                      id="ic"
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={interviewerCount}
+                      onChange={(e) =>
+                        setInterviewerCount(
+                          Math.max(1, Math.min(10, parseInt(e.target.value) || 1))
+                        )
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {messages.dashboard.company.interviewerHintPrefix}
+                      {interviewerCount}
+                      {messages.dashboard.company.interviewerHintMiddle}
+                      {interviewerCount > 1
+                        ? messages.dashboard.company.interviewerHintPlural
+                        : ""}
+                      {messages.dashboard.company.interviewerHintSuffix}
+                      {interviewerCount}
+                      {messages.dashboard.company.interviewerHintTail}
+                    </p>
+                  </div>
                 </div>
                 {error ? <p className="text-xs text-destructive">{error}</p> : null}
                 {saved ? (
