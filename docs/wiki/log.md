@@ -281,3 +281,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruiter-dashboard]
 - Expanded the recruiter company profile description editor into a taller adaptive textarea and grouped smaller company fields below it.
 - Updated `docs/wiki/topics/recruiter-dashboard.md`.
+
+## [2026-05-15] fix | Flatten My Company editor
+attributed_to: [niko]   belongs_to: [recruiter-dashboard]
+- Removed the single card wrapper around the My Company editor so the form uses page-level space; description leads, uploads sit in a side column on wide screens.
+- Updated `docs/wiki/topics/recruiter-dashboard.md`.

@@ -9,7 +9,6 @@ import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { ImageUpload, MultiImageUpload } from "@/components/image-upload";
 import { BulletTextarea } from "@/components/bullet-textarea";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   getEmploymentTypeOptions,
@@ -938,18 +937,74 @@ export function RecruiterCompanyTab({
     <div className="space-y-6">
       {renderStatusStrip()}
       {section === "company" ? (
-        <>
-          <Card>
-            <CardHeader>
-              <h2 className="font-heading text-lg font-semibold">
-                {recruiter.company}
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {recruiter.industry} · {recruiter.contactEmail}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSaveCompany} className="space-y-5">
+        <section className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="font-heading text-2xl font-semibold tracking-tight">
+              {recruiter.company}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {recruiter.industry} · {recruiter.contactEmail}
+            </p>
+          </div>
+          <form onSubmit={handleSaveCompany} className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
+              <div className="space-y-5">
+                <div className="space-y-1.5">
+                  <label htmlFor="desc" className="text-sm font-medium">
+                    {messages.dashboard.company.companyDescription}
+                  </label>
+                  <textarea
+                    id="desc"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={messages.dashboard.company.whatDoesCompanyDo}
+                    rows={10}
+                    className="min-h-72 w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="website" className="text-sm font-medium">
+                      {messages.dashboard.company.websiteUrl}
+                    </label>
+                    <Input
+                      id="website"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      placeholder="https://company.com"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="ic" className="text-sm font-medium">
+                      {messages.dashboard.company.interviewerCount}
+                    </label>
+                    <Input
+                      id="ic"
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={interviewerCount}
+                      onChange={(e) =>
+                        setInterviewerCount(
+                          Math.max(1, Math.min(10, parseInt(e.target.value) || 1))
+                        )
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {messages.dashboard.company.interviewerHintPrefix}
+                      {interviewerCount}
+                      {messages.dashboard.company.interviewerHintMiddle}
+                      {interviewerCount > 1
+                        ? messages.dashboard.company.interviewerHintPlural
+                        : ""}
+                      {messages.dashboard.company.interviewerHintSuffix}
+                      {interviewerCount}
+                      {messages.dashboard.company.interviewerHintTail}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-5">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Company Logo</label>
                   <ImageUpload
@@ -1012,81 +1067,26 @@ export function RecruiterCompanyTab({
                     )}
                   </div>
                 )}
-
-                <div className="space-y-1.5">
-                  <label htmlFor="desc" className="text-sm font-medium">
-                    {messages.dashboard.company.companyDescription}
-                  </label>
-                  <textarea
-                    id="desc"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder={messages.dashboard.company.whatDoesCompanyDo}
-                    rows={8}
-                    className="min-h-48 w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label htmlFor="website" className="text-sm font-medium">
-                      {messages.dashboard.company.websiteUrl}
-                    </label>
-                    <Input
-                      id="website"
-                      value={websiteUrl}
-                      onChange={(e) => setWebsiteUrl(e.target.value)}
-                      placeholder="https://company.com"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="ic" className="text-sm font-medium">
-                      {messages.dashboard.company.interviewerCount}
-                    </label>
-                    <Input
-                      id="ic"
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={interviewerCount}
-                      onChange={(e) =>
-                        setInterviewerCount(
-                          Math.max(1, Math.min(10, parseInt(e.target.value) || 1))
-                        )
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {messages.dashboard.company.interviewerHintPrefix}
-                      {interviewerCount}
-                      {messages.dashboard.company.interviewerHintMiddle}
-                      {interviewerCount > 1
-                        ? messages.dashboard.company.interviewerHintPlural
-                        : ""}
-                      {messages.dashboard.company.interviewerHintSuffix}
-                      {interviewerCount}
-                      {messages.dashboard.company.interviewerHintTail}
-                    </p>
-                  </div>
-                </div>
-                {error ? <p className="text-xs text-destructive">{error}</p> : null}
-                {saved ? (
-                  <p className="text-xs text-green-600">
-                    {messages.dashboard.company.saved}
-                  </p>
-                ) : null}
-                <Button type="submit" disabled={saving} size="sm">
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      {messages.dashboard.company.saving}
-                    </>
-                  ) : (
-                    messages.dashboard.company.saveCompanyInfo
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </>
+              </div>
+            </div>
+            {error ? <p className="text-xs text-destructive">{error}</p> : null}
+            {saved ? (
+              <p className="text-xs text-green-600">
+                {messages.dashboard.company.saved}
+              </p>
+            ) : null}
+            <Button type="submit" disabled={saving} size="sm">
+              {saving ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  {messages.dashboard.company.saving}
+                </>
+              ) : (
+                messages.dashboard.company.saveCompanyInfo
+              )}
+            </Button>
+          </form>
+        </section>
       ) : null}
 
       {section === "jobs" ? (

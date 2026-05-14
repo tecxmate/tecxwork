@@ -21,6 +21,7 @@ Recruiter-facing dashboard: company profile, gallery, jobs, slots, interviews.
 - `src/app/api/me/recruiter/route.ts` — slot regen on interviewerCount change.
 
 ## History
+- 2026-05-15: My Company editor was flattened out of its single card wrapper; the description now leads the page with uploads in a side column on wide screens.
 - 2026-05-15: Recruiter company profile description editor is now a wider, taller adaptive textarea, with website/interviewer fields grouped below it.
 - 2026-05-15: Recruiter company/jobs editor now has a sticky save-status strip matching admin settings. It shows all saved, unsaved changes, saving, saved, and error states; job submit/delete actions also show in-flight button spinners.
 - 2026-05-13: Salary currency in recruiter job forms is now event-configured. The default for this event is TWD, VND, and USD only; admins can add/remove visible currencies in `/admin/settings`, and recruiter create/update APIs reject currencies not enabled for the event.
