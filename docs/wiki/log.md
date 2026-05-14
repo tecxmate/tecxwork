@@ -261,3 +261,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows, photo-uploads, admin
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Removed the extra border/background frame around uploaded recruiter logos on public job cards; placeholder icons keep the framed treatment.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-15] feat | Company photo viewer swipe navigation
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Company photo viewer now supports swipe left/right plus left/right screen tap zones, and uses higher-contrast floating navigation controls.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

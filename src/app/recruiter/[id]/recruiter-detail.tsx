@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -192,6 +192,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
     initialJobs.length > 0 ? initialJobs[0].id : null
   );
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState<number | null>(null);
+  const galleryTouchStartXRef = useRef<number | null>(null);
 
   const galleryUrls = recruiter.galleryUrls?.slice(0, 4) ?? [];
   const selectedGalleryUrl =
@@ -270,6 +271,32 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [galleryUrls.length, selectedGalleryIndex]);
+
+  const goToPreviousGalleryPhoto = () => {
+    setSelectedGalleryIndex((current) =>
+      current === null ? current : Math.max(0, current - 1)
+    );
+  };
+
+  const goToNextGalleryPhoto = () => {
+    setSelectedGalleryIndex((current) =>
+      current === null ? current : Math.min(galleryUrls.length - 1, current + 1)
+    );
+  };
+
+  const handleGalleryTouchEnd = (clientX: number) => {
+    const startX = galleryTouchStartXRef.current;
+    galleryTouchStartXRef.current = null;
+    if (startX === null || galleryUrls.length <= 1) return;
+
+    const deltaX = clientX - startX;
+    if (Math.abs(deltaX) < 40) return;
+    if (deltaX > 0) {
+      goToPreviousGalleryPhoto();
+    } else {
+      goToNextGalleryPhoto();
+    }
+  };
 
   const handleSelectPosition = (title: string) => {
     if (!isAuthenticated) {
@@ -871,7 +898,16 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
           role="dialog"
           aria-modal="true"
           aria-label={`${recruiter.company} photo ${selectedGalleryIndex + 1}`}
-          onClick={() => setSelectedGalleryIndex(null)}
+          onTouchStart={(event) => {
+            galleryTouchStartXRef.current = event.changedTouches[0]?.clientX ?? null;
+          }}
+          onTouchEnd={(event) => {
+            const touch = event.changedTouches[0];
+            if (touch) handleGalleryTouchEnd(touch.clientX);
+          }}
+          onTouchCancel={() => {
+            galleryTouchStartXRef.current = null;
+          }}
         >
           <button
             type="button"
@@ -879,7 +915,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
               event.stopPropagation();
               setSelectedGalleryIndex(null);
             }}
-            className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-5 sm:top-5"
+            className="absolute right-3 top-3 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-background/80 text-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.65),0_4px_12px_-4px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-5 sm:top-5"
             aria-label="Close photo"
           >
             <X className="h-5 w-5" />
@@ -891,37 +927,51 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
-                  setSelectedGalleryIndex((current) =>
-                    current === null ? current : Math.max(0, current - 1)
-                  );
+                  goToPreviousGalleryPhoto();
                 }}
                 disabled={selectedGalleryIndex === 0}
-                className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-30 sm:left-5"
+                className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-w-resize focus-visible:outline-none disabled:cursor-default"
+                aria-label="Previous photo"
+              />
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  goToNextGalleryPhoto();
+                }}
+                disabled={selectedGalleryIndex === galleryUrls.length - 1}
+                className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-e-resize focus-visible:outline-none disabled:cursor-default"
+                aria-label="Next photo"
+              />
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  goToPreviousGalleryPhoto();
+                }}
+                disabled={selectedGalleryIndex === 0}
+                className="absolute left-3 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-background/80 text-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.65),0_4px_12px_-4px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-35 sm:left-5 sm:h-14 sm:w-14"
                 aria-label="Previous photo"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-6 w-6" />
               </button>
               <button
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
-                  setSelectedGalleryIndex((current) =>
-                    current === null
-                      ? current
-                      : Math.min(galleryUrls.length - 1, current + 1)
-                  );
+                  goToNextGalleryPhoto();
                 }}
                 disabled={selectedGalleryIndex === galleryUrls.length - 1}
-                className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-30 sm:right-5"
+                className="absolute right-3 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-background/80 text-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.65),0_4px_12px_-4px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-35 sm:right-5 sm:h-14 sm:w-14"
                 aria-label="Next photo"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             </>
           )}
 
           <div
-            className="relative h-full max-h-[calc(100dvh-2rem)] w-full max-w-6xl"
+            className="pointer-events-none relative h-full max-h-[calc(100dvh-2rem)] w-full max-w-6xl"
             onClick={(event) => event.stopPropagation()}
           >
             <Image
