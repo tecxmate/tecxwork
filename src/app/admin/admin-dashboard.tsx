@@ -179,6 +179,8 @@ type FeedbackReportRow = {
   resolvedAt: string | null;
 };
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 // Round-trip a UTC ISO string through a <input type="datetime-local"> in
 // Asia/Taipei. The input is timezone-naive, so we explicitly format and
 // parse against UTC+8 instead of the browser's local zone.
@@ -270,6 +272,8 @@ export function AdminDashboard({
   const [currencyError, setCurrencyError] = useState("");
   const [locked, setLocked] = useState(initialLocked);
   const [saving, setSaving] = useState(false);
+  const [settingsStatus, setSettingsStatus] = useState<SaveStatus>("idle");
+  const [settingsMessage, setSettingsMessage] = useState("");
   const [domains, setDomains] = useState<Domain[]>(initialDomains);
   const [recruiterApprovals, setRecruiterApprovals] = useState<
     RecruiterApproval[]
@@ -363,6 +367,40 @@ export function AdminDashboard({
     { label: admin.stats.slots, value: `${bookedSlots}/${stats.totalSlots}`, icon: Calendar },
     { label: "Booking Requests", value: stats.totalBookings, icon: Briefcase },
   ];
+  const hasSettingsError =
+    settingsStatus === "error" ||
+    Boolean(currencyError) ||
+    Boolean(brandingError) ||
+    Boolean(tfError);
+  const isSettingsSaving =
+    settingsStatus === "saving" ||
+    currencySaving ||
+    brandingSaving ||
+    tfSaving ||
+    hpSaving;
+  const hasRecentSave =
+    settingsStatus === "saved" ||
+    currencySaved ||
+    brandingSaved ||
+    tfSaved ||
+    hpSaved;
+  const settingsStatusLabel = hasSettingsError
+    ? "Some changes failed"
+    : isSettingsSaving
+      ? "Saving changes..."
+      : hasRecentSave
+        ? "Changes saved"
+        : "All changes saved";
+  const settingsStatusClassName = hasSettingsError
+    ? "border-destructive/30 bg-destructive/10 text-destructive"
+    : isSettingsSaving
+      ? "border-primary/30 bg-primary/10 text-primary"
+      : "border-[#30D158]/30 bg-[#30D158]/10 text-[#1f8f3a]";
+  const settingsStatusDetail = hasSettingsError
+    ? settingsMessage || currencyError || brandingError || tfError || "Review the section with an error."
+    : settingsStatus === "saved"
+      ? settingsMessage
+      : "";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -372,7 +410,10 @@ export function AdminDashboard({
 
   async function handleModeChange(newMode: string) {
     if (locked) return;
+    const previous = mode;
     setSaving(true);
+    setSettingsStatus("saving");
+    setSettingsMessage("Saving booking mode...");
     setMode(newMode);
     const res = await fetch("/api/admin/mode", {
       method: "PUT",
@@ -380,10 +421,17 @@ export function AdminDashboard({
       body: JSON.stringify({ mode: newMode }),
     });
     if (!res.ok) {
-      // revert
-      setMode(currentMode);
+      const data = await res.json().catch(() => ({}));
+      setMode(previous);
+      setSettingsStatus("error");
+      setSettingsMessage(data.error || "Booking mode could not be saved.");
+      setSaving(false);
+      return;
     }
     setSaving(false);
+    setSettingsStatus("saved");
+    setSettingsMessage("Booking mode saved.");
+    setTimeout(() => setSettingsStatus("idle"), 2500);
     router.refresh();
   }
 
@@ -392,19 +440,37 @@ export function AdminDashboard({
       if (!confirm(admin.eventMode.lockConfirm))
         return;
     }
+    const previous = locked;
+    const nextLocked = !locked;
     setSaving(true);
-    await fetch("/api/admin/mode", {
+    setSettingsStatus("saving");
+    setSettingsMessage("Saving booking lock...");
+    setLocked(nextLocked);
+    const res = await fetch("/api/admin/mode", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lock: !locked }),
+      body: JSON.stringify({ lock: nextLocked }),
     });
-    setLocked(!locked);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setLocked(previous);
+      setSettingsStatus("error");
+      setSettingsMessage(data.error || "Booking lock could not be saved.");
+      setSaving(false);
+      return;
+    }
     setSaving(false);
+    setSettingsStatus("saved");
+    setSettingsMessage(nextLocked ? "Booking mode locked." : "Booking mode unlocked.");
+    setTimeout(() => setSettingsStatus("idle"), 2500);
     router.refresh();
   }
 
   async function handleOnboardingModeChange(nextMode: OnboardingMode) {
+    const previous = onboardingMode;
     setSaving(true);
+    setSettingsStatus("saving");
+    setSettingsMessage("Saving student profile requirement...");
     setOnboardingMode(nextMode);
     const res = await fetch("/api/admin/mode", {
       method: "PUT",
@@ -412,15 +478,25 @@ export function AdminDashboard({
       body: JSON.stringify({ onboardingMode: nextMode }),
     });
     if (!res.ok) {
-      setOnboardingMode(initialOnboardingMode);
+      const data = await res.json().catch(() => ({}));
+      setOnboardingMode(previous);
+      setSettingsStatus("error");
+      setSettingsMessage(data.error || "Student profile requirement could not be saved.");
+      setSaving(false);
+      return;
     }
     setSaving(false);
+    setSettingsStatus("saved");
+    setSettingsMessage("Student profile requirement saved.");
+    setTimeout(() => setSettingsStatus("idle"), 2500);
     router.refresh();
   }
 
   async function handleJobModerationToggle(nextEnabled: boolean) {
     const previous = jobModerationEnabled;
     setSaving(true);
+    setSettingsStatus("saving");
+    setSettingsMessage("Saving job approval setting...");
     setJobModerationEnabled(nextEnabled);
     const res = await fetch("/api/admin/mode", {
       method: "PUT",
@@ -428,9 +504,17 @@ export function AdminDashboard({
       body: JSON.stringify({ jobModerationEnabled: nextEnabled }),
     });
     if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
       setJobModerationEnabled(previous);
+      setSettingsStatus("error");
+      setSettingsMessage(data.error || "Job approval setting could not be saved.");
+      setSaving(false);
+      return;
     }
     setSaving(false);
+    setSettingsStatus("saved");
+    setSettingsMessage("Job approval setting saved.");
+    setTimeout(() => setSettingsStatus("idle"), 2500);
     router.refresh();
   }
 
@@ -663,6 +747,31 @@ export function AdminDashboard({
                 </div>
               </div>
 
+              <div
+                className={cn(
+                  "sticky top-3 z-20 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80",
+                  settingsStatusClassName
+                )}
+                role="status"
+                aria-live="polite"
+              >
+                <span className="flex min-w-0 items-center gap-2 font-medium">
+                  {isSettingsSaving ? (
+                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+                  ) : hasSettingsError ? (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
+                  ) : (
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span className="truncate">{settingsStatusLabel}</span>
+                </span>
+                {settingsStatusDetail ? (
+                  <span className="hidden min-w-0 truncate text-right opacity-80 sm:block">
+                    {settingsStatusDetail}
+                  </span>
+                ) : null}
+              </div>
+
               {/* Settings: 2-Column Layout */}
               <div className="grid gap-4 lg:grid-cols-2">
                 {/* Left Column: Platform Settings */}
@@ -671,7 +780,13 @@ export function AdminDashboard({
                     <div className="flex items-center gap-2">
                       <Settings className="h-4 w-4 text-muted-foreground" />
                       <h3 className="text-sm font-semibold">Platform Settings</h3>
-                      {saving && <span className="text-[10px] text-muted-foreground">{messages.common.saving}</span>}
+                      {settingsStatus === "saving" ? (
+                        <span className="text-[10px] text-muted-foreground">{messages.common.saving}</span>
+                      ) : settingsStatus === "saved" ? (
+                        <span className="text-[10px] text-green-600">Saved</span>
+                      ) : settingsStatus === "error" ? (
+                        <span className="text-[10px] text-destructive">{settingsMessage}</span>
+                      ) : null}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">

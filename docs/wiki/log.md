@@ -224,6 +224,12 @@ attributed_to: [niko]   belongs_to: [recruiter-dashboard]
 - The strip distinguishes all saved, unsaved changes, saving, saved, and failed states; job submit/delete buttons now show spinners while requests are in flight.
 - Updated `docs/wiki/topics/recruiter-dashboard.md`.
 
+## [2026-05-15] fix | Admin settings save feedback
+attributed_to: [niko]   belongs_to: [admin-panel]
+- Added a sticky `/admin/settings` save-status strip summarizing saving, saved, and error states across the settings page.
+- Platform setting changes now show explicit in-flight/saved/error feedback and roll back optimistic UI state when `/api/admin/mode` fails.
+- Updated `docs/wiki/topics/admin-panel.md`.
+
 ## [2026-05-13] decision | Admin interview moderation page + Overview→Settings demotion
 attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 - New /admin/interviews with status filter chips, per-row soft cancel, and bulk-cancel by email substring (walks the existing DELETE /api/bookings/[id] so the cancellation email + slot release + waitlist promotion all run unchanged). Admin top nav now: Recruiters · Jobs · Applicants · Interviews.
