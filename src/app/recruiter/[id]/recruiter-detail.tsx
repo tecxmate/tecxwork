@@ -894,7 +894,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
       </main>
       {selectedGalleryUrl && selectedGalleryIndex !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-3 sm:p-6"
+          className="fixed inset-0 z-50 grid grid-cols-[minmax(1.75rem,3rem)_minmax(0,1fr)_minmax(1.75rem,3rem)] items-center bg-black/90 px-1 py-3 sm:grid-cols-[minmax(3rem,5rem)_minmax(0,1fr)_minmax(3rem,5rem)] sm:px-2 sm:py-6"
           role="dialog"
           aria-modal="true"
           aria-label={`${recruiter.company} photo ${selectedGalleryIndex + 1}`}
@@ -950,10 +950,10 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                   goToPreviousGalleryPhoto();
                 }}
                 disabled={selectedGalleryIndex === 0}
-                className="absolute left-3 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-background/80 text-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.65),0_4px_12px_-4px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-35 sm:left-5 sm:h-14 sm:w-14"
+                className="relative z-30 col-start-1 flex h-16 w-full items-center justify-center text-white/90 drop-shadow-[0_3px_8px_rgba(0,0,0,0.85)] transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:text-white/25"
                 aria-label="Previous photo"
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className="h-8 w-8 sm:h-10 sm:w-10" strokeWidth={2.5} />
               </button>
               <button
                 type="button"
@@ -962,16 +962,16 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                   goToNextGalleryPhoto();
                 }}
                 disabled={selectedGalleryIndex === galleryUrls.length - 1}
-                className="absolute right-3 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-background/80 text-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.65),0_4px_12px_-4px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-35 sm:right-5 sm:h-14 sm:w-14"
+                className="relative z-30 col-start-3 flex h-16 w-full items-center justify-center text-white/90 drop-shadow-[0_3px_8px_rgba(0,0,0,0.85)] transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:text-white/25"
                 aria-label="Next photo"
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-8 w-8 sm:h-10 sm:w-10" strokeWidth={2.5} />
               </button>
             </>
           )}
 
           <div
-            className="pointer-events-none relative h-full max-h-[calc(100dvh-2rem)] w-full max-w-6xl"
+            className="pointer-events-none relative col-start-2 row-start-1 h-full max-h-[calc(100dvh-2rem)] w-full"
             onClick={(event) => event.stopPropagation()}
           >
             <Image

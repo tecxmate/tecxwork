@@ -266,3 +266,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Company photo viewer now supports swipe left/right plus left/right screen tap zones, and uses higher-contrast floating navigation controls.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-15] fix | Company photo viewer side-rail arrows
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Moved company photo viewer arrows outside the centered image into narrow side rails and removed circular arrow backgrounds.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
