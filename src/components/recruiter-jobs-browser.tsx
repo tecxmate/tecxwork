@@ -91,17 +91,19 @@ function JobTeaserCard({
       <div className="flex min-w-0 items-start gap-3">
         <Link
           href={`/recruiter/${job.recruiterId}`}
-          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-secondary transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={`View ${job.company}`}
         >
           {job.logoUrl ? (
             <img
               src={job.logoUrl}
               alt={`${job.company} logo`}
-              className="h-full w-full object-contain p-1.5"
+              className="h-full w-full object-contain"
             />
           ) : (
-            <Building2 className="h-7 w-7 text-primary" />
+            <span className="flex h-full w-full items-center justify-center rounded-lg border border-border/60 bg-secondary">
+              <Building2 className="h-7 w-7 text-primary" />
+            </span>
           )}
         </Link>
         <div className="min-w-0 flex-1 space-y-1">
