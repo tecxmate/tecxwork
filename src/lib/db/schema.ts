@@ -342,6 +342,8 @@ export const eventConfig = pgTable("event_config", {
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),
   homepageImages: text("homepage_images").array().notNull().default([]),
+  browsePageImages: text("browse_page_images").array().notNull().default([]),
+  jobsPageImages: text("jobs_page_images").array().notNull().default([]),
   heroOverlayEnabled: boolean("hero_overlay_enabled").notNull().default(true),
   salaryCurrencyOptions: text("salary_currency_options")
     .array()

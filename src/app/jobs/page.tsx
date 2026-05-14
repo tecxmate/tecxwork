@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
 import { RecruiterJobsBrowser } from "@/components/recruiter-jobs-browser";
+import { PageImageCarousel } from "@/components/page-image-carousel";
 import { SiteFooter } from "@/components/site-footer";
 import { db, jobOpenings, recruiters } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
@@ -11,6 +12,7 @@ import { getSession } from "@/lib/auth";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
 import { getEventBranding } from "@/lib/event-branding";
+import { getPageImages } from "@/lib/page-images";
 import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -57,7 +59,10 @@ export default async function JobsPage() {
   const session = await getSession();
   const locale = await getStudentLocale();
   const messages = getStudentMessages(locale);
-  const jobs = await getRecruiterPostedJobs();
+  const [jobs, pageImages] = await Promise.all([
+    getRecruiterPostedJobs(),
+    getPageImages("jobs"),
+  ]);
   const dashboardUrl = session
     ? session.role === "admin"
       ? "/admin"
@@ -113,6 +118,8 @@ export default async function JobsPage() {
           </p>
         </div>
       </section>
+
+      <PageImageCarousel images={pageImages} />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl space-y-4">

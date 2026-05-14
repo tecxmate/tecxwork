@@ -9,7 +9,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
  * POST /api/upload
  * Uploads an image to Vercel Blob storage.
  * Requires authentication.
- * Body: FormData with "file" and "type" (avatar | logo)
+ * Body: FormData with "file" and "type".
  */
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!type || !["avatar", "logo", "gallery", "homepage", "feedback"].includes(type)) {
+  if (!type || !["avatar", "logo", "gallery", "homepage", "page", "feedback"].includes(type)) {
     return NextResponse.json(
-      { error: "Invalid type. Must be 'avatar', 'logo', 'gallery', 'homepage', or 'feedback'" },
+      { error: "Invalid type. Must be 'avatar', 'logo', 'gallery', 'homepage', 'page', or 'feedback'" },
       { status: 400 }
     );
   }
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     logo: "logos",
     gallery: "gallery",
     homepage: "homepage",
+    page: "page-images",
     feedback: "feedback",
   };
   const folder = folders[type];

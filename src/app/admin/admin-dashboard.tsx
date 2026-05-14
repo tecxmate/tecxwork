@@ -221,6 +221,8 @@ export function AdminDashboard({
   initialLocked,
   timeFrame: initialTimeFrame,
   initialHomepageImages,
+  initialBrowsePageImages,
+  initialJobsPageImages,
   initialBranding,
   section,
 }: {
@@ -238,6 +240,8 @@ export function AdminDashboard({
   initialLocked: boolean;
   timeFrame: { startHour: number; startMinute: number; endHour: number; endMinute: number; slotDuration: number; bufferMinutes: number };
   initialHomepageImages: string[];
+  initialBrowsePageImages: string[];
+  initialJobsPageImages: string[];
   initialBranding: {
     eventName: string;
     emailEventName: string;
@@ -287,6 +291,12 @@ export function AdminDashboard({
   const [tfSaved, setTfSaved] = useState(false);
   const [tfError, setTfError] = useState("");
   const [homepageImages, setHomepageImages] = useState<string[]>(initialHomepageImages ?? []);
+  const [browsePageImages, setBrowsePageImages] = useState<string[]>(
+    initialBrowsePageImages ?? []
+  );
+  const [jobsPageImages, setJobsPageImages] = useState<string[]>(
+    initialJobsPageImages ?? []
+  );
   const [hpSaving, setHpSaving] = useState(false);
   const [hpSaved, setHpSaved] = useState(false);
   const [timeFrameOpen, setTimeFrameOpen] = useState(false);
@@ -401,6 +411,28 @@ export function AdminDashboard({
     : settingsStatus === "saved"
       ? settingsMessage
       : "";
+
+  async function saveDecorativePageImages(
+    placement: "browse" | "jobs",
+    images: string[]
+  ) {
+    setHpSaving(true);
+    try {
+      const res = await fetch("/api/admin/page-images", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ placement, images }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save page images");
+      }
+      setHpSaved(true);
+      setTimeout(() => setHpSaved(false), 2000);
+    } finally {
+      setHpSaving(false);
+    }
+  }
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -1446,6 +1478,66 @@ export function AdminDashboard({
                       </div>
                       {hpSaving && <p className="text-[10px] text-muted-foreground">Saving...</p>}
                       {hpSaved && <p className="text-[10px] text-green-600">Saved!</p>}
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Browse & Jobs Decorative Images</label>
+                        <p className="text-[11px] leading-snug text-muted-foreground">
+                          Optional wide images shown above the student company and job lists. Use one image, or two for a small swipeable carousel.
+                        </p>
+                      </div>
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        <div className="space-y-2 rounded-lg border border-border/60 p-3">
+                          <div>
+                            <p className="text-xs font-medium text-foreground">Companies page</p>
+                            <p className="text-[11px] text-muted-foreground">Shown above `/browse`.</p>
+                          </div>
+                          <div className="flex flex-wrap gap-3">
+                            {[0, 1].map((slotIndex) => (
+                              <ImageUpload
+                                key={`browse-${slotIndex}`}
+                                type="page"
+                                hint=""
+                                value={browsePageImages[slotIndex] || undefined}
+                                onChange={async (url) => {
+                                  const next = [
+                                    browsePageImages[0] ?? "",
+                                    browsePageImages[1] ?? "",
+                                  ];
+                                  next[slotIndex] = url ?? "";
+                                  setBrowsePageImages(next);
+                                  await saveDecorativePageImages("browse", next);
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-2 rounded-lg border border-border/60 p-3">
+                          <div>
+                            <p className="text-xs font-medium text-foreground">Jobs page</p>
+                            <p className="text-[11px] text-muted-foreground">Shown above `/jobs`.</p>
+                          </div>
+                          <div className="flex flex-wrap gap-3">
+                            {[0, 1].map((slotIndex) => (
+                              <ImageUpload
+                                key={`jobs-${slotIndex}`}
+                                type="page"
+                                hint=""
+                                value={jobsPageImages[slotIndex] || undefined}
+                                onChange={async (url) => {
+                                  const next = [
+                                    jobsPageImages[0] ?? "",
+                                    jobsPageImages[1] ?? "",
+                                  ];
+                                  next[slotIndex] = url ?? "";
+                                  setJobsPageImages(next);
+                                  await saveDecorativePageImages("jobs", next);
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

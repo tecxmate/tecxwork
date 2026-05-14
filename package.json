@@ -16,6 +16,7 @@
     "db:update:job-details": "npx tsx src/lib/db/add-job-opening-detail-columns.ts",
     "db:update:job-moderation-toggle": "npx tsx src/lib/db/add-job-moderation-toggle-column.ts",
     "db:update:salary-currency-options": "npx tsx src/lib/db/add-salary-currency-options-column.ts",
+    "db:update:page-images": "npx tsx src/lib/db/add-browse-jobs-page-images-columns.ts",
     "db:update:hero-overlay-toggle": "npx tsx src/lib/db/add-hero-overlay-toggle-column.ts",
     "db:update:onboarding-mode": "npx tsx src/lib/db/add-onboarding-mode-column.ts",
     "db:update:recruiter-email-approvals": "npx tsx src/lib/db/create-recruiter-email-approvals-table.ts",

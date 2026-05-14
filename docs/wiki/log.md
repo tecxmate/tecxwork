@@ -250,3 +250,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Public job cards now show larger recruiter logo blocks; clicking the logo or company name opens the recruiter profile.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-15] feat | Browse/jobs decorative image carousels
+attributed_to: [niko]   belongs_to: [recruitment-workflows, photo-uploads, admin-panel]
+- Added admin-managed wide image slots for `/browse` and `/jobs`; each page can show one image or a two-image horizontal carousel above the list.
+- Added `event_config.browse_page_images` and `event_config.jobs_page_images`; ran `npm run db:update:page-images`.
+- Updated `docs/wiki/topics/recruitment-workflows.md` and `docs/wiki/topics/photo-uploads.md`.

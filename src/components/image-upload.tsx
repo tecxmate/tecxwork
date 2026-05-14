@@ -4,18 +4,19 @@ import { useState, useRef } from "react";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type UploadType = "avatar" | "logo" | "gallery" | "homepage";
+type UploadType = "avatar" | "logo" | "gallery" | "homepage" | "page";
 
 const UPLOAD_GUIDELINES: Record<UploadType, string> = {
   avatar: "Square (1:1). Recommended 400×400px. JPG, PNG, WebP, or GIF. Max 4MB.",
   logo: "Square (1:1). Recommended 400×400px, transparent background preferred. JPG, PNG, WebP, or GIF. Max 4MB.",
   gallery: "Landscape (3:2). Recommended 1200×800px. JPG, PNG, WebP, or GIF. Max 4MB.",
   homepage: "Vertical / portrait (3:4). Recommended 1200×1600px. JPG, PNG, or WebP. Max 4MB.",
+  page: "Wide banner (16:9 or 21:9). Recommended 1600×700px. JPG, PNG, WebP, or GIF. Max 4MB.",
 };
 
 type ImageUploadProps = {
   value?: string;
-  onChange: (url: string | null) => void;
+  onChange: (url: string | null) => void | Promise<void>;
   type: UploadType;
   className?: string;
   disabled?: boolean;
@@ -64,7 +65,7 @@ export function ImageUpload({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
 
-      onChange(data.url);
+      await onChange(data.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -73,8 +74,15 @@ export function ImageUpload({
     }
   }
 
-  function handleRemove() {
-    onChange(null);
+  async function handleRemove() {
+    try {
+      setUploading(true);
+      await onChange(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove image");
+    } finally {
+      setUploading(false);
+    }
   }
 
   const sizeClasses = type === "avatar"
@@ -83,6 +91,8 @@ export function ImageUpload({
     ? "h-24 w-24 rounded-lg"
     : type === "homepage"
     ? "h-48 w-36 rounded-lg"
+    : type === "page"
+    ? "h-28 w-52 rounded-lg"
     : "h-32 w-48 rounded-lg";
 
   return (

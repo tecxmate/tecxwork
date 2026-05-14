@@ -66,6 +66,8 @@ export async function getAdminDashboardData() {
       slotDuration: eventConfig.slotDurationMinutes,
       bufferMinutes: eventConfig.bufferMinutes,
       homepageImages: eventConfig.homepageImages,
+      browsePageImages: eventConfig.browsePageImages,
+      jobsPageImages: eventConfig.jobsPageImages,
       eventName: eventConfig.eventName,
       emailEventName: eventConfig.emailEventName,
       tagline: eventConfig.tagline,
@@ -183,6 +185,8 @@ export async function getAdminDashboardData() {
       bufferMinutes: config?.bufferMinutes ?? 0,
     },
     initialHomepageImages: config?.homepageImages ?? [],
+    initialBrowsePageImages: config?.browsePageImages ?? [],
+    initialJobsPageImages: config?.jobsPageImages ?? [],
     initialBranding: {
       eventName: config?.eventName ?? "",
       emailEventName: config?.emailEventName ?? "",

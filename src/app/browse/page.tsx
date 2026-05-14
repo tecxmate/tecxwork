@@ -4,7 +4,9 @@ import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
 import { Directory } from "@/components/directory";
 import { SiteFooter } from "@/components/site-footer";
+import { PageImageCarousel } from "@/components/page-image-carousel";
 import { getSession } from "@/lib/auth";
+import { getPageImages } from "@/lib/page-images";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
 
@@ -12,6 +14,7 @@ export default async function BrowsePage() {
   const session = await getSession();
   const locale = await getStudentLocale();
   const messages = getStudentMessages(locale);
+  const pageImages = await getPageImages("browse");
   if (session?.role === "admin") redirect("/admin");
   if (session?.role === "recruiter") redirect("/dashboard/interviews");
 
@@ -53,6 +56,8 @@ export default async function BrowsePage() {
           </p>
         </div>
       </section>
+
+      <PageImageCarousel images={pageImages} />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
