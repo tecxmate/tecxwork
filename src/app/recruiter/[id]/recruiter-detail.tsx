@@ -13,11 +13,14 @@ import {
   Mail,
   MapPin,
   Clock,
+  ChevronLeft,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   CheckCircle2,
   ArrowRight,
   LogIn,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -188,7 +191,11 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
   const [selectedJobId, setSelectedJobId] = useState<number | null>(
     initialJobs.length > 0 ? initialJobs[0].id : null
   );
+  const [selectedGalleryIndex, setSelectedGalleryIndex] = useState<number | null>(null);
 
+  const galleryUrls = recruiter.galleryUrls?.slice(0, 4) ?? [];
+  const selectedGalleryUrl =
+    selectedGalleryIndex === null ? null : galleryUrls[selectedGalleryIndex] ?? null;
   const selectedJob = jobs.find((j) => j.id === selectedJobId) ?? null;
   const postingLocale = locale as JobPostingLocale;
   const selectedEmploymentLabel = employmentTypeLabel(
@@ -235,6 +242,34 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
       })
       .catch(() => {});
   }, [recruiter.id, isAuthenticated]);
+
+  useEffect(() => {
+    if (selectedGalleryIndex === null) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedGalleryIndex(null);
+      }
+      if (event.key === "ArrowLeft") {
+        setSelectedGalleryIndex((current) =>
+          current === null ? current : Math.max(0, current - 1)
+        );
+      }
+      if (event.key === "ArrowRight") {
+        setSelectedGalleryIndex((current) =>
+          current === null ? current : Math.min(galleryUrls.length - 1, current + 1)
+        );
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [galleryUrls.length, selectedGalleryIndex]);
 
   const handleSelectPosition = (title: string) => {
     if (!isAuthenticated) {
@@ -386,13 +421,16 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
           </div>
 
           {/* Company Gallery - Horizontal Carousel */}
-          {recruiter.galleryUrls && recruiter.galleryUrls.length > 0 && (
+          {galleryUrls.length > 0 && (
             <div className="mb-6 lg:hidden">
               <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
-                {recruiter.galleryUrls.slice(0, 4).map((url, index) => (
-                  <div
+                {galleryUrls.map((url, index) => (
+                  <button
+                    type="button"
                     key={index}
-                    className="relative aspect-[4/3] w-[70vw] shrink-0 overflow-hidden rounded-xl bg-secondary"
+                    onClick={() => setSelectedGalleryIndex(index)}
+                    className="relative aspect-[4/3] w-[70vw] shrink-0 cursor-zoom-in overflow-hidden rounded-xl bg-secondary text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`View ${recruiter.company} photo ${index + 1}`}
                   >
                     <Image
                       src={url}
@@ -401,7 +439,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                       className="object-cover"
                       sizes="70vw"
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -467,12 +505,15 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                 </Card>
 
                 {/* Desktop Gallery - Horizontal Carousel */}
-                {recruiter.galleryUrls && recruiter.galleryUrls.length > 0 && (
+                {galleryUrls.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    {recruiter.galleryUrls.slice(0, 4).map((url, index) => (
-                      <div
+                    {galleryUrls.map((url, index) => (
+                      <button
+                        type="button"
                         key={index}
-                        className="relative aspect-[4/3] w-40 shrink-0 overflow-hidden rounded-lg bg-secondary"
+                        onClick={() => setSelectedGalleryIndex(index)}
+                        className="relative aspect-[4/3] w-40 shrink-0 cursor-zoom-in overflow-hidden rounded-lg bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`View ${recruiter.company} photo ${index + 1}`}
                       >
                         <Image
                           src={url}
@@ -481,7 +522,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                           className="object-cover"
                           sizes="160px"
                         />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -824,6 +865,76 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
           </div>
         </div>
       </main>
+      {selectedGalleryUrl && selectedGalleryIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-3 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${recruiter.company} photo ${selectedGalleryIndex + 1}`}
+          onClick={() => setSelectedGalleryIndex(null)}
+        >
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectedGalleryIndex(null);
+            }}
+            className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-5 sm:top-5"
+            aria-label="Close photo"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {galleryUrls.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedGalleryIndex((current) =>
+                    current === null ? current : Math.max(0, current - 1)
+                  );
+                }}
+                disabled={selectedGalleryIndex === 0}
+                className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-30 sm:left-5"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedGalleryIndex((current) =>
+                    current === null
+                      ? current
+                      : Math.min(galleryUrls.length - 1, current + 1)
+                  );
+                }}
+                disabled={selectedGalleryIndex === galleryUrls.length - 1}
+                className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-30 sm:right-5"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="relative h-full max-h-[calc(100dvh-2rem)] w-full max-w-6xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Image
+              src={selectedGalleryUrl}
+              alt={`${recruiter.company} photo ${selectedGalleryIndex + 1}`}
+              fill
+              className="object-contain"
+              sizes="100vw"
+              priority
+            />
+          </div>
+        </div>
+      )}
       <SiteFooter />
     </div>
   );

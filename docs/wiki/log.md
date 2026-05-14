@@ -240,3 +240,8 @@ attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows, public-homepage]
 - Completed the mobile overflow hardening by making public recruiter-card industry badges shrink and truncate like the already-fixed position chips.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-15] feat | Company photo full-screen viewer
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Recruiter detail company gallery thumbnails now open into a full-screen photo viewer with close, previous/next, Escape, and arrow-key controls.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
