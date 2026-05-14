@@ -88,32 +88,35 @@ function JobTeaserCard({
 
   return (
     <article className="group relative flex h-full w-full flex-col rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
+      <div className="flex min-w-0 items-start gap-3">
+        <Link
+          href={`/recruiter/${job.recruiterId}`}
+          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-secondary transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={`View ${job.company}`}
+        >
+          {job.logoUrl ? (
+            <img
+              src={job.logoUrl}
+              alt={`${job.company} logo`}
+              className="h-full w-full object-contain p-1.5"
+            />
+          ) : (
+            <Building2 className="h-7 w-7 text-primary" />
+          )}
+        </Link>
+        <div className="min-w-0 flex-1 space-y-1">
           <Link
             href={`/jobs/${job.id}`}
             className="line-clamp-2 text-base font-semibold leading-tight hover:text-primary"
           >
             {job.title}
           </Link>
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {job.logoUrl ? (
-              <img
-                src={job.logoUrl}
-                alt=""
-                aria-hidden
-                className="h-4 w-4 shrink-0 rounded object-contain"
-              />
-            ) : (
-              <Building2 className="h-3.5 w-3.5 shrink-0" />
-            )}
-            <Link
-              href={`/recruiter/${job.recruiterId}`}
-              className="line-clamp-1 hover:text-primary hover:underline"
-            >
-              {job.company}
-            </Link>
-          </div>
+          <Link
+            href={`/recruiter/${job.recruiterId}`}
+            className="line-clamp-1 text-sm text-muted-foreground hover:text-primary hover:underline"
+          >
+            {job.company}
+          </Link>
         </div>
       </div>
 

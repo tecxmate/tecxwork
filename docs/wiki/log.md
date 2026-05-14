@@ -245,3 +245,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows, public-homepage]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Recruiter detail company gallery thumbnails now open into a full-screen photo viewer with close, previous/next, Escape, and arrow-key controls.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-15] feat | LinkedIn-style job card recruiter logos
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Public job cards now show larger recruiter logo blocks; clicking the logo or company name opens the recruiter profile.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
