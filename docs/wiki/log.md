@@ -235,3 +235,8 @@ attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 - New /admin/interviews with status filter chips, per-row soft cancel, and bulk-cancel by email substring (walks the existing DELETE /api/bookings/[id] so the cancellation email + slot release + waitlist promotion all run unchanged). Admin top nav now: Recruiters · Jobs · Applicants · Interviews.
 - Overview content moved to /admin/settings, reachable via a gear icon in the desktop topbar and a Settings entry in the mobile hamburger. /admin 307-redirects to /admin/interviews.
 - Hard delete deliberately kept out of the UI — audit trail preserved. Decision: docs/wiki/decisions/2026-05-13-admin-interview-moderation.md. Commit `15bd038`.
+
+## [2026-05-15] fix | Public recruiter industry badge overflow
+attributed_to: [niko]   belongs_to: [recruitment-workflows, public-homepage]
+- Completed the mobile overflow hardening by making public recruiter-card industry badges shrink and truncate like the already-fixed position chips.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

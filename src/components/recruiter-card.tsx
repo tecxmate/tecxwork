@@ -25,7 +25,7 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
     >
       <Card className="flex h-full cursor-pointer flex-col gap-4 p-4 group-focus-visible:ring-2 group-focus-visible:ring-ring sm:p-5">
         {/* Top row: logo + industry */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary sm:h-12 sm:w-12">
             {recruiter.logoUrl ? (
               <img
@@ -37,8 +37,8 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
               <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
             )}
           </div>
-          <Badge variant="secondary" className="shrink-0 text-xs">
-            {recruiter.industry}
+          <Badge variant="secondary" className="min-w-0 max-w-[calc(100%-3.25rem)] !shrink text-xs">
+            <span className="block truncate">{recruiter.industry}</span>
           </Badge>
         </div>
 

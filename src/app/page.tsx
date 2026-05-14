@@ -263,7 +263,7 @@ export default async function LandingPage() {
                     className="group block min-w-0"
                   >
                     <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-200 ease-out group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] group-hover:-translate-y-0.5 sm:p-5">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary sm:h-12 sm:w-12">
                           {recruiter.logoUrl ? (
                             <img
@@ -275,8 +275,8 @@ export default async function LandingPage() {
                             <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
                           )}
                         </div>
-                        <Badge variant="secondary" className="shrink-0 text-xs">
-                          {recruiter.industry}
+                        <Badge variant="secondary" className="min-w-0 max-w-[calc(100%-3.25rem)] !shrink text-xs">
+                          <span className="block truncate">{recruiter.industry}</span>
                         </Badge>
                       </div>
                       <div>

@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-12
+updated: 2026-05-15
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -41,4 +41,5 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-15: Public recruiter cards now constrain long industry badges the same way position chips are constrained, preventing mobile directory/homepage cards from widening the viewport.
 - 2026-05-12: [LinkedIn-style job detail apply flow](../decisions/2026-05-12-linkedin-style-job-apply-flow.md) moved job-click intent to `/jobs/[id]` apply and made company identity the company-page navigation affordance.
