@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
-import { BackToTop } from "@/components/back-to-top";
 import { BrandSplash } from "@/components/brand-splash";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
@@ -106,7 +105,6 @@ export default async function RootLayout({
             <PwaFirstRunSplash />
             <BrandSplash />
             {children}
-            <BackToTop />
             <Suspense fallback={null}>
               <MobileBottomNavServer sessionPromise={sessionPromise} />
             </Suspense>

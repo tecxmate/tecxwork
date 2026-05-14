@@ -41,6 +41,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-15: Removed the separate floating Back-to-top button; tapping the active mobile navigation pill now scrolls the current page to top.
 - 2026-05-15: Company photo viewer arrows moved into narrow side rails outside the centered photo, using bare high-contrast icons instead of circular controls.
 - 2026-05-15: Company photo viewer supports swipe left/right and left/right tap zones; navigation controls use a higher-contrast floating style.
 - 2026-05-15: Job-card recruiter logos no longer add an extra frame around uploaded logos; fallback icons keep their framed placeholder.

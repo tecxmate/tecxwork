@@ -271,3 +271,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Moved company photo viewer arrows outside the centered image into narrow side rails and removed circular arrow backgrounds.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-15] fix | Active nav pill scrolls to top
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Removed the separate floating Back-to-top button and made tapping the active mobile bottom-nav pill smoothly scroll the current page to top.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

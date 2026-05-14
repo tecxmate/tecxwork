@@ -214,7 +214,9 @@ export function MobileBottomNav({
                   : undefined
               }
               onClick={(event) => {
-                if (pathname === item.href && !search) {
+                if (currentActiveHref === item.href && !pendingHref) {
+                  event.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
                   return;
                 }
                 event.preventDefault();
