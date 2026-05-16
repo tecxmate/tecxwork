@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-16
+updated: 2026-05-17
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -15,7 +15,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 ## 1. Student Workflow
 1. **Registration**: Profile creation with name, major, skills, and Google Drive CV link.
    - Candidate idea: add consent-based CV autofill from LinkedIn-derived data. Official LinkedIn APIs are permission-gated; the safer near-term flow is student upload/paste of their own LinkedIn export/profile PDF/text, then parse into editable CV fields.
-   - Student CV export is available from `/profile`: students can preview a polished CV generated from profile data and export it via the browser print dialog/Save as PDF flow, with the main-logo `tecxwork` wordmark at the bottom.
+   - Student CV export is available from `/profile`: students can preview a polished CV generated from profile data and export it through the browser print/Save as PDF flow, with the main-logo `tecxwork` wordmark font preserved in the print window.
 2. **Discovery**: Browse recruiter directory by industry or position, or browse recruiter-posted jobs.
 3. **Job-level apply**: Clicking a job opens that job's detail page with an immediate apply action. Company logos/names on job cards link to the company page for browsing all jobs from that recruiter.
 4. **Booking**: Select 15-minute slots on the event calendar.
@@ -43,6 +43,15 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-17: Expanded company/recruiter industry tags and student preferred-industry options to include Beauty plus additional real-world sectors such as Education, Retail, Hospitality, Media, Logistics, Food & Beverage, Energy, Automotive, Gaming, and Nonprofit.
+- 2026-05-17: Reverted the inline SVG wordmark experiment because Safari PDF output broke the CV text layout; retained the stable text wordmark with print-window font loading.
+- 2026-05-17: Reverted the experimental direct PDF generator after it broke text layout; restored the browser-rendered print-window export while preserving the cursive `tecxwork` font fix.
+- 2026-05-17: Removed the Safari-insecure SVG/canvas snapshot path from CV export and switched the direct PDF download to vector text PDF generation.
+- 2026-05-17: Replaced Safari print-preview CV export with direct client-side PDF generation from the rendered CV surface so browser metadata and print borders cannot appear.
+- 2026-05-17: Removed browser print metadata margins and the visible page border from student CV PDF export by using a zero-margin A4 page with internal CV padding.
+- 2026-05-17: Preserved the cursive `tecxwork` wordmark in exported PDFs by carrying the app root font classes into the print window and waiting for print fonts before opening the dialog.
+- 2026-05-17: Fixed Safari blank student CV PDF export by cloning the visible CV surface into the print window instead of copying its hidden print-only wrapper.
+- 2026-05-16: Optimized the `/profile` My Profile header by using the profile avatar as the left anchor and placing title, email, and completion progress to its right.
 - 2026-05-16: Updated student CV header rendering so the university appears bold on the line below the major.
 - 2026-05-16: Made My CV QR Code compact on `/profile` by placing the QR code on the left and the CV link/actions on the right.
 - 2026-05-16: Reordered `/profile` so My CV QR Code contains the CV Link field and Export CV appears after the My Profile form.

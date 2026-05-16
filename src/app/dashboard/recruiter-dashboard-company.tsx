@@ -81,6 +81,15 @@ type JobDraft = {
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+type StatusStripAction = {
+  label: string;
+  form?: string;
+  onClick?: () => void;
+  disabled: boolean;
+  loading: boolean;
+  saved: boolean;
+  tone: "saved" | "unsaved" | "saving" | "error";
+};
 
 const EMPTY_JOB_DRAFT: JobDraft = {
   title: "",
@@ -223,7 +232,6 @@ export function RecruiterCompanyTab({
   const [logoUrl, setLogoUrl] = useState<string | null>(recruiter.logoUrl);
   const [galleryUrls, setGalleryUrls] = useState<string[]>(recruiter.galleryUrls ?? []);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [lastSavedCompanyDraft, setLastSavedCompanyDraft] = useState(() =>
     serializeCompanyDraft({
@@ -279,7 +287,6 @@ export function RecruiterCompanyTab({
   async function handleSaveCompany(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setSaved(false);
     setError("");
     setCompanyStatus("saving");
     setCompanyStatusMessage(messages.dashboard.company.saving);
@@ -305,12 +312,10 @@ export function RecruiterCompanyTab({
           galleryUrls,
         })
       );
-      setSaved(true);
       setCompanyStatus("saved");
       setCompanyStatusMessage(messages.dashboard.company.saved);
       router.refresh();
       setTimeout(() => {
-        setSaved(false);
         setCompanyStatus("idle");
       }, 3000);
     } catch (err) {
@@ -519,6 +524,8 @@ export function RecruiterCompanyTab({
     galleryUrls,
   });
   const hasUnsavedCompanyChanges = currentCompanyDraft !== lastSavedCompanyDraft;
+  const companyFormId = "recruiter-company-form";
+  const newJobFormId = "recruiter-new-job-form";
 
   const statusStrip =
     section === "jobs"
@@ -550,41 +557,110 @@ export function RecruiterCompanyTab({
         };
 
   function renderStatusStrip() {
-    const statusClassName =
+    const statusTone: StatusStripAction["tone"] =
       statusStrip.status === "error"
-        ? "border-destructive/30 bg-destructive/10 text-destructive"
+        ? "error"
         : statusStrip.status === "saving"
-          ? "border-primary/30 bg-primary/10 text-primary"
+          ? "saving"
           : statusStrip.label === "Unsaved changes"
-            ? "border-[#FF9500]/30 bg-[#FF9500]/10 text-[#9a5a00]"
-            : "border-[#30D158]/30 bg-[#30D158]/10 text-[#1f8f3a]";
+            ? "unsaved"
+            : "saved";
+    const statusAction: StatusStripAction | null =
+      section === "company"
+        ? {
+            label:
+              saving
+                ? messages.dashboard.company.saving
+                : hasUnsavedCompanyChanges
+                  ? messages.dashboard.company.saveCompanyInfo
+                  : statusStrip.label,
+            form: companyFormId,
+            disabled: saving || !hasUnsavedCompanyChanges,
+            loading: saving,
+            saved: !hasUnsavedCompanyChanges && !saving,
+            tone: statusTone,
+          }
+        : selectedJobId === "new"
+          ? {
+              label:
+                addingJob
+                  ? messages.dashboard.company.saving
+                  : newJobSaved
+                    ? statusStrip.label
+                    : messages.dashboard.company.add,
+              form: newJobFormId,
+              disabled:
+                addingJob ||
+                newJobSaved ||
+                !hasNewJobDraftChanges ||
+                !newJobDraft.title.trim() ||
+                !newJobDraft.location.trim() ||
+                !newJobDraft.employmentType,
+              loading: addingJob,
+              saved: newJobSaved,
+              tone: statusTone,
+            }
+          : typeof selectedJobId === "number"
+            ? {
+                label:
+                  updatingJobId === selectedJobId
+                    ? messages.dashboard.company.saving
+                    : isCurrentEditJobSaved
+                      ? statusStrip.label
+                      : messages.common.save,
+                onClick: () => void handleUpdateJob(selectedJobId),
+                disabled:
+                  updatingJobId === selectedJobId ||
+                  isCurrentEditJobSaved ||
+                  !editJobDraft.title.trim() ||
+                  !editJobDraft.location.trim() ||
+                  !editJobDraft.employmentType,
+                loading: updatingJobId === selectedJobId,
+                saved: isCurrentEditJobSaved,
+                tone: statusTone,
+              }
+            : null;
+    if (!statusAction) return null;
 
     return (
       <div
         className={cn(
-          "sticky top-3 z-20 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80",
-          statusClassName
+          "fixed inset-x-0 bottom-[calc(max(0.5rem,env(safe-area-inset-bottom))+4.25rem)] z-40 flex justify-center px-4 md:sticky md:top-3 md:bottom-auto md:justify-end md:px-0"
         )}
         role="status"
         aria-live="polite"
       >
-        <span className="flex min-w-0 items-center gap-2 font-medium">
-          {statusStrip.status === "saving" ? (
-            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-          ) : statusStrip.status === "error" ? (
-            <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
-          ) : statusStrip.label === "Unsaved changes" ? (
-            <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
-          ) : (
-            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+        <Button
+          type={statusAction.form ? "submit" : "button"}
+          form={statusAction.form}
+          size="sm"
+          variant={statusAction.tone === "saved" ? "outline" : "default"}
+          className={cn(
+            "h-11 min-w-[12rem] max-w-[calc(100vw-2rem)] gap-2 rounded-full px-5 text-sm font-semibold shadow-[0_12px_28px_-10px_rgba(0,0,0,0.35),0_4px_12px_-6px_rgba(0,0,0,0.25)] backdrop-blur-xl disabled:cursor-default disabled:opacity-100 md:min-w-[11rem] md:rounded-lg",
+            statusAction.tone === "saved" &&
+              "border-[#30D158]/35 bg-background/90 text-[#1f8f3a] supports-[backdrop-filter]:bg-background/75",
+            statusAction.tone === "unsaved" &&
+              "border-[#FF9500] bg-[#FF9500] text-white hover:bg-[#e68600]",
+            statusAction.tone === "saving" &&
+              "border-primary bg-primary text-primary-foreground",
+            statusAction.tone === "error" &&
+              "border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90"
           )}
-          <span className="truncate">{statusStrip.label}</span>
-        </span>
-        {statusStrip.detail ? (
-          <span className="hidden min-w-0 truncate text-right opacity-80 sm:block">
-            {statusStrip.detail}
-          </span>
-        ) : null}
+          disabled={statusAction.disabled}
+          onClick={statusAction.onClick}
+          title={statusStrip.detail || statusStrip.label}
+        >
+          {statusAction.loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : statusAction.tone === "saved" ? (
+            <CheckCircle2 className="h-4 w-4" />
+          ) : statusAction.tone === "error" ? (
+            <span className="h-2.5 w-2.5 rounded-full bg-current" />
+          ) : section === "jobs" && selectedJobId === "new" ? (
+            <Plus className="h-4 w-4" />
+          ) : null}
+          {statusAction.label}
+        </Button>
       </div>
     );
   }
@@ -592,21 +668,9 @@ export function RecruiterCompanyTab({
   function renderJobForm({
     draft,
     onChange,
-    submitLabel,
-    onSubmit,
-    submitButtonType = "button",
-    showPlusIcon = true,
-    isSubmitting = false,
-    isSaved = false,
   }: {
     draft: JobDraft;
     onChange: (field: keyof JobDraft, value: string) => void;
-    submitLabel: string;
-    onSubmit?: () => void;
-    submitButtonType?: "button" | "submit";
-    showPlusIcon?: boolean;
-    isSubmitting?: boolean;
-    isSaved?: boolean;
   }) {
     const companyMessages = messages.dashboard.company;
     const languageOptions = getLanguageRequirementOptions(locale);
@@ -895,46 +959,12 @@ export function RecruiterCompanyTab({
             rows={4}
           />
         </div>
-        <Button
-          type={submitButtonType}
-          size="sm"
-          variant={isSaved ? "outline" : "default"}
-          className={cn(
-            "mt-4 sm:col-span-2",
-            isSaved && "border-border bg-muted text-muted-foreground"
-          )}
-          disabled={
-            isSubmitting ||
-            isSaved ||
-            !draft.title.trim() ||
-            !draft.location.trim() ||
-            !draft.employmentType
-          }
-          onClick={onSubmit}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-              {companyMessages.saving}
-            </>
-          ) : isSaved ? (
-            <>
-              <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-              {messages.common.saved}
-            </>
-          ) : (
-            <>
-              {showPlusIcon ? <Plus className="mr-1 h-3.5 w-3.5" /> : null}
-              {submitLabel}
-            </>
-          )}
-        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28 md:pb-0">
       {renderStatusStrip()}
       {section === "company" ? (
         <section className="space-y-6">
@@ -946,7 +976,7 @@ export function RecruiterCompanyTab({
               {recruiter.industry} · {recruiter.contactEmail}
             </p>
           </div>
-          <form onSubmit={handleSaveCompany} className="space-y-6">
+          <form id={companyFormId} onSubmit={handleSaveCompany} className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
               <div className="space-y-5">
                 <div className="space-y-1.5">
@@ -1069,22 +1099,6 @@ export function RecruiterCompanyTab({
                 )}
               </div>
             </div>
-            {error ? <p className="text-xs text-destructive">{error}</p> : null}
-            {saved ? (
-              <p className="text-xs text-green-600">
-                {messages.dashboard.company.saved}
-              </p>
-            ) : null}
-            <Button type="submit" disabled={saving} size="sm">
-              {saving ? (
-                <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  {messages.dashboard.company.saving}
-                </>
-              ) : (
-                messages.dashboard.company.saveCompanyInfo
-              )}
-            </Button>
           </form>
         </section>
       ) : null}
@@ -1170,18 +1184,13 @@ export function RecruiterCompanyTab({
                 <div className="mb-4 border-b pb-4">
                   <h2 className="text-lg font-semibold">{messages.dashboard.company.add}</h2>
                 </div>
-                <form onSubmit={handleAddJob}>
+                <form id={newJobFormId} onSubmit={handleAddJob}>
                   {renderJobForm({
                     draft: newJobDraft,
                     onChange: (field, value) => {
                       setNewJobSaved(false);
                       setNewJobDraft((current) => ({ ...current, [field]: value }));
                     },
-                    submitLabel: messages.dashboard.company.add,
-                    submitButtonType: "submit",
-                    showPlusIcon: true,
-                    isSubmitting: addingJob,
-                    isSaved: newJobSaved,
                   })}
                 </form>
                 {jobError ? <p className="mt-2 text-xs text-destructive">{jobError}</p> : null}
@@ -1238,12 +1247,6 @@ export function RecruiterCompanyTab({
                   draft: editJobDraft,
                   onChange: (field, value) =>
                     setEditJobDraft((current) => ({ ...current, [field]: value })),
-                  submitLabel: messages.common.save,
-                  onSubmit: () => void handleUpdateJob(selectedJobId),
-                  submitButtonType: "button",
-                  showPlusIcon: false,
-                  isSubmitting: updatingJobId === selectedJobId,
-                  isSaved: isCurrentEditJobSaved,
                 })}
                 {jobError ? <p className="mt-2 text-xs text-destructive">{jobError}</p> : null}
               </div>

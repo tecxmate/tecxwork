@@ -150,6 +150,18 @@ const INDUSTRY_OPTIONS = [
   "Consulting",
   "Healthcare",
   "E-Commerce",
+  "Beauty",
+  "Education",
+  "Retail",
+  "Hospitality",
+  "Media",
+  "Real Estate",
+  "Logistics",
+  "Food & Beverage",
+  "Energy",
+  "Automotive",
+  "Gaming",
+  "Nonprofit",
 ] as const;
 
 type OnboardingMode = (typeof ONBOARDING_MODE_VALUES)[number];

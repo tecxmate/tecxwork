@@ -287,6 +287,11 @@ attributed_to: [niko]   belongs_to: [recruiter-dashboard]
 - Removed the single card wrapper around the My Company editor so the form uses page-level space; description leads, uploads sit in a side column on wide screens.
 - Updated `docs/wiki/topics/recruiter-dashboard.md`.
 
+## [2026-05-15] fix | Colocate recruiter save action with status
+attributed_to: [niko]   belongs_to: [recruiter-dashboard]
+- Collapsed recruiter company/job save feedback into a single stateful button that floats above the mobile bottom nav and removed duplicate lower save buttons.
+- Updated `docs/wiki/topics/recruiter-dashboard.md`.
+
 ## [2026-05-15] chat | Mobile nav long-label behavior
 attributed_to: [niko]   belongs_to: [design-system, public-homepage]
 - Niko clarified from a mobile nav screenshot that a tab title should never wrap to a second line; when there is not enough width, hide the title and show only the icon.
@@ -348,4 +353,49 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko asked for the university to render on a separate line in the generated CV header.
 - Updated the CV template header to show major and university as separate lines, with the university in bold.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-16] fix | Compact My Profile header
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked to optimize the `/profile` header space by removing the separate icon and using the person avatar on the top left with profile details to the right.
+- Moved the avatar upload control into the My Profile header and removed the duplicate in-form profile photo block.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-17] fix | Safari CV PDF blank page
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko reported that student CV PDF export still produced a blank Safari print page.
+- Fixed the export path to clone the visible `.student-cv-export-surface` into the print window instead of the hidden `.student-cv-print-only` wrapper.
+- Preserved the cursive `tecxwork` wordmark by applying the app root font classes and waiting for print-window fonts before opening the print dialog.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-17] fix | CV PDF print metadata margins
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked to remove browser-generated print metadata such as title, date, URL, page count, and the border around the exported CV content.
+- Changed CV print CSS to use a zero-margin A4 page with internal document padding and a borderless CV surface.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-17] fix | Direct student CV PDF download
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko showed that Safari still displayed browser print metadata and a larger inset around the CV even after print CSS changes.
+- Replaced the `/profile` CV export flow with direct client-side PDF generation from the rendered CV surface, bypassing Safari print preview.
+- Removed the Safari-insecure SVG/canvas snapshot path after it raised a runtime `SecurityError`; the PDF is now generated as vector text instead.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-17] fix | Restore browser-rendered CV export
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko rejected the direct PDF generator because it broke the CV typography and layout.
+- Restored the browser-rendered print-window export and kept the fix that carries the app root font classes so the cursive `tecxwork` wordmark remains correct.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-17] fix | SVG CV wordmark footer
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked to use SVG for the `tecxwork` mark at the bottom of the exported CV.
+- Replaced the CV footer's plain text mark with an inline SVG wordmark and targeted the SVG text in the print-window font override.
+- Reverted the SVG wordmark after Safari PDF output broke the CV text layout; the footer is back to stable text with the wordmark font override.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-17] fix | Expanded industry tags
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked for more company industry tags, including Beauty.
+- Added Beauty and additional sector options to public company filters, admin recruiter industry selection, and student preferred-industry choices.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.

@@ -11,7 +11,6 @@ import {
   Loader2,
   Plus,
   Search,
-  User,
   X,
   AlertCircle,
   BriefcaseBusiness,
@@ -424,9 +423,7 @@ function CvExportTemplate({
 
       <footer className="flex items-end justify-between border-t border-zinc-200 px-8 py-5">
         <span aria-hidden />
-        <p
-          className="font-wordmark text-3xl italic text-[#8C52FF]"
-        >
+        <p className="font-wordmark text-3xl italic text-[#8C52FF]">
           tecxwork
         </p>
       </footer>
@@ -1037,6 +1034,14 @@ export default function ProfilePage() {
       return;
     }
 
+    const cvSurface = cvNode.querySelector<HTMLElement>(
+      ".student-cv-export-surface"
+    );
+    const cvHtml = cvSurface?.outerHTML ?? cvNode.innerHTML;
+    const rootClassName = escapeHtml(document.documentElement.className);
+    const wordmarkFontFamily = getComputedStyle(document.documentElement)
+      .getPropertyValue("--font-instrument-serif")
+      .trim();
     const headAssets = Array.from(
       document.querySelectorAll<HTMLLinkElement | HTMLStyleElement>(
         'link[rel="stylesheet"], style'
@@ -1044,11 +1049,10 @@ export default function ProfilePage() {
     )
       .map((node) => node.outerHTML)
       .join("\n");
-
     const documentTitle = escapeHtml(draft.name ? `${draft.name} CV` : "TECXWORK CV");
 
     printWindow.document.write(`<!doctype html>
-<html>
+<html class="${rootClassName}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1059,24 +1063,40 @@ export default function ProfilePage() {
       @page { size: A4; margin: 12mm; }
       html, body { margin: 0; background: #ffffff; }
       body { padding: 0; color: #18181b; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .student-cv-print-only { display: block !important; }
+      ${wordmarkFontFamily ? `.font-wordmark { font-family: ${wordmarkFontFamily}, Georgia, serif !important; }` : ""}
       .student-cv-export-surface {
+        display: block !important;
+        visibility: visible !important;
         width: 100% !important;
         max-width: none !important;
         border: 0 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
       }
+      .student-cv-export-surface * { visibility: visible !important; }
+      @media print {
+        body * { visibility: visible !important; }
+      }
     </style>
   </head>
   <body>
-    ${cvNode.innerHTML}
+    ${cvHtml}
   </body>
 </html>`);
     printWindow.document.close();
     printWindow.focus();
-    window.setTimeout(() => {
+
+    const printCv = () => {
       printWindow.print();
-    }, 250);
+    };
+    const printFonts = printWindow.document.fonts;
+
+    if (printFonts) {
+      void printFonts.ready.then(printCv).catch(printCv);
+    } else {
+      window.setTimeout(printCv, 250);
+    }
   }
 
   useEffect(() => {
@@ -1168,28 +1188,39 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-2 text-left">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                  <User className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <h1 className="font-heading text-xl font-bold">
-                  {messages.profile.title}
-                </h1>
-                <p className="text-xs text-muted-foreground">{profileEmail}</p>
-                <div className="mt-1 w-full max-w-xs">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {messages.profile.profileCompletion ?? "Profile completion"}
-                    </span>
-                    <span className={profileCompletion >= 80 ? "font-medium text-green-600" : "font-medium text-primary"}>
-                      {profileCompletion}%
-                    </span>
+              <div className="flex min-w-0 flex-1 items-start gap-4 text-left">
+                <ImageUpload
+                  value={avatarUrl ?? undefined}
+                  onChange={setAvatarUrl}
+                  type="avatar"
+                  hint=""
+                  className="shrink-0"
+                />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div>
+                    <h1 className="font-heading text-xl font-bold">
+                      {messages.profile.title}
+                    </h1>
+                    <p className="text-xs text-muted-foreground">{profileEmail}</p>
                   </div>
-                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className={`h-full transition-all ${profileCompletion >= 80 ? "bg-green-500" : "bg-primary"}`}
-                      style={{ width: `${profileCompletion}%` }}
-                    />
+                  <div className="w-full max-w-sm">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {messages.profile.profileCompletion ?? "Profile completion"}
+                      </span>
+                      <span className={profileCompletion >= 80 ? "font-medium text-green-600" : "font-medium text-primary"}>
+                        {profileCompletion}%
+                      </span>
+                    </div>
+                    <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className={`h-full transition-all ${profileCompletion >= 80 ? "bg-green-500" : "bg-primary"}`}
+                        style={{ width: `${profileCompletion}%` }}
+                      />
+                    </div>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      Profile Photo
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1211,22 +1242,6 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <form id="profile-form" onSubmit={handleSave} className="space-y-6">
-
-                <section className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <ImageUpload
-                      value={avatarUrl ?? undefined}
-                      onChange={setAvatarUrl}
-                      type="avatar"
-                    />
-                    <div>
-                      <p className="text-sm font-medium">Profile Photo</p>
-                    </div>
-                  </div>
-                </section>
-
-                <Separator />
-
                 <section className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">

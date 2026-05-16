@@ -21,6 +21,7 @@ Recruiter-facing dashboard: company profile, gallery, jobs, slots, interviews.
 - `src/app/api/me/recruiter/route.ts` — slot regen on interviewerCount change.
 
 ## History
+- 2026-05-15: Recruiter company/jobs save feedback is now a single compact stateful button; on mobile it floats above the bottom navigation pill, and on wider screens it remains near the top of the editor.
 - 2026-05-15: My Company editor was flattened out of its single card wrapper; the description now leads the page with uploads in a side column on wide screens.
 - 2026-05-15: Recruiter company profile description editor is now a wider, taller adaptive textarea, with website/interviewer fields grouped below it.
 - 2026-05-15: Recruiter company/jobs editor now has a sticky save-status strip matching admin settings. It shows all saved, unsaved changes, saving, saved, and error states; job submit/delete actions also show in-flight button spinners.
