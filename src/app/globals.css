@@ -381,3 +381,51 @@ body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
     padding-bottom: 0.75rem;
   }
 }
+
+.student-cv-print-only {
+  display: none;
+}
+
+.student-cv-preview-scale {
+  width: min(820px, 100%);
+}
+
+.student-cv-preview-scale .student-cv-export-surface {
+  width: 100%;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .student-cv-print-only,
+  .student-cv-print-only * {
+    visibility: visible !important;
+  }
+
+  .student-cv-print-only {
+    display: block !important;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+
+  .student-cv-export-surface {
+    width: 100% !important;
+    max-width: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}

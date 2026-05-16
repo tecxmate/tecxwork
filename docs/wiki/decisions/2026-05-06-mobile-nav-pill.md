@@ -31,6 +31,7 @@ Refactor `src/components/mobile-bottom-nav.tsx` into a centered floating pill co
 - iOS Safari's bottom-toolbar behavior makes that calc push the pill too high (large gap below it on scrolled state), so iOS falls back via `@supports (-webkit-touch-callout: none)` to plain `bottom: max(0.5rem, env(safe-area-inset-bottom))`. Niko confirmed Android works great and asked iOS sit lower.
 - On 2026-05-13, Niko shared Android Chromium screenshots where the `/jobs` route framed incorrectly while iOS and other pages looked fine. The Android `dvh-svh` bottom offset is now scoped to non-standalone browser mode only, because standalone mode has no URL bar to stabilize. PWA viewport/manifest theme color is now the app background (`#FAFAFA`) and `colorScheme` is light. A later attempt to remove `viewport-fit=cover` was reverted because it broke iPhone rendering.
 - On 2026-05-15, Niko clarified that mobile nav labels should not wrap to a second line when a tab title is too long; if any tab label is cramped, all tabs should hide their text labels and show icons only.
+- On 2026-05-16, a React hydration mismatch surfaced around the mobile nav's label measurement spans and client-only device/layout calculations. The nav is now loaded through a no-SSR client wrapper so the server never emits mobile-nav HTML; the measured pill renders only after hydration.
 
 ## Provenance
 - Discussed on 2026-05-06 between [niko] (owner) and [claude-code] (agent).

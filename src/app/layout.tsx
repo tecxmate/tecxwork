@@ -4,7 +4,7 @@ import { EB_Garamond } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { BrandSplash } from "@/components/brand-splash";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { MobileBottomNavClient } from "@/components/mobile-bottom-nav-client";
 import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { StudentLocaleProvider } from "@/components/student-locale-provider";
@@ -121,5 +121,5 @@ async function MobileBottomNavServer({
   sessionPromise: ReturnType<typeof getSession>;
 }) {
   const session = await sessionPromise;
-  return <MobileBottomNav role={session?.role ?? "guest"} />;
+  return <MobileBottomNavClient role={session?.role ?? "guest"} />;
 }

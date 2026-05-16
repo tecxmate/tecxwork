@@ -55,6 +55,7 @@ export function MobileBottomNav({
   const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
   const [animateIndicator, setAnimateIndicator] = useState(false);
   const [iconOnlyHrefs, setIconOnlyHrefs] = useState<Set<string>>(() => new Set());
+  const [mounted, setMounted] = useState(false);
   const [isAndroid] = useState(
     () => typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent),
   );
@@ -101,6 +102,11 @@ export function MobileBottomNav({
     pathname === "/terms-of-service" ||
     pathname === "/privacy-policy" ||
     pathname === "/tutorial";
+
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(id);
+  }, []);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
@@ -200,7 +206,7 @@ export function MobileBottomNav({
     }, 900);
   }
 
-  if (shouldHide) {
+  if (!mounted || shouldHide) {
     return null;
   }
 

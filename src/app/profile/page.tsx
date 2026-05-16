@@ -1,12 +1,12 @@
 "use client";
 
-import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   Building2,
   Check,
   CheckCircle2,
+  Download,
   GraduationCap,
   Loader2,
   Plus,
@@ -15,6 +15,7 @@ import {
   X,
   AlertCircle,
   BriefcaseBusiness,
+  FileText,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -169,6 +170,268 @@ function buildProfilePayload(
     portfolioUrl: draft.portfolioUrl.trim(),
     description: draft.description.trim(),
   };
+}
+
+function formatOptionLabel(
+  value: string,
+  labels: Readonly<Record<string, string>> | undefined
+) {
+  return labels?.[value] ?? value;
+}
+
+function formatMonth(value: string) {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  if (!year || !month) return value;
+  return `${year}.${month}`;
+}
+
+function formatDate(value: string) {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  if (!year || !month) return value;
+  return `${year}.${month}`;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    };
+    return entities[char] ?? char;
+  });
+}
+
+function CvExportTemplate({
+  draft,
+  email,
+  labels,
+}: {
+  draft: StudentRegistrationDraft;
+  email: string;
+  labels: {
+    summary: string;
+    education: string;
+    experience: string;
+    skills: string;
+    certifications: string;
+    preferences: string;
+    links: string;
+    current: string;
+    studyLevel: Readonly<Record<string, string>>;
+    studyYear: Readonly<Record<string, string>>;
+    jobSeekingStatus: Readonly<Record<string, string>>;
+    workAuthorization: Readonly<Record<string, string>>;
+    preferredLocations: Readonly<Record<string, string>>;
+    preferredIndustries: Readonly<Record<string, string>>;
+  };
+}) {
+  const contactItems = [
+    email,
+    draft.phone,
+    draft.nationality,
+  ].filter(Boolean);
+  const schoolLine = [draft.schoolNameEn || draft.schoolName, draft.schoolName && draft.schoolNameEn ? draft.schoolName : ""]
+    .filter(Boolean)
+    .join(" / ");
+  const educationMeta = [
+    formatOptionLabel(draft.studyLevel, labels.studyLevel),
+    formatOptionLabel(draft.studyYear, labels.studyYear),
+    draft.expectedGraduation ? `Expected ${formatDate(draft.expectedGraduation)}` : "",
+  ].filter(Boolean);
+  const preferences = [
+    formatOptionLabel(draft.jobSeekingStatus, labels.jobSeekingStatus),
+    formatOptionLabel(draft.workAuthorization, labels.workAuthorization),
+    ...draft.preferredLocations.map((item) =>
+      formatOptionLabel(item, labels.preferredLocations)
+    ),
+    ...draft.preferredIndustries.map((item) =>
+      formatOptionLabel(item, labels.preferredIndustries)
+    ),
+  ].filter(Boolean);
+  const links = [
+    draft.linkedinUrl ? { label: "LinkedIn", value: draft.linkedinUrl } : null,
+    draft.portfolioUrl ? { label: "Portfolio", value: draft.portfolioUrl } : null,
+    draft.cvLink ? { label: "Source CV", value: draft.cvLink } : null,
+  ].filter((item): item is { label: string; value: string } => Boolean(item));
+
+  return (
+    <article className="student-cv-export-surface mx-auto max-w-[820px] overflow-hidden rounded-lg border border-zinc-200 bg-white text-zinc-950 shadow-sm">
+      <div className="grid gap-8 border-b border-zinc-200 bg-[#fbfaf7] px-8 py-8 sm:grid-cols-[1fr_auto]">
+        <div className="min-w-0">
+          <h2 className="font-heading text-4xl font-bold leading-tight text-zinc-950">
+            {draft.name || "Student Name"}
+          </h2>
+          <div className="mt-2 space-y-1 text-base font-medium text-zinc-700">
+            <p>{draft.major || "Student profile"}</p>
+            {schoolLine && <p className="font-bold">{schoolLine}</p>}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1 text-right text-sm text-zinc-600">
+          {contactItems.map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-8 px-8 py-8 sm:grid-cols-[1.5fr_0.8fr]">
+        <div className="space-y-7">
+          {draft.description.trim() && (
+            <section className="space-y-2">
+              <h3 className="border-b border-zinc-200 pb-1 text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+                {labels.summary}
+              </h3>
+              <p className="whitespace-pre-line text-sm leading-6 text-zinc-700">
+                {draft.description.trim()}
+              </p>
+            </section>
+          )}
+
+          <section className="space-y-2">
+            <h3 className="border-b border-zinc-200 pb-1 text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+              {labels.education}
+            </h3>
+            <div>
+              <p className="text-base font-semibold text-zinc-950">
+                {schoolLine || "School"}
+              </p>
+              <p className="text-sm text-zinc-700">{draft.major || "Major"}</p>
+              {educationMeta.length > 0 && (
+                <p className="mt-1 text-xs text-zinc-500">{educationMeta.join(" · ")}</p>
+              )}
+            </div>
+          </section>
+
+          {draft.workExperiences.length > 0 && (
+            <section className="space-y-3">
+              <h3 className="border-b border-zinc-200 pb-1 text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+                {labels.experience}
+              </h3>
+              {draft.workExperiences.map((experience, index) => {
+                const duration = [
+                  formatMonth(experience.startDate),
+                  experience.isCurrent
+                    ? labels.current
+                    : formatMonth(experience.endDate),
+                ].filter(Boolean).join(" - ");
+
+                return (
+                  <div key={`${experience.company}-${index}`} className="break-inside-avoid space-y-1">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-zinc-950">
+                          {experience.title || "Role"}
+                        </p>
+                        <p className="text-sm text-zinc-700">
+                          {[experience.company, experience.employmentType]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                      {duration && (
+                        <p className="shrink-0 text-xs font-medium text-zinc-500">
+                          {duration}
+                        </p>
+                      )}
+                    </div>
+                    {experience.description && (
+                      <p className="whitespace-pre-line text-sm leading-6 text-zinc-700">
+                        {experience.description}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </section>
+          )}
+        </div>
+
+        <aside className="space-y-6">
+          {draft.skills.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+                {labels.skills}
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {draft.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded-full border border-[#8C52FF]/25 bg-[#8C52FF]/10 px-2.5 py-1 text-xs font-medium text-zinc-800"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {draft.certifications.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+                {labels.certifications}
+              </h3>
+              <div className="space-y-2">
+                {draft.certifications.map((cert, index) => (
+                  <div key={`${cert.name}-${index}`}>
+                    <p className="text-sm font-semibold text-zinc-900">
+                      {[cert.name, cert.score].filter(Boolean).join(" · ")}
+                    </p>
+                    {cert.issueDate && (
+                      <p className="text-xs text-zinc-500">
+                        {formatMonth(cert.issueDate)}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {preferences.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+                {labels.preferences}
+              </h3>
+              <div className="space-y-1 text-sm text-zinc-700">
+                {preferences.map((item) => (
+                  <p key={item}>{item}</p>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {links.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+                {labels.links}
+              </h3>
+              <div className="space-y-1 text-xs text-zinc-600">
+                {links.map((link) => (
+                  <p key={link.label} className="break-all">
+                    <span className="font-semibold text-zinc-800">{link.label}: </span>
+                    {link.value}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
+        </aside>
+      </div>
+
+      <footer className="flex items-end justify-between border-t border-zinc-200 px-8 py-5">
+        <span aria-hidden />
+        <p
+          className="font-wordmark text-3xl italic text-[#8C52FF]"
+        >
+          tecxwork
+        </p>
+      </footer>
+    </article>
+  );
 }
 
 const WorkExperienceEditor = memo(function WorkExperienceEditor({
@@ -410,6 +673,7 @@ export default function ProfilePage() {
   const deferredSchoolQuery = useDeferredValue(draft.schoolQuery);
   const [lastSavedPayload, setLastSavedPayload] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const cvPrintRef = useRef<HTMLDivElement | null>(null);
 
   const profilePayload = useMemo(() => buildProfilePayload(draft), [draft]);
   const serializedPayload = useMemo(
@@ -704,6 +968,25 @@ export default function ProfilePage() {
   }, []);
 
   const profileCompletion = useMemo(() => calculateProfileCompletion(draft), [draft]);
+  const cvExportLabels = useMemo(
+    () => ({
+      summary: messages.profile.cvExportSummary ?? "Summary",
+      education: messages.profile.cvExportEducation ?? "Education",
+      experience: messages.profile.cvExportExperience ?? "Experience",
+      skills: messages.profile.cvExportSkills ?? "Skills",
+      certifications: messages.profile.cvExportCertifications ?? "Certifications",
+      preferences: messages.profile.cvExportPreferences ?? "Preferences",
+      links: messages.profile.cvExportLinks ?? "Links",
+      current: messages.profile.cvExportCurrent ?? "Present",
+      studyLevel: messages.options.studyLevel,
+      studyYear: messages.options.studyYear,
+      jobSeekingStatus: messages.options.jobSeekingStatus,
+      workAuthorization: messages.options.workAuthorization,
+      preferredLocations: messages.options.preferredLocations,
+      preferredIndustries: messages.options.preferredIndustries,
+    }),
+    [messages]
+  );
 
   const saveProfile = useCallback(async () => {
     setSaving(true);
@@ -735,6 +1018,7 @@ export default function ProfilePage() {
   }, [
     messages.profile.saveFailed,
     messages.register.somethingWentWrong,
+    avatarUrl,
     profilePayload,
     serializedPayload,
   ]);
@@ -742,6 +1026,57 @@ export default function ProfilePage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     await saveProfile();
+  }
+
+  function handleExportCv() {
+    const cvNode = cvPrintRef.current;
+    const printWindow = window.open("", "_blank", "width=900,height=1200");
+
+    if (!cvNode || !printWindow) {
+      window.print();
+      return;
+    }
+
+    const headAssets = Array.from(
+      document.querySelectorAll<HTMLLinkElement | HTMLStyleElement>(
+        'link[rel="stylesheet"], style'
+      )
+    )
+      .map((node) => node.outerHTML)
+      .join("\n");
+
+    const documentTitle = escapeHtml(draft.name ? `${draft.name} CV` : "TECXWORK CV");
+
+    printWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base href="${escapeHtml(window.location.origin)}/" />
+    <title>${documentTitle}</title>
+    ${headAssets}
+    <style>
+      @page { size: A4; margin: 12mm; }
+      html, body { margin: 0; background: #ffffff; }
+      body { padding: 0; color: #18181b; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .student-cv-export-surface {
+        width: 100% !important;
+        max-width: none !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    ${cvNode.innerHTML}
+  </body>
+</html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    window.setTimeout(() => {
+      printWindow.print();
+    }, 250);
   }
 
   useEffect(() => {
@@ -786,6 +1121,7 @@ export default function ProfilePage() {
             title={messages.profile.cvQrTitle}
             subtitle={messages.profile.cvQrSubtitle}
             size={160}
+            layout="horizontal"
           >
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -821,6 +1157,14 @@ export default function ProfilePage() {
               )}
             </div>
           </QRCard>
+
+          <div ref={cvPrintRef} className="student-cv-print-only">
+            <CvExportTemplate
+              draft={draft}
+              email={profileEmail}
+              labels={cvExportLabels}
+            />
+          </div>
 
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -1400,6 +1744,44 @@ export default function ProfilePage() {
                 <Separator />
 
               </form>
+            </CardContent>
+          </Card>
+
+          <Card className="print:hidden">
+            <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+              <div className="flex min-w-0 gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-heading text-xl font-bold">
+                    {messages.profile.cvExportTitle ?? "Export CV"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {messages.profile.cvExportSubtitle ??
+                      "Generate a polished CV from your TECXWORK profile data."}
+                  </p>
+                </div>
+              </div>
+              <Button type="button" onClick={handleExportCv} className="shrink-0">
+                <Download className="mr-2 h-4 w-4" />
+                {messages.profile.cvExportButton ?? "Export PDF"}
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="overflow-hidden rounded-lg bg-zinc-100 p-3">
+                <div className="student-cv-preview-scale mx-auto">
+                  <CvExportTemplate
+                    draft={draft}
+                    email={profileEmail}
+                    labels={cvExportLabels}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {messages.profile.cvExportHint ??
+                  "Your browser will open the print dialog. Choose Save as PDF to export."}
+              </p>
             </CardContent>
           </Card>
 

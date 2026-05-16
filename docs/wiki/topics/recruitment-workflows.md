@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-15
+updated: 2026-05-16
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -14,6 +14,8 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 
 ## 1. Student Workflow
 1. **Registration**: Profile creation with name, major, skills, and Google Drive CV link.
+   - Candidate idea: add consent-based CV autofill from LinkedIn-derived data. Official LinkedIn APIs are permission-gated; the safer near-term flow is student upload/paste of their own LinkedIn export/profile PDF/text, then parse into editable CV fields.
+   - Student CV export is available from `/profile`: students can preview a polished CV generated from profile data and export it via the browser print dialog/Save as PDF flow, with the main-logo `tecxwork` wordmark at the bottom.
 2. **Discovery**: Browse recruiter directory by industry or position, or browse recruiter-posted jobs.
 3. **Job-level apply**: Clicking a job opens that job's detail page with an immediate apply action. Company logos/names on job cards link to the company page for browsing all jobs from that recruiter.
 4. **Booking**: Select 15-minute slots on the event calendar.
@@ -41,6 +43,14 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-16: Updated student CV header rendering so the university appears bold on the line below the major.
+- 2026-05-16: Made My CV QR Code compact on `/profile` by placing the QR code on the left and the CV link/actions on the right.
+- 2026-05-16: Reordered `/profile` so My CV QR Code contains the CV Link field and Export CV appears after the My Profile form.
+- 2026-05-16: Fixed blank student CV PDF export by printing a dedicated CV document instead of the full profile page.
+- 2026-05-16: Adjusted student CV export branding by removing extra TECXWORK CV/generated-by text and using the main wordmark font for the bottom logo.
+- 2026-05-16: Implemented student CV preview/export on `/profile` using a print-optimized template generated from existing profile fields.
+- 2026-05-16: Niko proposed CV export for students who already completed profile/CV data as a more immediately useful function than LinkedIn import.
+- 2026-05-16: Niko asked about adding a LinkedIn import/autofill function for students to complete CV data, noting that resume builders such as Kickresume/CakeResume-like products offer similar flows.
 - 2026-05-15: Removed the separate floating Back-to-top button; tapping the active mobile navigation pill now scrolls the current page to top.
 - 2026-05-15: Company photo viewer arrows moved into narrow side rails outside the centered photo, using bare high-contrast icons instead of circular controls.
 - 2026-05-15: Company photo viewer supports swipe left/right and left/right tap zones; navigation controls use a higher-contrast floating style.
