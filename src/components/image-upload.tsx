@@ -35,6 +35,20 @@ export function ImageUpload({
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  async function parseUploadResponse(response: Response) {
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return response.json() as Promise<{ url?: string; error?: string }>;
+    }
+
+    const text = await response.text();
+    return {
+      error:
+        text.trim() ||
+        `Upload failed with HTTP ${response.status}. Please try again.`,
+    };
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -62,8 +76,9 @@ export function ImageUpload({
         body: formData,
       });
 
-      const data = await res.json();
+      const data = await parseUploadResponse(res);
       if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!data.url) throw new Error("Upload failed: missing uploaded image URL");
 
       await onChange(data.url);
     } catch (err) {
@@ -176,6 +191,20 @@ export function MultiImageUpload({
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  async function parseUploadResponse(response: Response) {
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return response.json() as Promise<{ url?: string; error?: string }>;
+    }
+
+    const text = await response.text();
+    return {
+      error:
+        text.trim() ||
+        `Upload failed with HTTP ${response.status}. Please try again.`,
+    };
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -208,8 +237,9 @@ export function MultiImageUpload({
         body: formData,
       });
 
-      const data = await res.json();
+      const data = await parseUploadResponse(res);
       if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!data.url) throw new Error("Upload failed: missing uploaded image URL");
 
       onChange([...values, data.url]);
     } catch (err) {

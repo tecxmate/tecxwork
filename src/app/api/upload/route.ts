@@ -4,6 +4,18 @@ import { getSession } from "@/lib/auth";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_UPLOAD_TYPES = [
+  "avatar",
+  "logo",
+  "gallery",
+  "homepage",
+  "page",
+  "feedback",
+];
+
+function jsonError(error: string, status: number) {
+  return NextResponse.json({ error }, { status });
+}
 
 /**
  * POST /api/upload
@@ -12,55 +24,61 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
  * Body: FormData with "file" and "type".
  */
 export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getSession();
+    if (!session) {
+      return jsonError("Unauthorized", 401);
+    }
+
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return jsonError(
+        "Image uploads are not configured. Missing BLOB_READ_WRITE_TOKEN.",
+        503
+      );
+    }
+
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    const type = formData.get("type") as string | null;
+
+    if (!file) {
+      return jsonError("No file provided", 400);
+    }
+
+    if (!type || !ALLOWED_UPLOAD_TYPES.includes(type)) {
+      return jsonError(
+        "Invalid type. Must be 'avatar', 'logo', 'gallery', 'homepage', 'page', or 'feedback'",
+        400
+      );
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return jsonError("Invalid file type. Allowed: JPEG, PNG, WebP, GIF", 400);
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return jsonError("File too large. Maximum size is 4MB", 400);
+    }
+
+    const folders: Record<string, string> = {
+      avatar: "avatars",
+      logo: "logos",
+      gallery: "gallery",
+      homepage: "homepage",
+      page: "page-images",
+      feedback: "feedback",
+    };
+    const folder = folders[type];
+    const ext = file.name.split(".").pop() || "jpg";
+    const filename = `${folder}/${session.userId}-${Date.now()}.${ext}`;
+
+    const blob = await put(filename, file, {
+      access: "public",
+    });
+
+    return NextResponse.json({ url: blob.url });
+  } catch (error) {
+    console.error("Image upload failed", error);
+    return jsonError("Image upload failed. Please try again.", 500);
   }
-
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
-  const type = formData.get("type") as string | null;
-
-  if (!file) {
-    return NextResponse.json({ error: "No file provided" }, { status: 400 });
-  }
-
-  if (!type || !["avatar", "logo", "gallery", "homepage", "page", "feedback"].includes(type)) {
-    return NextResponse.json(
-      { error: "Invalid type. Must be 'avatar', 'logo', 'gallery', 'homepage', 'page', or 'feedback'" },
-      { status: 400 }
-    );
-  }
-
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json(
-      { error: "Invalid file type. Allowed: JPEG, PNG, WebP, GIF" },
-      { status: 400 }
-    );
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json(
-      { error: "File too large. Maximum size is 4MB" },
-      { status: 400 }
-    );
-  }
-
-  const folders: Record<string, string> = {
-    avatar: "avatars",
-    logo: "logos",
-    gallery: "gallery",
-    homepage: "homepage",
-    page: "page-images",
-    feedback: "feedback",
-  };
-  const folder = folders[type];
-  const ext = file.name.split(".").pop() || "jpg";
-  const filename = `${folder}/${session.userId}-${Date.now()}.${ext}`;
-
-  const blob = await put(filename, file, {
-    access: "public",
-  });
-
-  return NextResponse.json({ url: blob.url });
 }

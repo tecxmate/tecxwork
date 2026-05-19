@@ -417,3 +417,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko asked to add Construction as a company industry type.
 - Added Construction to recruiter/company industry options, public filtering, and localized student preferred-industry labels.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-19] fix | Logo upload JSON error handling
+attributed_to: [niko]   belongs_to: [photo-uploads]
+- Niko reported company logo upload showing `Unexpected token '<'`, indicating the client parsed an HTML error response as JSON.
+- Added `/api/upload` storage-config guard, JSON error handling around Vercel Blob writes, and safer client parsing for non-JSON responses.
+- Updated `.env.example` with `BLOB_READ_WRITE_TOKEN` and `docs/wiki/topics/photo-uploads.md`.
