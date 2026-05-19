@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-17
+updated: 2026-05-19
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -43,6 +43,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-19: Homepage "View all companies" links now route guests directly to `/browse` instead of `/get-started`; applying/bookings still require login later.
 - 2026-05-17: Expanded company/recruiter industry tags and student preferred-industry options to include Beauty plus additional real-world sectors such as Education, Retail, Hospitality, Media, Logistics, Food & Beverage, Energy, Automotive, Gaming, and Nonprofit.
 - 2026-05-17: Reverted the inline SVG wordmark experiment because Safari PDF output broke the CV text layout; retained the stable text wordmark with print-window font loading.
 - 2026-05-17: Reverted the experimental direct PDF generator after it broke text layout; restored the browser-rendered print-window export while preserving the cursive `tecxwork` font fix.

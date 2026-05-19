@@ -405,3 +405,9 @@ attributed_to: [niko]   belongs_to: [data-privacy]
 - Niko reported students were applying directly by emailing HR after finding recruiter contact emails in the platform.
 - Removed recruiter `contactEmail` from student-facing recruiter/job page payloads, public recruiter API cache results, and booking-form copy.
 - Added `docs/wiki/decisions/2026-05-19-hide-hr-email-from-students.md` and updated `docs/wiki/topics/data-privacy.md`.
+
+## [2026-05-19] fix | Guest all-companies navigation
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko reported that guests clicking "all companies" on the homepage were being sent to sign in.
+- Changed homepage companies-section "View all" links from `/get-started` to `/browse`, preserving public company browsing for guests.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

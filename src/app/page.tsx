@@ -246,7 +246,7 @@ export default async function LandingPage() {
                 </p>
               </div>
               <Link
-                href="/get-started"
+                href="/browse"
                 className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline sm:flex"
               >
                 {messages.landing.viewAll}
@@ -329,7 +329,7 @@ export default async function LandingPage() {
             )}
 
             <Link
-              href="/get-started"
+              href="/browse"
               className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
             >
               {messages.landing.viewAllCompanies}
