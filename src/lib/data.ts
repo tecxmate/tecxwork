@@ -36,6 +36,7 @@ export const INDUSTRIES = [
   "Hospitality",
   "Media",
   "Real Estate",
+  "Construction",
   "Logistics",
   "Food & Beverage",
   "Energy",

@@ -411,3 +411,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko reported that guests clicking "all companies" on the homepage were being sent to sign in.
 - Changed homepage companies-section "View all" links from `/get-started` to `/browse`, preserving public company browsing for guests.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-19] fix | Construction industry option
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked to add Construction as a company industry type.
+- Added Construction to recruiter/company industry options, public filtering, and localized student preferred-industry labels.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

@@ -156,6 +156,7 @@ const INDUSTRY_OPTIONS = [
   "Hospitality",
   "Media",
   "Real Estate",
+  "Construction",
   "Logistics",
   "Food & Beverage",
   "Energy",

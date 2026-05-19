@@ -650,6 +650,7 @@ export const studentEnMessages = {
       Hospitality: "Hospitality",
       Media: "Media",
       "Real Estate": "Real Estate",
+      Construction: "Construction",
       Logistics: "Logistics",
       "Food & Beverage": "Food & Beverage",
       Energy: "Energy",

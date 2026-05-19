@@ -43,6 +43,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-19: Added Construction to company/recruiter industry options, public industry filters, and student preferred-industry choices.
 - 2026-05-19: Homepage "View all companies" links now route guests directly to `/browse` instead of `/get-started`; applying/bookings still require login later.
 - 2026-05-17: Expanded company/recruiter industry tags and student preferred-industry options to include Beauty plus additional real-world sectors such as Education, Retail, Hospitality, Media, Logistics, Food & Beverage, Energy, Automotive, Gaming, and Nonprofit.
 - 2026-05-17: Reverted the inline SVG wordmark experiment because Safari PDF output broke the CV text layout; retained the stable text wordmark with print-window font loading.

@@ -642,6 +642,7 @@ export const studentZhTwMessages = {
       Hospitality: "餐旅",
       Media: "媒體",
       "Real Estate": "房地產",
+      Construction: "營建",
       Logistics: "物流",
       "Food & Beverage": "食品飲料",
       Energy: "能源",

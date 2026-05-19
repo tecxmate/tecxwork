@@ -651,6 +651,7 @@ export const studentViMessages = {
       Hospitality: "Nhà hàng - khách sạn",
       Media: "Truyền thông",
       "Real Estate": "Bất động sản",
+      Construction: "Xây dựng",
       Logistics: "Logistics",
       "Food & Beverage": "Thực phẩm & đồ uống",
       Energy: "Năng lượng",
