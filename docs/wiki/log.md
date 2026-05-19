@@ -423,3 +423,9 @@ attributed_to: [niko]   belongs_to: [photo-uploads]
 - Niko reported company logo upload showing `Unexpected token '<'`, indicating the client parsed an HTML error response as JSON.
 - Added `/api/upload` storage-config guard, JSON error handling around Vercel Blob writes, and safer client parsing for non-JSON responses.
 - Updated `.env.example` with `BLOB_READ_WRITE_TOKEN` and `docs/wiki/topics/photo-uploads.md`.
+
+## [2026-05-19] fix | Event venue changed to MCUT
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- Niko requested changing the event location to MCUT (Ming Chi University of Technology).
+- Updated static event defaults, schema/default seed values, admin placeholder copy, and event wiki context.
+- Added a DB update script so existing `event_config` rows can be moved from NTUT to MCUT.

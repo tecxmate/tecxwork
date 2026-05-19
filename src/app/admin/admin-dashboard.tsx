@@ -1078,7 +1078,7 @@ export function AdminDashboard({
                           <Input
                             value={branding.hostedAt}
                             onChange={(e) => setBranding({ ...branding, hostedAt: e.target.value })}
-                            placeholder="NTUT (Taipei Tech)"
+                            placeholder="MCUT (Ming Chi University of Technology)"
                             className="h-8 text-xs"
                           />
                         </label>

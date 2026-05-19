@@ -26,11 +26,11 @@ async function main() {
   `;
   await sql`
     ALTER TABLE event_config
-    ADD COLUMN IF NOT EXISTS hosted_at text NOT NULL DEFAULT 'NTUT (Taipei Tech)'
+    ADD COLUMN IF NOT EXISTS hosted_at text NOT NULL DEFAULT 'MCUT (Ming Chi University of Technology)'
   `;
   await sql`
     ALTER TABLE event_config
-    ADD COLUMN IF NOT EXISTS hosted_at_full text NOT NULL DEFAULT 'National Taipei University of Science and Technology'
+    ADD COLUMN IF NOT EXISTS hosted_at_full text NOT NULL DEFAULT 'Ming Chi University of Technology'
   `;
   await sql`
     ALTER TABLE event_config

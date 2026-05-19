@@ -18,6 +18,7 @@
     "db:update:salary-currency-options": "npx tsx src/lib/db/add-salary-currency-options-column.ts",
     "db:update:page-images": "npx tsx src/lib/db/add-browse-jobs-page-images-columns.ts",
     "db:update:hero-overlay-toggle": "npx tsx src/lib/db/add-hero-overlay-toggle-column.ts",
+    "db:update:event-location-mcut": "npx tsx src/lib/db/update-event-location-mcut.ts",
     "db:update:onboarding-mode": "npx tsx src/lib/db/add-onboarding-mode-column.ts",
     "db:update:recruiter-email-approvals": "npx tsx src/lib/db/create-recruiter-email-approvals-table.ts",
     "db:update:student-profile-columns": "npx tsx src/lib/db/add-student-profile-columns.ts",

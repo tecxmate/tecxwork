@@ -104,7 +104,9 @@ async function resetAndSeed() {
   await db.insert(schema.eventConfig).values({
     eventName: "V-GEN TRIDENT 2026",
     eventDate: new Date("2026-06-06T10:00:00+08:00"),
-    location: "NTUT (Taipei Tech), Taipei",
+    hostedAt: "MCUT (Ming Chi University of Technology)",
+    hostedAtFull: "Ming Chi University of Technology",
+    location: "MCUT (Ming Chi University of Technology)",
     slotDurationMinutes: 15,
     mode: "both",
     salaryCurrencyOptions: ["TWD", "VND", "USD"],

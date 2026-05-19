@@ -4,7 +4,7 @@ type: topic
 slug: v-gen-trident-2026
 role: automation
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-19
 attributed_to: [niko]
 belongs_to: [vsatw, tecxmate]
 source: document
@@ -14,12 +14,12 @@ related: [vsatw, tecxmate, tecxwork]
 ---
 
 ## Overview
-The flagship career fair event for Vietnamese students in Taiwan, hosted at NTUT (Taipei Tech) on June 6, 2026.
+The flagship career fair event for Vietnamese students in Taiwan, hosted at MCUT (Ming Chi University of Technology) on June 6, 2026.
 
 ## Event Details
 - **Date**: Saturday, June 6, 2026.
 - **Time**: 10:00 AM – 17:30 PM (Taipei Time).
-- **Venue**: NTUT (National Taipei University of Technology), Taipei.
+- **Venue**: MCUT (Ming Chi University of Technology).
 - **Format**: Hybrid (Digital booking via Tecxwork + Physical interviews).
 
 ## Configuration

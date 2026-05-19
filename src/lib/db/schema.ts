@@ -316,17 +316,19 @@ export const eventConfig = pgTable("event_config", {
     .notNull()
     .default("Vietnamese Student Association in Taiwan"),
   organizerShort: text("organizer_short").notNull().default("VSATW"),
-  hostedAt: text("hosted_at").notNull().default("NTUT (Taipei Tech)"),
+  hostedAt: text("hosted_at")
+    .notNull()
+    .default("MCUT (Ming Chi University of Technology)"),
   hostedAtFull: text("hosted_at_full")
     .notNull()
-    .default("National Taipei University of Science and Technology"),
+    .default("Ming Chi University of Technology"),
   displayDate: text("display_date").notNull().default("June 6, 2026"),
   displayYear: text("display_year").notNull().default("2026"),
   eventEndDate: timestamp("event_end_date", { withTimezone: true }),
   eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
   location: text("location")
     .notNull()
-    .default("NTUT (Taipei Tech), Taipei"),
+    .default("MCUT (Ming Chi University of Technology)"),
   slotDurationMinutes: integer("slot_duration_minutes").notNull().default(15),
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
   startHour: integer("start_hour").notNull().default(10),

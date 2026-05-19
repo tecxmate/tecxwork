@@ -106,7 +106,9 @@ async function seed() {
     .values({
       eventName: "V-GEN TRIDENT 2026",
       eventDate: new Date("2026-06-06T09:00:00+08:00"),
-      location: "National Taiwan University, Taipei",
+      hostedAt: "MCUT (Ming Chi University of Technology)",
+      hostedAtFull: "Ming Chi University of Technology",
+      location: "MCUT (Ming Chi University of Technology)",
       slotDurationMinutes: 15,
       salaryCurrencyOptions: ["TWD", "VND", "USD"],
     })
