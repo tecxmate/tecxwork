@@ -375,7 +375,7 @@ export const studentEnMessages = {
       "Your application to {company} for {position} at {time} is now {status}.",
     recruiterReview:
       "The recruiter will review your CV and confirm your interview. You'll receive an email when accepted.",
-    shareCv: "Share your CV with {email} on Google Drive.",
+    shareCv: "Share your CV via Google Drive.",
     viewOtherPositions: "View Other Positions",
     bookWith: "Book with {company}",
     positionApplyingFor: "Position applying for",

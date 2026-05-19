@@ -27,7 +27,6 @@ type Step = "details" | "pick-slot" | "booking-form";
 type JobDetailApplyJob = RecruiterJobPosting & {
   recruiterId: number;
   company: string;
-  contactEmail: string;
 };
 
 export function JobDetailApply({
@@ -155,7 +154,6 @@ export function JobDetailApply({
       <BookingForm
         recruiterId={job.recruiterId}
         company={job.company}
-        contactEmail={job.contactEmail}
         positions={[job.title]}
         slot={selectedSlot}
         onBack={handleBack}

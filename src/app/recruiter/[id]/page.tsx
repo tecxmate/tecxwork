@@ -22,7 +22,6 @@ export default async function RecruiterPage({
         company: recruiters.company,
         industry: recruiters.industry,
         description: recruiters.description,
-        contactEmail: recruiters.contactEmail,
         logoUrl: recruiters.logoUrl,
         websiteUrl: recruiters.websiteUrl,
         galleryUrls: recruiters.galleryUrls,

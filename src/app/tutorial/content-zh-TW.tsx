@@ -254,7 +254,7 @@ export function RecruiterSectionZh() {
             <li>公司介紹、網站</li>
             <li>Logo 與相簿照片(最多 4 張 — 上傳至 Vercel Blob)</li>
             <li>面試官人數(1–10) — 增加會擴大時段池;減少僅會移除尚未預約的時段</li>
-            <li>顯示給申請人的聯絡信箱</li>
+            <li>用於平台通知的聯絡信箱</li>
           </ul>
         </div>
 

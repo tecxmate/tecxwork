@@ -254,7 +254,7 @@ export function RecruiterSectionEn() {
             <li>Company description, website</li>
             <li>Logo and gallery photos (up to 4 — uploaded to Vercel Blob)</li>
             <li>Number of interviewers (1–10) — adding more grows the slot pool; reducing drops only unbooked slots</li>
-            <li>Contact email shown to applicants</li>
+            <li>Contact email used for platform notifications</li>
           </ul>
         </div>
 

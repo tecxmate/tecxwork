@@ -399,3 +399,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko asked for more company industry tags, including Beauty.
 - Added Beauty and additional sector options to public company filters, admin recruiter industry selection, and student preferred-industry choices.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-19] decision | Hide HR email from students
+attributed_to: [niko]   belongs_to: [data-privacy]
+- Niko reported students were applying directly by emailing HR after finding recruiter contact emails in the platform.
+- Removed recruiter `contactEmail` from student-facing recruiter/job page payloads, public recruiter API cache results, and booking-form copy.
+- Added `docs/wiki/decisions/2026-05-19-hide-hr-email-from-students.md` and updated `docs/wiki/topics/data-privacy.md`.

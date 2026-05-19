@@ -365,7 +365,7 @@ export const studentZhTwMessages = {
     pendingReview: "審核中",
     submittedBody: "你已申請 {company} 的 {position}（時間：{time}），目前狀態為：{status}。",
     recruiterReview: "招募方會先審閱履歷，確認後會寄信通知你。",
-    shareCv: "透過 Google Drive 與 {email} 分享你的履歷。",
+    shareCv: "透過 Google Drive 分享你的履歷。",
     viewOtherPositions: "查看其他職缺",
     bookWith: "與 {company} 預約",
     positionApplyingFor: "投遞職位",

@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-05-19 — Hide HR email from student-facing pages](decisions/2026-05-19-hide-hr-email-from-students.md) — remove recruiter contact emails from public student UI and payloads
 - [2026-05-13 — Admin interview moderation page; Overview → Settings](decisions/2026-05-13-admin-interview-moderation.md) — new /admin/interviews with filters + bulk soft-cancel by email; settings moved to /admin/settings
 - [2026-05-13 — Event-day burst hardening](decisions/2026-05-13-event-day-burst-hardening.md) — SKIP LOCKED slot claim; two-tier auth rate limit (IP + email)
 - [2026-05-13 — Password-reset brute-force fix](decisions/2026-05-13-password-reset-brute-force-fix.md) — `failed_attempts` cap + rate limit on verify-code; CSPRNG for codes

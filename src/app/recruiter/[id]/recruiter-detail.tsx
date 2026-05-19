@@ -10,7 +10,6 @@ import {
   Building2,
   ExternalLink,
   Globe,
-  Mail,
   MapPin,
   Clock,
   ChevronLeft,
@@ -51,7 +50,6 @@ type Recruiter = {
   company: string;
   industry: string;
   description: string;
-  contactEmail: string;
   logoUrl: string | null;
   websiteUrl: string | null;
   galleryUrls: string[];
@@ -419,10 +417,6 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                 <CardContent className="border-t pt-4">
                   <p className="text-sm text-muted-foreground">{recruiter.description}</p>
                   <div className="mt-3 space-y-1.5 text-xs text-muted-foreground">
-                    <p className="flex items-start gap-1.5">
-                      <Mail className="mt-0.5 h-3 w-3 shrink-0" />
-                      <span className="break-all">{recruiter.contactEmail}</span>
-                    </p>
                     {recruiter.websiteUrl && (
                       <a
                         href={recruiter.websiteUrl}
@@ -499,10 +493,6 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     <p className="text-sm text-muted-foreground line-clamp-3">{recruiter.description}</p>
                     <Separator />
                     <div className="space-y-1.5 text-xs text-muted-foreground">
-                      <div className="flex items-start gap-2">
-                        <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <span className="break-all">{recruiter.contactEmail}</span>
-                      </div>
                       {recruiter.websiteUrl && (
                         <a
                           href={recruiter.websiteUrl}
@@ -881,7 +871,6 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                 <BookingForm
                   recruiterId={recruiter.id}
                   company={recruiter.company}
-                  contactEmail={recruiter.contactEmail}
                   positions={[selectedPosition]}
                   slot={selectedSlot}
                   onBack={handleBack}

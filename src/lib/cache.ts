@@ -26,7 +26,7 @@ export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
  * Cached recruiters list - 5 minute TTL
  */
 export async function getCachedRecruiters() {
-  const key = "recruiters:list:v2";
+  const key = "recruiters:list:v3";
   const cached = await cache.get(key);
 
   if (cached) {
@@ -45,7 +45,6 @@ async function fetchRecruiters() {
       company: recruiters.company,
       industry: recruiters.industry,
       description: recruiters.description,
-      contactEmail: recruiters.contactEmail,
       logoUrl: recruiters.logoUrl,
     })
     .from(recruiters)

@@ -36,7 +36,6 @@ type Profile = {
 export function BookingForm({
   recruiterId,
   company,
-  contactEmail,
   positions,
   slot,
   onBack,
@@ -44,7 +43,6 @@ export function BookingForm({
 }: {
   recruiterId: number;
   company: string;
-  contactEmail: string;
   positions: string[];
   slot: SelectedSlot;
   onBack: () => void;
@@ -245,9 +243,7 @@ export function BookingForm({
               placeholder="https://drive.google.com/file/d/..."
             />
             <p className="text-xs text-muted-foreground">
-              {interpolate(messages.bookingForm.cvShareOnly, {
-                email: contactEmail,
-              })}
+              {messages.bookingForm.cvShareOnly}
             </p>
             <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-xs leading-relaxed text-muted-foreground">
               <input

@@ -43,7 +43,6 @@ async function getJob(id: number) {
       createdAt: jobOpenings.createdAt,
       recruiterId: recruiters.id,
       company: recruiters.company,
-      contactEmail: recruiters.contactEmail,
       logoUrl: recruiters.logoUrl,
     })
     .from(jobOpenings)

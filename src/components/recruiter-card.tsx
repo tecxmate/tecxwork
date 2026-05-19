@@ -10,7 +10,6 @@ export type RecruiterCardData = {
   industry: string;
   description: string;
   positions: string[];
-  contactEmail: string;
   jdAvailable: boolean;
   logoUrl: string | null;
 };

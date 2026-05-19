@@ -254,7 +254,7 @@ export function RecruiterSectionVi() {
             <li>Mô tả công ty, website</li>
             <li>Logo và ảnh thư viện (tối đa 4 — tải lên Vercel Blob)</li>
             <li>Số người phỏng vấn (1–10) — tăng sẽ mở rộng số slot; giảm chỉ bỏ các slot chưa được đặt</li>
-            <li>Email liên hệ hiển thị cho ứng viên</li>
+            <li>Email liên hệ dùng cho thông báo của nền tảng</li>
           </ul>
         </div>
 
