@@ -429,3 +429,15 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Niko requested changing the event location to MCUT (Ming Chi University of Technology).
 - Updated static event defaults, schema/default seed values, admin placeholder copy, and event wiki context.
 - Added a DB update script so existing `event_config` rows can be moved from NTUT to MCUT.
+
+## [2026-05-19] fix | Optional job location
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko clarified that if a company does not put a job location on the JD, the platform should leave it empty rather than falling back to the event venue.
+- Removed recruiter dashboard/API validation requiring job location; existing public cards already hide empty location badges.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-19] fix | DB-backed event venue display
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- Niko asked to apply the event location variable anywhere venue text had been hardcoded.
+- Switched recruiter detail event-venue display and Open Graph image venue text to use DB-backed event branding instead of static `EVENT_CONFIG` values.
+- Kept job location independent and optional; empty job locations remain blank.

@@ -137,12 +137,6 @@ export async function PUT(
 
   if ("location" in body) {
     const location = toCleanString(body.location);
-    if (!location) {
-      return NextResponse.json(
-        { error: "Location is required" },
-        { status: 400 }
-      );
-    }
     updates.location = location;
   }
 

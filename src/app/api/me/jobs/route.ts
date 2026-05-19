@@ -117,9 +117,6 @@ export async function POST(req: NextRequest) {
   if (!title) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
-  if (!location) {
-    return NextResponse.json({ error: "Location is required" }, { status: 400 });
-  }
   if (!employmentType || !EMPLOYMENT_TYPE_VALUES.has(employmentType)) {
     return NextResponse.json(
       { error: "Valid employment type is required" },

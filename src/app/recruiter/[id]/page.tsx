@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { db, recruiters, jobOpenings } from "@/lib/db";
 import { and, eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { getEventBranding } from "@/lib/event-branding";
 import { RecruiterDetail } from "./recruiter-detail";
 
 export default async function RecruiterPage({
@@ -15,7 +16,7 @@ export default async function RecruiterPage({
 
   const session = await getSession();
 
-  const [[recruiter], jobs] = await Promise.all([
+  const [[recruiter], jobs, branding] = await Promise.all([
     db
       .select({
         id: recruiters.id,
@@ -56,6 +57,7 @@ export default async function RecruiterPage({
           eq(jobOpenings.moderationStatus, "approved")
         )
       ),
+    getEventBranding(),
   ]);
 
   if (!recruiter) notFound();
@@ -65,6 +67,8 @@ export default async function RecruiterPage({
       recruiter={recruiter}
       jobs={jobs}
       isAuthenticated={!!session}
+      eventLocation={branding.location}
+      slotDuration={branding.slotDuration}
     />
   );
 }

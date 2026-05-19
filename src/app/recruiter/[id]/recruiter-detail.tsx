@@ -31,7 +31,6 @@ import { BookingForm } from "@/components/booking-form";
 import { SiteFooter } from "@/components/site-footer";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
-import { EVENT_CONFIG } from "@/lib/data";
 import {
   employmentTypeLabel,
   formatApplicationDeadline,
@@ -173,9 +172,17 @@ type Props = {
   recruiter: Recruiter;
   jobs: JobOpening[];
   isAuthenticated: boolean;
+  eventLocation: string;
+  slotDuration: number;
 };
 
-export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated }: Props) {
+export function RecruiterDetail({
+  recruiter,
+  jobs: initialJobs,
+  isAuthenticated,
+  eventLocation,
+  slotDuration,
+}: Props) {
   const { messages, locale } = useStudentI18n();
   const router = useRouter();
   const [step, setStep] = useState<Step>("positions");
@@ -432,7 +439,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     <p className="flex items-center gap-1.5">
                       <Clock className="h-3 w-3 shrink-0" />
                       {interpolate(messages.recruiterDetail.interviewMin, {
-                        duration: EVENT_CONFIG.slotDuration,
+                        duration: slotDuration,
                       })}
                     </p>
                   </div>
@@ -509,13 +516,13 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                         <Clock className="h-3.5 w-3.5 shrink-0" />
                         <span>
                           {interpolate(messages.recruiterDetail.interviewMin, {
-                            duration: EVENT_CONFIG.slotDuration,
+                            duration: slotDuration,
                           })}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-3.5 w-3.5 shrink-0" />
-                        <span>{EVENT_CONFIG.location}</span>
+                        <span>{eventLocation}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -854,7 +861,7 @@ export function RecruiterDetail({ recruiter, jobs: initialJobs, isAuthenticated 
                     </h2>
                     <p className="text-sm text-muted-foreground">
                       {interpolate(messages.recruiterDetail.pickTime, {
-                        duration: EVENT_CONFIG.slotDuration,
+                        duration: slotDuration,
                       })}
                     </p>
                   </CardHeader>

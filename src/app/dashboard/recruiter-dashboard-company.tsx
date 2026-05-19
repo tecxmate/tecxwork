@@ -336,10 +336,10 @@ export function RecruiterCompanyTab({
     if (addingJob) return;
 
     const payload = buildJobPayload(newJobDraft, salaryCurrencyOptions);
-    if (!payload.title || !payload.location || !payload.employmentType) {
-      setJobError("Please fill in title, location, and employment type.");
+    if (!payload.title || !payload.employmentType) {
+      setJobError("Please fill in title and employment type.");
       setJobStatus("error");
-      setJobStatusMessage("Please fill in title, location, and employment type.");
+      setJobStatusMessage("Please fill in title and employment type.");
       return;
     }
 
@@ -381,10 +381,10 @@ export function RecruiterCompanyTab({
 
   async function handleUpdateJob(id: number) {
     const payload = buildJobPayload(editJobDraft, salaryCurrencyOptions);
-    if (!payload.title || !payload.location || !payload.employmentType) {
-      setJobError("Please fill in title, location, and employment type.");
+    if (!payload.title || !payload.employmentType) {
+      setJobError("Please fill in title and employment type.");
       setJobStatus("error");
-      setJobStatusMessage("Please fill in title, location, and employment type.");
+      setJobStatusMessage("Please fill in title and employment type.");
       return;
     }
 
@@ -594,7 +594,6 @@ export function RecruiterCompanyTab({
                 newJobSaved ||
                 !hasNewJobDraftChanges ||
                 !newJobDraft.title.trim() ||
-                !newJobDraft.location.trim() ||
                 !newJobDraft.employmentType,
               loading: addingJob,
               saved: newJobSaved,
@@ -613,7 +612,6 @@ export function RecruiterCompanyTab({
                   updatingJobId === selectedJobId ||
                   isCurrentEditJobSaved ||
                   !editJobDraft.title.trim() ||
-                  !editJobDraft.location.trim() ||
                   !editJobDraft.employmentType,
                 loading: updatingJobId === selectedJobId,
                 saved: isCurrentEditJobSaved,
@@ -704,7 +702,6 @@ export function RecruiterCompanyTab({
             value={draft.location}
             onChange={(e) => onChange("location", e.target.value)}
             placeholder={companyMessages.locationPlaceholder}
-            required
           />
         </div>
 
