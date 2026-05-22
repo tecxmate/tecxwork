@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
+import { AppTopBarActions } from "@/components/app-topbar-actions";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -112,7 +113,15 @@ export function RecruiterSignupScreen() {
             <ArrowLeft className="h-4 w-4" />
             {messages.common.back}
           </Link>
-          <RecruiterLanguageSwitcher className="sm:w-32" />
+          <AppTopBarActions
+            mobileOverflow
+            desktopChildren={null}
+            mobileChildren={
+              <div className="px-2 py-2">
+                <RecruiterLanguageSwitcher />
+              </div>
+            }
+          />
         </div>
       </header>
 
