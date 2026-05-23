@@ -447,3 +447,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko flagged that the mobile recruiter-detail header cramped the company title by showing the full language switcher inline.
 - Moved the student language switcher into the mobile hamburger menu on recruiter detail pages while keeping it visible on desktop.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-24] fix | Browser-default first-visit language
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked for first-time users to see their browser default language without manually switching on first sign-in/use.
+- Added supported-language preference detection for `Accept-Language` and `navigator.languages`, persisted locale cookies on first load, and kept existing manual locale choices authoritative.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

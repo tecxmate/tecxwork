@@ -20,17 +20,59 @@ export const studentMessages: Record<StudentLocale, StudentMessages> = {
   "zh-TW": studentZhTwMessages,
 };
 
+function preferredLanguageTags(
+  locale: string | readonly string[] | null | undefined
+): string[] {
+  if (!locale) return [];
+  const values = typeof locale === "string" ? locale.split(",") : [...locale];
+
+  return values
+    .map((value) => {
+      const [tag, ...params] = value.trim().split(";");
+      const qualityParam = params.find((param) => param.trim().startsWith("q="));
+      const quality = qualityParam
+        ? Number.parseFloat(qualityParam.trim().slice(2))
+        : 1;
+
+      return {
+        tag: tag.trim().toLowerCase(),
+        quality: Number.isFinite(quality) ? quality : 1,
+      };
+    })
+    .filter(({ tag, quality }) => tag && quality > 0)
+    .sort((a, b) => b.quality - a.quality)
+    .map(({ tag }) => tag);
+}
+
+function localeFromLanguageTag(tag: string): StudentLocale | null {
+  if (tag.startsWith("zh")) {
+    return "zh-TW";
+  }
+  if (tag.startsWith("vi")) {
+    return "vi";
+  }
+  if (tag.startsWith("en")) {
+    return "en";
+  }
+  return null;
+}
+
+export function detectPreferredStudentLocale(
+  locale: string | readonly string[] | null | undefined
+): StudentLocale {
+  for (const tag of preferredLanguageTags(locale)) {
+    const matchedLocale = localeFromLanguageTag(tag);
+    if (matchedLocale) {
+      return matchedLocale;
+    }
+  }
+  return "en";
+}
+
 export function normalizeStudentLocale(
   locale: string | null | undefined
 ): StudentLocale {
-  const value = locale?.toLowerCase() || "";
-  if (value.startsWith("zh")) {
-    return "zh-TW";
-  }
-  if (value.startsWith("vi")) {
-    return "vi";
-  }
-  return "en";
+  return detectPreferredStudentLocale(locale);
 }
 
 export function getStudentMessages(locale: StudentLocale): StudentMessages {

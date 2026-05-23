@@ -3,6 +3,7 @@
 import {
   startTransition,
   createContext,
+  useEffect,
   useContext,
   useMemo,
   useState,
@@ -12,6 +13,7 @@ import { useRouter } from "next/navigation";
 
 import {
   STUDENT_LOCALE_COOKIE,
+  detectPreferredStudentLocale,
   getStudentMessages,
   type StudentLocale,
   type StudentMessages,
@@ -25,6 +27,12 @@ type StudentLocaleContextValue = {
 
 const StudentLocaleContext = createContext<StudentLocaleContextValue | null>(null);
 
+function hasLocaleCookie(cookieName: string) {
+  return document.cookie
+    .split(";")
+    .some((cookie) => cookie.trim().startsWith(`${cookieName}=`));
+}
+
 export function StudentLocaleProvider({
   initialLocale,
   children,
@@ -34,6 +42,24 @@ export function StudentLocaleProvider({
 }) {
   const router = useRouter();
   const [locale, setLocaleState] = useState<StudentLocale>(initialLocale);
+
+  useEffect(() => {
+    if (hasLocaleCookie(STUDENT_LOCALE_COOKIE)) return;
+
+    const browserLocale = detectPreferredStudentLocale(
+      navigator.languages?.length ? navigator.languages : navigator.language
+    );
+
+    document.cookie = `${STUDENT_LOCALE_COOKIE}=${encodeURIComponent(
+      browserLocale
+    )}; path=/; max-age=31536000; samesite=lax`;
+
+    if (browserLocale !== locale) {
+      startTransition(() => {
+        router.refresh();
+      });
+    }
+  }, [locale, router]);
 
   const value = useMemo<StudentLocaleContextValue>(() => {
     const messages = getStudentMessages(locale);
