@@ -1,53 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getApplicantFromSession } from "@/lib/auth";
 import {
   db,
-  applicantProfiles,
   professionalProfiles,
   referralRequests,
   referrals,
 } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
+import { parseJsonBody, referralRequestSchema } from "@/lib/validation";
 
 export async function POST(req: NextRequest) {
-  const session = await getSession();
+  const applicantSession = await getApplicantFromSession();
 
-  if (!session || session.role !== "applicant") {
+  if (!applicantSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { professionalId: number; message: string };
-
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  if (!body.professionalId || !body.message) {
-    return NextResponse.json(
-      { error: "Professional ID and message required" },
-      { status: 400 }
-    );
-  }
-
-  const [applicant] = await db
-    .select()
-    .from(applicantProfiles)
-    .where(eq(applicantProfiles.userId, session.userId))
-    .limit(1);
-
-  if (!applicant) {
-    return NextResponse.json(
-      { error: "Applicant profile not found" },
-      { status: 404 }
-    );
-  }
+  const parsed = await parseJsonBody(req, referralRequestSchema);
+  if (!parsed.ok) return parsed.response;
+  const { professionalId, message } = parsed.data;
 
   const [professional] = await db
     .select()
     .from(professionalProfiles)
-    .where(eq(professionalProfiles.id, body.professionalId))
+    .where(eq(professionalProfiles.id, professionalId))
     .limit(1);
 
   if (!professional) {
@@ -62,8 +38,8 @@ export async function POST(req: NextRequest) {
     .from(referrals)
     .where(
       and(
-        eq(referrals.professionalId, body.professionalId),
-        eq(referrals.applicantId, applicant.id)
+        eq(referrals.professionalId, professionalId),
+        eq(referrals.applicantId, applicantSession.applicantId)
       )
     )
     .limit(1);
@@ -80,8 +56,8 @@ export async function POST(req: NextRequest) {
     .from(referralRequests)
     .where(
       and(
-        eq(referralRequests.professionalId, body.professionalId),
-        eq(referralRequests.applicantId, applicant.id),
+        eq(referralRequests.professionalId, professionalId),
+        eq(referralRequests.applicantId, applicantSession.applicantId),
         eq(referralRequests.status, "pending")
       )
     )
@@ -97,9 +73,9 @@ export async function POST(req: NextRequest) {
   const [request] = await db
     .insert(referralRequests)
     .values({
-      applicantId: applicant.id,
-      professionalId: body.professionalId,
-      message: body.message,
+      applicantId: applicantSession.applicantId,
+      professionalId,
+      message,
     })
     .returning();
 

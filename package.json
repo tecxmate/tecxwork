@@ -21,6 +21,7 @@
     "db:update:event-location-mcut": "npx tsx src/lib/db/update-event-location-mcut.ts",
     "db:update:onboarding-mode": "npx tsx src/lib/db/add-onboarding-mode-column.ts",
     "db:update:recruiter-email-approvals": "npx tsx src/lib/db/create-recruiter-email-approvals-table.ts",
+    "db:update:referral-system": "npx tsx src/lib/db/add-referral-system-tables.ts",
     "db:update:student-profile-columns": "npx tsx src/lib/db/add-student-profile-columns.ts",
     "db:update:work-experiences": "npx tsx src/lib/db/add-work-experiences-column.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",

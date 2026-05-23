@@ -471,3 +471,9 @@ attributed_to: [niko]   belongs_to: [referral-system]
 - Niko asked to switch back to the old `feature/referral-system` branch, update it to current `main`, and continue development there.
 - Merged current `main` into the feature branch, resolved auth/DB/get-started conflicts, and restored build/lint health with professional nav coverage.
 - Added `docs/wiki/topics/referral-system.md` and updated `docs/wiki/index.md`.
+
+## [2026-05-24] fix | Referral API hardening
+attributed_to: [niko]   belongs_to: [referral-system]
+- Continued referral-system development after reviving the old branch.
+- Updated professional signup and referral request APIs to use current validation/auth helpers, complete session payloads, and bounded request bodies.
+- Added `npm run db:update:referral-system` for referral/professional tables.

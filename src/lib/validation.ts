@@ -91,6 +91,30 @@ export const applicantSignupSchema = z.object({
   wantsNewsletter: z.boolean().optional(),
 });
 
+export const professionalSignupSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  name: z.string().trim().min(1, "Name is required"),
+  company: z.string().trim().min(1, "Company is required"),
+  jobTitle: z.string().trim().min(1, "Job title is required"),
+  industry: z.string().trim().min(1, "Industry is required"),
+  linkedinUrl: z.string().trim().url("LinkedIn URL must be valid").optional().or(z.literal("")),
+  bio: z.string().trim().max(1000, "Bio must be 1000 characters or less").optional(),
+  graduatedFrom: z.string().trim().max(200).optional(),
+  graduationYear: z.number().int().min(1900).max(new Date().getFullYear() + 1).optional(),
+});
+
+export const referralRequestSchema = z.object({
+  professionalId: z.number().int().positive(),
+  message: z.string().trim().min(1, "Message is required").max(2000),
+});
+
+export const referralRespondSchema = z.object({
+  action: z.enum(["accept", "reject"]),
+  endorsement: z.string().trim().max(2000).optional(),
+  relationship: z.string().trim().max(200).optional(),
+});
+
 /* ---------- bookings ---------- */
 
 export const createBookingSchema = z.object({

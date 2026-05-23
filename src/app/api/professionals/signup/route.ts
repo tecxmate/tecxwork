@@ -1,42 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, professionalProfiles } from "@/lib/db";
 import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
-import { sign } from "jsonwebtoken";
-import { COOKIE_NAME } from "@/lib/auth";
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+import { COOKIE_NAME, createToken, hashPassword } from "@/lib/auth";
+import { parseJsonBody, professionalSignupSchema } from "@/lib/validation";
 
 export async function POST(req: NextRequest) {
-  let body: {
-    email: string;
-    password: string;
-    name: string;
-    company: string;
-    jobTitle: string;
-    industry: string;
-    linkedinUrl?: string;
-    bio?: string;
-    graduatedFrom?: string;
-    graduationYear?: number;
-  };
-
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const { email, password, name, company, jobTitle, industry } = body;
-
-  if (!email || !password || !name || !company || !jobTitle || !industry) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
-  }
-
-  const normalizedEmail = email.trim().toLowerCase();
+  const parsed = await parseJsonBody(req, professionalSignupSchema);
+  if (!parsed.ok) return parsed.response;
+  const {
+    email: normalizedEmail,
+    password,
+    name,
+    company,
+    jobTitle,
+    industry,
+    linkedinUrl,
+    bio,
+    graduatedFrom,
+    graduationYear,
+  } = parsed.data;
 
   const existing = await db
     .select()
@@ -51,7 +33,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await hashPassword(password);
 
   const [newUser] = await db
     .insert(users)
@@ -72,18 +54,18 @@ export async function POST(req: NextRequest) {
       company,
       jobTitle,
       industry,
-      linkedinUrl: body.linkedinUrl || null,
-      bio: body.bio || "",
-      graduatedFrom: body.graduatedFrom || null,
-      graduationYear: body.graduationYear || null,
+      linkedinUrl: linkedinUrl || null,
+      bio: bio || "",
+      graduatedFrom: graduatedFrom || null,
+      graduationYear: graduationYear || null,
     })
     .returning();
 
-  const token = sign(
-    { userId: newUser.id, role: newUser.role },
-    JWT_SECRET,
-    { expiresIn: "24h" }
-  );
+  const token = createToken({
+    userId: newUser.id,
+    email: newUser.email,
+    role: "professional",
+  });
 
   const res = NextResponse.json({
     user: {
@@ -93,7 +75,7 @@ export async function POST(req: NextRequest) {
       role: newUser.role,
     },
     profile,
-  });
+  }, { status: 201 });
 
   res.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,

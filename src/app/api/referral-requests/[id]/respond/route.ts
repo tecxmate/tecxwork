@@ -7,6 +7,7 @@ import {
   referrals,
 } from "@/lib/db";
 import { eq, and, sql } from "drizzle-orm";
+import { parseJsonBody, referralRespondSchema } from "@/lib/validation";
 
 export async function POST(
   req: NextRequest,
@@ -25,17 +26,9 @@ export async function POST(
     return NextResponse.json({ error: "Invalid request ID" }, { status: 400 });
   }
 
-  let body: {
-    action: "accept" | "reject";
-    endorsement?: string;
-    relationship?: string;
-  };
-
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(req, referralRespondSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   const [profile] = await db
     .select()

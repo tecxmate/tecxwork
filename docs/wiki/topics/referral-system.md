@@ -19,6 +19,7 @@ The referral system lets working professionals create professional profiles, app
 - Revived the old `feature/referral-system` branch and merged it with current `main` on 2026-05-24.
 - Added `professional` as a user role, professional profile tables, referrals, and referral requests in `src/lib/db/schema.ts`.
 - Routes currently include `/network`, `/professional/signup`, `/professional/dashboard`, `/api/professionals`, `/api/professionals/me`, `/api/professionals/signup`, `/api/referral-requests`, and `/api/referral-requests/[id]/respond`.
+- Deployment can create the referral enum/tables with `npm run db:update:referral-system`.
 - The updated branch passes `npm run build`; `npm run lint` has the same existing warning baseline as `main`.
 
 ## Open questions
@@ -28,4 +29,5 @@ The referral system lets working professionals create professional profiles, app
 - Whether professional signup should reuse the current email verification and localized auth flows.
 
 ## History
+- 2026-05-24: Hardened professional signup and referral request APIs with current validation/auth helpers, removed the old JWT fallback secret path, and added `src/lib/db/add-referral-system-tables.ts`.
 - 2026-05-24: Merged current `main` into `feature/referral-system`, resolved conflicts around auth roles, DB connection setup, and role selection, then added professional nav coverage.
