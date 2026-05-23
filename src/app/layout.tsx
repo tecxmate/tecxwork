@@ -1,10 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
-import { InstallPrompt } from "@/components/install-prompt";
+import { BrandSplash } from "@/components/brand-splash";
+import { MobileBottomNavClient } from "@/components/mobile-bottom-nav-client";
+import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
+import { RouteLoadingSignal } from "@/components/route-loading-signal";
+import { StudentLocaleProvider } from "@/components/student-locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
-import { EVENT_CONFIG } from "@/lib/data";
+import { getSession } from "@/lib/auth";
+import { getEventBranding } from "@/lib/event-branding";
+import { getStudentLocale } from "@/lib/student-locale.server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,49 +36,90 @@ const instrumentSerif = Instrument_Serif({
   style: "italic",
 });
 
-export const metadata: Metadata = {
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "TECXWORK",
-  },
-  title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
-  description:
-    `Ngày Hội Việc Làm ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} — ${EVENT_CONFIG.tagline}. ${EVENT_CONFIG.displayDate} at ${EVENT_CONFIG.hostedAt}.`,
-  openGraph: {
-    title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
-    description:
-      `Ngày Hội Việc Làm ${EVENT_CONFIG.organizerShort} ${EVENT_CONFIG.displayYear} — ${EVENT_CONFIG.tagline}. Book your interview slot now.`,
-    type: "website",
-    locale: "en_US",
-    siteName: "TECXWORK",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`,
-    description:
-      `Career fair for Vietnamese students in Taiwan. ${EVENT_CONFIG.displayDate} at ${EVENT_CONFIG.hostedAt}.`,
-  },
+function getMetadataBase(): URL {
+  const configured =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_BASE_URL;
+
+  try {
+    return new URL(configured ?? "https://tecxwork.com");
+  } catch {
+    return new URL("https://tecxwork.com");
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getEventBranding();
+  const titleLine = branding.name;
+  return {
+    metadataBase: getMetadataBase(),
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "TECXWORK",
+    },
+    title: titleLine,
+    description: `${branding.organizerShort} ${branding.displayYear} — ${branding.tagline}. ${branding.displayDate} at ${branding.hostedAt}.`,
+    openGraph: {
+      title: titleLine,
+      description: `${branding.organizerShort} ${branding.displayYear} — ${branding.tagline}. Book your interview slot now.`,
+      type: "website",
+      locale: "en_US",
+      siteName: "TECXWORK",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleLine,
+      description: `Career fair for Vietnamese students in Taiwan. ${branding.displayDate} at ${branding.hostedAt}.`,
+    },
+  };
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  colorScheme: "light",
+  themeColor: "#FAFAFA",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const sessionPromise = getSession();
+  const studentLocale = await getStudentLocale();
+
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${ebGaramond.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-[100dvh] flex-col overflow-x-clip bg-background">
         <ThemeProvider>
-          {children}
-          <InstallPrompt />
+          <StudentLocaleProvider initialLocale={studentLocale}>
+            <RouteLoadingSignal />
+            <PwaFirstRunSplash />
+            <BrandSplash />
+            {children}
+            <Suspense fallback={null}>
+              <MobileBottomNavServer sessionPromise={sessionPromise} />
+            </Suspense>
+          </StudentLocaleProvider>
         </ThemeProvider>
       </body>
     </html>
   );
+}
+
+async function MobileBottomNavServer({
+  sessionPromise,
+}: {
+  sessionPromise: ReturnType<typeof getSession>;
+}) {
+  const session = await sessionPromise;
+  return <MobileBottomNavClient role={session?.role ?? "guest"} />;
 }

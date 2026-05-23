@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, allowedDomains } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { db, allowedDomains, recruiterEmailApprovals, recruiters, users } from "@/lib/db";
+import { and, eq } from "drizzle-orm";
 
 /** GET ?email=... — check if recruiter email is allowed, return pre-fill info */
 export async function GET(req: NextRequest) {
@@ -11,7 +11,45 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
-  const domain = email.split("@")[1].trim().toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
+  const domain = normalizedEmail.split("@")[1].trim().toLowerCase();
+
+  const [emailApproval] = await db
+    .select()
+    .from(recruiterEmailApprovals)
+    .where(
+      and(
+        eq(recruiterEmailApprovals.email, normalizedEmail),
+        eq(recruiterEmailApprovals.status, "approved")
+      )
+    );
+
+  if (emailApproval) {
+    return NextResponse.json({
+      allowed: true,
+      company: emailApproval.company,
+      industry: emailApproval.industry,
+      approvalType: "email",
+    });
+  }
+
+  const [existingRecruiter] = await db
+    .select({
+      company: recruiters.company,
+      industry: recruiters.industry,
+    })
+    .from(users)
+    .innerJoin(recruiters, eq(recruiters.userId, users.id))
+    .where(and(eq(users.email, normalizedEmail), eq(users.role, "recruiter")));
+
+  if (existingRecruiter) {
+    return NextResponse.json({
+      allowed: true,
+      company: existingRecruiter.company,
+      industry: existingRecruiter.industry,
+      approvalType: "existing-recruiter",
+    });
+  }
 
   const [match] = await db
     .select()
@@ -29,5 +67,6 @@ export async function GET(req: NextRequest) {
     allowed: true,
     company: match.company,
     industry: match.industry,
+    approvalType: "domain",
   });
 }

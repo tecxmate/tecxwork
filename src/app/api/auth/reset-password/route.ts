@@ -1,32 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, passwordResetCodes } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { and, eq, gte } from "drizzle-orm";
 import { hashPassword } from "@/lib/auth";
+import { parseJsonBody, resetPasswordSchema } from "@/lib/validation";
 
 /**
  * POST /api/auth/reset-password
- * Body: { email, resetToken (code ID), password }
- * Sets the new password if the token is valid.
+ * Body: { email, resetToken (id_code), password }
+ * Sets the new password if the token is valid, verified, unexpired, and unused.
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const email = body.email?.trim().toLowerCase();
-  const resetToken = body.resetToken;
-  const password = body.password;
-
-  if (!email || !resetToken || !password) {
-    return NextResponse.json(
-      { error: "Email, reset token, and new password are required" },
-      { status: 400 }
-    );
-  }
-
-  if (password.length < 6) {
-    return NextResponse.json(
-      { error: "Password must be at least 6 characters" },
-      { status: 400 }
-    );
-  }
+  const parsed = await parseJsonBody(req, resetPasswordSchema);
+  if (!parsed.ok) return parsed.response;
+  const { email, resetToken, password } = parsed.data;
 
   // Parse compound token: "id_code"
   const separatorIdx = resetToken.indexOf("_");
@@ -46,15 +32,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify the reset token belongs to this email, was used (verified), and code matches
-  const [codeRecord] = await db
-    .select({ id: passwordResetCodes.id, email: passwordResetCodes.email, code: passwordResetCodes.code })
-    .from(passwordResetCodes)
-    .where(eq(passwordResetCodes.id, tokenId));
+  // Atomically consume the token: must match id+code+email, be verified
+  // (used=true was set by /verify-code), and not expired. Deleting on the
+  // same conditions ensures a token can be redeemed at most once even
+  // under concurrent requests.
+  const consumed = await db
+    .delete(passwordResetCodes)
+    .where(
+      and(
+        eq(passwordResetCodes.id, tokenId),
+        eq(passwordResetCodes.email, email),
+        eq(passwordResetCodes.code, tokenCode),
+        eq(passwordResetCodes.used, true),
+        gte(passwordResetCodes.expiresAt, new Date())
+      )
+    )
+    .returning({ id: passwordResetCodes.id });
 
-  if (!codeRecord || codeRecord.email !== email || codeRecord.code !== tokenCode) {
+  if (!consumed.length) {
     return NextResponse.json(
-      { error: "Invalid reset token. Please start over." },
+      { error: "Invalid or expired reset token. Please start over." },
       { status: 400 }
     );
   }
@@ -74,7 +71,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Clean up all codes for this email
+  // Clean up any other codes for this email
   await db
     .delete(passwordResetCodes)
     .where(eq(passwordResetCodes.email, email));

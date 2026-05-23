@@ -1,30 +1,33 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase } from "lucide-react";
 
 export default function Loading() {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Briefcase className="h-4 w-4 text-primary-foreground" />
+      <header className="sticky top-0 z-10 border-b bg-white dark:bg-card">
+        <div className="h-[env(safe-area-inset-top)] bg-primary md:hidden" />
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <img src="/icon.svg" alt="TECXWORK" className="h-8 w-8 rounded-md" />
+              <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
             </div>
-            <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
+            <div className="ml-auto flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-md" />
+              <Skeleton className="h-8 w-24 rounded-full" />
+            </div>
           </div>
-          <Skeleton className="h-8 w-20 rounded-lg" />
         </div>
       </header>
       <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-7xl text-center">
-          <Skeleton className="mx-auto h-5 w-20" />
-          <Skeleton className="mx-auto mt-3 h-8 w-64 sm:h-10" />
-          <Skeleton className="mx-auto mt-2 h-4 w-48" />
+          <Skeleton className="mx-auto h-8 w-64 sm:h-12 sm:w-96" />
+          <Skeleton className="mx-auto mt-2 h-4 w-80 sm:mt-3 sm:h-5" />
         </div>
       </section>
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
-          <Skeleton className="mb-4 h-9 w-full max-w-sm" />
+          <Skeleton className="mb-4 h-10 w-full max-w-sm" />
+          <Skeleton className="mb-4 h-5 w-32" />
           <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="rounded-xl border bg-card p-5">

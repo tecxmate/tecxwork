@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -58,11 +58,7 @@ export default function ProfessionalDashboard() {
   const [endorsement, setEndorsement] = useState("");
   const [relationship, setRelationship] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/professionals/me");
       if (!res.ok) {
@@ -78,7 +74,11 @@ export default function ProfessionalDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleRespond = async (
     requestId: number,
@@ -300,7 +300,7 @@ export default function ProfessionalDashboard() {
                         {referral.relationship}
                       </p>
                       <p className="mt-2 text-sm italic">
-                        "{referral.endorsement}"
+                        &ldquo;{referral.endorsement}&rdquo;
                       </p>
                     </div>
                     <Badge className="bg-green-100 text-green-700">

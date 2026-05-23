@@ -17,6 +17,8 @@ import {
   FileText,
   Briefcase,
 } from "lucide-react";
+import { useStudentI18n } from "@/components/student-locale-provider";
+import { interpolate } from "@/lib/student-messages";
 
 type BookingState = "idle" | "submitting" | "success" | "error";
 
@@ -34,7 +36,6 @@ type Profile = {
 export function BookingForm({
   recruiterId,
   company,
-  contactEmail,
   positions,
   slot,
   onBack,
@@ -42,24 +43,25 @@ export function BookingForm({
 }: {
   recruiterId: number;
   company: string;
-  contactEmail: string;
   positions: string[];
   slot: SelectedSlot;
   onBack: () => void;
   onDone?: () => void;
 }) {
+  const { messages } = useStudentI18n();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState("");
   const [position, setPosition] = useState(positions[0] ?? "");
   const [cvLink, setCvLink] = useState("");
   const [pipaConsent, setPipaConsent] = useState(false);
+  const [shareConfirm, setShareConfirm] = useState(false);
   const [state, setState] = useState<BookingState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/me/profile")
       .then(async (r) => {
-        if (!r.ok) throw new Error("Could not load your profile");
+        if (!r.ok) throw new Error(messages.bookingForm.couldNotLoadProfile);
         return r.json();
       })
       .then((data) => {
@@ -67,13 +69,13 @@ export function BookingForm({
         setCvLink(data.profile.cvLink);
       })
       .catch((err) => {
-        setProfileError(err.message || "Failed to load profile");
+        setProfileError(err.message || messages.bookingForm.failedToLoadProfile);
       });
-  }, []);
+  }, [messages.bookingForm.couldNotLoadProfile, messages.bookingForm.failedToLoadProfile]);
 
   const slotDate = new Date(slot.startTime);
   const formattedTime = format(slotDate, "EEEE, MMMM d 'at' HH:mm");
-  const canSubmit = !!profile && !!position && cvLink.trim() && pipaConsent;
+  const canSubmit = !!profile && !!position && cvLink.trim() && pipaConsent && shareConfirm;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -97,13 +99,15 @@ export function BookingForm({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Booking failed");
+        throw new Error(data.error || messages.bookingForm.bookingFailed);
       }
 
       setState("success");
     } catch (err) {
       setState("error");
-      setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
+      setErrorMsg(
+        err instanceof Error ? err.message : messages.register.somethingWentWrong
+      );
     }
   }
 
@@ -116,30 +120,23 @@ export function BookingForm({
           </div>
           <div>
             <h3 className="font-heading text-xl font-semibold">
-              Application Submitted!
+              {messages.bookingForm.applicationSubmitted}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your application to {company} for{" "}
-              <span className="font-medium text-foreground">{position}</span>{" "}
-              at {formattedTime} is now <span className="font-semibold text-yellow-700 dark:text-yellow-300">pending review</span>.
+              {interpolate(messages.bookingForm.submittedBody, {
+                company,
+                position,
+                time: formattedTime,
+                status: messages.bookingForm.pendingReview,
+              })}
             </p>
           </div>
           <Separator />
           <div className="space-y-1 text-sm text-muted-foreground">
-            <p>
-              The recruiter will review your CV and confirm your interview.
-              You&apos;ll receive an email when accepted.
-            </p>
-            <p>
-              Share your CV with{" "}
-              <span className="font-medium text-foreground">
-                {contactEmail}
-              </span>{" "}
-              on Google Drive.
-            </p>
+            <p>{messages.bookingForm.recruiterReview}</p>
           </div>
           <Button variant="outline" onClick={onDone ?? onBack} className="mt-2">
-            View Other Positions
+            {messages.bookingForm.viewOtherPositions}
           </Button>
         </CardContent>
       </Card>
@@ -152,7 +149,9 @@ export function BookingForm({
         <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
           <p className="text-sm text-muted-foreground">{profileError}</p>
-          <Button variant="outline" onClick={onBack}>Back</Button>
+          <Button variant="outline" onClick={onBack}>
+            {messages.common.back}
+          </Button>
         </CardContent>
       </Card>
     );
@@ -163,7 +162,9 @@ export function BookingForm({
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+          <span className="ml-2 text-sm text-muted-foreground">
+            {messages.common.loading}
+          </span>
         </CardContent>
       </Card>
     );
@@ -177,7 +178,7 @@ export function BookingForm({
           <span>{formattedTime}</span>
         </div>
         <h3 className="font-heading text-lg font-semibold">
-          Book with {company}
+          {interpolate(messages.bookingForm.bookWith, { company })}
         </h3>
       </CardHeader>
       <CardContent>
@@ -198,7 +199,8 @@ export function BookingForm({
           <div className="space-y-1.5">
             <label htmlFor="position" className="text-sm font-medium">
               <Briefcase className="mr-1 inline h-3.5 w-3.5" />
-              Position applying for <span className="text-destructive">*</span>
+              {messages.bookingForm.positionApplyingFor}{" "}
+              <span className="text-destructive">*</span>
             </label>
             {positions.length > 1 ? (
               <select
@@ -221,7 +223,7 @@ export function BookingForm({
             )}
             {positions.length > 1 && (
               <p className="text-xs text-muted-foreground">
-                You can apply for multiple positions at different time slots.
+                {messages.bookingForm.multiplePositionHint}
               </p>
             )}
           </div>
@@ -230,7 +232,7 @@ export function BookingForm({
           <div className="space-y-1.5">
             <label htmlFor="cv-link" className="text-sm font-medium">
               <FileText className="mr-1 inline h-3.5 w-3.5" />
-              CV Link <span className="text-destructive">*</span>
+              {messages.bookingForm.cvLink} <span className="text-destructive">*</span>
             </label>
             <Input
               id="cv-link"
@@ -241,9 +243,18 @@ export function BookingForm({
               placeholder="https://drive.google.com/file/d/..."
             />
             <p className="text-xs text-muted-foreground">
-              Share only with{" "}
-              <span className="font-medium text-foreground">{contactEmail}</span>.
+              {messages.bookingForm.cvShareOnly}
             </p>
+            <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-xs leading-relaxed text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={shareConfirm}
+                onChange={(e) => setShareConfirm(e.target.checked)}
+                className="mt-0.5 h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                required
+              />
+              <span>{messages.bookingForm.cvShareConfirm}</span>
+            </label>
           </div>
 
           <Separator />
@@ -263,8 +274,7 @@ export function BookingForm({
               className="cursor-pointer text-xs leading-relaxed text-muted-foreground"
             >
               <ShieldCheck className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-primary" />
-              I consent to sharing my profile with {company} for the {position} position
-              in accordance with Taiwan&apos;s PIPA.
+              {interpolate(messages.bookingForm.consent, { company, position })}
             </label>
           </div>
 
@@ -272,7 +282,7 @@ export function BookingForm({
             <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
-                <p className="font-medium">Booking failed</p>
+                <p className="font-medium">{messages.bookingForm.bookingFailed}</p>
                 <p className="text-xs">{errorMsg}</p>
               </div>
             </div>
@@ -280,16 +290,16 @@ export function BookingForm({
 
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onBack} className="flex-1">
-              Back
+              {messages.common.back}
             </Button>
             <Button type="submit" disabled={!canSubmit || state === "submitting"} className="flex-1">
               {state === "submitting" ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Booking...
+                  {messages.bookingForm.booking}
                 </>
               ) : (
-                "Request Booking"
+                messages.bookingForm.requestBooking
               )}
             </Button>
           </div>

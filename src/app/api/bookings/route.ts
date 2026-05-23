@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, applicantProfiles, recruiters } from "@/lib/db";
 import { eq, and, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { createBookingSchema, parseJsonBody } from "@/lib/validation";
 
 /**
  * POST — Student applies for an interview (Mode A).
@@ -21,25 +22,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: {
-    recruiterId: number;
-    startTime: string;
-    position: string;
-    cvLink?: string;
-    pipaConsent: boolean;
-  };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  if (!body.recruiterId || !body.startTime || !body.position) {
-    return NextResponse.json(
-      { error: "recruiterId, startTime, and position are required" },
-      { status: 400 }
-    );
-  }
+  const parsed = await parseJsonBody(req, createBookingSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   if (!body.pipaConsent) {
     return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, jobOpenings } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 /** GET /api/jobs?recruiterId=X — public listing of job openings */
 export async function GET(req: NextRequest) {
@@ -16,10 +16,29 @@ export async function GET(req: NextRequest) {
       id: jobOpenings.id,
       title: jobOpenings.title,
       jdLink: jobOpenings.jdLink,
+      location: jobOpenings.location,
+      employmentType: jobOpenings.employmentType,
+      workplaceType: jobOpenings.workplaceType,
+      salaryMin: jobOpenings.salaryMin,
+      salaryMax: jobOpenings.salaryMax,
+      salaryCurrency: jobOpenings.salaryCurrency,
+      salaryPeriod: jobOpenings.salaryPeriod,
+      seniority: jobOpenings.seniority,
+      languageRequirement: jobOpenings.languageRequirement,
+      visaSupport: jobOpenings.visaSupport,
+      applicationDeadline: jobOpenings.applicationDeadline,
       description: jobOpenings.description,
+      responsibilities: jobOpenings.responsibilities,
+      requirements: jobOpenings.requirements,
+      benefits: jobOpenings.benefits,
     })
     .from(jobOpenings)
-    .where(eq(jobOpenings.recruiterId, parseInt(recruiterId)))
+    .where(
+      and(
+        eq(jobOpenings.recruiterId, parseInt(recruiterId)),
+        eq(jobOpenings.moderationStatus, "approved")
+      )
+    )
     .orderBy(jobOpenings.createdAt);
 
   return NextResponse.json({ jobs });

@@ -1,29 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 
 export async function GET() {
   const [config] = await db
-    .select({ mode: eventConfig.mode, locked: eventConfig.modeLocked })
+    .select({
+      mode: eventConfig.mode,
+      onboardingMode: eventConfig.onboardingMode,
+      jobModerationEnabled: eventConfig.jobModerationEnabled,
+      salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
+      locked: eventConfig.modeLocked,
+    })
     .from(eventConfig)
     .limit(1);
 
   return NextResponse.json({
     mode: config?.mode ?? "both",
+    onboardingMode: config?.onboardingMode ?? "full",
+    jobModerationEnabled: config?.jobModerationEnabled ?? true,
+    salaryCurrencyOptions: normalizeSalaryCurrencyOptions(
+      config?.salaryCurrencyOptions
+    ),
     locked: config?.locked ?? false,
   });
 }
 
 export async function PUT(req: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
-  const { mode, lock } = body;
+  const { mode, onboardingMode, jobModerationEnabled, salaryCurrencyOptions, lock } = body;
 
   const [config] = await db
     .select({ id: eventConfig.id, locked: eventConfig.modeLocked })
@@ -41,6 +51,25 @@ export async function PUT(req: NextRequest) {
       .set({ modeLocked: lock })
       .where(eq(eventConfig.id, config.id));
     return NextResponse.json({ locked: lock });
+  }
+
+  if (typeof jobModerationEnabled === "boolean") {
+    await db
+      .update(eventConfig)
+      .set({ jobModerationEnabled })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ jobModerationEnabled });
+  }
+
+  if (Array.isArray(salaryCurrencyOptions)) {
+    const normalized = normalizeSalaryCurrencyOptions(salaryCurrencyOptions);
+    await db
+      .update(eventConfig)
+      .set({ salaryCurrencyOptions: normalized })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ salaryCurrencyOptions: normalized });
   }
 
   // Mode change — blocked if currently locked
@@ -63,6 +92,19 @@ export async function PUT(req: NextRequest) {
       .set({ mode })
       .where(eq(eventConfig.id, config.id));
     return NextResponse.json({ mode });
+  }
+
+  if (onboardingMode) {
+    if (!["minimal", "full"].includes(onboardingMode)) {
+      return NextResponse.json({ error: "Invalid onboarding mode" }, { status: 400 });
+    }
+
+    await db
+      .update(eventConfig)
+      .set({ onboardingMode })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ onboardingMode });
   }
 
   return NextResponse.json({ error: "No changes provided" }, { status: 400 });

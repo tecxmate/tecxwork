@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, ArrowRight, FileText } from "lucide-react";
+import { useStudentI18n } from "@/components/student-locale-provider";
 
 export type RecruiterCardData = {
   id: number;
@@ -9,50 +10,58 @@ export type RecruiterCardData = {
   industry: string;
   description: string;
   positions: string[];
-  contactEmail: string;
-  jdLink: string | null;
+  jdAvailable: boolean;
+  logoUrl: string | null;
 };
 
 export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
+  const { messages } = useStudentI18n();
+
   return (
     <Link
       href={`/recruiter/${recruiter.id}`}
-      className="group block h-full focus-visible:outline-none"
+      className="group block h-full min-w-0 focus-visible:outline-none"
     >
-      <Card className="flex h-full cursor-pointer flex-col gap-4 p-4 transition-all duration-200 ease-out group-hover:border-primary/30 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.1)] group-hover:-translate-y-0.5 group-focus-visible:ring-2 group-focus-visible:ring-ring sm:p-5">
-        {/* Top row: logo + industry */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary sm:h-12 sm:w-12">
-            <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+      <Card className="flex h-full min-w-0 cursor-pointer flex-col gap-4 border-border/70 p-4 transition-all duration-200 ease-out group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] group-focus-visible:ring-2 group-focus-visible:ring-ring">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+            {recruiter.logoUrl ? (
+              <img
+                src={recruiter.logoUrl}
+                alt={`${recruiter.company} logo`}
+                className="h-full w-full object-contain p-1"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center rounded-lg border border-border/60 bg-secondary">
+                <Building2 className="h-7 w-7 text-primary" />
+              </span>
+            )}
           </div>
-          <Badge variant="secondary" className="shrink-0 text-xs">
-            {recruiter.industry}
-          </Badge>
+          <div className="min-w-0 flex-1 space-y-1">
+            <h3 className="line-clamp-2 font-heading text-base font-semibold leading-tight sm:text-lg">
+              {recruiter.company}
+            </h3>
+            <Badge variant="secondary" className="min-w-0 max-w-full !shrink text-xs">
+              <span className="block truncate">{recruiter.industry}</span>
+            </Badge>
+            <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+              {recruiter.description}
+            </p>
+          </div>
         </div>
 
-        {/* Company name + description */}
-        <div>
-          <h3 className="font-heading text-base font-semibold leading-tight sm:text-lg">
-            {recruiter.company}
-          </h3>
-          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-            {recruiter.description}
-          </p>
-        </div>
-
-        {/* Positions */}
         <div className="flex-1">
           <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
-            Open Positions
+            {messages.recruiterCard.openPositions}
           </p>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex min-w-0 max-w-full flex-wrap gap-1">
             {recruiter.positions.slice(0, 3).map((pos) => (
               <Badge
                 key={pos}
                 variant="outline"
-                className="text-[10px] font-normal sm:text-xs"
+                className="min-w-0 max-w-full !shrink text-[10px] font-normal sm:text-xs"
               >
-                {pos}
+                <span className="block truncate">{pos}</span>
               </Badge>
             ))}
             {recruiter.positions.length > 3 && (
@@ -66,18 +75,16 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
           </div>
         </div>
 
-        {/* JD available indicator */}
-        {recruiter.jdLink && (
+        {recruiter.jdAvailable && (
           <div className="flex items-center gap-1.5 text-xs text-primary">
             <FileText className="h-3 w-3" />
-            <span>Job description available</span>
+            <span>{messages.recruiterCard.jdAvailable}</span>
           </div>
         )}
 
-        {/* CTA */}
-        <div className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-all duration-200 group-hover:bg-primary/90 group-hover:gap-2">
-          View & Book
-          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+        <div className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground">
+          {messages.recruiterCard.viewBook}
+          <ArrowRight className="h-4 w-4" />
         </div>
       </Card>
     </Link>

@@ -5,6 +5,7 @@ import {
   timestamp,
   integer,
   boolean,
+  jsonb,
   pgEnum,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -38,6 +39,15 @@ export const eventModeEnum = pgEnum("event_mode", [
   "recruiter_books_applicant",
   "both",
 ]);
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "booking_pending",
+  "booking_accepted",
+  "booking_rejected",
+  "booking_waitlisted",
+  "booking_cancelled",
+  "interview_reminder",
+  "system",
+]);
 
 // ---- Users (admin + recruiter only) ----
 
@@ -66,6 +76,9 @@ export const recruiters = pgTable("recruiters", {
   positions: text("positions").array().notNull().default([]),
   contactEmail: text("contact_email").notNull(),
   jdLink: text("jd_link"),
+  logoUrl: text("logo_url"),
+  websiteUrl: text("website_url"),
+  galleryUrls: text("gallery_urls").array().notNull().default([]),
   interviewerCount: integer("interviewer_count").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -81,7 +94,25 @@ export const jobOpenings = pgTable("job_openings", {
     .references(() => recruiters.id),
   title: text("title").notNull(),
   jdLink: text("jd_link"),
+  location: text("location").notNull().default(""),
+  employmentType: text("employment_type").notNull().default(""),
+  workplaceType: text("workplace_type").notNull().default(""),
+  salaryMin: integer("salary_min"),
+  salaryMax: integer("salary_max"),
+  salaryCurrency: text("salary_currency").notNull().default("TWD"),
+  salaryPeriod: text("salary_period").notNull().default("month"),
+  seniority: text("seniority").notNull().default(""),
+  languageRequirement: text("language_requirement").notNull().default(""),
+  visaSupport: text("visa_support").notNull().default(""),
+  applicationDeadline: text("application_deadline"),
   description: text("description").notNull().default(""),
+  responsibilities: text("responsibilities").notNull().default(""),
+  requirements: text("requirements").notNull().default(""),
+  benefits: text("benefits").notNull().default(""),
+  moderationStatus: text("moderation_status").notNull().default("draft"),
+  moderationNotes: text("moderation_notes").notNull().default(""),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -94,9 +125,26 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   userId: integer("user_id").references(() => users.id).unique(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  phone: text("phone").notNull().default(""),
+  nationality: text("nationality").notNull().default(""),
+  schoolCode: text("school_code").notNull().default(""),
+  schoolName: text("school_name").notNull().default(""),
+  schoolNameEn: text("school_name_en").notNull().default(""),
   major: text("major").notNull().default(""),
+  studyLevel: text("study_level").notNull().default(""),
+  studyYear: text("study_year").notNull().default(""),
+  expectedGraduation: text("expected_graduation").notNull().default(""),
+  jobSeekingStatus: text("job_seeking_status").notNull().default(""),
+  workAuthorization: text("work_authorization").notNull().default(""),
   skills: text("skills").array().notNull().default([]),
+  preferredLocations: text("preferred_locations").array().notNull().default([]),
+  preferredIndustries: text("preferred_industries").array().notNull().default([]),
+  workExperiences: jsonb("work_experiences").notNull().default([]),
+  certifications: jsonb("certifications").notNull().default([]),
   cvLink: text("cv_link").notNull(),
+  linkedinUrl: text("linkedin_url").notNull().default(""),
+  portfolioUrl: text("portfolio_url").notNull().default(""),
+  avatarUrl: text("avatar_url"),
   description: text("description").notNull().default(""),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
   wantsNewsletter: boolean("wants_newsletter").notNull().default(false),
@@ -104,6 +152,24 @@ export const applicantProfiles = pgTable("applicant_profiles", {
     .notNull()
     .defaultNow(),
 });
+
+// ---- Taiwan schools (bilingual source of truth for applicant signup) ----
+
+export const schools = pgTable(
+  "schools",
+  {
+    id: serial("id").primaryKey(),
+    code: text("code").notNull(),
+    nameZh: text("name_zh").notNull(),
+    nameEn: text("name_en").notNull().default(""),
+    city: text("city").notNull().default(""),
+    schoolType: text("school_type").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("schools_code_idx").on(table.code)]
+);
 
 // ---- Recruiter slots (interview windows offered by recruiter — Mode A) ----
 
@@ -192,6 +258,22 @@ export const allowedDomains = pgTable("allowed_domains", {
     .defaultNow(),
 });
 
+// ---- Exact recruiter email approvals (admin-reviewed signup allow-list) ----
+
+export const recruiterEmailApprovals = pgTable("recruiter_email_approvals", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  company: text("company").notNull(),
+  industry: text("industry").notNull(),
+  status: text("status").notNull().default("approved"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  approvedAt: timestamp("approved_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ---- Password reset codes ----
 
 export const passwordResetCodes = pgTable("password_reset_codes", {
@@ -200,6 +282,21 @@ export const passwordResetCodes = pgTable("password_reset_codes", {
   code: text("code").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   used: boolean("used").notNull().default(false),
+  failedAttempts: integer("failed_attempts").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ---- Email verification codes (signup flow) ----
+
+export const emailVerificationCodes = pgTable("email_verification_codes", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  verified: boolean("verified").notNull().default(false),
+  failedAttempts: integer("failed_attempts").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -209,19 +306,52 @@ export const passwordResetCodes = pgTable("password_reset_codes", {
 
 export const eventConfig = pgTable("event_config", {
   id: serial("id").primaryKey(),
-  eventName: text("event_name").notNull().default("V-GEN TRIDENT 2026"),
+  eventName: text("event_name").notNull().default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
+  emailEventName: text("email_event_name")
+    .notNull()
+    .default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
+  tagline: text("tagline")
+    .notNull()
+    .default("The Vietnamese Generation — Versatile in Talent, Value in Action"),
+  organizer: text("organizer")
+    .notNull()
+    .default("Vietnamese Student Association in Taiwan"),
+  organizerShort: text("organizer_short").notNull().default("VSATW"),
+  hostedAt: text("hosted_at")
+    .notNull()
+    .default("MCUT (Ming Chi University of Technology)"),
+  hostedAtFull: text("hosted_at_full")
+    .notNull()
+    .default("Ming Chi University of Technology"),
+  displayDate: text("display_date").notNull().default("June 6, 2026"),
+  displayYear: text("display_year").notNull().default("2026"),
+  eventEndDate: timestamp("event_end_date", { withTimezone: true }),
   eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
   location: text("location")
     .notNull()
-    .default("NTUT (Taipei Tech), Taipei"),
+    .default("MCUT (Ming Chi University of Technology)"),
   slotDurationMinutes: integer("slot_duration_minutes").notNull().default(15),
+  bufferMinutes: integer("buffer_minutes").notNull().default(0),
   startHour: integer("start_hour").notNull().default(10),
+  startMinute: integer("start_minute").notNull().default(0),
   endHour: integer("end_hour").notNull().default(17),
   endMinute: integer("end_minute").notNull().default(30),
   mode: eventModeEnum("mode").notNull().default("both"),
+  onboardingMode: text("onboarding_mode").notNull().default("full"),
+  jobModerationEnabled: boolean("job_moderation_enabled")
+    .notNull()
+    .default(true),
   modeLocked: boolean("mode_locked").notNull().default(false),
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),
+  homepageImages: text("homepage_images").array().notNull().default([]),
+  browsePageImages: text("browse_page_images").array().notNull().default([]),
+  jobsPageImages: text("jobs_page_images").array().notNull().default([]),
+  heroOverlayEnabled: boolean("hero_overlay_enabled").notNull().default(true),
+  salaryCurrencyOptions: text("salary_currency_options")
+    .array()
+    .notNull()
+    .default(["TWD", "VND", "USD"]),
 });
 
 // ---- Professional profiles (alumni/senior professionals who can refer students) ----
@@ -334,4 +464,67 @@ export const crawlLogs = pgTable("crawl_logs", {
   errorMessage: text("error_message"),
   durationMs: integer("duration_ms"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- Email tracking ----
+
+export const emailLogs = pgTable("email_logs", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // booking_confirmation, rejection, rescheduling, verification, etc.
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject"),
+  success: boolean("success").notNull().default(true),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- Push subscriptions ----
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  userEmail: text("user_email").notNull(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- In-app notifications ----
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  recipientEmail: text("recipient_email").notNull(),
+  recipientRole: userRoleEnum("recipient_role").notNull(),
+  type: notificationTypeEnum("type").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  metadata: jsonb("metadata").notNull().default({}),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- Feedback / bug reports ----
+
+export const feedbackKindEnum = pgEnum("feedback_kind", ["bug", "feedback", "feature"]);
+export const feedbackSeverityEnum = pgEnum("feedback_severity", ["low", "med", "high"]);
+export const feedbackStatusEnum = pgEnum("feedback_status", ["open", "triaged", "resolved"]);
+
+export const feedbackReports = pgTable("feedback_reports", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  userRole: userRoleEnum("user_role"),
+  userEmail: text("user_email"),
+  kind: feedbackKindEnum("kind").notNull().default("bug"),
+  severity: feedbackSeverityEnum("severity").notNull().default("med"),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  pathname: text("pathname"),
+  userAgent: text("user_agent"),
+  viewport: text("viewport"),
+  appVersion: text("app_version"),
+  clientLogs: jsonb("client_logs").notNull().default([]),
+  screenshotUrl: text("screenshot_url"),
+  status: feedbackStatusEnum("status").notNull().default("open"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
 });

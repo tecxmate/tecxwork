@@ -1,88 +1,157 @@
 import Link from "next/link";
 import { Briefcase } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { AppTopBar } from "@/components/app-topbar";
+import { LogoutButton } from "@/components/logout-button";
+import { RecruiterJobsBrowser } from "@/components/recruiter-jobs-browser";
+import { PageImageCarousel } from "@/components/page-image-carousel";
 import { SiteFooter } from "@/components/site-footer";
-import { JobDirectory } from "@/components/job-directory";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { db, jobOpenings, recruiters } from "@/lib/db";
+import { eq, desc } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
+import { getStudentLocale } from "@/lib/student-locale.server";
+import { getStudentMessages } from "@/lib/student-messages";
+import { getEventBranding } from "@/lib/event-branding";
+import { getPageImages } from "@/lib/page-images";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Job Opportunities | V-GEN TRIDENT",
-  description:
-    "Browse part-time and full-time job opportunities in Taiwan for Vietnamese students",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getEventBranding();
+  return {
+    title: `Job Opportunities | ${branding.name}`,
+    description: "Browse openings posted by participating recruiters",
+  };
+}
 
-export default function JobsPage() {
+async function getRecruiterPostedJobs() {
+  return db
+    .select({
+      id: jobOpenings.id,
+      title: jobOpenings.title,
+      description: jobOpenings.description,
+      jdLink: jobOpenings.jdLink,
+      location: jobOpenings.location,
+      employmentType: jobOpenings.employmentType,
+      workplaceType: jobOpenings.workplaceType,
+      salaryMin: jobOpenings.salaryMin,
+      salaryMax: jobOpenings.salaryMax,
+      salaryCurrency: jobOpenings.salaryCurrency,
+      salaryPeriod: jobOpenings.salaryPeriod,
+      seniority: jobOpenings.seniority,
+      languageRequirement: jobOpenings.languageRequirement,
+      visaSupport: jobOpenings.visaSupport,
+      applicationDeadline: jobOpenings.applicationDeadline,
+      responsibilities: jobOpenings.responsibilities,
+      requirements: jobOpenings.requirements,
+      benefits: jobOpenings.benefits,
+      createdAt: jobOpenings.createdAt,
+      recruiterId: recruiters.id,
+      company: recruiters.company,
+      logoUrl: recruiters.logoUrl,
+    })
+    .from(jobOpenings)
+    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .where(eq(jobOpenings.moderationStatus, "approved"))
+    .orderBy(desc(jobOpenings.createdAt));
+}
+
+export default async function JobsPage() {
+  const session = await getSession();
+  const locale = await getStudentLocale();
+  const messages = getStudentMessages(locale);
+  const [jobs, pageImages] = await Promise.all([
+    getRecruiterPostedJobs(),
+    getPageImages("jobs"),
+  ]);
+  const dashboardUrl = session
+    ? session.role === "admin"
+      ? "/admin"
+      : session.role === "recruiter"
+        ? "/dashboard/interviews"
+        : null
+    : null;
+
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Briefcase className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
-            >
-              Career Fair
-            </Link>
-            <Link
-              href="/login"
-              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/get-started"
-              className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
-            >
-              Sign Up
-            </Link>
-          </div>
-        </div>
-      </header>
+      <AppTopBar
+        href="/jobs"
+        navRole={session?.role ?? "guest"}
+        currentPath="/jobs"
+        desktopActions={
+          session ? (
+            session.role === "applicant" ? (
+              <LogoutButton />
+            ) : (
+              <Link
+                href={dashboardUrl!}
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
+              >
+                {messages.common.goToDashboard}
+              </Link>
+            )
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
+              >
+                {messages.common.logIn}
+              </Link>
+              <Link
+                href="/get-started"
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
+              >
+                {messages.common.signUp}
+              </Link>
+            </>
+          )
+        }
+      />
 
       <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-7xl text-center">
-          <Badge className="mb-2 sm:mb-4">Job Board</Badge>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            Jobs for Vietnamese in Taiwan
+            {messages.jobsPage.title}
           </h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:mt-3 sm:text-base">
-            Browse part-time and full-time opportunities from Taiwan&apos;s top
-            job platforms. Click &ldquo;Apply&rdquo; to apply directly on the
-            original site.
+            {messages.jobsPage.subtitle}
           </p>
         </div>
       </section>
 
+      <PageImageCarousel images={pageImages} />
+
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-7xl">
-          <JobDirectory />
+        <div className="mx-auto max-w-7xl space-y-4">
+          {jobs.length === 0 ? (
+            <Card className="flex flex-col items-center justify-center py-16 text-center">
+              <Briefcase className="h-10 w-10 text-muted-foreground/50" />
+              <p className="mt-4 text-lg font-medium text-muted-foreground">
+                {messages.jobsPage.emptyTitle}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {messages.jobsPage.emptySubtitle}
+              </p>
+            </Card>
+          ) : (
+            <RecruiterJobsBrowser
+              jobs={jobs}
+              locale={locale}
+              labels={{
+                viewDetails: messages.jobsPage.viewDetails,
+                searchPlaceholder: messages.jobsPage.searchPlaceholder,
+                resultsCount: messages.jobsPage.resultsCount,
+                noMatchTitle: messages.jobsPage.noMatchTitle,
+                noMatchSubtitle: messages.jobsPage.noMatchSubtitle,
+                card: {
+                  applicationDeadline: messages.jobsPage.card.applicationDeadline,
+                },
+                filters: messages.jobsPage.filters,
+              }}
+            />
+          )}
         </div>
       </main>
-
-      <div className="border-t bg-muted/30 px-4 py-4 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-center text-xs text-muted-foreground">
-            Job data provided by{" "}
-            <a
-              href="https://www.1111.com.tw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground"
-            >
-              1111 Job Bank
-            </a>
-            . Click &ldquo;Apply&rdquo; to view full details and submit your
-            application on the original platform.
-          </p>
-        </div>
-      </div>
 
       <SiteFooter />
     </div>

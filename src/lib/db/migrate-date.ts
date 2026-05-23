@@ -7,7 +7,7 @@ import { sql } from "drizzle-orm";
  * Migrate slots and event_config to VSATW 2026 — V-GEN TRIDENT
  * Date:     Saturday, June 6, 2026
  * Time:     10:00 – 17:30 (Asia/Taipei)
- * Location: NTUT (Taipei Tech)
+ * Location: MCUT (Ming Chi University of Technology)
  */
 async function migrate() {
   const url = process.env.DATABASE_URL;
@@ -21,7 +21,7 @@ async function migrate() {
   await db.update(schema.eventConfig).set({
     eventName: "VSATW 2026 — V-GEN TRIDENT",
     eventDate: new Date("2026-06-06T10:00:00+08:00"),
-    location: "NTUT (Taipei Tech), Taipei",
+    location: "MCUT (Ming Chi University of Technology)",
   });
 
   // Clear old data

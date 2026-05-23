@@ -1,11 +1,15 @@
 {
   "name": "tecxwork — VSATW Career Fair",
   "short_name": "tecxwork",
-  "description": "VSATW 2026 Career Fair — Book interviews, browse companies",
+  "description": "VSATW JOB FAIR 2026: V-GEN TRIDENT — Book interviews, browse companies",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#FAFAFA",
-  "theme_color": "#8C52FF",
+  "theme_color": "#FAFAFA",
   "icons": [
     {
       "src": "/icon-192.png",

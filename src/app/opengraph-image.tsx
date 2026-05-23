@@ -1,12 +1,15 @@
 import { ImageResponse } from "next/og";
 import { EVENT_CONFIG } from "@/lib/data";
+import { getEventBranding } from "@/lib/event-branding";
 
 export const runtime = "edge";
 export const alt = `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OGImage() {
+export default async function OGImage() {
+  const branding = await getEventBranding();
+
   return new ImageResponse(
     (
       <div
@@ -63,7 +66,7 @@ export default function OGImage() {
             marginBottom: 8,
           }}
         >
-          {EVENT_CONFIG.organizer}
+          {branding.organizer}
         </div>
 
         {/* Event name */}
@@ -75,7 +78,7 @@ export default function OGImage() {
             marginBottom: 12,
           }}
         >
-          V-GEN TRIDENT {EVENT_CONFIG.displayYear}
+          V-GEN TRIDENT {branding.displayYear}
         </div>
 
         {/* Tagline */}
@@ -87,7 +90,7 @@ export default function OGImage() {
             marginBottom: 24,
           }}
         >
-          &ldquo;{EVENT_CONFIG.tagline}&rdquo;
+          &ldquo;{branding.tagline}&rdquo;
         </div>
 
         {/* Details */}
@@ -99,9 +102,9 @@ export default function OGImage() {
             color: "#444",
           }}
         >
-          <span>{EVENT_CONFIG.displayDate}</span>
+          <span>{branding.displayDate}</span>
           <span>10:00 – 17:30</span>
-          <span>{EVENT_CONFIG.hostedAt}</span>
+          <span>{branding.hostedAt}</span>
         </div>
 
         {/* Footer */}

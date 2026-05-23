@@ -1,83 +1,63 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MapPin, Clock, Briefcase, ShieldCheck } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Countdown } from "@/components/countdown";
-import { Directory } from "@/components/directory";
+import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
+import { Directory } from "@/components/directory";
 import { SiteFooter } from "@/components/site-footer";
-import { CvQrButton } from "@/components/cv-qr-button";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { EVENT_CONFIG } from "@/lib/data";
+import { PageImageCarousel } from "@/components/page-image-carousel";
 import { getSession } from "@/lib/auth";
+import { getPageImages } from "@/lib/page-images";
+import { getStudentLocale } from "@/lib/student-locale.server";
+import { getStudentMessages } from "@/lib/student-messages";
 
 export default async function BrowsePage() {
   const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role === "admin") redirect("/admin");
-  if (session.role === "recruiter") redirect("/dashboard");
-
-  const formattedDate = EVENT_CONFIG.date.toLocaleDateString("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    timeZone: EVENT_CONFIG.timezone,
-  });
+  const locale = await getStudentLocale();
+  const messages = getStudentMessages(locale);
+  const pageImages = await getPageImages("browse");
+  if (session?.role === "admin") redirect("/admin");
+  if (session?.role === "recruiter") redirect("/dashboard/interviews");
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/browse" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Briefcase className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            <Link
-              href="/profile"
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 sm:text-sm"
-            >
-              My Profile
-            </Link>
+      <AppTopBar
+        href="/browse"
+        navRole={session?.role ?? "guest"}
+        currentPath="/browse"
+        desktopActions={
+          session ? (
             <LogoutButton />
-          </div>
-        </div>
-      </header>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
+              >
+                {messages.common.logIn}
+              </Link>
+              <Link
+                href="/get-started"
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-sm"
+              >
+                {messages.common.signUp}
+              </Link>
+            </>
+          )
+        }
+      />
 
-      {/* Compact hero on mobile, bigger on desktop */}
-      <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12 lg:py-16">
+      <section className="border-b bg-card px-4 py-6 sm:px-6 sm:py-12">
         <div className="mx-auto max-w-7xl text-center">
-          <Badge className="mb-2 sm:mb-4">{EVENT_CONFIG.organizerShort}</Badge>
           <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            {EVENT_CONFIG.name}
+            {messages.browsePage.title}
           </h1>
-          <p className="mx-auto mt-2 max-w-2xl text-xs italic text-muted-foreground sm:mt-3 sm:text-sm">
-            &ldquo;{EVENT_CONFIG.tagline}&rdquo;
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:mt-3 sm:text-base">
+            {messages.browsePage.subtitle}
           </p>
-
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground sm:mt-6 sm:gap-x-6 sm:gap-y-3 sm:text-sm">
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {formattedDate} &middot; 10:00 – 17:30
-            </span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="max-w-[220px] truncate sm:max-w-none">
-                {EVENT_CONFIG.hostedAt}
-              </span>
-            </span>
-          </div>
-
-          <div className="mt-4 flex justify-center sm:mt-6">
-            <Countdown target={EVENT_CONFIG.date} />
-          </div>
         </div>
       </section>
+
+      <PageImageCarousel images={pageImages} />
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
@@ -85,27 +65,7 @@ export default async function BrowsePage() {
         </div>
       </main>
 
-      <Separator />
-
-      <div className="px-4 py-6 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary sm:h-5 sm:w-5" />
-              <div className="space-y-1 text-xs sm:text-sm">
-                <p className="font-semibold">Data Protection Notice (PIPA)</p>
-                <p className="text-muted-foreground">
-                  Your CV link is shared only with the recruiter you book with.
-                  All booking data is purged within 2 days after the event.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <SiteFooter />
-      <CvQrButton />
     </div>
   );
 }

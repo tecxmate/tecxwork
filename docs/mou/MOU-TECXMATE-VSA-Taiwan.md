@@ -13,7 +13,7 @@
 - Địa chỉ: Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam
 - Mã số thuế: 0319431089
 - Điện thoại: (+84) 0337460602
-- Email: ceo@tecxmate.com
+- Email: official@tecxmate.com
 
 Hôm nay, ngày... tháng... năm..., hai bên thống nhất ký kết Biên bản ghi nhớ hợp tác (MOU) với các điều khoản sau đây:
 

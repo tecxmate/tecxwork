@@ -802,3 +802,489 @@ the background on the phone?
   Biggest visual impact to implement next:
   1. Square cards with purple glow on hover (job cards, company cards)
   2. Navbar glassmorphism effect
+
+
+Here's the security & consistency audit. I read every API route plus middleware/auth helpers; findings are grouped by      
+  severity with file:line and a fix.                                                                                         
+                                                                                                                             
+  Critical                                                                                                                   
+                                                                                                                             
+  1. Recruiter signup is an account takeover — src/app/api/recruiters/signup/route.ts:79-146                                 
+  If existingRecruiter is found for the email, the route simply re-hashes the new password and overwrites it, then issues a  
+  session cookie — no current-password check, no email re-verification. Anyone who knows a recruiter's email (and the domain 
+  is in allowedDomains, which it must be since they're already registered) can hijack the account.                           
+  Fix: require the existing-account branch to go through /api/auth/login or a verified email code before updating            
+  credentials. Prefer rejecting outright with "use sign-in" / "reset password".                                              
+                                               
+  2. Password reset skips expiry & verified checks — src/app/api/auth/reset-password/route.ts:50-68                          
+  Verifies only tokenId+code match the row in password_reset_codes. Does NOT check expiresAt and does NOT check
+  used/verified. Consequences:                                                                                               
+  - Expired codes still reset passwords.                           
+  - An attacker with the original 6-digit code can call /reset-password directly, bypassing /verify-code entirely (so        
+  failed-attempt counters and "used" flags don't help).                                                              
+  Fix: add gte(passwordResetCodes.expiresAt, now) and eq(passwordResetCodes.used, true) to the where. Also require verified  
+  === true if you keep that column.                                                                                         
+                                                                                                                             
+  High                                                             
+                                                                                                                             
+  3. CSV formula injection in admin export — src/app/api/admin/export/route.ts:62-77                                         
+  escape() only doubles quotes. An applicant whose name is =cmd|'/c calc'!A1 (or any =/+/-/@/\t/\r prefix) executes when     
+  admin opens the CSV in Excel/Sheets.                                                                                       
+  Fix: prefix any cell starting with = + - @ \t \r with a single quote, or wrap and prefix unconditionally.
+                                                                                                                             
+  4. HTML injection in transactional emails — src/lib/email/index.ts:79, 92, 123, 136, 144, 201-207, 258, 319, 413-415       
+  data.applicantName, data.company, data.recruiterNote, data.cvLink, etc. are interpolated raw into HTML. Email clients won't
+   run JS, but link spoofing/phishing is trivial — e.g. a recruiter "note" of </p><a href="https://evil">click here for      
+  offer</a> lands in the applicant's mailbox.                      
+  Fix: add an escapeHtml(v) helper and apply it to every interpolated user value; for cvLink validate it's an https:// URL   
+  before placing in href.                                                                                                    
+                                               
+  Medium                                                                                                                     
+                                                                   
+  5. IDOR on push-subscription DELETE — src/app/api/push-subscription/route.ts:48-52                                         
+  Any logged-in user can delete another user's subscription by sending its endpoint.
+  Fix: add and(eq(pushSubscriptions.userEmail, session.email)).                                                              
+                                                                   
+  6. Cascade deletes are not transactional — src/app/api/admin/applicants/route.ts:53-58,                                    
+  src/app/api/admin/recruiters/route.ts:116-120                    
+  Sequential db.delete(...) calls with no db.transaction(async tx => …). A failure mid-chain leaves orphans (e.g. user       
+  without profile, slots without recruiter).                                                                                 
+                                               
+  7. Rate-limit race window — src/lib/rate-limit.ts:29-35                                                                    
+  get then set(current+1) is not atomic; two parallel requests can both read 0. The 5/min auth limit can be exceeded under
+  burst attacks.                                                                                                             
+  Fix: use a CAS/incr primitive or a token-bucket library backed by Redis.
+                                                                                                                             
+  8. Weak default JWT secret leaks across dev/staging — src/lib/auth.ts:8-13                                                 
+  Falls back to "dev-secret-change-me" whenever NODE_ENV !== 'production'. A misconfigured preview/staging signs forgeable   
+  tokens.                                                                                                                    
+  Fix: require JWT_SECRET unconditionally; fail fast at boot.      
+                                                                                                                             
+  9. Minimum password length 6 — src/app/api/applicants/route.ts:176, src/app/api/recruiters/signup/route.ts:36,             
+  src/app/api/auth/reset-password/route.ts:24. Bump to 8+ (NIST 800-63B recommends 8 for new passwords).                     
+                                                                                                                             
+  10. Inconsistent admin gating throws 500 — src/app/api/admin/homepage-images/route.ts:7 calls requireAdmin() un-caught;    
+  everything else does try/catch → 401. Non-admins hit a 500 here.
+                                                                                                                             
+  Low / cleanup                                                                                                              
+                                               
+  11. Duplicated sanitizeWorkExperiences — identical block in src/app/api/applicants/route.ts:7-46 and                       
+  src/app/api/me/profile/route.ts:36-75. Move into src/lib/student-profile.ts (the types already live there).
+                                                                                                                             
+  12. Repeated "fetch recruiter by session.userId" pattern — bookings/[id]/route.ts:52-55, bookings/review/route.ts:33-36,   
+  me/recruiter/route.ts:19-25, bookings/reverse/route.ts:44-47, me/jobs/[id]/route.ts:55-58. Extract requireRecruiter()
+  returning { session, recruiterId }.                                                                                        
+                                                                   
+  13. notifications PUT loops one update per id — src/app/api/notifications/route.ts:62-74. Replace with                     
+  inArray(notifications.id, notificationIds).
+                                                                                                                             
+  14. unreadCount selects all rows then .length — src/app/api/notifications/route.ts:28-36. Use count() aggregate.           
+                                               
+  15. Authorization keyed on session.email instead of userId — bookings/[id]/route.ts:48, bookings/mine/route.ts:33,         
+  notifications/route.ts:16,33,57,70. If users are ever allowed to change email, all their booking/notification ACLs silently
+   break. Prefer applicantId/userId joins.                                                                                   
+                                                                   
+  16. /api/admin/slots accepts unvalidated durationMinutes — src/app/api/admin/slots/route.ts:23,36. durationMinutes=0       
+  infinite-loops. Same validation block exists in applicant-slots/route.ts:81-96; reuse it.
+                                                                                                                             
+  17. /api/admin/homepage-images doesn't validate URL strings — route.ts:10-28. Could store javascript: URLs that flow into  
+  <img src>/<a href> somewhere. Validate https://*.public.blob.vercel-storage.com (matches your next.config.ts allowlist).
+                                                                                                                             
+  18. getCachedRecruiters() then in-memory filter+slice — src/app/api/recruiters/route.ts:26-46. Fine for current size, but  
+  at scale this fetches all recruiters per request; push search/pagination into Drizzle.
+                                                                                                                             
+  If you want, I can fix the two Critical items (#1, #2) and the CSV/email-HTML injections (#3, #4) in one pass.             
+                                               
+✻ Sautéed for 7m 28s                                                                                                         
+                                                                   
+❯ ok fix pls ths 
+
+⏺ Pushed as 6cf3dd6. Final task state:                       
+                                                                                                                   
+  ┌─────┬──────────────────┬────────────────────────────────────────────────────────────────────────────────────┐
+  │  #  │      Status      │                                       Notes                                        │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 1   │ ✅               │ Booking ACL switched to applicantId via getApplicantFromSession()                  │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 2   │ ✅               │ All 13 admin routes use non-throwing getAdminSession()                             │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 3   │ ⏭ skipped        │ Zod migration is its own PR — large, touches every route                           │  
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 4   │ ✅ (best-effort) │ Window-stamped key + remaining-window TTL; strict atomicity needs Upstash/Postgres │
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 5   │ ✅               │ Min password length 6→8 across server, UI, all 3 locales, tutorial                 │
+  ├─────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────┤  
+  │ 6   │ ⏭ skipped        │ Integration test setup (db, runner) is a separate effort                           │  
+  └─────┴──────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  Add integration tests for booking races and reset-password flow what is this is it need to be done?              
+                                                                      
+⏺ Task #6 is automated regression tests for the two trickiest flows we just hardened. What it covers:              
+                                                                                                                   
+  - Booking race: two recruiters/users hitting /api/bookings/review for the same slot at the same time. The
+  advisory lock + atomic slot UPDATE in bookings/review/route.ts:134-241 is meant to serialize them so only one    
+  wins. Without a test, a future refactor (someone removing the lock or reordering the UPDATE) could silently break
+   this and double-book a slot. The test would fire ~50 concurrent accepts and assert exactly one succeeds.        
+  - Reset-password flow: ensures the fixes in commit 16b4adf actually hold — that an expired token, an unverified  
+  token, or a replayed token all return 400 and don't change the password. Without a test, a regression here is
+  invisible until exploited.                                                                                       
+                                                                   
+  Is it needed? Not strictly — the code is correct today. But:                                                     
+                                                                   
+  - The booking race is concurrency-sensitive. Concurrency bugs don't show up in manual testing; they show up at   
+  2am during the career fair when 200 students hit "apply" at the same minute. A test is the cheapest way to keep
+  it correct.                                          
+  - Reset-password is auth-critical. A regression here = account takeover.                                         
+                                                
+  Cost to add: ~2-3 hours of work — pick a runner (vitest), set up a throwaway Neon branch for tests (Neon has a   
+  fast branching API for exactly this), write fixtures, write ~5 test cases. After that it runs in CI on every PR. 
+                                                          
+  Recommendation: do it before the event, skip it if the event is far off and you'd rather ship features. It's a   
+  "preventing regression" investment, not a "fixing a bug" one.
+
+
+❯ is this similar to jmeter load tester?                                                                           
+                                                                   
+⏺ No — different category of tool. Quick comparison:   
+                                                                      
+  ┌────────────────┬────────────────────────────────────────────┬──────────────────────────────────────────────┐
+  │                │           Integration tests (#6)           │                    JMeter                    │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ Goal           │ Prove logic is correct                        │ Prove system holds up under load           │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Question       │ "Does the advisory lock actually serialize    │ "Can we handle 5000 students hitting       │
+  │ answered       │ concurrent accepts?"                          │ /apply per minute without timeouts?"       │  
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤
+  │ Concurrency    │ ~50 parallel calls — just enough to expose    │ Thousands; ramps over time                 │  
+  │ level          │ the race                                      │                                            │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Runs where     │ CI on every PR, ~30 sec                       │ Separate machine pointed at staging,       │
+  │                │                                               │ minutes to hours                           │
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Pass/fail      │ Asserts on data: "exactly one booking is      │ Asserts on perf: "p95 < 500ms, error rate  │  
+  │                │ accepted, the other is 409"                   │ < 1%"                                      │  
+  ├────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────────┤  
+  │ Catches        │ Logic regressions (someone removed the        │ Capacity issues (DB connection pool        │  
+  │                │ pg_advisory_xact_lock)                        │ exhausted, slow queries, memory leaks)     │
+  └────────────────┴───────────────────────────────────────────────┴────────────────────────────────────────────┘  
+                                                                                                                   
+  There's overlap — both fire concurrent requests — but the intent is different. The integration test is a
+  unit-test-style assertion run constantly; JMeter is a benchmark run occasionally before launch.                  
+                                                                                                                   
+  For the career fair you'd want both eventually:         
+  - Integration tests catch "the code stopped being safe" (regression).                                            
+  - A small JMeter / k6 run catches "the code is safe but Neon free tier maxes out at 80 connections" (capacity).  
+                                                                                                                 
+  For this codebase right now, integration tests give better return — the logic is subtle (advisory locks,         
+  transactions, row-level CAS) and easy to break without noticing. Load testing matters closer to event day when   
+  you know your real traffic shape.  
+
+
+  ❯ after that if i add any feature (not related to login) i dont need to touch this right?                          
+
+⏺ Mostly correct — but a few things to know:
+
+  You don't need to touch:
+  - src/lib/auth.ts, src/lib/validation.ts (unless adding new field types)
+  - src/test/setup.ts, vitest.config.ts
+  - The 4 commits' security fixes — they're in helpers, not in your feature path
+
+  You will reuse (not modify) for any new authed route:
+  - getSession() / getAdminSession() / getRecruiterFromSession() / getApplicantFromSession() — call them at the top
+   of new handlers
+  - parseJsonBody(req, schema) — add a new zod schema in lib/validation.ts and use it
+  - escapeHtml() / safeUrl() from lib/email/index.ts — if your feature sends emails with user data
+  - rateLimit() — call on any public-write endpoint
+  - db.transaction(...) — wrap any multi-step write
+  - getCachedRecruiters / getCachedExternalJobs pattern in lib/cache.ts — for read-heavy lists
+
+  You should add tests for new features touching:
+  - Concurrency (slot booking, inventory-like flows)
+  - Authorization (any "user X can only see/edit their own Y")
+  - Token/code flows (verification, invites, etc.)
+
+  Tests use the same harness — just add a new file under src/test/your-feature.test.ts.
+
+  Things that will break if you add features carelessly:
+  - New API route without auth check → silent IDOR
+  - New email template with ${user.something} → re-introduces HTML injection
+  - New CSV export without the escape() helper → re-introduces formula injection
+  - New mutation route without zod → re-introduces ad-hoc validation drift
+
+  Short version: this PR set up the patterns. New features should follow them, not bypass them. The helpers exist
+  so you write less code, not more.  
+
+
+add TEST_DATABASE_URL for the new branch of test Neon db  
+
+
+❯ do i need to add jmeter now?                                                                                     
+
+⏺ No, not now. Here's the decision tree:
+                                                                                                                   
+  Skip JMeter if:   
+  - Event is more than 2 weeks out (premature — code will change)
+  - You don't yet know your real traffic shape (peak users, peak time, ratio of read:write)                        
+  - Neon is on a paid tier with autoscaling (most capacity issues self-resolve)            
+  - You haven't seen any slow responses in dev/staging                                                             
+                                                                                                                   
+  Add load testing when:                                                                                           
+  - ≤2 weeks before the career fair, on a staging environment that mirrors prod                                    
+  - You want to confirm Neon's connection pool + Vercel function concurrency hold under realistic burst (e.g. "200 
+  students hit /apply in the same minute when slots open")                                                        
+  - You see real-world slowness you can't explain                                                                  
+                                                                   
+  If you do add it, prefer k6 over JMeter for this stack — k6 scripts are JS/TS (matches your codebase), Vercel has
+   a published guide for it, and the output integrates with Grafana cleanly. JMeter is heavier and Java-based;     
+  better for complex enterprise scenarios than a Next.js app.                                                      
+                                                                                                                   
+  Minimum viable load test (when the time comes), ~30 minutes of work:                                             
+  1. One k6 script that simulates "burst at slot-release time": 500 virtual users hammering POST /api/bookings for
+  the same 10 recruiters over 60 seconds.                                                                          
+  2. Run it against a Neon test branch + a Vercel preview URL.     
+  3. Pass if p95 < 1s and error rate (excluding expected 409s for full slots) < 1%.                                
+                                                                                                                   
+  That's the only load test that actually matters for this app — everything else (browse, profile fetch) is cached 
+  and trivial.                                                                                                     
+                                                                                                                   
+  Recommendation: put a calendar reminder for ~10 days before the event to add the k6 script. Don't do it now —    
+  capacity numbers from a half-built feature set tell you nothing useful.
+                                                                                                                   
+❯ so it should be done after all feature is done right                                                             
+                                                                                                                   
+✻ Levitating…                                                                                                      
+  ⎿  Tip: Open the Command Palette (Cmd+Shift+P) and run "Shell Command: Install 'code' command in PATH" to enable 
+     IDE integration                                                                                               
+                                                                                                                   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯                                                                                                                  
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  niko@tecxwork | Opus 4.7 (1M context) | ctx:27% | 5h:49% | 7d:31%
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+  Add load testing when:
+  - ≤2 weeks before the career fair, on a staging environment that mirrors prod
+  - You want to confirm Neon's connection pool + Vercel function concurrency hold under realistic burst (e.g. "200
+  students hit /apply in the same minute when slots open")
+  - You see real-world slowness you can't explain
+
+  If you do add it, prefer k6 over JMeter for this stack — k6 scripts are JS/TS (matches your codebase), Vercel has
+   a published guide for it, and the output integrates with Grafana cleanly. JMeter is heavier and Java-based;
+  better for complex enterprise scenarios than a Next.js app.
+
+  Minimum viable load test (when the time comes), ~30 minutes of work:
+  1. One k6 script that simulates "burst at slot-release time": 500 virtual users hammering POST /api/bookings for
+  the same 10 recruiters over 60 seconds.
+  2. Run it against a Neon test branch + a Vercel preview URL.
+  3. Pass if p95 < 1s and error rate (excluding expected 409s for full slots) < 1%.
+
+  That's the only load test that actually matters for this app — everything else (browse, profile fetch) is cached
+  and trivial.
+
+  Recommendation: put a calendar reminder for ~10 days before the event to add the k6 script. Don't do it now —
+  capacity numbers from a half-built feature set tell you nothing useful.
+
+❯ so it should be done after all feature is done right                                                             
+
+⏺ Yes — but with a caveat.     
+                                                                                                                   
+  Right ordering:   
+  1. Finish all features
+  2. Deploy to staging that matches prod (same Neon tier, same Vercel plan, real seed data volume)                 
+  3. Then load-test                                                                               
+                                                                                                                   
+  Why "after features" is the right rule:                          
+  - A load test on half-built code measures the wrong system. If you optimize against numbers that come from       
+  missing features, you'll re-tune everything once those features ship.                                            
+  - The bottleneck is usually one slow query or one missing index, not "the code." That bottleneck only shows up   
+  once the realistic data + realistic call patterns are in place.                                                  
+  - Capacity targets (p95, error rate) only have meaning relative to expected traffic — and expected traffic       
+  depends on which features exist and how they're surfaced in the UI.                                       
+                                                                                                                   
+  The caveat — don't wait all the way:                             
+  - Run the load test ~7-10 days before the event, not on event day. You need time to fix what it surfaces (add an 
+  index, bump Neon compute, batch a query).                                                                        
+  - If you ship a major feature in the last week (e.g. a new search page that hits the DB hard), re-run.           
+  - Keep the integration tests (npm test) running on every PR throughout — those catch correctness regressions and 
+  don't depend on traffic shape.                                                                                   
+                                                                                                                   
+  Practical sequence for this app:                                                                                 
+  1. Build features → integration tests guard correctness                                                          
+  2. Feature freeze ~10 days before event                                                                          
+  3. Deploy to staging + import realistic data volume                                                              
+  4. Run k6 burst test against /api/bookings and /api/bookings/review                                              
+  5. Fix what it finds (indexes, pool size, function concurrency limits)                                           
+  6. Tag the build, deploy to prod, freeze                                                                         
+                                                                                                                   
+  Skip k6 entirely if your event will have <100 simultaneous users — at that scale Neon + Vercel handle it without 
+  tuning.      
+
+
+  Pushed 5cf58fa. Summary of what landed:              
+                                                                                                            
+  Schema + migration                                                                                          
+  - src/lib/db/schema.ts adds emailEventName, tagline, organizer, organizerShort, hostedAt, hostedAtFull,
+  displayDate, displayYear, eventEndDate columns on event_config (with sensible defaults from current         
+  branding).                                                                                         
+  - src/lib/db/add-event-branding-columns.ts runs ALTER TABLE … ADD COLUMN IF NOT EXISTS for all of them. Run 
+  it once on each environment with tsx src/lib/db/add-event-branding-columns.ts.                              
+                                                                                                              
+  Server helper                                                                        
+  - src/lib/event-branding.ts exports getEventBranding() (React-cache, server-only). Overlays DB values on the
+   static EVENT_CONFIG defaults so non-DB fields like timezone/slotDuration still come through.               
+                                                                                               
+  Wired surfaces (read DB-backed branding)                                                                    
+  - src/app/layout.tsx → generateMetadata() (title, description, OG, Twitter)                                 
+  - src/app/page.tsx → hero tagline, host name, countdown target, formatted date                              
+  - src/lib/email/index.ts → booking confirm, recruiter notify, rejection, waitlist, student reminder,        
+  recruiter reminder                                                                                          
+  - src/app/api/auth/forgot-password/route.ts → reset code email subject + body                               
+  - src/app/api/admin/timeframe/route.ts → forced-reschedule email + slot regen date                          
+                                                                                                              
+  Static-only (intentionally left): opengraph-image.tsx (edge runtime), tutorial content, slot-pickers — these
+   read static fields that don't need to change between fairs.                                                
+                                                                                                              
+  Admin UI + API                                                                                              
+  - src/app/api/admin/branding/route.ts (GET + PUT) with per-field validation, length limits, and ISO datetime
+   parsing.                                                                                                   
+  - New collapsible "Event Branding" panel in the admin overview (src/app/admin/admin-dashboard.tsx) with
+  inputs for all editable fields, save button, and saved/error feedback.                                      
+                                                                                                              
+  Bonus                                                                                
+  - Removed a stale duplicate block at the bottom of src/messages/student/zh-TW.ts that was breaking tsc      
+  --noEmit.                                                                                                   
+                                                                                                              
+  Next step on your side: run the migration against prod (pnpm tsx src/lib/db/add-event-branding-columns.ts   
+  with DATABASE_URL set) before the deploy is rolled out, otherwise the new selects on missing columns will   
+  throw. 
+
+❯ How far are we from making this system multi-tenant so it becomes a Monetizable SaaS that multiple events   
+  can run at the same time? What infrastructure would be required and what role in the engineering team would 
+   be needed?                                                                                                 
+                                                                                                              
+⏺ Multi-tenant SaaS — Gap Analysis                                                                            
+                                                                                                              
+  How far you are today                                                                                       
+   
+  Architecturally you're single-tenant — one row in event_config, one set of users, one set of                
+  recruiters/applicants/jobs/bookings/slots. Branding is now DB-backed (good first step), but every other
+  table is implicitly scoped to "the one event."                                                              
+                                                                                                              
+  What's already in your favor:                                                                               
+  - Next.js App Router on Vercel (Fluid Compute) — scales horizontally without changes.
+  - Neon Postgres on Vercel Marketplace — supports branching/scaling, easy to add a tenant column or move to  
+  schema-per-tenant.                                                                                        
+  - Drizzle ORM — adding a tenantId to every query is mechanical, not architectural.                          
+  - Clean server boundary (getEventBranding, getAdminSession) — easy to swap for a tenant-aware version.
+  - Resend for email, Vercel Blob for storage — both already multi-tenant friendly.                           
+                                                                                                              
+  Realistic estimate: 6–10 engineering weeks to ship a first paying tenant, assuming one senior + one mid     
+  full-stack working in parallel and you don't expand scope.                                                  
+                                                                                                              
+  What needs to change (in order of cost)                                                                     
+                                                                   
+  1. Data model (~2 weeks)                                                                                    
+                                                                   
+  - Add tenants table (id, slug, plan, billing_customer_id, created_at, status).                              
+  - Add tenant_id FK to every existing table: users, recruiters, applicant_profiles, bookings, slots,
+  applicant_slots, job_openings, event_config, email_logs, password_reset_codes, recruiter_email_approvals,   
+  allowed_domains, external_jobs, homepage_images, schools.        
+  - Decide isolation model:                                                                                   
+    - Row-level (single DB, tenant_id filter) — cheapest, what you have momentum for. Add Postgres RLS as
+  defense-in-depth.                                                                                           
+    - Schema-per-tenant — middling cost, cleaner blast radius for data leaks.
+    - DB-per-tenant (Neon project per tenant) — easiest mental model, easiest deletion/export, but ops cost   
+  grows linearly. Neon's branching makes this viable.                                                         
+  Recommended for your scale: row-level + RLS, revisit when you cross ~50 tenants.                            
+                                                                                                              
+  2. Tenant resolution & routing (~1 week)                                                                    
+                                                                                                              
+  - Subdomain routing (tsmc.tecxwork.com, vsatw.tecxwork.com) via Routing Middleware on Vercel — sets a       
+  x-tenant-id header from the host.                                
+  - Custom domain support per tenant (Vercel Domains API + verification flow) — paid-tier feature.            
+  - Wrap every server query with a tenant-scoped DB client (db.forTenant(id)) so you can't accidentally query 
+  across tenants.                                                                                             
+                                                                                                              
+  3. Auth & authorization (~1 week)                                                                           
+                                                                   
+  - Sessions need tenant_id. A user can belong to multiple tenants → introduce tenant_memberships (user_id,   
+  tenant_id, role).
+  - Admin role becomes per-tenant; introduce a separate "platform admin" role for you/Tecxmate.               
+  - Update getAdminSession() → getAdminSession(tenantId).                                                     
+                                                                                                              
+  4. Billing (~1–2 weeks)                                                                                     
+                                                                                                              
+  - Stripe (Checkout + Customer Portal + webhooks) — plans, seats, per-event pricing, or per-applicant        
+  pricing.                                     
+  - A cron Function (Fluid Compute) that downgrades/locks tenants on failed payment; an audit trail of plan   
+  changes.                                                                                                    
+  - Usage metering if you charge by emails sent / applicants / interviews booked — Vercel AI Gateway-style
+  metering pattern, or just count rows.                                                                       
+                                                                   
+  5. Onboarding self-serve (~1 week)                                                                          
+                                                                   
+  - "Create event" flow: tenant signup → seed event_config row → assign first admin → provision subdomain.    
+  - Tenant-level branding (logos, colors, copy) — extend the branding panel you just shipped.
+                                                                                                              
+  6. Operations (~1–2 weeks)                                                                                  
+                                                                                                              
+  - Per-tenant rate limits on email (Resend daily caps are global).                                           
+  - Per-tenant feature flags (paid plans unlock job moderation, custom domains, more email volume).
+  - Backups, exports, and deletion (GDPR/PIPA — tenant offboarding must purge).                               
+  - Logging/observability with tenant_id as a default tag (Vercel Log Drains → Datadog/Axiom).                
+  - Status page + on-call rotation once you have paying customers.                                            
+                                                                                                              
+  7. Things that get harder                                                                                   
+                                                                                                              
+  - Email reputation — one tenant's bad practices can hurt all of you. Per-tenant Resend domains or dedicated 
+  IPs at scale.                                                    
+  - Abuse / moderation — strangers can sign up; need T&S, abuse reporting, takedown flow.                     
+  - Support — even one paying customer means SLAs, a support inbox, refund policy.                            
+  - Pricing experiments — Stripe metered billing + plan changes are easy to break.                            
+                                                                                                              
+  Roles you'll want                                                                                           
+                                                                                                              
+  Minimum viable team to ship and operate this:                                                               
+                                                                   
+  1. Senior full-stack / tech lead (you, possibly) — owns the multi-tenant data model, RLS rollout, tenant    
+  resolution, code review. ~50% of the build.                      
+  2. Mid full-stack engineer — owns billing integration, onboarding flow, admin UI for platform operators,    
+  tenant settings. ~30%.                                                                                      
+  3. Platform/DevOps engineer (part-time or contractor for ~3 months) — Neon scaling, log drains, alerting,
+  custom-domain automation, backup/restore runbooks, SOC2-readiness if you sell to enterprises.               
+  4. Designer (contractor) — multi-tenant branding controls, marketing site for the SaaS itself, pricing page.
+  5. GTM / founding AE or PMM (later) — once you have 2–3 reference customers, sales motion + onboarding      
+  documentation become the bottleneck.                                                                        
+                                                                                                              
+  Not yet needed: dedicated SRE, security engineer, data engineer — Vercel + Neon absorb most of that until   
+  ~$1M ARR.                                                        
+                                                                                                              
+  My recommendation                                                
+                                               
+  Don't refactor everything at once. Sequence:                                                                
+   
+  1. Now → 2 weeks: add tenants + tenant_id to schema with a single seeded "VSATW" tenant. All queries get    
+  scoped. Keep one event running, prove no regressions.            
+  2. +2 weeks: subdomain routing + tenant-aware sessions. Internally test by creating a second fake tenant.   
+  3. +2 weeks: Stripe + onboarding + tenant-scoped admin. Onboard one design-partner customer at a steep      
+  discount.                                                                                                   
+  4. +2–4 weeks: custom domains, RLS, email reputation hardening, operational polish.                         
+                                                                                                              
+  The biggest risk is not the code — it's deciding pricing, ICP, and onboarding before you have customers.    
+  Spend a week on customer discovery (who would pay, how much, for what) before writing the tenant migration. 
+
+
+    - src/app/page.tsx — Removed the "Event Photos / Activity Photos" section entirely from the homepage (no
+  placeholder, no admin uploader on homepage).
+  - src/components/image-upload.tsx — ImageUpload and MultiImageUpload now display per-type guideline text
+  (size, format, aspect ratio) below the upload control, with an optional hint override.
+    - avatar: 1:1, 400×400px
+    - logo: 1:1, 400×400px
+    - gallery: 3:2, 1200×800px
+    - homepage: 3:4 vertical, 1200×1600px
+  - src/components/homepage-image-editor.tsx — Updated to 3:4 vertical hero (placeholder grid, recommended
+  1200×1600px, min 900×1200px, ratio check 0.7–0.8, copy and confirm dialog).
+  - src/app/admin/admin-dashboard.tsx — Hero uploader now labeled "Homepage Hero Images" with explicit 3:4
+  vertical hint.
+  - src/app/profile/page.tsx / src/app/dashboard/recruiter-dashboard-company.tsx — Removed redundant inline
+  hints; the component now self-documents (gallery uploader uses an explicit override).

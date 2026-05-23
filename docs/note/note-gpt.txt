@@ -1,0 +1,567 @@
+I’ve removed one unnecessary duplication. I’m doing a quick final validation pass so I can give you a concrete “keep this / simplify
+  that” answer rather than abstract architecture advice.
+
+• Waited for background terminal · npm run lint
+
+• Ran npm run lint
+  └
+    > app@0.1.0 lint
+    … +40 lines (ctrl + t to view transcript)
+    ✖ 15 problems (0 errors, 15 warnings)
+
+
+• Waited for background terminal · npm run build
+
+• Ran npm run build
+  └
+    > app@0.1.0 build
+    … +80 lines (ctrl + t to view transcript)
+    ƒ  (Dynamic)  server-rendered on demand
+
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• The system is still coherent enough to keep moving. It is not broadly overcomplicated yet.
+
+  What I would keep:
+
+  - onboardingMode as a single admin toggle. That is a clean control with real product value.
+  - Job moderation on job_openings. draft -> pending_review -> approved/rejected is the minimum workflow that actually solves the
+    compliance problem.
+  - Recruiter-side draft/edit/submit and admin-side approve/reject. That is the right amount of process.
+
+  What is the main overcomplication risk:
+
+  - You currently have two job models at once:
+      - legacy recruiter profile fields: recruiters.positions and recruiters.jdLink
+      - real job records: job_openings
+  - That is the biggest source of incoherence in the app now. Public recruiter pages still fall back to recruiters.positions if no
+    job_openings exist, so there are effectively two sources of truth.
+
+  My recommendation:
+
+  - keep job_openings as the only long-term source of truth
+  - treat recruiters.positions and recruiters.jdLink as legacy compatibility only
+  - next cleanup pass should remove that fallback from public UI and stop using those fields for new recruiter-facing product behavior
+
+  Small cleanup I already did:
+
+  - extracted the duplicated flagged-language moderation helper into app/src/lib/job-moderation.ts:1
+
+  My practical verdict:
+
+  - onboarding toggle: lean enough
+  - job moderation: lean enough
+  - admin dashboard: getting large, but still acceptable for now
+  - dual positions model: the one thing I would simplify next before adding more hiring features
+
+  Validation is still good:
+
+  - npm run lint: warning-only, no errors
+  - npm run build: passed
+
+  If you want, I can do the next cleanup pass now and start migrating the app away from recruiters.positions/jdLink toward job_openings
+  only.
+
+
+
+
+   The migration is in a good state.
+
+  I moved the app back to the old Vercel-managed Neon database path and removed DB_URL from the app flow. The codebase now uses
+  DATABASE_URL only again, the old Neon branch was migrated forward with the missing schema pieces, and I verified the key data on that
+  database:
+
+  - external_jobs: 453
+  - schools: 171
+  - malformed school codes: 0
+  - recruiters still carrying legacy job values: 0
+
+  I also fixed the school import path so it no longer pretends there are 1807 schools. u1_new.csv repeats schools across years; the
+  real one-school-per-code dataset is 171 unique schools, and the seed script now syncs that deterministically.
+
+  App checks are clean:
+
+  - npm run lint: passes with the same existing 15 warnings, no errors
+  - npm run build: passes
+
+  Two important notes:
+
+  - Local dev needs a restart to pick up the .env.local database switch.
+  - I did not drop the physical recruiters.positions / recruiters.jdLink columns yet. The app no longer relies on them, and their
+    values were cleaned, but the schema drop itself is still pending.
+
+
+I want to sell it as a
+  tool to recruiters and job fair organizers in taiwan or globally, how far am i from that product?
+
+
+• I’m assessing this against the current product shape, not the original platform idea. I’ll check the codebase against the organizer/
+  recruiter-tool version and give you the gap in concrete product terms, not a vague startup answer.
+
+• Explored
+  └ Read admin-dashboard.tsx
+    Search admin-dashboard|dashboard|bookings|recruiter signup|applicants|qr|slots|external jobs|event_config|onboarding_mode|job_openings|
+api/
+           admin|api/bookings|api/recruiters/signup|api/applicants in app
+    Read schema.ts
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• You are much closer to a white-label / event-ops recruitment tool than to a standalone job platform.
+
+  If I strip away the public-marketplace framing and look at the product honestly, you already have the core of a recruiter + organizer tool:
+
+  - organizer side:
+      - admin dashboard
+      - event mode toggle
+      - onboarding mode toggle
+      - recruiter domain control
+      - booking oversight
+      - export
+      - time-slot configuration
+  - recruiter side:
+      - recruiter signup
+      - recruiter dashboard
+      - applicant browsing
+      - reverse booking
+      - company profile + job opening management
+      - job moderation workflow
+  - candidate side:
+      - applicant onboarding
+      - profile management
+      - QR/CV flow
+      - slot booking flow
+
+  So for an event recruiting workflow SaaS, I’d say you are roughly 60-75% of the way to a usable v1.
+
+  What you still need before it is really sellable as a tool:
+
+  1. Multi-tenant architecture
+     Right now this still feels like one event/app instance, not a product for many organizers.
+     You need:
+
+  - organizations/accounts
+  - multiple events per organizer
+  - data isolation by organizer/event
+  - recruiter/applicant/job/booking scoped to an event or organization
+
+  This is the biggest product gap.
+
+  2. Branding and configuration layer
+     To sell to organizers, they need to control:
+
+  - event name
+  - logos/colors
+  - dates/venue
+  - onboarding questions
+  - recruiter instructions
+  - privacy/terms text
+  - language options
+    You have some config already, but not enough for a reusable product.
+
+  3. Access model and permissions
+     You need cleaner roles than just admin/recruiter/applicant for product use:
+
+  - platform owner
+  - organizer admin
+  - organizer staff
+  - recruiter
+  - maybe recruiter teammate
+    Without that, it’s still a custom event app, not a product.
+
+  4. Recruiter and organizer onboarding UX
+     The workflows exist, but they still feel internal/product-builder oriented.
+     To sell this, you need:
+
+  - cleaner empty states
+  - setup checklist
+  - sample data / guided setup
+  - less developer-style surfaces
+
+  5. Auditability and ops safety
+     For paying organizer use, you need:
+
+  - activity logs
+  - clear booking history
+  - safer deletion flows
+  - better error handling
+  - basic support/debug surfaces
+
+  6. Remove “platform” signals you no longer want
+     If you want lower legal exposure, the product positioning and UI should lean toward:
+
+  - event recruiting operations
+  - recruiter scheduling
+  - candidate intake for events
+    not:
+  - public job marketplace
+  - open recruiting platform
+    The external jobs section especially pushes the product back toward “job platform” territory.
+
+  My blunt product read:
+
+  What it is now:
+
+  - a strong custom career-fair operating system for one event series
+
+  What it is not yet:
+
+  - a polished multi-tenant SaaS tool for many organizers
+
+  Fastest path to a sellable product:
+
+  1. make everything event-scoped
+  2. add organizer account/workspace model
+  3. add event setup/branding/config screen
+  4. de-emphasize public marketplace features
+  5. keep recruiter/applicant booking as the core value
+
+  If you do only that, you can sell this as:
+
+  - “career fair operations software”
+  - “recruiter scheduling and candidate intake tool”
+  - “event talent matching system”
+
+  That is a much safer and cleaner product than “independent job platform.”
+
+  If you want, I can next map the exact schema and route changes needed to turn the current app into a true
+  multi-event organizer product. 
+
+UI REFACTOR NOTE — DESKTOP/MOBILE NAVIGATION UNIFICATION
+
+Context:
+- The app used to have mixed navigation systems:
+  - public/applicant pages had a top bar + mobile bottom nav
+  - recruiter desktop used a left sidebar
+  - recruiter mobile used bottom nav with old `?tab=` links
+  - admin was mostly a large single page with in-page section switching
+- This was getting too fragmented and hard to maintain.
+
+What changed:
+- Navigation was consolidated into:
+  - desktop: shared top bar
+  - mobile: shared bottom navigation bar
+- Recruiter desktop sidebar was removed.
+- Recruiter and admin primary sections were moved to real routes instead of relying on page-local tab state.
+- The shared nav definition now lives in:
+  - `src/lib/navigation.ts`
+- The shared desktop top bar lives in:
+  - `src/components/app-topbar.tsx`
+- Desktop route prefetching now lives in:
+  - `src/components/desktop-top-nav.tsx`
+
+Why this was done:
+- To make desktop and mobile navigation structurally match.
+- To reduce duplicated navigation logic across roles.
+- To make active states, prefetching, and route ownership cleaner.
+- To avoid having recruiter/admin primary navigation hidden inside giant page components.
+
+Current canonical site structure:
+
+
+JOB POSTING EXPANSION NOTE — RECRUITER / STUDENT / ADMIN CONSISTENCY
+
+Context:
+- Recruiter-created jobs were previously too thin for real hiring use.
+- The old job upload flow was mostly title + JD link.
+- The user wanted richer job posting fields similar to external job listings, and the same detail shape across recruiter, student, and admin views.
+
+What changed:
+- `job_openings` is now the real structured source of truth for recruiter-posted jobs.
+- Added richer job fields to `job_openings`:
+  - `location`
+  - `employmentType`
+  - `workplaceType`
+  - `salaryMin`
+  - `salaryMax`
+  - `salaryCurrency`
+  - `salaryPeriod`
+  - `seniority`
+  - `languageRequirement`
+  - `visaSupport`
+  - `applicationDeadline`
+  - `description`
+  - `responsibilities`
+  - `requirements`
+- Added migration helper:
+  - `src/lib/db/add-job-opening-detail-columns.ts`
+- Added shared posting helpers:
+  - `src/lib/job-posting.ts`
+- Added shared job UI card:
+  - `src/components/recruiter-job-posting-card.tsx`
+
+Recruiter-side:
+- Recruiter company/jobs editor now supports a full posting form instead of just a title/link.
+- New fields are visible and editable in:
+  - `src/app/dashboard/recruiter-dashboard-company.tsx`
+- The recruiter job list now uses the shared structured card.
+
+Student/public-side:
+- Public recruiter jobs board and recruiter detail page now render the same richer job card.
+- Files:
+  - `src/app/jobs/page.tsx`
+  - `src/app/recruiter/[id]/page.tsx`
+  - `src/app/recruiter/[id]/recruiter-detail.tsx`
+
+Admin-side:
+- Admin moderation now sees the same structured job card, with the richer fields searchable and reviewable.
+- Files:
+  - `src/app/admin/admin-data.ts`
+  - `src/app/admin/admin-dashboard.tsx`
+
+API changes:
+- Recruiter create/update job APIs now validate and persist the richer fields:
+  - `src/app/api/me/jobs/route.ts`
+  - `src/app/api/me/jobs/[id]/route.ts`
+- Public recruiter jobs API now returns the richer fields:
+  - `src/app/api/jobs/route.ts`
+
+Localization note:
+- Shared job-card labels were added for EN / VI / ZH-TW in student/admin-facing messages.
+- Recruiter form labels were expanded in recruiter EN / ZH-TW messages.
+- The option labels themselves in `src/lib/job-posting.ts` are still English constants for now.
+
+Database note:
+- Ran:
+  - `set -a; source .env.local; set +a; npm run db:update:job-details`
+- Result:
+  - `Ensured job_openings detail columns exist`
+
+Validation:
+- `npm run lint`: passes with existing warnings only, no errors
+- `npm run build`: passes
+
+Git state:
+- Latest pushed commit for this work:
+  - `aba7eee` — `Expand recruiter job posting details`
+
+Practical product note:
+- The recruiter job system is now much closer to a real event recruiting tool workflow.
+- Next sensible extensions, if needed:
+  - application status analytics per job
+  - recruiter-side job preview modal
+  - event-scoped job visibility / deadlines
+  - optional structured filters on student jobs page using the new fields
+
+Guest
+- `/`
+- `/browse`
+- `/jobs`
+- `/login`
+
+Applicant
+- `/`
+- `/browse`
+- `/jobs`
+- `/profile`
+
+Recruiter
+- `/dashboard/interviews`
+- `/dashboard/applicants`
+- `/dashboard/jobs`
+- `/dashboard/company`
+
+Admin
+- `/admin`
+- `/admin/recruiters`
+- `/admin/applicants`
+- `/admin/jobs`
+
+Important recruiter details:
+- `/dashboard` still exists, but now acts as a redirect layer.
+- Old recruiter links like `?tab=bookings`, `?tab=applicants`, `?tab=company` are redirected to the new route-based pages.
+- Recruiter `View Site` action was removed from recruiter surfaces.
+- Recruiter language switcher was simplified to just `EN / 中`.
+
+Important admin details:
+- `/admin` remains the overview page.
+- Recruiters / Applicants / Jobs are now separate admin routes.
+- The old in-page admin tab switching is no longer the primary nav model.
+
+Performance notes from this refactor:
+- Mobile bottom nav already prefetched role-based routes.
+- Desktop top nav now also prefetches all visible role routes.
+- Recruiter route switching was additionally improved by:
+  - prefetching all recruiter routes on dashboard load
+  - caching recruiter job list client-side so `/dashboard/jobs` is less cold on repeat entry
+
+Files added in this refactor:
+- `src/app/dashboard/recruiter-data.ts`
+- `src/app/dashboard/interviews/page.tsx`
+- `src/app/dashboard/applicants/page.tsx`
+- `src/app/dashboard/jobs/page.tsx`
+- `src/app/dashboard/company/page.tsx`
+- `src/app/admin/admin-data.ts`
+- `src/app/admin/recruiters/page.tsx`
+- `src/app/admin/applicants/page.tsx`
+- `src/app/admin/jobs/page.tsx`
+- `src/components/desktop-top-nav.tsx`
+
+Files heavily changed:
+- `src/components/app-topbar.tsx`
+- `src/lib/navigation.ts`
+- `src/app/dashboard/recruiter-dashboard.tsx`
+- `src/app/dashboard/recruiter-dashboard-company.tsx`
+- `src/app/admin/admin-dashboard.tsx`
+- `src/app/dashboard/page.tsx`
+- `src/app/admin/page.tsx`
+
+Current design intent:
+- desktop and mobile should expose the same primary destinations per role
+- top bar / bottom nav should be the only primary navigation systems
+- page-local primary tab systems should not be reintroduced unless there is a very strong reason
+
+LATEST STATUS UPDATE — APR 24, 2026
+
+What was finalized after the initial nav refactor:
+- Guest access to `/browse` is now truly public.
+- The real fix was in `src/proxy.ts`; the page itself had already been opened, but the proxy layer was still redirecting guests to `/login`.
+- Mobile nav route activation was tightened so highlighted state follows the actual route more reliably.
+- Mobile nav spacing was slimmed down to reduce wasted vertical height.
+- Both mobile bottom nav and desktop top nav now prefetch role-visible routes to reduce cold tab switches.
+
+Canonical current navigation model:
+
+Desktop
+- one shared top bar across public, applicant, recruiter, and admin
+- brand on the left
+- primary nav centered
+- utility actions on the right
+
+Mobile
+- one shared bottom nav across roles
+- one simplified top bar pattern for page chrome
+- no recruiter desktop sidebar anymore
+
+Current route map to preserve:
+
+Guest
+- `/`
+- `/browse`
+- `/jobs`
+- `/login`
+
+Applicant
+- `/`
+- `/browse`
+- `/jobs`
+- `/profile`
+
+Recruiter
+- `/dashboard/interviews`
+- `/dashboard/applicants`
+- `/dashboard/jobs`
+- `/dashboard/company`
+
+Admin
+- `/admin`
+- `/admin/recruiters`
+- `/admin/applicants`
+- `/admin/jobs`
+
+Important behavior notes:
+- `/dashboard` is now compatibility/redirect glue, not the canonical recruiter destination.
+- Old recruiter `?tab=` links should continue redirecting into the route-based recruiter pages.
+- `/browse` must remain public for guests; if it ever starts redirecting again, check `src/proxy.ts` first.
+- Desktop recruiter/admin navigation should stay in the top bar, not drift back into local sidebars or section tabs.
+
+Recruiter-specific UI notes:
+- recruiter desktop sidebar was intentionally removed
+- recruiter language switcher is intentionally simplified to `EN / 中`
+- recruiter `View Site` was intentionally removed from recruiter surfaces
+- recruiter route changes were sped up by prefetching recruiter routes and caching recruiter jobs client-side
+
+Admin-specific UI notes:
+- `/admin` remains the overview page by design
+- recruiter/applicant/jobs admin areas are separate routes now
+- avoid rebuilding a giant single-page admin tab switcher unless absolutely necessary
+
+LATEST STATUS UPDATE — APR 24, 2026 (JOB MODERATION TOGGLE)
+
+What changed:
+- Added a new admin-controlled toggle for recruiter job publishing mode:
+  - `Admin review required` (existing moderation workflow)
+  - `Instant publish` (recruiters publish/remove directly)
+
+Persistence + schema:
+- Added `event_config.job_moderation_enabled` (boolean, default `true`).
+- Added migration script:
+  - `src/lib/db/add-job-moderation-toggle-column.ts`
+- Added npm script:
+  - `db:update:job-moderation-toggle`
+
+Backend behavior:
+- `GET/PUT /api/admin/mode` now returns and updates `jobModerationEnabled`.
+- Recruiter job APIs now read this flag:
+  - `POST /api/me/jobs`
+  - `PUT /api/me/jobs/[id]`
+- Behavior by mode:
+  - when moderation is ON: create/update keeps draft/review flow
+  - when moderation is OFF: create/update/submit become `approved` immediately
+
+UI behavior:
+- Admin overview now includes a `Job Publishing` control section.
+- Recruiter jobs tab updates copy depending on mode.
+- Recruiter `Submit for review` action is hidden when instant publish is enabled.
+
+Validation:
+- Build passed after implementation (`npm run build`).
+- Migration was run successfully with env loaded:
+  - `Ensured event_config.job_moderation_enabled exists`
+
+Commit:
+- `dfa84a0` — Add admin toggle for recruiter job moderation
+
+LATEST REVIEW NOTES — APR 28, 2026 01:30 TAIPEI
+
+Overall project consistency scan:
+
+1. High: applicant PII was publicly exposed.
+   - `src/app/api/applicants/route.ts:48` exposed applicant profiles without session checks and returned email, phone, nationality, CV link, LinkedIn, portfolio, work authorization, etc.
+   - Intended direction: restrict applicant browsing/profile data to recruiter/admin.
+   - Status: item 5 follow-up started fixing this by protecting `/api/applicants`, `/applicant/[id]`, and adding applicant-name links from recruiter/admin views.
+
+2. High: force-overriding event time cancels bookings but does not release booked slots.
+   - `src/app/api/admin/timeframe/route.ts:81` marks active bookings cancelled, but booked `slots` / `applicantSlots` are not reset.
+   - Later regeneration deletes only available slots and treats remaining booked slots as blocked at `src/app/api/admin/timeframe/route.ts:166`, so cancelled interviews can leave stale unavailable slots.
+
+3. High: accepting applications can double-book applicants.
+   - `src/app/api/bookings/review/route.ts:162` locks a recruiter slot and then accepts the booking, but does not re-check whether the applicant already has another accepted interview at the same time.
+   - Two recruiters can accept two pending requests for the same applicant/time.
+
+4. Medium: recruiter-books-applicant flow can overbook recruiters.
+   - `src/app/api/bookings/reverse/route.ts:87` books the applicant's slot and creates an accepted booking, but does not check recruiter availability or interviewer capacity at that time.
+   - A recruiter can book multiple applicants into the same time slot.
+
+5. Medium: Browse Applicants feature was orphaned/inconsistent.
+   - `RecruiterApplicantsTab` still exists at `src/app/dashboard/recruiter-dashboard-applicants.tsx:37`, and `showApplicants` is still computed in `src/app/dashboard/recruiter-data.ts:72`, but the dashboard no longer routes to that UI.
+   - Clarified intent: recruiter/admin should be able to click any applicant name and see the full profile.
+   - Status: keep full applicant profile route, protect it, and link names into it from recruiter/admin surfaces.
+
+6. Low: lint debt remains.
+   - `npm run lint` passes with warnings only, but there are 36 warnings: unused imports/state/functions, `img` warnings, and hook dependency warnings.
+   - Not currently blocking, but it hides real regressions.
+
+FOLLOW-UP FIXES — APR 28, 2026 01:45 TAIPEI
+
+Fixed issues 1-3 from the review notes:
+
+1. Applicant profile/PII access:
+   - Protected `/api/applicants` so only recruiter/admin sessions can list applicant profile data.
+   - Protected `/applicant/[id]` via `src/proxy.ts` and page-level checks.
+   - Added applicant profile links from recruiter booking cards and admin applicant/booking tables.
+
+2. Force timeframe override slot release:
+   - `PUT /api/admin/timeframe` now releases linked recruiter `slots` and `applicantSlots` before regenerating slots after active bookings are force-cancelled.
+
+3. Applicant double-book prevention on recruiter accept:
+   - `PUT /api/bookings/review` now accepts inside a DB transaction.
+   - Added an advisory lock keyed by applicant email + requested time.
+   - Re-checks accepted booking conflicts before locking a recruiter slot.
+   - Checks conflicts against both normal recruiter slots and recruiter-booked applicant slots.
+
+Validation:
+- `npm run lint` passed with existing warnings only.
+- `git diff --check` passed.
+- `npm run build` passed.

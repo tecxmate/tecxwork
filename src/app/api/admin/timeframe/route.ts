@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, eventConfig, slots, recruiters, bookings } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
-import { eq, and, count } from "drizzle-orm";
-import { EVENT_CONFIG } from "@/lib/data";
+import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applicantSlots } from "@/lib/db";
+import { getAdminSession } from "@/lib/auth";
+import { eq, count, inArray } from "drizzle-orm";
+import { getEventBranding } from "@/lib/event-branding";
+import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
 
 /**
  * PUT /api/admin/timeframe
@@ -10,56 +11,179 @@ import { EVENT_CONFIG } from "@/lib/data";
  * Updates event_config and regenerates unbooked slots for all recruiters.
  */
 export async function PUT(req: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Block changes if any bookings exist (pending, accepted, or waitlisted)
-  const [activeBookings] = await db
+  try {
+    return await handlePut(req);
+  } catch (err) {
+    console.error("PUT /api/admin/timeframe failed:", err);
+    return NextResponse.json(
+      {
+        error: `Failed to save time frame: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+async function handlePut(req: NextRequest) {
+  const body = await req.json();
+  const { forceOverride } = body;
+  const { startHour, startMinute = 0, endHour, endMinute, slotDuration, bufferMinutes = 0 } = body;
+
+  if (
+    typeof startHour !== "number" ||
+    typeof startMinute !== "number" ||
+    typeof endHour !== "number" ||
+    typeof endMinute !== "number" ||
+    typeof slotDuration !== "number" ||
+    typeof bufferMinutes !== "number" ||
+    startHour < 0 || startHour > 23 ||
+    startMinute < 0 || startMinute > 59 ||
+    endHour < startHour || endHour > 24 ||
+    endMinute < 0 || endMinute > 59 ||
+    slotDuration < 5 || slotDuration > 120 ||
+    bufferMinutes < 0 || bufferMinutes > 30
+  ) {
+    return NextResponse.json({ error: "Invalid time parameters" }, { status: 400 });
+  }
+
+  // Check if any bookings exist (pending, accepted, or waitlisted)
+  const [activeBookingsCount] = await db
     .select({ count: count() })
     .from(bookings)
-    .where(
-      eq(bookings.status, "pending")
-    );
+    .where(eq(bookings.status, "pending"));
 
-  const [acceptedBookings] = await db
+  const [acceptedBookingsCount] = await db
     .select({ count: count() })
     .from(bookings)
     .where(eq(bookings.status, "accepted"));
 
-  const [waitlistedBookings] = await db
+  const [waitlistedBookingsCount] = await db
     .select({ count: count() })
     .from(bookings)
     .where(eq(bookings.status, "waitlisted"));
 
   const totalActive =
-    activeBookings.count + acceptedBookings.count + waitlistedBookings.count;
+    activeBookingsCount.count + acceptedBookingsCount.count + waitlistedBookingsCount.count;
 
-  if (totalActive > 0) {
+  if (totalActive > 0 && !forceOverride) {
     return NextResponse.json(
       {
-        error: `Cannot change time frame — ${totalActive} active booking${totalActive > 1 ? "s" : ""} exist (${acceptedBookings.count} accepted, ${activeBookings.count} pending, ${waitlistedBookings.count} waitlisted). Cancel or reject all bookings first.`,
+        error: `Cannot change time frame — ${totalActive} active booking${totalActive > 1 ? "s" : ""} exist (${acceptedBookingsCount.count} accepted, ${activeBookingsCount.count} pending, ${waitlistedBookingsCount.count} waitlisted). Use force override to cancel all bookings and notify students.`,
+        activeBookings: totalActive,
+        canForceOverride: true,
       },
       { status: 423 }
     );
   }
 
-  const body = await req.json();
-  const { startHour, endHour, endMinute, slotDuration } = body;
+  // If force override, cancel all active bookings and send emails
+  if (totalActive > 0 && forceOverride) {
+    const activeBookingsList = await db
+      .select({
+        id: bookings.id,
+        applicantId: bookings.applicantId,
+        slotId: bookings.slotId,
+        applicantSlotId: bookings.applicantSlotId,
+        status: bookings.status,
+      })
+      .from(bookings)
+      .where(inArray(bookings.status, ["pending", "accepted", "waitlisted"]));
 
-  if (
-    typeof startHour !== "number" ||
-    typeof endHour !== "number" ||
-    typeof endMinute !== "number" ||
-    typeof slotDuration !== "number" ||
-    startHour < 0 || startHour > 23 ||
-    endHour < startHour || endHour > 24 ||
-    endMinute < 0 || endMinute > 59 ||
-    slotDuration < 5 || slotDuration > 120
-  ) {
-    return NextResponse.json({ error: "Invalid time parameters" }, { status: 400 });
+    const applicantIds = [...new Set(
+      activeBookingsList
+        .map((b) => b.applicantId)
+        .filter((id): id is number => id !== null)
+    )];
+
+    const applicants = applicantIds.length > 0
+      ? await db
+          .select({
+            id: applicantProfiles.id,
+            name: applicantProfiles.name,
+            email: applicantProfiles.email,
+          })
+          .from(applicantProfiles)
+          .where(inArray(applicantProfiles.id, applicantIds))
+      : [];
+
+    // Cancel all active bookings
+    await db
+      .update(bookings)
+      .set({ status: "cancelled" })
+      .where(inArray(bookings.status, ["pending", "accepted", "waitlisted"]));
+
+    const recruiterSlotIds = activeBookingsList
+      .map((b) => b.slotId)
+      .filter((id): id is number => id !== null);
+    const applicantSlotIds = activeBookingsList
+      .map((b) => b.applicantSlotId)
+      .filter((id): id is number => id !== null);
+
+    if (recruiterSlotIds.length > 0) {
+      await db
+        .update(slots)
+        .set({ status: "available" })
+        .where(inArray(slots.id, recruiterSlotIds));
+    }
+    if (applicantSlotIds.length > 0) {
+      await db
+        .update(applicantSlots)
+        .set({ status: "available" })
+        .where(inArray(applicantSlots.id, applicantSlotIds));
+    }
+
+    // Send rescheduling emails to affected students
+    const resend = getResend();
+    if (resend) {
+      const branding = await getEventBranding();
+      const emailPromises = applicants.map(async (applicant) => {
+        try {
+          await resend.emails.send({
+            from: EMAIL_FROM,
+            to: applicant.email,
+            subject: `Interview Rescheduled — Please Book Again`,
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
+                <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Rescheduled</h2>
+                <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+                  The event organizer has updated the interview time frame for the ${branding.organizerShort} ${branding.displayYear} Career Fair.
+                </p>
+
+                <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                  <p style="margin: 0; font-size: 14px; color: #92400e;">
+                    <strong>Your previous interview booking has been cancelled.</strong><br>
+                    Please visit the platform to book a new interview slot.
+                  </p>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                  <a href="${getPublicBaseUrl()}/browse" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+                    Book New Interview
+                  </a>
+                </div>
+
+                <p style="font-size: 12px; color: #999; margin-top: 32px;">
+                  ${branding.name}<br>
+                  Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
+                </p>
+              </div>
+            `,
+          });
+        } catch (err) {
+          console.error(`Failed to send rescheduling email to ${applicant.email}:`, err);
+        }
+      });
+
+      await Promise.allSettled(emailPromises);
+    }
+
+    console.log(`Force override: cancelled ${activeBookingsList.length} bookings, notified ${applicants.length} students`);
   }
 
   // Update config
@@ -72,24 +196,47 @@ export async function PUT(req: NextRequest) {
     .update(eventConfig)
     .set({
       startHour,
+      startMinute,
       endHour,
       endMinute,
       slotDurationMinutes: slotDuration,
+      bufferMinutes,
     })
     .where(eq(eventConfig.id, config.id));
 
-  // Regenerate unbooked slots for all recruiters
-  // Delete available (unbooked) slots
-  await db.delete(slots).where(eq(slots.status, "available"));
+  // Regenerate unbooked slots for all recruiters.
+  // Cancelled/rejected bookings can still hold FK references to
+  // available slots, which blocks the delete. Null those refs first.
+  const availableSlotRows = await db
+    .select({ id: slots.id })
+    .from(slots)
+    .where(eq(slots.status, "available"));
+  const availableSlotIds = availableSlotRows.map((r) => r.id);
+  if (availableSlotIds.length > 0) {
+    await db
+      .update(bookings)
+      .set({ slotId: null })
+      .where(inArray(bookings.slotId, availableSlotIds));
+    await db.delete(slots).where(inArray(slots.id, availableSlotIds));
+  }
 
   // Get all recruiters
   const allRecruiters = await db
     .select({ id: recruiters.id, interviewerCount: recruiters.interviewerCount })
     .from(recruiters);
 
-  // Format date correctly handling local timezone offset
-  const dateObj = EVENT_CONFIG.date;
-  const eventDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+  // Format the event day in Asia/Taipei explicitly. Vercel runs in UTC,
+  // so dateObj.getDate() can return the previous day for early-morning
+  // Taipei start times. sv-SE returns "YYYY-MM-DD HH:mm:ss".
+  const branding = await getEventBranding();
+  const eventDate = branding.date
+    .toLocaleString("sv-SE", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .slice(0, 10);
   let totalCreated = 0;
 
   for (const rec of allRecruiters) {
@@ -113,26 +260,34 @@ export async function PUT(req: NextRequest) {
       interviewerNumber: number;
     }[] = [];
 
-    for (let h = startHour; h <= endHour; h++) {
-      for (let m = 0; m < 60; m += slotDuration) {
-        if (h === endHour && m >= endMinute) break;
-        if (h > endHour) break;
+    const slotInterval = slotDuration + bufferMinutes;
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
 
-        const start = new Date(
-          `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
-        );
-        const end = new Date(start.getTime() + slotDuration * 60 * 1000);
+    // Iterate in absolute minutes so non-60-dividing slot durations
+    // (e.g., 45 min) keep a consistent cadence across hour boundaries,
+    // and a slot is only created if it ends within the event window.
+    for (
+      let t = startMinutes;
+      t + slotDuration <= endMinutes;
+      t += slotInterval
+    ) {
+      const h = Math.floor(t / 60);
+      const m = t % 60;
+      const start = new Date(
+        `${eventDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`
+      );
+      const end = new Date(start.getTime() + slotDuration * 60 * 1000);
 
-        for (let i = 1; i <= rec.interviewerCount; i++) {
-          const key = `${start.toISOString()}_${i}`;
-          if (!bookedSet.has(key)) {
-            newSlots.push({
-              recruiterId: rec.id,
-              startTime: start,
-              endTime: end,
-              interviewerNumber: i,
-            });
-          }
+      for (let i = 1; i <= rec.interviewerCount; i++) {
+        const key = `${start.toISOString()}_${i}`;
+        if (!bookedSet.has(key)) {
+          newSlots.push({
+            recruiterId: rec.id,
+            startTime: start,
+            endTime: end,
+            interviewerNumber: i,
+          });
         }
       }
     }
@@ -146,9 +301,11 @@ export async function PUT(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     startHour,
+    startMinute,
     endHour,
     endMinute,
     slotDuration,
+    bufferMinutes,
     slotsRegenerated: totalCreated,
   });
 }

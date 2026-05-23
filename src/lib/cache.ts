@@ -1,6 +1,6 @@
 import { getCache } from "@vercel/functions";
 import { getExternalJobs, type GetExternalJobsOptions } from "./crawler";
-import { db, recruiters, users } from "./db";
+import { db, recruiters, users, jobOpenings } from "./db";
 import { eq } from "drizzle-orm";
 
 const cache = getCache({ namespace: "app" });
@@ -26,7 +26,7 @@ export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
  * Cached recruiters list - 5 minute TTL
  */
 export async function getCachedRecruiters() {
-  const key = "recruiters:list";
+  const key = "recruiters:list:v3";
   const cached = await cache.get(key);
 
   if (cached) {
@@ -39,17 +39,48 @@ export async function getCachedRecruiters() {
 }
 
 async function fetchRecruiters() {
-  return db
+  const recruiterList = await db
     .select({
       id: recruiters.id,
       company: recruiters.company,
       industry: recruiters.industry,
       description: recruiters.description,
-      positions: recruiters.positions,
-      contactEmail: recruiters.contactEmail,
-      jdLink: recruiters.jdLink,
+      logoUrl: recruiters.logoUrl,
     })
     .from(recruiters)
     .innerJoin(users, eq(recruiters.userId, users.id))
     .orderBy(recruiters.company);
+
+  const approvedJobs = await db
+    .select({
+      recruiterId: jobOpenings.recruiterId,
+      title: jobOpenings.title,
+      jdLink: jobOpenings.jdLink,
+    })
+    .from(jobOpenings)
+    .where(eq(jobOpenings.moderationStatus, "approved"));
+
+  const jobsByRecruiter = new Map<
+    number,
+    { titles: string[]; hasJdLink: boolean }
+  >();
+
+  for (const job of approvedJobs) {
+    const current = jobsByRecruiter.get(job.recruiterId) ?? {
+      titles: [],
+      hasJdLink: false,
+    };
+    current.titles.push(job.title);
+    current.hasJdLink = current.hasJdLink || Boolean(job.jdLink);
+    jobsByRecruiter.set(job.recruiterId, current);
+  }
+
+  return recruiterList.map((recruiter) => {
+    const jobs = jobsByRecruiter.get(recruiter.id);
+    return {
+      ...recruiter,
+      positions: jobs?.titles ?? [],
+      jdAvailable: jobs?.hasJdLink ?? false,
+    };
+  });
 }

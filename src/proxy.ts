@@ -17,7 +17,7 @@ export function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL("/admin", req.url));
     }
     if (session.role === "recruiter") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(new URL("/dashboard/interviews", req.url));
     }
     return NextResponse.redirect(new URL("/browse", req.url));
   }
@@ -38,10 +38,18 @@ export function proxy(req: NextRequest) {
     }
   }
 
-  // Applicant-only: /browse and /profile (recruiter detail pages are public for browsing)
-  if (pathname.startsWith("/browse") || pathname.startsWith("/profile")) {
+  // Applicant-only: /profile
+  if (pathname.startsWith("/profile")) {
     if (!session) return NextResponse.redirect(new URL("/login", req.url));
     if (session.role !== "applicant") {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+  }
+
+  // Recruiter/admin-only: applicant profile review pages
+  if (pathname.startsWith("/applicant")) {
+    if (!session) return NextResponse.redirect(new URL("/login", req.url));
+    if (session.role !== "recruiter" && session.role !== "admin") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
   }
@@ -53,10 +61,10 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/browse/:path*",
     "/dashboard/:path*",
     "/admin/:path*",
     "/recruiter/:path*",
+    "/applicant/:path*",
     "/profile/:path*",
     "/login",
     "/register",

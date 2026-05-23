@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, slots } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 
 /**
  * POST /api/admin/slots — Bulk generate slots for a recruiter.
@@ -8,9 +8,7 @@ import { requireAdmin } from "@/lib/auth";
  * Creates slots every `durationMinutes` from startHour to endHour (Asia/Taipei).
  */
 export async function POST(req: NextRequest) {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,6 +24,23 @@ export async function POST(req: NextRequest) {
   if (!recruiterId || !date) {
     return NextResponse.json(
       { error: "recruiterId and date are required" },
+      { status: 400 }
+    );
+  }
+
+  if (
+    typeof startHour !== "number" ||
+    typeof endHour !== "number" ||
+    typeof durationMinutes !== "number" ||
+    startHour < 0 ||
+    startHour > 23 ||
+    endHour <= startHour ||
+    endHour > 24 ||
+    durationMinutes < 5 ||
+    durationMinutes > 120
+  ) {
+    return NextResponse.json(
+      { error: "Invalid time parameters" },
       { status: 400 }
     );
   }

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
-import { eq, and, sql } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { eq, and } from "drizzle-orm";
+import {
+  getApplicantFromSession,
+  getRecruiterFromSession,
+  getSession,
+} from "@/lib/auth";
+import { sendRejectionEmail } from "@/lib/email";
+import { createBookingNotification } from "@/lib/notifications";
+import { cancelBookingSchema } from "@/lib/validation";
 
 /**
  * DELETE /api/bookings/[id] — cancel a booking.
@@ -9,12 +16,25 @@ import { getSession } from "@/lib/auth";
  * Auto-promotes the first waitlisted applicant for the same time+recruiter.
  */
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Parse optional note from request body. Empty/missing body is fine —
+  // schema is fully optional so an empty parse still succeeds.
+  let note: string | undefined;
+  try {
+    const raw = await req.json();
+    const parsed = cancelBookingSchema.safeParse(raw);
+    if (parsed.success) {
+      note = parsed.data.note;
+    }
+  } catch {
+    // No body or invalid JSON — note stays undefined
   }
 
   const { id } = await params;
@@ -34,15 +54,13 @@ export async function DELETE(
 
   // Authorization
   if (session.role === "applicant") {
-    if (booking.applicantEmail !== session.email) {
+    const auth = await getApplicantFromSession();
+    if (!auth || auth.applicantId !== booking.applicantId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   } else if (session.role === "recruiter") {
-    const [rec] = await db
-      .select({ id: recruiters.id })
-      .from(recruiters)
-      .where(eq(recruiters.userId, session.userId));
-    if (!rec || rec.id !== booking.recruiterId) {
+    const auth = await getRecruiterFromSession();
+    if (!auth || auth.recruiterId !== booking.recruiterId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   } else if (session.role !== "admin") {
@@ -68,6 +86,33 @@ export async function DELETE(
     .update(bookings)
     .set({ status: "cancelled" })
     .where(eq(bookings.id, bookingId));
+
+  // Send cancellation email to applicant (only when recruiter cancels)
+  if (session.role === "recruiter" || session.role === "admin") {
+    const [rec] = await db
+      .select({ company: recruiters.company })
+      .from(recruiters)
+      .where(eq(recruiters.id, booking.recruiterId));
+
+    if (rec) {
+      sendRejectionEmail({
+        applicantName: booking.applicantName,
+        applicantEmail: booking.applicantEmail,
+        company: rec.company,
+        recruiterNote: note,
+        action: "cancelled",
+      }).catch(() => {});
+
+      createBookingNotification({
+        recipientEmail: booking.applicantEmail,
+        recipientRole: "applicant",
+        status: "cancelled",
+        companyName: rec.company,
+        position: booking.position ?? undefined,
+        note,
+      }).catch(() => {});
+    }
+  }
 
   // Auto-promote: if there's a waitlisted applicant for the same time+recruiter,
   // promote them to pending so recruiter can accept

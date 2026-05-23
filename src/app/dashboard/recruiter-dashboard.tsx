@@ -1,40 +1,37 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Building2,
   LogOut,
   Mail,
   FileText,
   ExternalLink,
-  Search,
-  Users,
-  BookOpen,
   Calendar,
   Loader2,
-  GraduationCap,
-  Trash2,
-  X,
-  AlertCircle,
   CheckCircle2,
-  Plus,
-  Briefcase,
+  X,
+  LayoutList,
+  LayoutGrid,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { SlotPicker } from "@/components/slot-picker-applicant";
+import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
+import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
+import { AppTopBar } from "@/components/app-topbar";
+
+// ... existing Booking/Recruiter types ...
 
 type Booking = {
   id: number;
   direction: string;
+  applicantId: number | null;
   position: string | null;
   applicantName: string;
   applicantEmail: string;
@@ -43,6 +40,12 @@ type Booking = {
   createdAt: Date | null;
   requestedTime: Date | null;
   slotId: number | null;
+  applicantSlotId: number | null;
+  slotStart: Date | null;
+  slotEnd: Date | null;
+  interviewerNumber: number | null;
+  applicantSlotStart: Date | null;
+  applicantSlotEnd: Date | null;
 };
 
 type Recruiter = {
@@ -50,144 +53,402 @@ type Recruiter = {
   company: string;
   industry: string;
   description: string;
-  positions: string[];
   contactEmail: string;
-  jdLink: string | null;
   interviewerCount: number;
+  logoUrl: string | null;
+  websiteUrl: string | null;
+  galleryUrls: string[];
 };
 
-type Applicant = {
-  id: number;
-  name: string;
-  email: string;
-  major: string;
-  skills: string[];
-  cvLink: string;
-  description: string;
-};
+type Section = "interviews" | "applicants" | "jobs" | "company";
+const APPLICANTS_NOTICE_DISMISSED_KEY =
+  "recruiter_applicants_compliance_notice_dismissed_v1";
 
-type Tab = "bookings" | "applicants" | "company";
+const RecruiterCompanyTab = dynamic(
+  () =>
+    import("./recruiter-dashboard-company").then(
+      (module) => module.RecruiterCompanyTab
+    ),
+  { loading: () => <DashboardTabLoader /> }
+);
 
 export function RecruiterDashboard({
   recruiter,
   bookings,
-  eventMode,
+  section,
+  jobModerationEnabled,
+  salaryCurrencyOptions,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
-  eventMode: string;
+  section: Section;
+  showApplicants: boolean;
+  jobModerationEnabled: boolean;
+  salaryCurrencyOptions: string[];
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("bookings");
-  const showApplicants =
-    eventMode === "recruiter_books_applicant" || eventMode === "both";
+  const { messages } = useRecruiterI18n();
+  const [showApplicantsComplianceNotice, setShowApplicantsComplianceNotice] =
+    useState(() => {
+      if (typeof window === "undefined") {
+        return true;
+      }
+
+      try {
+        return (
+          window.localStorage.getItem(APPLICANTS_NOTICE_DISMISSED_KEY) !== "1"
+        );
+      } catch {
+        return true;
+      }
+    });
+  const currentPath =
+    section === "interviews"
+      ? "/dashboard/interviews"
+      : section === "applicants"
+        ? "/dashboard/applicants"
+        : section === "jobs"
+          ? "/dashboard/jobs"
+          : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   }
 
+  useEffect(() => {
+    const recruiterRoutes = [
+      "/dashboard/interviews",
+      "/dashboard/applicants",
+      "/dashboard/jobs",
+      "/dashboard/company",
+    ];
+
+    for (const href of recruiterRoutes) {
+      router.prefetch(href);
+    }
+  }, [router]);
+
+  function dismissApplicantsComplianceNotice() {
+    setShowApplicantsComplianceNotice(false);
+    try {
+      window.localStorage.setItem(APPLICANTS_NOTICE_DISMISSED_KEY, "1");
+    } catch {
+      // Ignore storage write failures.
+    }
+  }
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-              <Building2 className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-heading text-lg font-bold">
-              {recruiter.company}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              View Site
-            </Link>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-1.5 h-3.5 w-3.5" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Tabs */}
-      <div className="border-b bg-card">
-        <div className="mx-auto flex max-w-5xl gap-0 px-4 sm:px-6">
-          <button
-            onClick={() => setTab("bookings")}
-            className={cn(
-              "flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
-              tab === "bookings"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <BookOpen className="h-4 w-4" />
-            My Bookings
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {bookings.length}
-            </Badge>
-          </button>
-          {showApplicants && (
+      <AppTopBar
+        href="/"
+        navRole="recruiter"
+        currentPath={currentPath}
+        mobileActions={<RecruiterLanguageSwitcher />}
+        showActionsOnMobile
+        accountLabels={{
+          roleLabel: messages.common.recruiter,
+          logout: messages.common.logout,
+        }}
+        notificationLabels={messages.notifications}
+        desktopActions={
+          <>
+            <RecruiterLanguageSwitcher className="sm:w-32" />
             <button
-              onClick={() => setTab("applicants")}
-              className={cn(
-                "flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
-                tab === "applicants"
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
+              onClick={handleLogout}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-muted-foreground transition-premium hover:bg-muted/55 hover:text-foreground"
             >
-              <GraduationCap className="h-4 w-4" />
-              Browse Applicants
+              <LogOut className="h-4 w-4" />
+              {messages.common.logout}
             </button>
-          )}
-          <button
-            onClick={() => setTab("company")}
-            className={cn(
-              "flex cursor-pointer items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
-              tab === "company"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Building2 className="h-4 w-4" />
-            My Company
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <main className="flex-1 px-4 py-8 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          {tab === "bookings" ? (
+      <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
+        <div className="mx-auto max-w-6xl">
+          {section === "interviews" ? (
+            <InterviewScheduleTab bookings={bookings} />
+          ) : section === "applicants" ? (
             <BookingsTab bookings={bookings} />
-          ) : tab === "applicants" ? (
-            <ApplicantsTab recruiterId={recruiter.id} />
+          ) : section === "jobs" ? (
+            <RecruiterCompanyTab
+              recruiter={recruiter}
+              section="jobs"
+              jobModerationEnabled={jobModerationEnabled}
+              salaryCurrencyOptions={salaryCurrencyOptions}
+            />
           ) : (
-            <CompanyTab recruiter={recruiter} />
+            <RecruiterCompanyTab
+              recruiter={recruiter}
+              section="company"
+              jobModerationEnabled={jobModerationEnabled}
+              salaryCurrencyOptions={salaryCurrencyOptions}
+            />
           )}
         </div>
       </main>
+      {section === "applicants" && showApplicantsComplianceNotice ? (
+        <div className="px-4 pb-4 sm:px-6 md:px-8">
+          <div className="mx-auto max-w-6xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+            <div className="flex items-start justify-between gap-3">
+              <p className="pr-2">
+                Review applicant data only for recruitment purposes. Before
+                hiring, confirm the student&apos;s legal work eligibility in
+                Taiwan, respect any applicable work-permit and hour-limit rules,
+                and avoid discriminatory screening criteria.
+              </p>
+              <button
+                type="button"
+                onClick={dismissApplicantsComplianceNotice}
+                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-amber-300/70 text-amber-700 transition-colors hover:bg-amber-100/70 dark:border-amber-800/60 dark:text-amber-300 dark:hover:bg-amber-900/40"
+                aria-label="Dismiss compliance notice"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <SiteFooter />
     </div>
   );
 }
 
+function getInterviewStart(booking: Booking) {
+  return booking.slotStart ?? booking.applicantSlotStart ?? booking.requestedTime;
+}
+
+function getInterviewEnd(booking: Booking) {
+  return booking.slotEnd ?? booking.applicantSlotEnd;
+}
+
+function BookingSummaryCard({
+  booking,
+  borderClassName,
+  timeLabel,
+  rightSlot,
+  cvLabel,
+}: {
+  booking: Booking;
+  borderClassName?: string;
+  timeLabel?: string;
+  rightSlot?: ReactNode;
+  cvLabel: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between",
+        borderClassName
+      )}
+    >
+      <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
+        <a
+          href={booking.cvLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+        >
+          <FileText className="h-4 w-4" />
+          {cvLabel}
+        </a>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-3">
+            {booking.applicantId ? (
+              <Link
+                href={`/applicant/${booking.applicantId}`}
+                className="truncate text-sm font-semibold transition-colors hover:text-primary hover:underline"
+              >
+                {booking.applicantName}
+              </Link>
+            ) : (
+              <p className="truncate text-sm font-semibold">
+                {booking.applicantName}
+              </p>
+            )}
+          </div>
+          <div className="grid gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-[minmax(9rem,0.9fr)_minmax(14rem,1.2fr)_minmax(9rem,0.8fr)]">
+            <span className="min-w-0 truncate font-medium text-foreground/80">
+              {booking.position || "—"}
+            </span>
+            <span className="flex min-w-0 items-center gap-1">
+              <Mail className="h-3 w-3 shrink-0" />
+              <span className="truncate">{booking.applicantEmail}</span>
+            </span>
+            {timeLabel ? (
+              <span className="flex min-w-0 items-center gap-1 whitespace-nowrap">
+                <Calendar className="h-3 w-3 shrink-0" />
+                {timeLabel}
+              </span>
+            ) : (
+              <span aria-hidden="true">—</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+        {rightSlot}
+      </div>
+    </div>
+  );
+}
+
+function InterviewScheduleTab({ bookings }: { bookings: Booking[] }) {
+  const { messages } = useRecruiterI18n();
+  const [sortBy, setSortBy] = useState<
+    "time" | "interviewer" | "name" | "email" | "position"
+  >("time");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const accepted = bookings
+    .filter((booking) => booking.status === "accepted")
+    .sort((a, b) => {
+      let comparison = 0;
+
+      if (sortBy === "time") {
+        comparison =
+          (getInterviewStart(a)?.getTime() ?? 0) -
+          (getInterviewStart(b)?.getTime() ?? 0);
+      } else if (sortBy === "interviewer") {
+        comparison =
+          (a.interviewerNumber ?? Number.MAX_SAFE_INTEGER) -
+          (b.interviewerNumber ?? Number.MAX_SAFE_INTEGER);
+      } else if (sortBy === "name") {
+        comparison = a.applicantName.localeCompare(b.applicantName);
+      } else if (sortBy === "email") {
+        comparison = a.applicantEmail.localeCompare(b.applicantEmail);
+      } else if (sortBy === "position") {
+        comparison = (a.position ?? "").localeCompare(b.position ?? "");
+      }
+
+      if (comparison === 0 && sortBy !== "time") {
+        comparison =
+          (getInterviewStart(a)?.getTime() ?? 0) -
+          (getInterviewStart(b)?.getTime() ?? 0);
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-heading text-lg font-semibold">
+          {messages.dashboard.bookings.acceptedSchedule}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {messages.dashboard.bookings.acceptedScheduleDescription}
+        </p>
+      </div>
+
+      {accepted.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground">
+              {messages.dashboard.bookings.noAcceptedInterviews}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="flex justify-end border-b border-border pb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Sort by:
+              </span>
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [by, order] = e.target.value.split("-");
+                  setSortBy(
+                    by as "time" | "interviewer" | "name" | "email" | "position"
+                  );
+                  setSortOrder(order as "asc" | "desc");
+                }}
+              >
+                <option value="time-asc">Booking Time (Earliest)</option>
+                <option value="time-desc">Booking Time (Latest)</option>
+                <option value="interviewer-asc">Interviewer (Low to High)</option>
+                <option value="interviewer-desc">Interviewer (High to Low)</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="email-asc">Email (A-Z)</option>
+                <option value="email-desc">Email (Z-A)</option>
+                <option value="position-asc">Position (A-Z)</option>
+                <option value="position-desc">Position (Z-A)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              {accepted.length}
+            </span>
+            {messages.dashboard.bookings.accepted}
+          </h3>
+          <div className="space-y-2">
+            {accepted.map((booking) => {
+              const start = getInterviewStart(booking);
+              const end = getInterviewEnd(booking);
+              const timeLabel = start
+                ? `${format(start, "MMM d, HH:mm")}${end ? ` - ${format(end, "HH:mm")}` : ""}`
+                : undefined;
+
+              return (
+                <BookingSummaryCard
+                  key={booking.id}
+                  booking={booking}
+                  borderClassName="border-emerald-500/60 dark:border-emerald-500/50"
+                  timeLabel={timeLabel}
+                  cvLabel={messages.dashboard.bookings.cv}
+                  rightSlot={
+                    booking.interviewerNumber ? (
+                      <Badge variant="secondary" className="h-8 px-3 text-xs font-normal">
+                        Interviewer {booking.interviewerNumber}
+                      </Badge>
+                    ) : null
+                  }
+                />
+              );
+            })}
+          </div>
+        </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DashboardTabLoader() {
+  return (
+    <Card>
+      <CardContent className="flex items-center justify-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+      </CardContent>
+    </Card>
+  );
+}
+
 function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
+  const { messages } = useRecruiterI18n();
   const [items, setItems] = useState(initialBookings);
   const [acting, setActing] = useState<number | null>(null);
+  const [rejectModal, setRejectModal] = useState<{ id: number; name: string; type: "reject" | "cancel" } | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
   const router = useRouter();
 
-  async function handleReview(id: number, action: "accept" | "reject" | "waitlist") {
+  const [sortBy, setSortBy] = useState<"date" | "name">("date");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
+  async function handleReview(id: number, action: "accept" | "reject" | "waitlist", note?: string) {
     setActing(id);
     const res = await fetch("/api/bookings/review", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId: id, action }),
+      body: JSON.stringify({ bookingId: id, action, note }),
     });
     if (res.ok) {
       const newStatus = action === "accept" ? "accepted" : action === "reject" ? "rejected" : "waitlisted";
@@ -197,10 +458,13 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     setActing(null);
   }
 
-  async function handleCancel(id: number) {
-    if (!confirm("Cancel this? The slot will be released and a waitlisted applicant may be promoted.")) return;
+  async function handleCancel(id: number, note?: string) {
     setActing(id);
-    const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/bookings/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note }),
+    });
     if (res.ok) {
       setItems(items.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
       router.refresh();
@@ -208,17 +472,46 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     setActing(null);
   }
 
-  const pending = items.filter((b) => b.status === "pending");
-  const accepted = items.filter((b) => b.status === "accepted");
-  const waitlisted = items.filter((b) => b.status === "waitlisted");
-  const other = items.filter((b) => b.status === "rejected" || b.status === "cancelled");
+  function openRejectModal(id: number, name: string, type: "reject" | "cancel") {
+    setRejectModal({ id, name, type });
+    setRejectNote("");
+  }
 
-  const statusColor: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-    accepted: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    waitlisted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-    rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-    cancelled: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  async function confirmReject() {
+    if (!rejectModal) return;
+    if (rejectModal.type === "reject") {
+      await handleReview(rejectModal.id, "reject", rejectNote);
+    } else {
+      await handleCancel(rejectModal.id, rejectNote);
+    }
+    setRejectModal(null);
+    setRejectNote("");
+  }
+
+  const sortedItems = [...items].sort((a, b) => {
+    let comparison = 0;
+    if (sortBy === "date") {
+      const dateA = a.requestedTime ? new Date(a.requestedTime).getTime() : 0;
+      const dateB = b.requestedTime ? new Date(b.requestedTime).getTime() : 0;
+      comparison = dateA - dateB;
+    } else if (sortBy === "name") {
+      comparison = a.applicantName.localeCompare(b.applicantName);
+    }
+    return sortOrder === "asc" ? comparison : -comparison;
+  });
+
+  const pending = sortedItems.filter((b) => b.status === "pending");
+  const accepted = sortedItems.filter((b) => b.status === "accepted");
+  const waitlisted = sortedItems.filter((b) => b.status === "waitlisted");
+  const other = sortedItems.filter((b) => b.status === "rejected" || b.status === "cancelled");
+
+  // Design system status border colors
+  const statusBorderColor: Record<string, string> = {
+    pending: "border-orange-500/60 dark:border-orange-500/50",
+    accepted: "border-emerald-500/60 dark:border-emerald-500/50",
+    waitlisted: "border-primary/60 dark:border-primary/50",
+    rejected: "border-destructive/60 dark:border-destructive/50",
+    cancelled: "border-border",
   };
 
   function renderBooking(b: Booking) {
@@ -226,109 +519,88 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     const isWaitlisted = b.status === "waitlisted";
     const isAccepted = b.status === "accepted";
     const isActing = acting === b.id;
+    const timeLabel = b.requestedTime
+      ? format(new Date(b.requestedTime), "MMM d, HH:mm")
+      : undefined;
 
     return (
-      <Card key={b.id} className={isPending ? "border-yellow-300/50" : ""}>
-        <CardContent className="py-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{b.applicantName}</p>
-                  <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold", statusColor[b.status] ?? "")}>
-                    {b.status}
-                  </span>
-                  {b.position && (
-                    <Badge variant="outline" className="text-xs font-normal">
-                      {b.position}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Mail className="h-3 w-3" />
-                    {b.applicantEmail}
-                  </span>
-                  {b.requestedTime && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(b.requestedTime), "MMM d, HH:mm")}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <a
-                href={b.cvLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-              >
-                <FileText className="h-3 w-3" />
-                CV
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-
-            {/* Actions */}
-            {(isPending || isWaitlisted) && (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  disabled={isActing}
-                  onClick={() => handleReview(b.id, "accept")}
-                  className="h-8 bg-green-600 text-white hover:bg-green-700"
-                >
-                  {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
-                  Accept
+      <BookingSummaryCard
+        key={b.id}
+        booking={b}
+        borderClassName={statusBorderColor[b.status]}
+        timeLabel={timeLabel}
+        cvLabel={messages.dashboard.bookings.cv}
+        rightSlot={
+          <>
+            {(isPending || isWaitlisted) ? (
+            <>
+              <Button size="sm" disabled={isActing} onClick={() => handleReview(b.id, "accept")} className="h-8 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600">
+                {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
+                {messages.dashboard.bookings.accept}
+              </Button>
+              {isPending && (
+                <Button size="sm" variant="outline" disabled={isActing} onClick={() => handleReview(b.id, "waitlist")} className="h-8">
+                  {messages.dashboard.bookings.waitlist}
                 </Button>
-                {isPending && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isActing}
-                    onClick={() => handleReview(b.id, "waitlist")}
-                    className="h-8"
-                  >
-                    Waitlist
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isActing}
-                  onClick={() => handleReview(b.id, "reject")}
-                  className="h-8 text-destructive hover:bg-destructive/10"
-                >
-                  Reject
-                </Button>
-              </div>
-            )}
-            {isAccepted && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleCancel(b.id)}
-                  className="cursor-pointer text-xs text-muted-foreground hover:text-destructive hover:underline"
-                >
-                  Cancel interview
-                </button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+              <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "reject")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
+                {messages.dashboard.bookings.reject}
+              </Button>
+            </>
+            ) : null}
+            {isAccepted ? (
+            <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "cancel")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
+              {messages.dashboard.bookings.cancelInterview}
+            </Button>
+            ) : null}
+          </>
+        }
+      />
     );
   }
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="font-heading text-lg font-semibold">
+          {messages.dashboard.bookings.applicationStages}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {messages.dashboard.bookings.applicationStagesDescription}
+        </p>
+      </div>
+
+      {/* Controls Header */}
+      {items.length > 0 && (
+        <div className="flex justify-end border-b border-border pb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Sort by:</span>
+            <select
+              className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [by, order] = e.target.value.split("-");
+                setSortBy(by as "date" | "name");
+                setSortOrder(order as "asc" | "desc");
+              }}
+            >
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Pending — most urgent */}
       {pending.length > 0 && (
         <div>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 text-[10px] font-bold text-yellow-700">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500/15 text-[10px] font-bold text-orange-600 dark:text-orange-400">
               {pending.length}
             </span>
-            Pending Review
+            {messages.dashboard.bookings.pendingReview}
           </h3>
           <div className="space-y-2">{pending.map(renderBooking)}</div>
         </div>
@@ -337,8 +609,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Accepted */}
       {accepted.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-green-700 dark:text-green-400">
-            Accepted ({accepted.length})
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              {accepted.length}
+            </span>
+            {messages.dashboard.bookings.accepted}
           </h3>
           <div className="space-y-2">{accepted.map(renderBooking)}</div>
         </div>
@@ -347,8 +622,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Waitlisted */}
       {waitlisted.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
-            Waitlisted ({waitlisted.length})
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+              {waitlisted.length}
+            </span>
+            {messages.dashboard.bookings.waitlisted}
           </h3>
           <div className="space-y-2">{waitlisted.map(renderBooking)}</div>
         </div>
@@ -357,8 +635,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {/* Rejected/Cancelled */}
       {other.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            Past ({other.length})
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+              {other.length}
+            </span>
+            {messages.dashboard.bookings.past}
           </h3>
           <div className="space-y-2">{other.map(renderBooking)}</div>
         </div>
@@ -367,556 +648,60 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       {items.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No applications yet.</p>
+            <p className="text-muted-foreground">{messages.dashboard.bookings.noApplications}</p>
           </CardContent>
         </Card>
       )}
-    </div>
-  );
-}
 
-function ApplicantsTab({ recruiterId }: { recruiterId: number }) {
-  const [applicants, setApplicants] = useState<Applicant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
-  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
-    null
-  );
-
-  useEffect(() => {
-    fetch("/api/applicants")
-      .then((r) => r.json())
-      .then((data) => setApplicants(data.applicants ?? []))
-      .catch(() => setApplicants([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = applicants.filter((a) => {
-    const q = query.toLowerCase();
-    if (!q) return true;
-    return (
-      a.name.toLowerCase().includes(q) ||
-      a.major.toLowerCase().includes(q) ||
-      a.skills.some((s) => s.toLowerCase().includes(q))
-    );
-  });
-
-  if (selectedApplicant) {
-    return (
-      <ApplicantBookingView
-        applicant={selectedApplicant}
-        recruiterId={recruiterId}
-        onBack={() => setSelectedApplicant(null)}
-      />
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search by name, major, or skill..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pl-9"
-        />
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">
-            Loading applicants...
-          </span>
-        </div>
-      ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            No applicants found.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map((a) => (
-            <Card
-              key={a.id}
-              className="cursor-pointer transition-shadow hover:shadow-md"
-              onClick={() => setSelectedApplicant(a)}
-            >
-              <CardContent className="py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="font-medium">{a.name}</p>
-                    {a.major && (
-                      <p className="text-xs text-muted-foreground">
-                        {a.major}
-                      </p>
-                    )}
-                  </div>
-                  <a
-                    href={a.cvLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FileText className="h-3 w-3" />
-                    CV
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-                {a.skills.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {a.skills.map((s) => (
-                      <Badge
-                        key={s}
-                        variant="outline"
-                        className="text-xs font-normal"
-                      >
-                        {s}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                {a.description && (
-                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
-                    {a.description}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ApplicantBookingView({
-  applicant,
-  recruiterId,
-  onBack,
-}: {
-  applicant: Applicant;
-  recruiterId: number;
-  onBack: () => void;
-}) {
-  const [bookingState, setBookingState] = useState<
-    "picking" | "confirming" | "success" | "error"
-  >("picking");
-  const [selectedSlot, setSelectedSlot] = useState<{
-    id: number;
-    startTime: string;
-  } | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  async function handleConfirm() {
-    if (!selectedSlot) return;
-    setBookingState("confirming");
-
-    try {
-      const res = await fetch("/api/bookings/reverse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          applicantSlotId: selectedSlot.id,
-          recruiterId,
-          applicantId: applicant.id,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking failed");
-
-      setBookingState("success");
-    } catch (err) {
-      setErrorMsg(
-        err instanceof Error ? err.message : "Something went wrong"
-      );
-      setBookingState("error");
-    }
-  }
-
-  if (bookingState === "success") {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
-          </div>
-          <h3 className="font-heading text-xl font-semibold">
-            Interview Booked!
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Interview with {applicant.name} at{" "}
-            {selectedSlot &&
-              format(new Date(selectedSlot.startTime), "MMM d, HH:mm")}
-            .
-          </p>
-          <Button variant="outline" onClick={onBack}>
-            Back to Applicants
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <Button variant="outline" size="sm" onClick={onBack}>
-        Back to Applicants
-      </Button>
-
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* Applicant info */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <h2 className="font-heading text-lg font-semibold">
-              {applicant.name}
-            </h2>
-            {applicant.major && (
-              <p className="text-sm text-muted-foreground">
-                {applicant.major}
-              </p>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {applicant.description && (
-              <p className="text-sm text-muted-foreground">
-                {applicant.description}
-              </p>
-            )}
-            {applicant.skills.length > 0 && (
-              <>
-                <Separator />
-                <div className="flex flex-wrap gap-1.5">
-                  {applicant.skills.map((s) => (
-                    <Badge key={s} variant="outline" className="text-xs">
-                      {s}
-                    </Badge>
-                  ))}
-                </div>
-              </>
-            )}
-            <Separator />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mail className="h-4 w-4" />
-              {applicant.email}
+      {/* Rejection/Cancellation Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-heading text-lg font-semibold">
+                {rejectModal.type === "reject"
+                  ? messages.dashboard.bookings.rejectTitle ?? "Decline Application"
+                  : messages.dashboard.bookings.cancelTitle ?? "Cancel Interview"}
+              </h3>
+              <button
+                onClick={() => setRejectModal(null)}
+                className="rounded-full p-1 hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <a
-              href={applicant.cvLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-            >
-              <FileText className="h-4 w-4" />
-              View CV
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </CardContent>
-        </Card>
-
-        {/* Slot picker */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <h3 className="font-heading text-lg font-semibold">
-              Select a Time Slot
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Pick a time from {applicant.name}&apos;s availability.
+            <p className="mb-4 text-sm text-muted-foreground">
+              {rejectModal.type === "reject"
+                ? messages.dashboard.bookings.rejectDescription ?? `You are declining the application from ${rejectModal.name}. Add an optional note to let them know why.`
+                : messages.dashboard.bookings.cancelDescription ?? `You are cancelling the interview with ${rejectModal.name}. Add an optional note to let them know why.`}
             </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <SlotPicker
-              applicantId={applicant.id}
-              onSlotSelect={(slot) => setSelectedSlot(slot)}
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              placeholder={messages.dashboard.bookings.notePlaceholder ?? "Optional: Add a message for the student..."}
+              rows={3}
+              className="mb-4 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
-
-            {selectedSlot && bookingState === "picking" && (
-              <Button onClick={handleConfirm} className="w-full">
-                Confirm Booking at{" "}
-                {format(new Date(selectedSlot.startTime), "HH:mm")}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setRejectModal(null)}>
+                {messages.common?.cancel ?? "Cancel"}
               </Button>
-            )}
-
-            {bookingState === "confirming" && (
-              <Button disabled className="w-full">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Booking...
-              </Button>
-            )}
-
-            {bookingState === "error" && (
-              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
-                {errorMsg}
-                <button
-                  onClick={() => setBookingState("picking")}
-                  className="mt-1 block text-xs underline"
-                >
-                  Try again
-                </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-type JobOpening = {
-  id: number;
-  title: string;
-  jdLink: string | null;
-  description: string;
-};
-
-function CompanyTab({ recruiter }: { recruiter: Recruiter }) {
-  const router = useRouter();
-
-  // Company info
-  const [description, setDescription] = useState(recruiter.description);
-  const [interviewerCount, setInterviewerCount] = useState(recruiter.interviewerCount);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
-
-  // Job openings
-  const [jobs, setJobs] = useState<JobOpening[]>([]);
-  const [loadingJobs, setLoadingJobs] = useState(true);
-  const [newTitle, setNewTitle] = useState("");
-  const [newJdLink, setNewJdLink] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editJdLink, setEditJdLink] = useState("");
-
-  useEffect(() => {
-    fetch("/api/me/jobs")
-      .then((r) => r.json())
-      .then((d) => setJobs(d.jobs ?? []))
-      .finally(() => setLoadingJobs(false));
-  }, []);
-
-  async function handleSaveCompany(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setSaved(false);
-    setError("");
-    try {
-      const res = await fetch("/api/me/recruiter", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: description.trim(), interviewerCount }),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      setSaved(true);
-      router.refresh();
-      setTimeout(() => setSaved(false), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleAddJob(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-    const res = await fetch("/api/me/jobs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle.trim(), jdLink: newJdLink.trim() || null }),
-    });
-    if (res.ok) {
-      const d = await res.json();
-      setJobs([...jobs, d.job]);
-      setNewTitle("");
-      setNewJdLink("");
-    }
-  }
-
-  async function handleUpdateJob(id: number) {
-    const res = await fetch(`/api/me/jobs/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: editTitle.trim(), jdLink: editJdLink.trim() || null }),
-    });
-    if (res.ok) {
-      const d = await res.json();
-      setJobs(jobs.map((j) => (j.id === id ? d.job : j)));
-      setEditingId(null);
-    }
-  }
-
-  async function handleDeleteJob(id: number) {
-    if (!confirm("Remove this position?")) return;
-    await fetch(`/api/me/jobs/${id}`, { method: "DELETE" });
-    setJobs(jobs.filter((j) => j.id !== id));
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Company info */}
-      <Card>
-        <CardHeader>
-          <h2 className="font-heading text-lg font-semibold">{recruiter.company}</h2>
-          <p className="text-xs text-muted-foreground">{recruiter.industry} · {recruiter.contactEmail}</p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSaveCompany} className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="desc" className="text-sm font-medium">Company Description</label>
-              <textarea
-                id="desc"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="What does your company do?"
-                rows={3}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="ic" className="text-sm font-medium">Number of Interviewers</label>
-              <Input
-                id="ic"
-                type="number"
-                min={1}
-                max={10}
-                value={interviewerCount}
-                onChange={(e) => setInterviewerCount(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
-              />
-              <p className="text-xs text-muted-foreground">
-                {interviewerCount} interviewer{interviewerCount > 1 ? "s" : ""} = {interviewerCount}x slots per time. Assigned randomly.
-              </p>
-            </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            {saved && <p className="text-xs text-green-600">Saved!</p>}
-            <Button type="submit" disabled={saving} size="sm">
-              {saving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Saving...</> : "Save Company Info"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Job Openings CRUD */}
-      <Card>
-        <CardHeader>
-          <h2 className="font-heading text-lg font-semibold">Job Openings</h2>
-          <p className="text-xs text-muted-foreground">
-            Each position has its own JD link. Students select a position when applying.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Add new job */}
-          <form onSubmit={handleAddJob} className="space-y-2 rounded-lg border bg-muted/20 p-3">
-            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-              <Input
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Position title"
-                required
-              />
-              <Input
-                value={newJdLink}
-                onChange={(e) => setNewJdLink(e.target.value)}
-                placeholder="JD link (optional)"
-                type="url"
-              />
-              <Button type="submit" size="sm" disabled={!newTitle.trim()}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
-                Add
+              <Button
+                variant="destructive"
+                disabled={acting === rejectModal.id}
+                onClick={confirmReject}
+              >
+                {acting === rejectModal.id ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : null}
+                {rejectModal.type === "reject"
+                  ? messages.dashboard.bookings.confirmReject ?? "Decline"
+                  : messages.dashboard.bookings.confirmCancel ?? "Cancel Interview"}
               </Button>
             </div>
-          </form>
-
-          {/* Job list */}
-          {loadingJobs ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : jobs.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              No positions added yet.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {jobs.map((job) =>
-                editingId === job.id ? (
-                  <div key={job.id} className="rounded-lg border border-primary/30 p-3">
-                    <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
-                      <Input
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        placeholder="Title"
-                      />
-                      <Input
-                        value={editJdLink}
-                        onChange={(e) => setEditJdLink(e.target.value)}
-                        placeholder="JD link"
-                        type="url"
-                      />
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      <Button size="sm" onClick={() => handleUpdateJob(job.id)}>
-                        Save
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    key={job.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{job.title}</p>
-                      {job.jdLink && (
-                        <a
-                          href={job.jdLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                        >
-                          <FileText className="h-3 w-3" />
-                          View JD
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
-                      {!job.jdLink && (
-                        <p className="text-xs text-muted-foreground">No JD link</p>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 gap-1">
-                      <button
-                        onClick={() => {
-                          setEditingId(job.id);
-                          setEditTitle(job.title);
-                          setEditJdLink(job.jdLink ?? "");
-                        }}
-                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
-                        aria-label="Edit"
-                      >
-                        <Briefcase className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteJob(job.id)}
-                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        aria-label="Delete"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

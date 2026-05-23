@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { externalJobs, crawlLogs } from "@/lib/db/schema";
-import { eq, and, desc, not, ilike, or } from "drizzle-orm";
+import { eq, and, desc, not, ilike } from "drizzle-orm";
 import { crawl104 } from "./crawler-104";
 import { crawl1111 } from "./crawler-1111";
 import type { ExternalJob, CrawlResult, CrawlerConfig } from "./types";
@@ -163,7 +163,7 @@ export interface GetExternalJobsOptions {
 export async function getExternalJobs(
   options?: GetExternalJobsOptions
 ): Promise<typeof externalJobs.$inferSelect[]> {
-  let query = db.select().from(externalJobs);
+  const query = db.select().from(externalJobs);
 
   const conditions = [eq(externalJobs.isVietnameseJob, true)];
 

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, slots, recruiters } from "@/lib/db";
-import { eq, and, sql } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
-import { sendBookingEmails } from "@/lib/email";
+import { db, bookings, slots, recruiters, applicantSlots } from "@/lib/db";
+import { eq, and, sql, or, ne, inArray } from "drizzle-orm";
+import { getRecruiterFromSession } from "@/lib/auth";
+import { sendBookingEmails, sendRejectionEmail, sendWaitlistEmail } from "@/lib/email";
+import { createBookingNotification } from "@/lib/notifications";
 import { users } from "@/lib/db";
+import { parseJsonBody, reviewBookingSchema } from "@/lib/validation";
 
 /**
  * PUT /api/bookings/review
@@ -13,30 +15,15 @@ import { users } from "@/lib/db";
  * On reject/waitlist: just update status.
  */
 export async function PUT(req: NextRequest) {
-  const session = await getSession();
-  if (!session || session.role !== "recruiter") {
+  const auth = await getRecruiterFromSession();
+  if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const recruiter = { id: auth.recruiterId };
 
-  const body = await req.json();
-  const { bookingId, action } = body;
-
-  if (!bookingId || !["accept", "reject", "waitlist"].includes(action)) {
-    return NextResponse.json(
-      { error: "bookingId and action (accept/reject/waitlist) required" },
-      { status: 400 }
-    );
-  }
-
-  // Verify recruiter owns this booking
-  const [recruiter] = await db
-    .select({ id: recruiters.id })
-    .from(recruiters)
-    .where(eq(recruiters.userId, session.userId));
-
-  if (!recruiter) {
-    return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
-  }
+  const parsed = await parseJsonBody(req, reviewBookingSchema);
+  if (!parsed.ok) return parsed.response;
+  const { bookingId, action, note } = parsed.data;
 
   const [booking] = await db
     .select()
@@ -65,6 +52,57 @@ export async function PUT(req: NextRequest) {
       .set({ status: action === "reject" ? "rejected" : "waitlisted" })
       .where(eq(bookings.id, bookingId));
 
+    // Send rejection email with optional note
+    if (action === "reject") {
+      const [rec] = await db
+        .select({ company: recruiters.company })
+        .from(recruiters)
+        .where(eq(recruiters.id, recruiter.id));
+
+      if (rec) {
+        sendRejectionEmail({
+          applicantName: booking.applicantName,
+          applicantEmail: booking.applicantEmail,
+          company: rec.company,
+          recruiterNote: note?.trim() || undefined,
+          action: "rejected",
+        }).catch(() => {});
+
+        createBookingNotification({
+          recipientEmail: booking.applicantEmail,
+          recipientRole: "applicant",
+          status: "rejected",
+          companyName: rec.company,
+          position: booking.position ?? undefined,
+          note: note?.trim() || undefined,
+        }).catch(() => {});
+      }
+    }
+
+    if (action === "waitlist") {
+      const [rec] = await db
+        .select({ company: recruiters.company })
+        .from(recruiters)
+        .where(eq(recruiters.id, recruiter.id));
+
+      if (rec) {
+        sendWaitlistEmail({
+          applicantName: booking.applicantName,
+          applicantEmail: booking.applicantEmail,
+          company: rec.company,
+          position: booking.position ?? undefined,
+        }).catch(() => {});
+
+        createBookingNotification({
+          recipientEmail: booking.applicantEmail,
+          recipientRole: "applicant",
+          status: "waitlisted",
+          companyName: rec.company,
+          position: booking.position ?? undefined,
+        }).catch(() => {});
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       status: action === "reject" ? "rejected" : "waitlisted",
@@ -79,53 +117,118 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  // Find a random available slot at the requested time
-  const [randomSlot] = await db
-    .select({
-      id: slots.id,
-      startTime: slots.startTime,
-      endTime: slots.endTime,
-    })
-    .from(slots)
-    .where(
-      and(
-        eq(slots.recruiterId, recruiter.id),
-        eq(slots.startTime, booking.requestedTime),
-        eq(slots.status, "available")
-      )
-    )
-    .orderBy(sql`random()`)
-    .limit(1);
+  const acceptanceResult = await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext(${`${booking.applicantEmail}:${booking.requestedTime!.toISOString()}`}))`
+    );
 
-  if (!randomSlot) {
-    return NextResponse.json(
-      {
+    const [currentBooking] = await tx
+      .select({
+        id: bookings.id,
+        status: bookings.status,
+      })
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+
+    if (!currentBooking || !["pending", "waitlisted"].includes(currentBooking.status)) {
+      return {
+        ok: false as const,
+        status: 409,
+        error: `Cannot ${action} a booking with status "${currentBooking?.status ?? "missing"}"`,
+      };
+    }
+
+    const [acceptedConflict] = await tx
+      .select({ id: bookings.id })
+      .from(bookings)
+      .leftJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
+      .where(
+        and(
+          eq(bookings.applicantEmail, booking.applicantEmail),
+          ne(bookings.id, bookingId),
+          eq(bookings.status, "accepted"),
+          or(
+            eq(bookings.requestedTime, booking.requestedTime!),
+            eq(applicantSlots.startTime, booking.requestedTime!)
+          )
+        )
+      )
+      .limit(1);
+
+    if (acceptedConflict) {
+      return {
+        ok: false as const,
+        status: 409,
+        error:
+          "This applicant already has an accepted interview at this time.",
+      };
+    }
+
+    // Claim an available interviewer slot atomically. SKIP LOCKED is the
+    // Postgres job-queue pattern: two concurrent acceptances pick different
+    // rows, so we never spuriously report "no slot" when a free one exists.
+    const claimed = await tx.execute<{
+      id: number;
+      start_time: Date;
+      end_time: Date;
+    }>(sql`
+      UPDATE slots SET status = 'booked'
+      WHERE id = (
+        SELECT id FROM slots
+        WHERE recruiter_id = ${recruiter.id}
+          AND start_time = ${booking.requestedTime!}
+          AND status = 'available'
+        ORDER BY random()
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+      )
+      RETURNING id, start_time, end_time
+    `);
+
+    const claimedRow = claimed.rows?.[0];
+    if (!claimedRow) {
+      return {
+        ok: false as const,
+        status: 409,
         error:
           "No available interviewer slots at this time. All interviewers are booked. Try waitlisting instead.",
-      },
-      { status: 409 }
-    );
-  }
+      };
+    }
 
-  // Atomic lock the slot
-  const updated = await db
-    .update(slots)
-    .set({ status: "booked" })
-    .where(and(eq(slots.id, randomSlot.id), eq(slots.status, "available")))
-    .returning({ id: slots.id });
+    const randomSlot = {
+      id: claimedRow.id,
+      startTime: claimedRow.start_time,
+      endTime: claimedRow.end_time,
+    };
 
-  if (!updated.length) {
+    // Update booking: assign slot, mark accepted
+    const accepted = await tx
+      .update(bookings)
+      .set({ slotId: randomSlot.id, status: "accepted" })
+      .where(
+        and(
+          eq(bookings.id, bookingId),
+          inArray(bookings.status, ["pending", "waitlisted"])
+        )
+      )
+      .returning({ id: bookings.id });
+
+    if (!accepted.length) {
+      throw new Error("Booking status changed before acceptance completed");
+    }
+
+    return { ok: true as const, slot: randomSlot };
+  });
+
+  if (!acceptanceResult.ok) {
     return NextResponse.json(
-      { error: "Slot was just taken. Try again." },
-      { status: 409 }
+      { error: acceptanceResult.error },
+      { status: acceptanceResult.status }
     );
   }
 
-  // Update booking: assign slot, mark accepted
-  await db
-    .update(bookings)
-    .set({ slotId: randomSlot.id, status: "accepted" })
-    .where(eq(bookings.id, bookingId));
+  const randomSlot = acceptanceResult.slot;
 
   // Send confirmation emails
   const [rec] = await db
@@ -149,6 +252,15 @@ export async function PUT(req: NextRequest) {
       slotEnd: randomSlot.endTime,
       cvLink: booking.cvLink,
       direction: "applicant_books_recruiter",
+    }).catch(() => {});
+
+    createBookingNotification({
+      recipientEmail: booking.applicantEmail,
+      recipientRole: "applicant",
+      status: "accepted",
+      companyName: rec.company,
+      position: booking.position ?? undefined,
+      interviewTime: randomSlot.startTime,
     }).catch(() => {});
   }
 

@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
-  try {
-    await requireAdmin();
-  } catch {
+  if (!(await getAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Mode A bookings
-  const modeA = await db
+  const allBookings = await db
     .select({
       id: bookings.id,
       direction: bookings.direction,
@@ -22,39 +19,28 @@ export async function GET() {
       createdAt: bookings.createdAt,
       slotStart: slots.startTime,
       slotEnd: slots.endTime,
+      applicantSlotStart: applicantSlots.startTime,
+      applicantSlotEnd: applicantSlots.endTime,
       company: recruiters.company,
       contactEmail: recruiters.contactEmail,
     })
     .from(bookings)
     .leftJoin(slots, eq(bookings.slotId, slots.id))
-    .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
-    .orderBy(bookings.createdAt);
-
-  // Mode B bookings
-  const modeB = await db
-    .select({
-      id: bookings.id,
-      direction: bookings.direction,
-      applicantName: bookings.applicantName,
-      applicantEmail: bookings.applicantEmail,
-      cvLink: bookings.cvLink,
-      status: bookings.status,
-      createdAt: bookings.createdAt,
-      slotStart: applicantSlots.startTime,
-      slotEnd: applicantSlots.endTime,
-      company: recruiters.company,
-      contactEmail: recruiters.contactEmail,
-    })
-    .from(bookings)
     .leftJoin(applicantSlots, eq(bookings.applicantSlotId, applicantSlots.id))
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
     .orderBy(bookings.createdAt);
 
-  const all = [...modeA, ...modeB].sort(
+  const all = allBookings
+    .map(({ applicantSlotStart, applicantSlotEnd, ...booking }) => ({
+      ...booking,
+      slotStart: booking.slotStart ?? applicantSlotStart,
+      slotEnd: booking.slotEnd ?? applicantSlotEnd,
+    }))
+    .sort(
     (a, b) =>
       (a.slotStart ? new Date(a.slotStart).getTime() : 0) -
       (b.slotStart ? new Date(b.slotStart).getTime() : 0)
-  );
+    );
 
   // Build CSV
   const headers = [
@@ -71,8 +57,14 @@ export async function GET() {
     "Booked At",
   ];
 
-  const escape = (v: string) =>
-    `"${String(v ?? "").replace(/"/g, '""')}"`;
+  // CSV-escape and neutralize spreadsheet formula prefixes (=, +, -, @, tab, CR).
+  // Without this, a value like `=cmd|'/c calc'!A1` would execute when the CSV
+  // is opened in Excel/Sheets.
+  const escape = (v: string) => {
+    const s = String(v ?? "");
+    const neutralized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    return `"${neutralized.replace(/"/g, '""')}"`;
+  };
 
   const rows = all.map((b) => [
     b.id,

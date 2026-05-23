@@ -58,6 +58,11 @@
  * Border     #E5E5E7 — subtle
  */
 :root {
+  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snappy: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 160ms;
+  --duration-slow: 420ms;
   --background: #FAFAFA;
   --foreground: #1D1D1F;
   --card: #FFFFFF;
@@ -138,10 +143,47 @@
   body {
     @apply bg-background text-foreground;
     overflow-x: clip;
+    text-rendering: optimizeLegibility;
+  }
+
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  summary {
+    transition:
+      color var(--duration-fast) var(--ease-fluid),
+      background-color var(--duration-fast) var(--ease-fluid),
+      border-color var(--duration-fast) var(--ease-fluid),
+      box-shadow var(--duration-base) var(--ease-fluid),
+      transform var(--duration-fast) var(--ease-fluid),
+      opacity var(--duration-fast) var(--ease-fluid);
+  }
+
+  button:active,
+  [role="button"]:active,
+  a:active {
+    transform: translateY(0.5px) scale(0.992);
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 24%, transparent);
+    color: var(--foreground);
   }
 }
 
-/* Premium animations */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -191,6 +233,24 @@
   }
 }
 
+@keyframes route-progress {
+  0% {
+    transform: scaleX(0.12);
+    opacity: 0.25;
+  }
+  12% {
+    opacity: 1;
+  }
+  72% {
+    transform: scaleX(0.82);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.95;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.4s ease-out forwards;
 }
@@ -213,6 +273,33 @@
   animation: float 3s ease-in-out infinite;
 }
 
+.page-shell {
+  min-height: 100%;
+}
+
+header.app-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(140, 82, 255, 0.16),
+    rgba(140, 82, 255, 0.88),
+    rgba(169, 120, 255, 0.52)
+  );
+}
+
+.route-loading header.app-header::after {
+  animation: route-progress 240ms linear forwards;
+}
+
 /* Staggered animations for lists */
 .stagger-fade-in > * {
   opacity: 0;
@@ -232,18 +319,113 @@
 /* Smooth transitions for interactive elements */
 @layer utilities {
   .transition-premium {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      color var(--duration-fast) var(--ease-fluid),
+      background-color var(--duration-fast) var(--ease-fluid),
+      border-color var(--duration-fast) var(--ease-fluid),
+      box-shadow var(--duration-base) var(--ease-fluid),
+      transform var(--duration-fast) var(--ease-fluid),
+      opacity var(--duration-fast) var(--ease-fluid);
   }
 
   .hover-lift {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      transform var(--duration-base) var(--ease-fluid),
+      box-shadow var(--duration-base) var(--ease-fluid),
+      border-color var(--duration-fast) var(--ease-fluid);
   }
 
   .hover-lift:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
   }
 
   .hover-glow:hover {
     box-shadow: 0 0 20px rgba(140, 82, 255, 0.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body[data-topbar-menu-open="true"] .tutorial-shortcut-bar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The floating mobile nav pill anchors itself via inline style; the calc that
+   stabilizes Android Chrome's URL-bar wobble is applied conditionally in JS
+   (see mobile-bottom-nav.tsx) so it never trips on macOS Safari. */
+
+/* Standalone PWA: the floating pill already accounts for safe-area via its
+   own bottom offset, so no extra padding on the nav itself. Footer keeps
+   matching the breathing room used in browser mode. */
+@media (display-mode: standalone) {
+  .site-footer {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4.75rem);
+  }
+}
+@media (display-mode: standalone) and (min-width: 768px) {
+  .site-footer {
+    padding-bottom: 0.75rem;
+  }
+}
+
+.student-cv-print-only {
+  display: none;
+}
+
+.student-cv-preview-scale {
+  width: min(820px, 100%);
+}
+
+.student-cv-preview-scale .student-cv-export-surface {
+  width: 100%;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .student-cv-print-only,
+  .student-cv-print-only * {
+    visibility: visible !important;
+  }
+
+  .student-cv-print-only {
+    display: block !important;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+
+  .student-cv-export-surface {
+    width: 100% !important;
+    max-width: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 }

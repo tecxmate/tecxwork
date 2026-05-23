@@ -117,10 +117,10 @@ Two tabs: **Recruiters** and **Students**
 - [ ] Be available for support (password resets, account issues)
 - [ ] Watch for any recruiters who haven't received bookings — may need troubleshooting
 
-### 2 days after
+### Post-event wrap up
 - [ ] Export all booking data (admin bookings page or direct DB export)
-- [ ] Delete all user data to comply with PIPA
-- [ ] Notify recruiters that data has been purged
+- [ ] Process any user deletion requests to comply with the Personal Data Protection Act (PIPA)
+- [ ] Maintain active profiles to optimize the experience for future events
 
 ---
 
@@ -138,13 +138,3 @@ Two tabs: **Recruiters** and **Students**
 **"The mode accidentally changed during the event"**
 → That's what mode lock prevents. If it happens, switch back and lock it immediately.
 
----
-
-## Technical Notes
-
-- **Platform**: Next.js on Vercel (auto-scaling, handles 1,000+ concurrent users)
-- **Database**: Neon Postgres (serverless, auto-scaling connections)
-- **Auth**: JWT cookies, bcrypt password hashing
-- **Booking**: Atomic slot locking — no double-bookings possible
-- **PIPA**: All data can be purged by clearing the database after the event
-- **Designed & Developed by**: [TECXMATE.COM](https://tecxmate.com)

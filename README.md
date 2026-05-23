@@ -1,5 +1,32 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Notes
+
+Database access uses `DATABASE_URL`.
+
+Current behavior:
+- runtime DB access uses `DATABASE_URL`
+- Drizzle commands and DB maintenance scripts use `DATABASE_URL`
+
+Recommended setup:
+
+```bash
+DATABASE_URL=your_neon_connection_string
+TEST_DATABASE_URL=your_throwaway_neon_branch_connection_string
+JWT_SECRET=your_random_session_secret
+CRON_SECRET=your_random_cron_secret
+NEXT_PUBLIC_SITE_URL=https://your-production-origin.example
+```
+
+Optional push notifications also need `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and
+`VAPID_PRIVATE_KEY`.
+
+Taiwan school data:
+- the applicant school lookup is stored in the `schools` table in Neon
+- use `npm run db:push` after schema changes
+- then run `npm run db:seed:schools` once to import the bilingual Taiwan school dataset from `public/dataset/`
+- the signup API reads from Neon, not from the local CSV files at request time
+
 ## Getting Started
 
 First, run the development server:
