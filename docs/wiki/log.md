@@ -459,3 +459,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko asked company cards to match the job-card logo/title treatment: seamless uploaded logos, no extra frame gaps, and text laid out to the right of a larger logo.
 - Updated `RecruiterCard` to use the same larger uploaded-logo block and right-side company title/details layout as job cards.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-24] fix | Long horizontal company logos
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko flagged Bellwether-style long horizontal uploaded logos needing better fit inside square card logo frames.
+- Added a small safe inset to uploaded-logo images in company and job cards while preserving `object-contain` and the unframed uploaded-logo treatment.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

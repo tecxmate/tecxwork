@@ -29,7 +29,7 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
               <img
                 src={recruiter.logoUrl}
                 alt={`${recruiter.company} logo`}
-                className="h-full w-full object-contain"
+                className="h-full w-full object-contain p-1"
               />
             ) : (
               <span className="flex h-full w-full items-center justify-center rounded-lg border border-border/60 bg-secondary">
