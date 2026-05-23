@@ -441,3 +441,9 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Niko asked to apply the event location variable anywhere venue text had been hardcoded.
 - Switched recruiter detail event-venue display and Open Graph image venue text to use DB-backed event branding instead of static `EVENT_CONFIG` values.
 - Kept job location independent and optional; empty job locations remain blank.
+
+## [2026-05-24] fix | Recruiter detail mobile language menu
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko flagged that the mobile recruiter-detail header cramped the company title by showing the full language switcher inline.
+- Moved the student language switcher into the mobile hamburger menu on recruiter detail pages while keeping it visible on desktop.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

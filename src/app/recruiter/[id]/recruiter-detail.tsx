@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { AppTopBarActions } from "@/components/app-topbar-actions";
 import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { SlotPicker } from "@/components/slot-picker";
 import { BookingForm } from "@/components/booking-form";
@@ -351,7 +352,7 @@ export function RecruiterDetail({
     <div className="flex min-h-full flex-1 flex-col">
       <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:bg-card/80">
         <div className="h-[env(safe-area-inset-top)] bg-primary md:hidden" />
-        <div className="mx-auto grid max-w-4xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto grid max-w-4xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-6">
           <div className="justify-self-start">
             {step === "positions" ? (
               <Link
@@ -371,11 +372,19 @@ export function RecruiterDetail({
               </button>
             )}
           </div>
-          <p className="max-w-[45vw] truncate text-sm font-medium sm:max-w-md">
+          <p className="min-w-0 truncate text-center text-sm font-medium">
             {recruiter.company}
           </p>
           <div className="justify-self-end">
-            <StudentLanguageSwitcher />
+            <AppTopBarActions
+              mobileOverflow
+              desktopChildren={<StudentLanguageSwitcher />}
+              mobileChildren={
+                <div className="px-2 py-2">
+                  <StudentLanguageSwitcher />
+                </div>
+              }
+            />
           </div>
         </div>
       </header>

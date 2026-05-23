@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-19
+updated: 2026-05-24
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -43,6 +43,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-24: Student-facing recruiter detail pages now place the language switcher inside the mobile hamburger menu, matching other auth/topbar screens and giving long company names more header space.
 - 2026-05-19: Recruiter-created job location is optional; blank job locations remain blank in public job cards/details and do not fall back to event venue.
 - 2026-05-19: Added Construction to company/recruiter industry options, public industry filters, and student preferred-industry choices.
 - 2026-05-19: Homepage "View all companies" links now route guests directly to `/browse` instead of `/get-started`; applying/bookings still require login later.
