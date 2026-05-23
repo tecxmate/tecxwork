@@ -90,7 +90,7 @@ export function StudentSectionEn() {
             <li>Cancel any pending or accepted application from your bookings page — releases the slot for someone else</li>
           </ul>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
-            <strong>Important:</strong> Share your CV via Google Drive and set access to &quot;Anyone with the link can view&quot; so companies can open your CV.
+            <strong>Important:</strong> Share your CV via Google Drive and set access to &quot;Anyone with the link can view&quot;. Anyone who receives the link can view it, so use a CV you are comfortable sharing for recruiting.
           </div>
         </div>
 

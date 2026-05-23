@@ -90,7 +90,7 @@ export function StudentSectionZh() {
             <li>可在預約頁取消任何待審或已接受的申請 — 釋出時段給其他人</li>
           </ul>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
-            <strong>重要:</strong>請將履歷透過 Google Drive 分享,並把權限設為「知道連結的任何人都能檢視」,這樣公司才能打開你的履歷。
+            <strong>重要:</strong>請將履歷透過 Google Drive 分享,並把權限設為「知道連結的任何人都能檢視」。任何取得連結的人都能查看履歷，因此請使用你同意供招募用途分享的履歷。
           </div>
         </div>
 

@@ -38,6 +38,7 @@ export default async function PrivacyPolicyPage() {
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Account Data:</strong> Full name, email address, and password (hashed).</li>
           <li><strong>Professional Data:</strong> University, degree/study level, expected graduation date, work experience, skills, career preferences, and links to your CV/Resume (e.g., Google Drive links) or uploaded resume files.</li>
+          <li><strong>Consent and Retention Choices:</strong> Your PDPA consent, optional Talent Passport retention choice, and the time that retention choice was recorded.</li>
           <li><strong>Eligibility and Matching Data:</strong> Nationality, work-authorization information, and related profile information that you voluntarily provide for job-matching purposes.</li>
           <li><strong>Interaction Data:</strong> The interviews you book, time slots selected, and your interactions with recruiters on the Platform.</li>
         </ul>
@@ -69,6 +70,7 @@ export default async function PrivacyPolicyPage() {
         <p className="mt-4">Your data is only shared under the following conditions:</p>
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>With Recruiters (Students Only):</strong> When you book an interview with a recruiter, or if you set your profile visibility to &quot;Public&quot; (allowing recruiters to find you via Talent Search), your profile and CV link will be shared with verified recruiters on the Platform.</li>
+          <li><strong>Google Drive CV Links:</strong> If you set your Drive CV to &quot;Anyone with the link can view,&quot; anyone who receives that link can view the CV. We use that link for recruitment workflows, but the Drive access setting is controlled by you in Google Drive.</li>
           <li><strong>Visibility Is Consent-Based:</strong> We only expose applicant profile data to recruiters for recruitment-related purposes within the Platform workflow and based on the applicant&apos;s submission and consent choices.</li>
           <li><strong>With Service Providers:</strong> We use third-party infrastructure providers to operate the Platform (e.g., Vercel for hosting, Neon for database services in Tokyo, Japan, and email delivery services). These processors are contractually bound to protect your data.</li>
           <li><strong>Legal Requirements:</strong> If required by Taiwanese or Vietnamese law, we may disclose data to law enforcement or regulatory authorities.</li>

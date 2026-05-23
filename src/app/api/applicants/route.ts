@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
     portfolioUrl,
     description,
     pipaConsent,
+    talentPassportOptIn,
     wantsNewsletter,
   } = body;
 
@@ -192,6 +193,8 @@ export async function POST(req: NextRequest) {
         portfolioUrl: portfolioUrl ?? "",
         description: description ?? "",
         pipaConsent,
+        talentPassportOptIn: !!talentPassportOptIn,
+        talentPassportConsentedAt: talentPassportOptIn ? new Date() : null,
         wantsNewsletter: !!wantsNewsletter,
       })
       .returning();

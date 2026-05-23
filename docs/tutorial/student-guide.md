@@ -67,8 +67,8 @@ After registration, you'll be redirected to the **Company Directory**.
 ### After Booking
 
 - You'll see a confirmation with the interview time
-- **Important:** Share your CV on Google Drive with the recruiter's email address shown on screen
-- Do NOT set your Drive link to "Anyone can view" — share only with the specific recruiter
+- **Important:** Set your Google Drive CV link to "Anyone with the link can view" so the recruiter can open it without an access request.
+- Anyone who receives that Drive link can view the CV, so use a file you are comfortable sharing for recruiting.
 
 ---
 

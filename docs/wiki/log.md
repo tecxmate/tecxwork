@@ -441,3 +441,15 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Niko asked to apply the event location variable anywhere venue text had been hardcoded.
 - Switched recruiter detail event-venue display and Open Graph image venue text to use DB-backed event branding instead of static `EVENT_CONFIG` values.
 - Kept job location independent and optional; empty job locations remain blank.
+
+## [2026-05-22] chat | Taiwan data-retention legal risk
+attributed_to: [niko]   belongs_to: [data-privacy]
+- Niko asked whether keeping user data can be used to sue Tecxwork in Taiwan.
+- Recorded that storage alone is not the core PDPA risk; mismatch between consent, stated retention, actual retention, deletion handling, security controls, or new uses is the practical exposure.
+- Updated `docs/wiki/topics/data-privacy.md` and `docs/wiki/topics/taiwan-compliance.md`.
+
+## [2026-05-23] decision | Talent Passport retention opt-in
+attributed_to: [niko]   belongs_to: [data-privacy]
+- Niko asked to add a real Talent Passport and make CV-link copy honest.
+- Added dedicated Talent Passport opt-in fields and timestamp, registration/profile controls, and clearer Drive-link disclosure copy across student UI, email, tutorial, and privacy policy surfaces.
+- Added `docs/wiki/decisions/2026-05-23-talent-passport-retention-opt-in.md` and updated `docs/wiki/topics/data-privacy.md`, `docs/wiki/decisions/2026-05-05-cv-anyone-with-link.md`, and `docs/wiki/index.md`.

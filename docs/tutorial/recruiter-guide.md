@@ -85,7 +85,7 @@ Each booking shows:
 A: Contact the event admin to update your profile.
 
 **Q: How do students share their CVs with me?**
-A: Students share their Google Drive CV link exclusively with your contact email. You'll see the link in each booking.
+A: Students provide a Google Drive CV link when they apply. The platform asks them to use "Anyone with the link can view" so recruiters can open the CV without requesting access.
 
 **Q: Can multiple people from my company sign up?**
 A: Yes — anyone with an email on the allowed domain can create their own recruiter account. Each gets their own set of interview slots.

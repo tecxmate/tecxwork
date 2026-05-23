@@ -3,7 +3,7 @@ title: Taiwan Legal Compliance
 type: topic
 slug: taiwan-compliance
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-22
 attributed_to: [gpt, niko]
 belongs_to: [tecxmate]
 source: document
@@ -24,6 +24,8 @@ Operating a recruitment platform in Taiwan involves navigating the Employment Se
 - **Consent**: Explicit consent is required for collecting and processing personal data.
 - **Rights**: Users must have the right to inquire, correct, and delete their data ("Right to be Forgotten").
 - **Strategy**: Use the "Explicit Targeted Sharing" model for CVs to ensure privacy.
+- **Current risk note (2026-05-22)**: The 2025 PDPA amendments add stronger private-sector supervision, breach reporting/notification, security-maintenance requirements, and higher fine exposure once the amended provisions are in force. Tecxwork should treat privacy-policy promises, retention opt-in evidence, deletion handling, and breach-response records as compliance-critical.
+- **Litigation exposure**: A data subject generally needs an unlawful collection/processing/use, rights infringement, leak, or other PDPA violation causing injury; the mere fact that Tecxwork stores personal data is not by itself the actionable issue if notice, purpose, consent/legal basis, security, and deletion rights are handled correctly.
 
 ## 3. Student Work Permits
 - **Foreign Students**: In Taiwan, foreign students require work permits to work legally. Recruiters must verify these permits.

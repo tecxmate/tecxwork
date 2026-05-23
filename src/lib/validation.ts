@@ -88,6 +88,7 @@ export const applicantSignupSchema = z.object({
   portfolioUrl: z.string().trim().optional(),
   description: z.string().trim().optional(),
   pipaConsent: z.boolean(),
+  talentPassportOptIn: z.boolean().optional(),
   wantsNewsletter: z.boolean().optional(),
 });
 

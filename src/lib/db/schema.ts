@@ -146,6 +146,12 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   avatarUrl: text("avatar_url"),
   description: text("description").notNull().default(""),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
+  talentPassportOptIn: boolean("talent_passport_opt_in")
+    .notNull()
+    .default(false),
+  talentPassportConsentedAt: timestamp("talent_passport_consented_at", {
+    withTimezone: true,
+  }),
   wantsNewsletter: boolean("wants_newsletter").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

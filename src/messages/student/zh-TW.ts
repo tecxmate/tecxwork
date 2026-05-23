@@ -254,9 +254,11 @@ export const studentZhTwMessages = {
     portfolio: "作品集 / GitHub",
     aboutYou: "自我介紹",
     cvLink: "CV 連結 (Google Drive)",
-    cvHint: "請將履歷透過 Google Drive 分享，並把權限設為「知道連結的任何人都能檢視」，這樣公司才能打開你的履歷。",
+    cvHint: "請將履歷透過 Google Drive 分享，並把權限設為「知道連結的任何人都能檢視」。任何取得連結的人都能查看履歷，因此請只使用你同意供招募用途分享的連結。",
     consentText:
       "我同意依照台灣個人資料保護法 (PIPA) 的規定，在此次招募活動中向招募方公開我的個人資料、學歷資訊與履歷連結，並同意平台服務條款與隱私權政策。",
+    talentPassport:
+      "(選填) 活動結束後保留我的 TECXWORK 個人資料作為 Talent Passport，方便未來活動與招募機會再次使用。我可隨時要求刪除。",
     legalNotice: "學生在接受任何工作、實習或兼職前，有責任確認自己在台灣具有合法工作資格。如果你是國際學生、僑生或其他外籍人士，可能需要有效的工作許可，且在學期間可能會受到工時限制。",
     newsletter: "(選填) 訂閱 V-GEN 人才網絡，接收未來就業博覽會與職缺更新。",
     registering: "註冊中...",
@@ -295,7 +297,7 @@ export const studentZhTwMessages = {
     ...studentEnMessages.profile,
     cvQrTitle: "我的 CV QR Code",
     cvQrSubtitle: "在活動現場出示給招募方掃描查看履歷",
-    cvHint: "更新此連結以重新產生上方的 QR Code。你的 Drive 履歷連結為公開連結，會直接用於提供給招募方作為招募用途。",
+    cvHint: "更新此連結以重新產生上方的 QR Code。若 Drive 權限設為「知道連結的任何人都能檢視」，任何取得連結的人都能查看履歷；TECXWORK 僅在招募流程中使用此連結。",
     title: "我的個人資料",
     profileUpdated: "資料已更新！",
     saveFailed: "儲存失敗",
@@ -371,8 +373,8 @@ export const studentZhTwMessages = {
     positionApplyingFor: "投遞職位",
     multiplePositionHint: "你可以在不同時段申請多個職缺。",
     cvLink: "履歷連結",
-    cvShareOnly: "請將履歷透過 Google Drive 分享，並把權限設為「知道連結的任何人都能檢視」，這樣公司才能打開你的履歷。",
-    cvShareConfirm: "我確認已將權限設為「知道連結的任何人都能檢視」。",
+    cvShareOnly: "請將履歷透過 Google Drive 分享，並把權限設為「知道連結的任何人都能檢視」。任何取得連結的人都能查看履歷，TECXWORK 會將此連結提供給本次應徵的招募方。",
+    cvShareConfirm: "我確認履歷連結已設為「知道連結的任何人都能檢視」，並理解任何取得連結的人都能開啟履歷。",
     consent:
       "我同意依照台灣個人資料保護法 (PIPA) 的規定，將我的個人資料分享給 {company} 以應徵 {position} 職位。",
     requestBooking: "送出預約申請",

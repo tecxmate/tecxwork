@@ -74,6 +74,8 @@ type ProfileResponse = {
   portfolioUrl: string;
   avatarUrl: string | null;
   description: string;
+  talentPassportOptIn: boolean;
+  talentPassportConsentedAt: string | null;
 };
 
 type ProfileSavePayload = {
@@ -98,6 +100,7 @@ type ProfileSavePayload = {
   linkedinUrl: string;
   portfolioUrl: string;
   description: string;
+  talentPassportOptIn: boolean;
 };
 
 function profileToDraft(profile: ProfileResponse): StudentRegistrationDraft {
@@ -140,6 +143,7 @@ function profileToDraft(profile: ProfileResponse): StudentRegistrationDraft {
     linkedinUrl: profile.linkedinUrl ?? "",
     portfolioUrl: profile.portfolioUrl ?? "",
     description: profile.description ?? "",
+    talentPassportOptIn: !!profile.talentPassportOptIn,
   };
 }
 
@@ -168,6 +172,7 @@ function buildProfilePayload(
     linkedinUrl: draft.linkedinUrl.trim(),
     portfolioUrl: draft.portfolioUrl.trim(),
     description: draft.description.trim(),
+    talentPassportOptIn: draft.talentPassportOptIn,
   };
 }
 
@@ -1753,6 +1758,26 @@ export default function ProfilePage() {
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                       />
                     </div>
+                  </div>
+                </section>
+
+                <Separator />
+
+                <section className="space-y-4">
+                  <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                    <input
+                      id="talent-passport"
+                      type="checkbox"
+                      checked={draft.talentPassportOptIn}
+                      onChange={(e) => setField("talentPassportOptIn", e.target.checked)}
+                      className="mt-0.5 h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                    />
+                    <label
+                      htmlFor="talent-passport"
+                      className="cursor-pointer text-xs leading-relaxed text-muted-foreground"
+                    >
+                      {messages.register.talentPassport}
+                    </label>
                   </div>
                 </section>
 

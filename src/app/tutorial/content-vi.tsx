@@ -90,7 +90,7 @@ export function StudentSectionVi() {
             <li>Bạn có thể huỷ đơn đăng ký đang chờ hoặc đã được chấp nhận trên trang đặt lịch — slot sẽ được giải phóng cho người khác</li>
           </ul>
           <div className="bg-muted p-3 rounded-md text-muted-foreground border-l-4 border-primary mb-4">
-            <strong>Quan trọng:</strong> Chia sẻ link CV trên Google Drive và cài đặt quyền truy cập là &quot;Bất kỳ ai có đường link đều có thể xem&quot;, để các công ty có thể xem CV của bạn.
+            <strong>Quan trọng:</strong> Chia sẻ link CV trên Google Drive và cài đặt quyền truy cập là &quot;Bất kỳ ai có đường link đều có thể xem&quot;. Bất kỳ ai nhận được link đều có thể xem CV, vì vậy chỉ dùng CV bạn đồng ý chia sẻ cho mục đích tuyển dụng.
           </div>
         </div>
 

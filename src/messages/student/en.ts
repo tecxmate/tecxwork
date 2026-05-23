@@ -251,9 +251,11 @@ export const studentEnMessages = {
     aboutYou: "About You",
     cvLink: "CV Link (Google Drive)",
     cvHint:
-      "Share your CV via Google Drive and set access to \"Anyone with the link can view\" so companies can open it.",
+      "Share your CV via Google Drive and set access to \"Anyone with the link can view\". Anyone who receives the link can view the CV, so use a file you are comfortable sharing for recruiting.",
     consentText:
       "I consent to making my profile, education information, and CV link visible to recruiters for this recruitment event in accordance with Taiwan's Personal Data Protection Act, and I agree to the Platform Terms and Privacy Policy.",
+    talentPassport:
+      "(Optional) Keep my TECXWORK profile after this event as my Talent Passport so I can reuse it for future events and recruiter opportunities. I can request deletion at any time.",
     legalNotice:
       "Students are responsible for confirming they are legally allowed to work in Taiwan before accepting any job, internship, or part-time role. If you are an international student, overseas Chinese student, or other foreign national, you may need a valid work permit and may be subject to working-hour limits during the academic semester.",
     newsletter:
@@ -302,7 +304,7 @@ export const studentEnMessages = {
     cvQrSubtitle:
       "Show this to recruiters at the event - they scan to view your CV",
     cvHint:
-      "Update this link to regenerate the QR code above. Your CV link on Drive is public and will be explicitly used to send to recruiters for recruiting purposes.",
+      "Update this link to regenerate the QR code above. If your Drive access is set to \"Anyone with the link\", anyone who receives the link can view the CV; TECXWORK uses it only for recruiting workflows.",
     profileUpdated: "Profile updated!",
     title: "My Profile",
     saveFailed: "Save failed",
@@ -382,8 +384,8 @@ export const studentEnMessages = {
     multiplePositionHint:
       "You can apply for multiple positions at different time slots.",
     cvLink: "CV Link",
-    cvShareOnly: "Share your CV via Google Drive and set access to \"Anyone with the link can view\" so companies can open your CV.",
-    cvShareConfirm: "I confirm I have set access to \"Anyone with the link can view\".",
+    cvShareOnly: "Share your CV via Google Drive and set access to \"Anyone with the link can view\". Anyone who receives the link can view it, and TECXWORK will share it with the recruiter for this application.",
+    cvShareConfirm: "I confirm my CV link is set to \"Anyone with the link can view\" and understand that anyone with the link can open it.",
     consent:
       "I consent to sharing my profile with {company} for the {position} position in accordance with Taiwan's Personal Data Protection Act (PIPA).",
     requestBooking: "Request Booking",

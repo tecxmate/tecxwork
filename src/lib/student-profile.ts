@@ -209,6 +209,7 @@ export type StudentRegistrationDraft = {
   cvLink: string;
   description: string;
   pipaConsent: boolean;
+  talentPassportOptIn: boolean;
   wantsNewsletter: boolean;
   phone: string;
   nationality: string;
@@ -240,6 +241,7 @@ export const EMPTY_STUDENT_REGISTRATION_DRAFT: StudentRegistrationDraft = {
   cvLink: "",
   description: "",
   pipaConsent: false,
+  talentPassportOptIn: false,
   wantsNewsletter: false,
   phone: "",
   nationality: "",

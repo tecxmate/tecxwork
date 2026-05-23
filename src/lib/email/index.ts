@@ -143,7 +143,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
           <div style="background: #f3eeff; border-radius: 12px; padding: 16px; margin-bottom: 24px; font-size: 13px;">
             <strong style="color: #8C52FF;">Important — CV Sharing</strong>
             <p style="margin: 8px 0 0; color: #555;">
-              Remember to set your Google Drive CV link sharing to <strong>"Anyone with the link can view"</strong> so the recruiter can open it.
+              Remember to set your Google Drive CV link sharing to <strong>"Anyone with the link can view"</strong> so the recruiter can open it. Anyone who receives that link can view the CV.
             </p>
             <p style="margin: 8px 0 0; color: #555;">
               Recruiter's email: <a href="mailto:${safeRecruiterEmail}" style="color: #8C52FF;">${safeRecruiterEmail}</a>
@@ -406,7 +406,7 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
             <ul style="margin: 8px 0 0; padding-left: 18px; color: #555;">
               <li>Arrive 10 minutes early</li>
               <li>Bring your student ID</li>
-              <li>Set your Google Drive CV link to "Anyone with the link can view" so the recruiter can open it</li>
+              <li>Set your Google Drive CV link to "Anyone with the link can view" so the recruiter can open it; anyone who receives that link can view the CV</li>
             </ul>
           </div>
 

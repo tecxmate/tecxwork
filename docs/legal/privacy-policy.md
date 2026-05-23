@@ -16,6 +16,7 @@ We collect personal data that you voluntarily provide to us when you register fo
 
 * **Account Data:** Full name, email address, and password (hashed).
 * **Professional Data:** University, major/department, skills, and links to your CV/Resume (e.g., Google Drive links) or uploaded resume files.
+* **Consent and Retention Choices:** Your PDPA consent, optional Talent Passport retention choice, and the time that retention choice was recorded.
 * **Interaction Data:** The interviews you book, time slots selected, and your interactions with recruiters on the Platform.
 
 **B. For Recruiters:**
@@ -44,6 +45,7 @@ We collect your personal data strictly for the following purposes:
 Your data is only shared under the following conditions:
 
 * **With Recruiters (Students Only):** When you book an interview with a recruiter, or if you set your profile visibility to "Public" (allowing recruiters to find you via Talent Search), your profile and CV link will be shared with verified recruiters on the Platform.
+* **Google Drive CV Links:** If you set your Drive CV to "Anyone with the link can view," anyone who receives that link can view the CV. We use that link for recruitment workflows, but the Drive access setting is controlled by you in Google Drive.
 * **With Service Providers:** We use third-party infrastructure providers to operate the Platform (e.g., Vercel for hosting, Neon for database services in Tokyo, Japan, and email delivery services). These processors are contractually bound to protect your data.
 * **Legal Requirements:** If required by Taiwanese or Vietnamese law, we may disclose data to law enforcement or regulatory authorities.
 
@@ -59,9 +61,9 @@ We implement stringent technical safeguards and strict access controls to ensure
 
 ## 5. Data Retention
 
-To provide you with the best possible long-term career support, we maintain your V-GEN profile beyond single events. By keeping your account active, we optimize your experience, allowing you to seamlessly connect with new recruiters, participate in future career fairs, and continuously discover new job opportunities without needing to rebuild your profile.
+If the Platform is utilized strictly for a single event, your personal data (including profile and booking records) will be permanently deleted from our active databases within 30 days after the conclusion of the event unless you explicitly opt in to keep your account active for future events ("Talent Passport").
 
-We retain your personal data to facilitate these ongoing connections and to operate the Platform effectively. While we do not automatically purge your data after a specific event concludes—ensuring your profile remains a lasting asset in your career journey—you always maintain full control over your personal information. You may exercise your right to request the permanent deletion of your account and associated personal data at any time, in accordance with applicable laws, by contacting us as detailed in Section 6.
+If you opt in to Talent Passport retention, we retain your account and profile data so you can reuse your profile for future events and recruiter opportunities. You may exercise your right to request the permanent deletion of your account and associated personal data at any time, in accordance with applicable laws, by contacting us as detailed in Section 6.
 
 ## 6. Your Rights (Taiwan PDPA Article 3)
 

@@ -40,6 +40,8 @@ export async function GET() {
       portfolioUrl: applicantProfiles.portfolioUrl,
       avatarUrl: applicantProfiles.avatarUrl,
       description: applicantProfiles.description,
+      talentPassportOptIn: applicantProfiles.talentPassportOptIn,
+      talentPassportConsentedAt: applicantProfiles.talentPassportConsentedAt,
     })
     .from(applicantProfiles)
     .where(eq(applicantProfiles.userId, session.userId));
@@ -82,6 +84,7 @@ export async function PUT(req: NextRequest) {
     portfolioUrl,
     avatarUrl,
     description,
+    talentPassportOptIn,
   } = body;
 
   const updates: Record<string, unknown> = {};
@@ -111,6 +114,10 @@ export async function PUT(req: NextRequest) {
   if (typeof portfolioUrl === "string") updates.portfolioUrl = portfolioUrl.trim();
   if (typeof avatarUrl === "string" || avatarUrl === null) updates.avatarUrl = avatarUrl;
   if (typeof description === "string") updates.description = description.trim();
+  if (typeof talentPassportOptIn === "boolean") {
+    updates.talentPassportOptIn = talentPassportOptIn;
+    updates.talentPassportConsentedAt = talentPassportOptIn ? new Date() : null;
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });

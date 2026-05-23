@@ -29,6 +29,7 @@ Change the on-form hint to instruct students to set the Drive link to **"Anyone 
 - New `cvShareConfirm` checkbox added to `BookingForm`: students must tick "I confirm I have set access to 'Anyone with the link can view'" before Apply is enabled (`canSubmit` gating).
 - PIPA/consent text unchanged (sharing scope is still student-initiated).
 - Future work may revisit direct upload if link-leak incidents occur.
+- 2026-05-23: Student-facing copy, tutorials, and emails were tightened to say the link can be opened by anyone who receives it; TECXWORK should not describe this workflow as private per-recruiter access control.
 
 ## Provenance
 - Discussed 2026-05-05 between [niko] (owner) and [claude-code] (agent).
