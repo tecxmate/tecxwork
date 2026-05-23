@@ -22,10 +22,9 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
       href={`/recruiter/${recruiter.id}`}
       className="group block h-full min-w-0 focus-visible:outline-none"
     >
-      <Card className="flex h-full cursor-pointer flex-col gap-4 p-4 group-focus-visible:ring-2 group-focus-visible:ring-ring sm:p-5">
-        {/* Top row: logo + industry */}
-        <div className="flex min-w-0 items-start justify-between gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary sm:h-12 sm:w-12">
+      <Card className="flex h-full min-w-0 cursor-pointer flex-col gap-4 border-border/70 p-4 transition-all duration-200 ease-out group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] group-focus-visible:ring-2 group-focus-visible:ring-ring">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg">
             {recruiter.logoUrl ? (
               <img
                 src={recruiter.logoUrl}
@@ -33,25 +32,24 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
                 className="h-full w-full object-contain"
               />
             ) : (
-              <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+              <span className="flex h-full w-full items-center justify-center rounded-lg border border-border/60 bg-secondary">
+                <Building2 className="h-7 w-7 text-primary" />
+              </span>
             )}
           </div>
-          <Badge variant="secondary" className="min-w-0 max-w-[calc(100%-3.25rem)] !shrink text-xs">
-            <span className="block truncate">{recruiter.industry}</span>
-          </Badge>
+          <div className="min-w-0 flex-1 space-y-1">
+            <h3 className="line-clamp-2 font-heading text-base font-semibold leading-tight sm:text-lg">
+              {recruiter.company}
+            </h3>
+            <Badge variant="secondary" className="min-w-0 max-w-full !shrink text-xs">
+              <span className="block truncate">{recruiter.industry}</span>
+            </Badge>
+            <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+              {recruiter.description}
+            </p>
+          </div>
         </div>
 
-        {/* Company name + description */}
-        <div>
-          <h3 className="font-heading text-base font-semibold leading-tight sm:text-lg">
-            {recruiter.company}
-          </h3>
-          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-            {recruiter.description}
-          </p>
-        </div>
-
-        {/* Positions */}
         <div className="flex-1">
           <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
             {messages.recruiterCard.openPositions}
@@ -77,7 +75,6 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
           </div>
         </div>
 
-        {/* JD available indicator */}
         {recruiter.jdAvailable && (
           <div className="flex items-center gap-1.5 text-xs text-primary">
             <FileText className="h-3 w-3" />
@@ -85,7 +82,6 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
           </div>
         )}
 
-        {/* CTA */}
         <div className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground">
           {messages.recruiterCard.viewBook}
           <ArrowRight className="h-4 w-4" />

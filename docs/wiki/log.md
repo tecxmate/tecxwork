@@ -453,3 +453,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko asked for first-time users to see their browser default language without manually switching on first sign-in/use.
 - Added supported-language preference detection for `Accept-Language` and `navigator.languages`, persisted locale cookies on first load, and kept existing manual locale choices authoritative.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-24] fix | Company card logo layout
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked company cards to match the job-card logo/title treatment: seamless uploaded logos, no extra frame gaps, and text laid out to the right of a larger logo.
+- Updated `RecruiterCard` to use the same larger uploaded-logo block and right-side company title/details layout as job cards.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

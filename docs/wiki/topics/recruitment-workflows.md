@@ -43,6 +43,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-24: Company cards now mirror job-card logo treatment, with a larger seamless uploaded logo block on the left and company title/details on the right.
 - 2026-05-24: First-visit locale selection now detects browser language preferences on both server and client, persists the selected student/recruiter locale cookie, and preserves manual language choices.
 - 2026-05-24: Student-facing recruiter detail pages now place the language switcher inside the mobile hamburger menu, matching other auth/topbar screens and giving long company names more header space.
 - 2026-05-19: Recruiter-created job location is optional; blank job locations remain blank in public job cards/details and do not fall back to event venue.
