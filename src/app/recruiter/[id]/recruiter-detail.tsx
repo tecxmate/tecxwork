@@ -894,6 +894,7 @@ export function RecruiterDetail({
           role="dialog"
           aria-modal="true"
           aria-label={`${recruiter.company} photo ${selectedGalleryIndex + 1}`}
+          onClick={() => setSelectedGalleryIndex(null)}
           onTouchStart={(event) => {
             galleryTouchStartXRef.current = event.changedTouches[0]?.clientX ?? null;
           }}
@@ -911,7 +912,8 @@ export function RecruiterDetail({
               event.stopPropagation();
               setSelectedGalleryIndex(null);
             }}
-            className="absolute right-3 top-3 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-background/80 text-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.65),0_4px_12px_-4px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-5 sm:top-5"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+            className="absolute right-3 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-background/80 text-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.65),0_4px_12px_-4px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-5"
             aria-label="Close photo"
           >
             <X className="h-5 w-5" />
