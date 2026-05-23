@@ -38,6 +38,7 @@ export function MobileBottomNav({
     if (role === "admin") {
       if (href === "/admin") return messages.nav.overview;
       if (href === "/admin/recruiters") return messages.nav.recruiters;
+      if (href === "/admin/professionals") return messages.nav.professionals;
       if (href === "/admin/applicants") return messages.nav.applicants;
       if (href === "/admin/jobs") return messages.nav.jobs;
     }

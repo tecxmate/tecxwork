@@ -477,3 +477,9 @@ attributed_to: [niko]   belongs_to: [referral-system]
 - Continued referral-system development after reviving the old branch.
 - Updated professional signup and referral request APIs to use current validation/auth helpers, complete session payloads, and bounded request bodies.
 - Added `npm run db:update:referral-system` for referral/professional tables.
+
+## [2026-05-24] fix | Referral launch readiness
+attributed_to: [niko]   belongs_to: [referral-system]
+- Niko asked to proceed with making the referral system ready to use after the first hardening pass.
+- Added admin professional verification, verified-only professional discovery/request handling, in-app referral notifications, and recruiter/admin applicant-profile referral display.
+- Ran the referral database update successfully after loading `.env.local`.

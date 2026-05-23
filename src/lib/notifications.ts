@@ -10,7 +10,7 @@ type NotificationType =
   | "interview_reminder"
   | "system";
 
-type RecipientRole = "admin" | "recruiter" | "applicant";
+type RecipientRole = "admin" | "recruiter" | "applicant" | "professional";
 
 type CreateNotificationParams = {
   recipientEmail: string;

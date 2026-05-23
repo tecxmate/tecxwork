@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import {
+  applicantProfiles,
   db,
   professionalProfiles,
   referralRequests,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/db";
 import { eq, and, sql } from "drizzle-orm";
 import { parseJsonBody, referralRespondSchema } from "@/lib/validation";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   req: NextRequest,
@@ -38,6 +40,13 @@ export async function POST(
 
   if (!profile) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  if (!profile.isVerified) {
+    return NextResponse.json(
+      { error: "Professional profile is not verified" },
+      { status: 403 }
+    );
   }
 
   const [request] = await db
@@ -87,6 +96,38 @@ export async function POST(
       respondedAt: new Date(),
     })
     .where(eq(referralRequests.id, requestId));
+
+  const [applicant] = await db
+    .select({
+      name: applicantProfiles.name,
+      email: applicantProfiles.email,
+    })
+    .from(applicantProfiles)
+    .where(eq(applicantProfiles.id, request.applicantId))
+    .limit(1);
+
+  if (applicant?.email) {
+    await createNotification({
+      recipientEmail: applicant.email,
+      recipientRole: "applicant",
+      type: "system",
+      title:
+        body.action === "accept"
+          ? "Referral request accepted"
+          : "Referral request declined",
+      message:
+        body.action === "accept"
+          ? `${profile.name} accepted your referral request.`
+          : `${profile.name} declined your referral request.`,
+      metadata: {
+        requestId,
+        professionalId: profile.id,
+        applicantId: request.applicantId,
+      },
+    }).catch((error) => {
+      console.error("Failed to create referral response notification", error);
+    });
+  }
 
   return NextResponse.json({ success: true });
 }

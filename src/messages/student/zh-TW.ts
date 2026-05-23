@@ -21,6 +21,7 @@ export const studentZhTwMessages = {
     myCompany: "我的公司",
     overview: "總覽",
     recruiters: "招募方",
+    professionals: "專業人士",
   },
   common: {
     ...studentEnMessages.common,

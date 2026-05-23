@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
+  Award,
   Briefcase,
   ExternalLink,
   FileText,
@@ -17,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SiteFooter } from "@/components/site-footer";
-import { db, applicantProfiles } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { db, applicantProfiles, professionalProfiles, referrals } from "@/lib/db";
+import { and, desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 
 type WorkExperience = {
@@ -64,6 +65,28 @@ async function getApplicant(id: number) {
   return applicant ?? null;
 }
 
+async function getApplicantReferrals(id: number) {
+  return db
+    .select({
+      id: referrals.id,
+      relationship: referrals.relationship,
+      endorsement: referrals.endorsement,
+      createdAt: referrals.createdAt,
+      professionalName: professionalProfiles.name,
+      company: professionalProfiles.company,
+      jobTitle: professionalProfiles.jobTitle,
+      industry: professionalProfiles.industry,
+      isVerified: professionalProfiles.isVerified,
+    })
+    .from(referrals)
+    .innerJoin(
+      professionalProfiles,
+      eq(referrals.professionalId, professionalProfiles.id)
+    )
+    .where(and(eq(referrals.applicantId, id), eq(referrals.isPublic, true)))
+    .orderBy(desc(referrals.createdAt));
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (session?.role !== "recruiter" && session?.role !== "admin") {
@@ -92,6 +115,7 @@ export default async function ApplicantProfilePage({
   const applicant = await getApplicant(parseInt(id));
 
   if (!applicant) notFound();
+  const applicantReferrals = await getApplicantReferrals(applicant.id);
 
   const backHref = session.role === "admin" ? "/admin/applicants" : "/dashboard/applicants";
 
@@ -268,6 +292,44 @@ export default async function ApplicantProfilePage({
                           {exp.summary && (
                             <p className="mt-2 text-sm text-muted-foreground">{exp.summary}</p>
                           )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {applicantReferrals.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <Award className="h-3.5 w-3.5" />
+                      Professional Referrals
+                    </h2>
+                    <div className="mt-3 space-y-3">
+                      {applicantReferrals.map((referral) => (
+                        <div
+                          key={referral.id}
+                          className="rounded-lg border border-border/60 p-3"
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
+                              <p className="font-medium">{referral.professionalName}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {referral.jobTitle} at {referral.company}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {referral.isVerified ? (
+                                <Badge variant="secondary">Verified</Badge>
+                              ) : null}
+                              <Badge variant="outline">{referral.relationship}</Badge>
+                            </div>
+                          </div>
+                          <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
+                            &ldquo;{referral.endorsement}&rdquo;
+                          </p>
                         </div>
                       ))}
                     </div>

@@ -115,6 +115,11 @@ export const referralRespondSchema = z.object({
   relationship: z.string().trim().max(200).optional(),
 });
 
+export const professionalVerifySchema = z.object({
+  id: z.number().int().positive(),
+  isVerified: z.boolean(),
+});
+
 /* ---------- bookings ---------- */
 
 export const createBookingSchema = z.object({

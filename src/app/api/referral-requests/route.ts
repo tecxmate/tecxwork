@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApplicantFromSession } from "@/lib/auth";
 import {
+  applicantProfiles,
   db,
   professionalProfiles,
   referralRequests,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { parseJsonBody, referralRequestSchema } from "@/lib/validation";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
   const applicantSession = await getApplicantFromSession();
@@ -30,6 +32,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Professional not found" },
       { status: 404 }
+    );
+  }
+
+  if (!professional.isVerified) {
+    return NextResponse.json(
+      { error: "Professional is not available for referrals" },
+      { status: 403 }
     );
   }
 
@@ -79,5 +88,29 @@ export async function POST(req: NextRequest) {
     })
     .returning();
 
-  return NextResponse.json({ request });
+  const [applicant] = await db
+    .select({
+      name: applicantProfiles.name,
+      email: applicantProfiles.email,
+    })
+    .from(applicantProfiles)
+    .where(eq(applicantProfiles.id, applicantSession.applicantId))
+    .limit(1);
+
+  await createNotification({
+    recipientEmail: professional.email,
+    recipientRole: "professional",
+    type: "system",
+    title: "New referral request",
+    message: `${applicant?.name ?? applicantSession.session.email} requested a referral.`,
+    metadata: {
+      requestId: request.id,
+      applicantId: applicantSession.applicantId,
+      applicantEmail: applicant?.email ?? applicantSession.session.email,
+    },
+  }).catch((error) => {
+    console.error("Failed to create referral request notification", error);
+  });
+
+  return NextResponse.json({ request }, { status: 201 });
 }

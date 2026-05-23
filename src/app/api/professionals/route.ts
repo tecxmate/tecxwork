@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, professionalProfiles } from "@/lib/db";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export async function GET() {
   const professionals = await db
@@ -17,6 +17,7 @@ export async function GET() {
       referralCount: professionalProfiles.referralCount,
     })
     .from(professionalProfiles)
+    .where(eq(professionalProfiles.isVerified, true))
     .orderBy(desc(professionalProfiles.referralCount));
 
   return NextResponse.json({ professionals });
