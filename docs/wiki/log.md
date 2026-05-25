@@ -483,3 +483,9 @@ attributed_to: [niko]   belongs_to: [referral-system]
 - Niko asked to proceed with making the referral system ready to use after the first hardening pass.
 - Added admin professional verification, verified-only professional discovery/request handling, in-app referral notifications, and recruiter/admin applicant-profile referral display.
 - Ran the referral database update successfully after loading `.env.local`.
+
+## [2026-05-25] fix | Recruiter application email
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked for recruiters to receive an email as soon as a student submits an application.
+- Added a pending-application recruiter email in the student booking submission flow and kept confirmation emails tied to recruiter acceptance.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
