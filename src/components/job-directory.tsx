@@ -56,7 +56,7 @@ function JobCard({
   return (
     <button
       onClick={onClick}
-      className="relative flex w-full flex-col border border-border/50 bg-card p-4 text-left transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] active:scale-[0.99]"
+      className="relative flex w-full min-w-0 flex-col overflow-hidden border border-border/50 bg-card p-4 text-left transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] active:scale-[0.99]"
     >
       <h3 className="line-clamp-2 text-base font-semibold leading-tight">
         {job.title}
@@ -67,15 +67,15 @@ function JobCard({
         <span className="line-clamp-1">{job.company}</span>
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <MapPin className="h-3 w-3" />
-          {job.location}
+      <div className="mt-3 flex min-w-0 max-w-full flex-wrap gap-x-3 gap-y-1.5 overflow-hidden text-xs text-muted-foreground">
+        <span className="flex min-w-0 max-w-full shrink items-center gap-1">
+          <MapPin className="h-3 w-3 shrink-0" />
+          <span className="min-w-0 truncate">{job.location}</span>
         </span>
         {job.salary && (
-          <span className="flex items-center gap-1">
-            <DollarSign className="h-3 w-3" />
-            {job.salary}
+          <span className="flex min-w-0 max-w-full shrink items-center gap-1">
+            <DollarSign className="h-3 w-3 shrink-0" />
+            <span className="min-w-0 truncate">{job.salary}</span>
           </span>
         )}
       </div>

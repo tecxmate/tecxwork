@@ -87,10 +87,10 @@ export function ExternalJobModal({
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm">
-              <MapPin className="h-3.5 w-3.5" />
-              {job.location}
+          <div className="flex min-w-0 max-w-full flex-wrap gap-2 overflow-hidden">
+            <div className="flex min-w-0 max-w-full shrink items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 truncate">{job.location}</span>
             </div>
             {job.jobType && (
               <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm">
@@ -99,9 +99,9 @@ export function ExternalJobModal({
               </div>
             )}
             {job.salary && (
-              <div className="flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-3 py-1.5 text-sm font-medium">
-                <DollarSign className="h-3.5 w-3.5" />
-                {job.salary}
+              <div className="flex min-w-0 max-w-full shrink items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
+                <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                <span className="min-w-0 truncate">{job.salary}</span>
               </div>
             )}
           </div>
