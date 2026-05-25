@@ -489,3 +489,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko asked for recruiters to receive an email as soon as a student submits an application.
 - Added a pending-application recruiter email in the student booking submission flow and kept confirmation emails tied to recruiter acceptance.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-25] fix | Job card long metadata layout
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko flagged long job addresses overflowing card boundaries and breaking the layout.
+- Constrained location, salary, and deadline metadata in public/internal job cards and external job displays with bounded flex items and truncated inner text.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

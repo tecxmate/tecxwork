@@ -47,10 +47,10 @@ export function ExternalJobsPreview({ jobs }: { jobs: ExternalJob[] }) {
               <p className="truncate text-xs text-muted-foreground">
                 {job.company}
               </p>
-              <div className="mt-auto flex items-center justify-between pt-1">
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" />
-                  {job.location}
+              <div className="mt-auto flex min-w-0 items-center justify-between gap-2 pt-1">
+                <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="min-w-0 truncate">{job.location}</span>
                 </span>
                 <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
               </div>

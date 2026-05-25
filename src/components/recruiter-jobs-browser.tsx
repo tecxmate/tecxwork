@@ -87,7 +87,7 @@ function JobTeaserCard({
   const preview = getPreviewText(job);
 
   return (
-    <article className="group relative flex h-full w-full flex-col rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]">
+    <article className="group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]">
       <div className="flex min-w-0 items-start gap-3">
         <Link
           href={`/recruiter/${job.recruiterId}`}
@@ -122,11 +122,14 @@ function JobTeaserCard({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div className="mt-3 flex min-w-0 max-w-full flex-wrap gap-1.5 overflow-hidden">
         {job.location ? (
-          <Badge variant="secondary" className="gap-1 text-[10px]">
-            <MapPin className="h-3 w-3" />
-            {job.location}
+          <Badge
+            variant="secondary"
+            className="min-w-0 max-w-full shrink justify-start gap-1 text-[10px]"
+          >
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="min-w-0 truncate">{job.location}</span>
           </Badge>
         ) : null}
         {employment ? (
@@ -135,10 +138,19 @@ function JobTeaserCard({
             {employment}
           </Badge>
         ) : null}
-        {salary ? <Badge className="text-[10px]">{salary}</Badge> : null}
+        {salary ? (
+          <Badge className="min-w-0 max-w-full shrink justify-start text-[10px]">
+            <span className="min-w-0 truncate">{salary}</span>
+          </Badge>
+        ) : null}
         {deadline ? (
-          <Badge variant="secondary" className="text-[10px]">
-            {labels.card.applicationDeadline}: {deadline}
+          <Badge
+            variant="secondary"
+            className="min-w-0 max-w-full shrink justify-start text-[10px]"
+          >
+            <span className="min-w-0 truncate">
+              {labels.card.applicationDeadline}: {deadline}
+            </span>
           </Badge>
         ) : null}
       </div>

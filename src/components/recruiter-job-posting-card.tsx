@@ -288,11 +288,14 @@ export function RecruiterJobPostingCard({
           {status}
         </div>
 
-        <div className="flex min-w-0 max-w-full flex-wrap gap-1.5">
+        <div className="flex min-w-0 max-w-full flex-wrap gap-1.5 overflow-hidden">
           {job.location ? (
-            <Badge variant="secondary" className="min-w-0 max-w-full !shrink gap-1 text-[10px]">
+            <Badge
+              variant="secondary"
+              className="min-w-0 max-w-full shrink justify-start gap-1 text-[10px]"
+            >
               <MapPin className="h-3 w-3 shrink-0" />
-              <span className="block truncate">{job.location}</span>
+              <span className="min-w-0 truncate">{job.location}</span>
             </Badge>
           ) : null}
           <Badge variant="secondary" className="gap-1 text-[10px]">
@@ -318,13 +321,20 @@ export function RecruiterJobPostingCard({
             </Badge>
           ) : null}
           {applicationDeadline ? (
-            <Badge variant="secondary" className="gap-1 text-[10px]">
+            <Badge
+              variant="secondary"
+              className="min-w-0 max-w-full shrink justify-start gap-1 text-[10px]"
+            >
               <CalendarClock className="h-3 w-3" />
-              {labels.applicationDeadline}: {applicationDeadline}
+              <span className="min-w-0 truncate">
+                {labels.applicationDeadline}: {applicationDeadline}
+              </span>
             </Badge>
           ) : null}
           {salaryLabel ? (
-            <Badge className="text-[10px]">{salaryLabel}</Badge>
+            <Badge className="min-w-0 max-w-full shrink justify-start text-[10px]">
+              <span className="min-w-0 truncate">{salaryLabel}</span>
+            </Badge>
           ) : null}
         </div>
 

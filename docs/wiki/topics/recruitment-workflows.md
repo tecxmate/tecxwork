@@ -43,6 +43,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-25: Job-card metadata fields such as long locations, salary labels, and deadlines are constrained with bounded flex items and inner truncation so they cannot stretch public/internal job cards past the viewport.
 - 2026-05-25: Student application submission now sends a recruiter email immediately when `POST /api/bookings` creates a pending application, while the later acceptance email remains unchanged.
 - 2026-05-24: Uploaded company logos in company and job cards now keep a small safe inset inside the square logo frame so long horizontal wordmarks fit without touching the edges.
 - 2026-05-24: Company cards now mirror job-card logo treatment, with a larger seamless uploaded logo block on the left and company title/details on the right.
