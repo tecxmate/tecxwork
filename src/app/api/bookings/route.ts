@@ -3,6 +3,8 @@ import { db, bookings, applicantProfiles, recruiters } from "@/lib/db";
 import { eq, and, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { createBookingSchema, parseJsonBody } from "@/lib/validation";
+import { getPublicBaseUrl, sendApplicationSubmittedEmail } from "@/lib/email";
+import { createBookingNotification } from "@/lib/notifications";
 
 /**
  * POST — Student applies for an interview (Mode A).
@@ -116,6 +118,38 @@ export async function POST(req: NextRequest) {
       status: "pending",
     })
     .returning();
+
+  const [recruiter] = await db
+    .select({
+      company: recruiters.company,
+      contactEmail: recruiters.contactEmail,
+    })
+    .from(recruiters)
+    .where(eq(recruiters.id, body.recruiterId))
+    .limit(1);
+
+  if (recruiter) {
+    sendApplicationSubmittedEmail({
+      applicantName: profile.name,
+      applicantEmail: profile.email,
+      recruiterEmail: recruiter.contactEmail,
+      company: recruiter.company,
+      position: body.position,
+      requestedTime,
+      cvLink: application.cvLink,
+      applicantProfileUrl: `${getPublicBaseUrl()}/applicant/${profile.id}`,
+    }).catch(() => {});
+
+    createBookingNotification({
+      recipientEmail: recruiter.contactEmail,
+      recipientRole: "recruiter",
+      status: "pending",
+      applicantName: profile.name,
+      companyName: recruiter.company,
+      position: body.position,
+      interviewTime: requestedTime,
+    }).catch(() => {});
+  }
 
   return NextResponse.json({
     booking: application,

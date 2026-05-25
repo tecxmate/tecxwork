@@ -465,3 +465,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko flagged Bellwether-style long horizontal uploaded logos needing better fit inside square card logo frames.
 - Added a small safe inset to uploaded-logo images in company and job cards while preserving `object-contain` and the unframed uploaded-logo treatment.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-25] fix | Recruiter application email
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked for recruiters to receive an email as soon as a student submits an application.
+- Added a pending-application recruiter email in the student booking submission flow and kept confirmation emails tied to recruiter acceptance.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

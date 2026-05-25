@@ -81,6 +81,17 @@ type BookingEmailData = {
   direction: "applicant_books_recruiter" | "recruiter_books_applicant";
 };
 
+type ApplicationSubmittedEmailData = {
+  applicantName: string;
+  applicantEmail: string;
+  recruiterEmail: string;
+  company: string;
+  position: string;
+  requestedTime: Date;
+  cvLink: string;
+  applicantProfileUrl: string;
+};
+
 function formatTime(date: Date): string {
   return date.toLocaleString("en-US", {
     weekday: "long",
@@ -92,6 +103,75 @@ function formatTime(date: Date): string {
     timeZone: EVENT_CONFIG.timezone,
     hour12: false,
   });
+}
+
+/**
+ * Notify the recruiter as soon as a student submits an application.
+ * Non-blocking — errors are logged but don't fail the application.
+ */
+export async function sendApplicationSubmittedEmail(
+  data: ApplicationSubmittedEmailData
+) {
+  const resend = getResend();
+  const subject = `New Application — ${data.applicantName} for ${data.position}`;
+
+  if (!resend) {
+    console.log("RESEND_API_KEY not set — skipping application email");
+    return;
+  }
+
+  const branding = await getEventBranding();
+  const timeStr = formatTime(data.requestedTime);
+  const safeApplicantName = escapeHtml(data.applicantName);
+  const safeApplicantEmail = escapeHtml(data.applicantEmail);
+  const safeCompany = escapeHtml(data.company);
+  const safePosition = escapeHtml(data.position);
+  const safeCvHref = safeUrl(data.cvLink);
+  const safeProfileHref = safeUrl(data.applicantProfileUrl);
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: data.recruiterEmail,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">New Application Submitted</h2>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+            A student submitted an application to <strong>${safeCompany}</strong> for the ${branding.emailEventName}. Review it in your recruiter dashboard to accept, waitlist, or decline.
+          </p>
+
+          <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #666; width: 120px;">Candidate</td><td style="padding: 6px 0; font-weight: 600;">${safeApplicantName}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Email</td><td style="padding: 6px 0;"><a href="mailto:${safeApplicantEmail}" style="color: #8C52FF;">${safeApplicantEmail}</a></td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Position</td><td style="padding: 6px 0; font-weight: 600;">${safePosition}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Requested time</td><td style="padding: 6px 0; font-weight: 600;">${timeStr}</td></tr>
+            </table>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;">
+            <a href="${safeProfileHref}" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+              View Applicant Profile
+            </a>
+            <a href="${safeCvHref}" target="_blank" style="display: inline-block; background: #f3eeff; color: #6D35D0; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+              View CV
+            </a>
+          </div>
+
+          <p style="font-size: 12px; color: #999; margin-top: 32px;">
+            ${branding.name}<br>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
+          </p>
+        </div>
+      `,
+    });
+    console.log("Application submitted email result:", JSON.stringify(result));
+    await logEmail("application_submitted", data.recruiterEmail, subject, true);
+  } catch (err) {
+    console.error("Failed to send application submitted email:", err);
+    await logEmail("application_submitted", data.recruiterEmail, subject, false, String(err));
+  }
 }
 
 /**

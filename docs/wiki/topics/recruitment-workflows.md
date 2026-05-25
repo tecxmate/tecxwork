@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-24
+updated: 2026-05-25
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -43,6 +43,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-25: Student application submission now sends a recruiter email immediately when `POST /api/bookings` creates a pending application, while the later acceptance email remains unchanged.
 - 2026-05-24: Uploaded company logos in company and job cards now keep a small safe inset inside the square logo frame so long horizontal wordmarks fit without touching the edges.
 - 2026-05-24: Company cards now mirror job-card logo treatment, with a larger seamless uploaded logo block on the left and company title/details on the right.
 - 2026-05-24: First-visit locale selection now detects browser language preferences on both server and client, persists the selected student/recruiter locale cookie, and preserves manual language choices.
