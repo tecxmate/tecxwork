@@ -477,3 +477,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko flagged long job addresses overflowing card boundaries and breaking the layout.
 - Constrained location, salary, and deadline metadata in public/internal job cards and external job displays with bounded flex items and truncated inner text.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-26] fix | PWA install reminder cap
+attributed_to: [niko]   belongs_to: [public-homepage]
+- Niko asked to remind users to install the PWA at most three times.
+- Updated `InstallPrompt` to cap shown reminders at three per browser, migrate the legacy dismissed flag as one prior reminder, and suppress prompts after install/standalone mode.
+- Updated `docs/wiki/topics/public-homepage.md`.

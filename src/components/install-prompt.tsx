@@ -4,21 +4,37 @@ import { useState, useEffect } from "react";
 import { X, Share, MoreVertical, Plus } from "lucide-react";
 
 const DISMISSED_KEY = "vgen_install_dismissed";
+const SHOWN_COUNT_KEY = "vgen_install_prompt_shown_count";
+const INSTALLED_KEY = "vgen_install_prompt_installed";
+const MAX_PROMPTS = 3;
 
 export function InstallPrompt() {
   const [show, setShow] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
 
   useEffect(() => {
-    // Only show on mobile, only if not dismissed, only if not already in standalone
+    // Only show on mobile, at most a few times, and never inside the installed app.
     if (typeof window === "undefined") return;
 
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       ("standalone" in navigator && (navigator as unknown as { standalone: boolean }).standalone);
 
-    if (isStandalone) return;
-    if (localStorage.getItem(DISMISSED_KEY)) return;
+    if (isStandalone) {
+      localStorage.setItem(INSTALLED_KEY, "1");
+      return;
+    }
+    if (localStorage.getItem(INSTALLED_KEY) === "1") return;
+
+    const legacyDismissed = localStorage.getItem(DISMISSED_KEY) === "1";
+    const storedCount = Number(localStorage.getItem(SHOWN_COUNT_KEY) ?? "0");
+    const shownCount = Number.isFinite(storedCount) ? storedCount : 0;
+    const effectiveShownCount = legacyDismissed && shownCount === 0 ? 1 : shownCount;
+    if (legacyDismissed) {
+      localStorage.removeItem(DISMISSED_KEY);
+      localStorage.setItem(SHOWN_COUNT_KEY, String(effectiveShownCount));
+    }
+    if (effectiveShownCount >= MAX_PROMPTS) return;
 
     const ua = navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(ua);
@@ -28,16 +44,27 @@ export function InstallPrompt() {
 
     // Show after a short delay so it doesn't compete with page load
     const timer = setTimeout(() => {
+      localStorage.setItem(SHOWN_COUNT_KEY, String(effectiveShownCount + 1));
       setPlatform(isIOS ? "ios" : "android");
       setShow(true);
     }, 3000);
 
-    return () => clearTimeout(timer);
+    function handleInstalled() {
+      localStorage.setItem(INSTALLED_KEY, "1");
+      localStorage.setItem(SHOWN_COUNT_KEY, String(MAX_PROMPTS));
+      setShow(false);
+    }
+
+    window.addEventListener("appinstalled", handleInstalled);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
   }, []);
 
   function dismiss() {
     setShow(false);
-    localStorage.setItem(DISMISSED_KEY, "1");
   }
 
   if (!show || !platform) return null;
