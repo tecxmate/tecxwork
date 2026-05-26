@@ -33,6 +33,7 @@ export default async function RecruiterPage({
       .select({
         id: jobOpenings.id,
         title: jobOpenings.title,
+        jobCategory: jobOpenings.jobCategory,
         jdLink: jobOpenings.jdLink,
         location: jobOpenings.location,
         employmentType: jobOpenings.employmentType,

@@ -98,6 +98,7 @@ export const studentViMessages = {
       all: "Tất cả",
       location: "Địa điểm",
       company: "Công ty",
+      category: "Ngành việc",
       employmentType: "Loại hình",
       clearFilters: "Xóa bộ lọc",
       page: "Trang",
@@ -498,6 +499,9 @@ export const studentViMessages = {
       submittedOn: "Đã nộp {date}",
       viewJd: "Xem JD",
       noJd: "Chưa có liên kết JD",
+      jobCategory: "Ngành việc",
+      uncategorized: "Chưa phân loại",
+      saveCategory: "Lưu ngành việc",
       adminNotes: "Ghi chú quản trị",
       notesPlaceholder: "Thêm hướng dẫn duyệt hoặc lý do từ chối...",
       card: {

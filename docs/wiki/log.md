@@ -483,3 +483,15 @@ attributed_to: [niko]   belongs_to: [public-homepage]
 - Niko asked to remind users to install the PWA at most three times.
 - Updated `InstallPrompt` to cap shown reminders at three per browser, migrate the legacy dismissed flag as one prior reminder, and suppress prompts after install/standalone mode.
 - Updated `docs/wiki/topics/public-homepage.md`.
+
+## [2026-05-26] chat | Job category filtering request
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko shared stakeholder input asking whether jobs can be filtered by Business/general, Tech/Engineering, and Service/Hospitality categories.
+- Validation: current jobs have no job-level category field; safest implementation is an additive blank-default `job_openings.job_category` text field with admin-only tagging in job review/moderation and public filtering on `/jobs`.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-26] fix | Job category tagging
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Implemented additive job-level categories for Business/general, Tech/Engineering, and Service/Hospitality across schema, admin tagging, public filtering, and job cards.
+- Ran `db:update:job-category` and backfilled 84 blank existing jobs only: 38 Business, 38 Tech/Engineering, 8 Service/Hospitality; follow-up dry-run found 0 blanks.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

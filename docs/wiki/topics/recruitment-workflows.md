@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-25
+updated: 2026-05-26
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -43,6 +43,8 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-05-26: Implemented job-level category tagging with an additive `job_openings.job_category` text field defaulting to blank, admin-only category assignment in job review/moderation, public `/jobs` filtering, and localized labels for Business/general, Tech/Engineering, and Service/Hospitality. Ran the additive migration and backfilled 84 previously blank jobs only, resulting in 38 Business, 38 Tech/Engineering, and 8 Service/Hospitality tags; rerunning the backfill dry-run reported 0 blank categories.
+- 2026-05-26: Niko shared stakeholder input requesting job-level filtering by three broad categories: Business/general, Tech/Engineering, and Service/Hospitality. Current jobs have company, location, employment type, and recruiter industry filters but no job-level category. Recommended safe shape is an additive `job_openings.job_category` text field with admin-only assignment during job review/moderation; existing jobs remain uncategorized until backfilled or manually tagged.
 - 2026-05-25: Job-card metadata fields such as long locations, salary labels, and deadlines are constrained with bounded flex items and inner truncation so they cannot stretch public/internal job cards past the viewport.
 - 2026-05-25: Student application submission now sends a recruiter email immediately when `POST /api/bookings` creates a pending application, while the later acceptance email remains unchanged.
 - 2026-05-24: Uploaded company logos in company and job cards now keep a small safe inset inside the square logo frame so long horizontal wordmarks fit without touching the edges.

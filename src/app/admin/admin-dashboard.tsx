@@ -52,6 +52,7 @@ import { interpolate } from "@/lib/student-messages";
 import {
   DEFAULT_SALARY_CURRENCY_CODES,
   getAllSalaryCurrencyOptions,
+  jobCategoryLabel,
   normalizeSalaryCurrencyOptions,
 } from "@/lib/job-posting";
 
@@ -108,6 +109,7 @@ type JobOpening = {
   recruiterId: number;
   company: string;
   title: string;
+  jobCategory: string;
   jdLink: string | null;
   location: string;
   employmentType: string;
@@ -1625,6 +1627,7 @@ function JobModerationSection({
       return (
         job.company.toLowerCase().includes(q) ||
         job.title.toLowerCase().includes(q) ||
+        (jobCategoryLabel(job.jobCategory, locale) ?? "").toLowerCase().includes(q) ||
         job.description.toLowerCase().includes(q) ||
         job.location.toLowerCase().includes(q) ||
         job.responsibilities.toLowerCase().includes(q) ||
@@ -1713,6 +1716,7 @@ function JobModerationSection({
     const isApproved = job.moderationStatus === "approved";
     const isRejected = job.moderationStatus === "rejected";
     const notes = job.moderationNotes ?? "";
+    const category = jobCategoryLabel(job.jobCategory, locale);
 
     return (
       <Link
@@ -1737,6 +1741,12 @@ function JobModerationSection({
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3 shrink-0" /> {job.employmentType}
             </span>
+            {category ? (
+              <span className="flex items-center gap-1">
+                <Briefcase className="h-3 w-3 shrink-0" />
+                {category}
+              </span>
+            ) : null}
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3 shrink-0" />
               {new Date(job.createdAt).toLocaleDateString(localeTag)}

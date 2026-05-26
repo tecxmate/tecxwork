@@ -207,6 +207,12 @@ export const LANGUAGE_REQUIREMENT_OPTIONS = [
   { value: "indonesian", label: "Bahasa Indonesia" },
 ] as const;
 
+export const JOB_CATEGORY_OPTIONS = [
+  { value: "business", label: "Business" },
+  { value: "tech_engineering", label: "Tech & Engineering" },
+  { value: "service_hospitality", label: "Service & Hospitality" },
+] as const;
+
 export type EmploymentTypeValue = (typeof EMPLOYMENT_TYPE_OPTIONS)[number]["value"];
 export type WorkplaceTypeValue = (typeof WORKPLACE_TYPE_OPTIONS)[number]["value"];
 export type SalaryPeriodValue = (typeof SALARY_PERIOD_OPTIONS)[number]["value"];
@@ -215,6 +221,7 @@ export type SeniorityValue = (typeof SENIORITY_OPTIONS)[number]["value"];
 export type VisaSupportValue = (typeof VISA_SUPPORT_OPTIONS)[number]["value"];
 export type LanguageRequirementValue =
   (typeof LANGUAGE_REQUIREMENT_OPTIONS)[number]["value"];
+export type JobCategoryValue = (typeof JOB_CATEGORY_OPTIONS)[number]["value"];
 
 export const EMPLOYMENT_TYPE_VALUES: ReadonlySet<string> = new Set(
   EMPLOYMENT_TYPE_OPTIONS.map((option) => option.value)
@@ -236,6 +243,9 @@ export const VISA_SUPPORT_VALUES: ReadonlySet<string> = new Set(
 );
 export const LANGUAGE_REQUIREMENT_VALUES: ReadonlySet<string> = new Set(
   LANGUAGE_REQUIREMENT_OPTIONS.map((option) => option.value)
+);
+export const JOB_CATEGORY_VALUES: ReadonlySet<string> = new Set(
+  JOB_CATEGORY_OPTIONS.map((option) => option.value)
 );
 
 const localizedLabels = {
@@ -277,6 +287,11 @@ const localizedLabels = {
       thai: "Thai",
       indonesian: "Bahasa Indonesia",
     },
+    jobCategory: {
+      business: "Business",
+      tech_engineering: "Tech & Engineering",
+      service_hospitality: "Service & Hospitality",
+    },
   },
   vi: {
     employmentType: {
@@ -315,6 +330,11 @@ const localizedLabels = {
       korean: "Tiếng Hàn",
       thai: "Tiếng Thái",
       indonesian: "Tiếng Indonesia",
+    },
+    jobCategory: {
+      business: "Business nói chung",
+      tech_engineering: "Tech - Kỹ thuật",
+      service_hospitality: "Dịch vụ / Phục vụ",
     },
   },
   "zh-TW": {
@@ -355,6 +375,11 @@ const localizedLabels = {
       thai: "泰文",
       indonesian: "印尼文",
     },
+    jobCategory: {
+      business: "商務",
+      tech_engineering: "科技與工程",
+      service_hospitality: "服務與餐旅",
+    },
   },
 } as const;
 
@@ -368,7 +393,8 @@ type OptionValue =
   | SalaryPeriodValue
   | SeniorityValue
   | VisaSupportValue
-  | LanguageRequirementValue;
+  | LanguageRequirementValue
+  | JobCategoryValue;
 
 function localizedOptionLabel<
   T extends keyof (typeof localizedLabels)["en"]
@@ -480,6 +506,13 @@ export function getLanguageRequirementOptions(locale?: JobPostingLocale) {
   }));
 }
 
+export function getJobCategoryOptions(locale?: JobPostingLocale) {
+  return JOB_CATEGORY_OPTIONS.map((option) => ({
+    ...option,
+    label: jobCategoryLabel(option.value, locale) || option.label,
+  }));
+}
+
 export function employmentTypeLabel(
   value: string | null | undefined,
   locale?: JobPostingLocale
@@ -520,6 +553,13 @@ export function languageRequirementOptionLabel(
   locale?: JobPostingLocale
 ) {
   return localizedOptionLabel("languageRequirement", value, locale);
+}
+
+export function jobCategoryLabel(
+  value: string | null | undefined,
+  locale?: JobPostingLocale
+) {
+  return localizedOptionLabel("jobCategory", value, locale);
 }
 
 export function parseLanguageRequirementTokens(

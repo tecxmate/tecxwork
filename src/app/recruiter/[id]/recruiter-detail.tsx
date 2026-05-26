@@ -63,6 +63,7 @@ type SelectedSlot = {
 type JobOpening = {
   id: number;
   title: string;
+  jobCategory: string;
   jdLink: string | null;
   location: string;
   employmentType: string;

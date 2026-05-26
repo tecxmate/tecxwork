@@ -104,6 +104,7 @@ export const studentEnMessages = {
       all: "All",
       location: "Location",
       company: "Company",
+      category: "Category",
       employmentType: "Type",
       clearFilters: "Clear filters",
       page: "Page",
@@ -509,6 +510,9 @@ export const studentEnMessages = {
       submittedOn: "Submitted {date}",
       viewJd: "View JD",
       noJd: "No JD link",
+      jobCategory: "Job category",
+      uncategorized: "Uncategorized",
+      saveCategory: "Save category",
       adminNotes: "Admin notes",
       notesPlaceholder: "Add review guidance or rejection reason...",
       card: {

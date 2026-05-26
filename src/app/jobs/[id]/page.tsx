@@ -24,6 +24,7 @@ async function getJob(id: number) {
     .select({
       id: jobOpenings.id,
       title: jobOpenings.title,
+      jobCategory: jobOpenings.jobCategory,
       description: jobOpenings.description,
       jdLink: jobOpenings.jdLink,
       location: jobOpenings.location,

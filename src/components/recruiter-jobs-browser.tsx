@@ -10,6 +10,7 @@ import {
   Filter,
   MapPin,
   Search,
+  Tags,
   X,
 } from "lucide-react";
 
@@ -17,7 +18,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { employmentTypeLabel, formatApplicationDeadline, formatSalaryRange, type JobPostingLocale } from "@/lib/job-posting";
+import {
+  employmentTypeLabel,
+  formatApplicationDeadline,
+  formatSalaryRange,
+  getJobCategoryOptions,
+  jobCategoryLabel,
+  type JobPostingLocale,
+} from "@/lib/job-posting";
 import type { RecruiterJobPosting } from "@/components/recruiter-job-posting-card";
 
 const ITEMS_PER_PAGE = 12;
@@ -35,6 +43,7 @@ type JobsBrowserLabels = {
     all: string;
     location: string;
     company: string;
+    category: string;
     employmentType: string;
     clearFilters: string;
     page: string;
@@ -83,6 +92,7 @@ function JobTeaserCard({
     locale,
   });
   const employment = employmentTypeLabel(job.employmentType, locale);
+  const category = jobCategoryLabel(job.jobCategory, locale);
   const deadline = formatApplicationDeadline(job.applicationDeadline, locale);
   const preview = getPreviewText(job);
 
@@ -138,6 +148,12 @@ function JobTeaserCard({
             {employment}
           </Badge>
         ) : null}
+        {category ? (
+          <Badge variant="secondary" className="gap-1 text-[10px]">
+            <Tags className="h-3 w-3" />
+            {category}
+          </Badge>
+        ) : null}
         {salary ? (
           <Badge className="min-w-0 max-w-full shrink justify-start text-[10px]">
             <span className="min-w-0 truncate">{salary}</span>
@@ -182,6 +198,7 @@ export function RecruiterJobsBrowser({
 }) {
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [employmentFilter, setEmploymentFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -191,6 +208,7 @@ export function RecruiterJobsBrowser({
     all: "All",
     location: "Location",
     company: "Company",
+    category: "Category",
     employmentType: "Type",
     clearFilters: "Clear filters",
     page: "Page",
@@ -205,6 +223,7 @@ export function RecruiterJobsBrowser({
     () => [...new Set(jobs.map((j) => j.company).filter(Boolean))].sort(),
     [jobs]
   );
+  const categoryOptions = useMemo(() => getJobCategoryOptions(locale), [locale]);
   const uniqueEmploymentTypes = useMemo(
     () => [...new Set(jobs.map((j) => j.employmentType).filter(Boolean))].sort(),
     [jobs]
@@ -215,6 +234,7 @@ export function RecruiterJobsBrowser({
 
     return jobs.filter((job) => {
       if (locationFilter && job.location !== locationFilter) return false;
+      if (categoryFilter && job.jobCategory !== categoryFilter) return false;
       if (companyFilter && job.company !== companyFilter) return false;
       if (employmentFilter && job.employmentType !== employmentFilter) return false;
 
@@ -224,15 +244,24 @@ export function RecruiterJobsBrowser({
         job.title,
         job.company,
         job.location,
+        jobCategoryLabel(job.jobCategory, locale),
         job.description,
         job.responsibilities,
         job.requirements,
         job.benefits,
       ]
-        .filter(Boolean)
+        .filter((value): value is string => Boolean(value))
         .some((value) => value.toLowerCase().includes(normalized));
     });
-  }, [deferredQuery, jobs, locationFilter, companyFilter, employmentFilter]);
+  }, [
+    deferredQuery,
+    jobs,
+    locale,
+    locationFilter,
+    categoryFilter,
+    companyFilter,
+    employmentFilter,
+  ]);
 
   const totalPages = Math.ceil(filteredJobs.length / ITEMS_PER_PAGE);
   const paginatedJobs = useMemo(() => {
@@ -240,10 +269,12 @@ export function RecruiterJobsBrowser({
     return filteredJobs.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredJobs, currentPage]);
 
-  const hasActiveFilters = locationFilter || companyFilter || employmentFilter;
+  const hasActiveFilters =
+    locationFilter || categoryFilter || companyFilter || employmentFilter;
 
   const clearFilters = () => {
     setLocationFilter("");
+    setCategoryFilter("");
     setCompanyFilter("");
     setEmploymentFilter("");
     setCurrentPage(1);
@@ -292,6 +323,18 @@ export function RecruiterJobsBrowser({
             <option value="">{filterLabels.company}: {filterLabels.all}</option>
             {uniqueCompanies.map((c) => (
               <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            value={categoryFilter}
+            onChange={(e) => handleFilterChange(setCategoryFilter)(e.target.value)}
+            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{filterLabels.category}: {filterLabels.all}</option>
+            {categoryOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
           </select>
           <select

@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { getAdminSession } from "@/lib/auth";
 import { db, jobOpenings, recruiters } from "@/lib/db";
+import { JOB_CATEGORY_VALUES } from "@/lib/job-posting";
 
 export async function PUT(
   req: NextRequest,
@@ -22,9 +23,35 @@ export async function PUT(
   const action = body.action;
   const moderationNotes =
     typeof body.moderationNotes === "string" ? body.moderationNotes.trim() : "";
+  const hasAction = action !== undefined;
 
-  if (!["approve", "reject", "reset"].includes(action)) {
+  if (hasAction && !["approve", "reject", "reset"].includes(action)) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  }
+
+  const updates: Partial<typeof jobOpenings.$inferInsert> = {};
+  if ("jobCategory" in body) {
+    const jobCategory =
+      typeof body.jobCategory === "string" ? body.jobCategory.trim() : "";
+    if (jobCategory && !JOB_CATEGORY_VALUES.has(jobCategory)) {
+      return NextResponse.json({ error: "Invalid job category" }, { status: 400 });
+    }
+    updates.jobCategory = jobCategory;
+  }
+
+  if (hasAction) {
+    updates.moderationStatus =
+      action === "approve"
+        ? "approved"
+        : action === "reject"
+          ? "rejected"
+          : "draft";
+    updates.moderationNotes = moderationNotes;
+    updates.reviewedAt = new Date();
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "No job updates provided" }, { status: 400 });
   }
 
   const [job] = await db
@@ -39,16 +66,7 @@ export async function PUT(
 
   await db
     .update(jobOpenings)
-    .set({
-      moderationStatus:
-        action === "approve"
-          ? "approved"
-          : action === "reject"
-            ? "rejected"
-            : "draft",
-      moderationNotes,
-      reviewedAt: new Date(),
-    })
+    .set(updates)
     .where(eq(jobOpenings.id, jobId));
 
   const [updated] = await db
@@ -57,6 +75,7 @@ export async function PUT(
       recruiterId: recruiters.id,
       company: recruiters.company,
       title: jobOpenings.title,
+      jobCategory: jobOpenings.jobCategory,
       jdLink: jobOpenings.jdLink,
       location: jobOpenings.location,
       employmentType: jobOpenings.employmentType,

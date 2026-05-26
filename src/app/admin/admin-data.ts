@@ -119,6 +119,7 @@ export async function getAdminDashboardData() {
       recruiterId: recruiters.id,
       company: recruiters.company,
       title: jobOpenings.title,
+      jobCategory: jobOpenings.jobCategory,
       jdLink: jobOpenings.jdLink,
       location: jobOpenings.location,
       employmentType: jobOpenings.employmentType,

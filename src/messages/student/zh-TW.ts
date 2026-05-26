@@ -98,6 +98,7 @@ export const studentZhTwMessages = {
       all: "全部",
       location: "地點",
       company: "公司",
+      category: "職缺分類",
       employmentType: "類型",
       clearFilters: "清除篩選",
       page: "第",
@@ -502,6 +503,9 @@ export const studentZhTwMessages = {
       submittedOn: "送出於 {date}",
       viewJd: "查看 JD",
       noJd: "尚未提供 JD 連結",
+      jobCategory: "職缺分類",
+      uncategorized: "未分類",
+      saveCategory: "儲存分類",
       adminNotes: "管理備註",
       notesPlaceholder: "填寫審核說明或退件原因...",
       card: {

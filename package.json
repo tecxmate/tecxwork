@@ -13,6 +13,8 @@
     "db:init:schools": "npx tsx src/lib/db/create-schools-table.ts",
     "db:cleanup:legacy-recruiter-jobs": "npx tsx src/lib/db/cleanup-legacy-recruiter-job-fields.ts",
     "db:update:job-opening-moderation": "npx tsx src/lib/db/add-job-opening-moderation-columns.ts",
+    "db:update:job-category": "npx tsx src/lib/db/add-job-category-column.ts",
+    "db:tag-job-categories": "npx tsx src/lib/db/tag-existing-job-categories.ts",
     "db:update:job-details": "npx tsx src/lib/db/add-job-opening-detail-columns.ts",
     "db:update:job-moderation-toggle": "npx tsx src/lib/db/add-job-moderation-toggle-column.ts",
     "db:update:salary-currency-options": "npx tsx src/lib/db/add-salary-currency-options-column.ts",

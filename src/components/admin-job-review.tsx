@@ -12,7 +12,10 @@ import {
   RecruiterJobPostingCard,
   type RecruiterJobPosting,
 } from "@/components/recruiter-job-posting-card";
-import type { JobPostingLocale } from "@/lib/job-posting";
+import {
+  getJobCategoryOptions,
+  type JobPostingLocale,
+} from "@/lib/job-posting";
 import { cn } from "@/lib/utils";
 
 type AdminJob = RecruiterJobPosting & {
@@ -40,6 +43,9 @@ type Labels = {
   reject: string;
   rejected: string;
   resetToDraft: string;
+  jobCategory: string;
+  uncategorized: string;
+  saveCategory: string;
   adminNotes: string;
   notesPlaceholder: string;
   back: string;
@@ -57,7 +63,10 @@ export function AdminJobReview({
   const router = useRouter();
   const [job, setJob] = useState<AdminJob>(initialJob);
   const [notes, setNotes] = useState(initialJob.moderationNotes ?? "");
+  const [category, setCategory] = useState(initialJob.jobCategory ?? "");
   const [pending, setPending] = useState<"approve" | "reject" | "reset" | null>(null);
+  const [categorySaving, setCategorySaving] = useState(false);
+  const jobCategoryOptions = getJobCategoryOptions(locale as JobPostingLocale);
 
   const isApproved = job.moderationStatus === "approved";
   const isRejected = job.moderationStatus === "rejected";
@@ -68,9 +77,23 @@ export function AdminJobReview({
     const res = await fetch(`/api/admin/jobs/${job.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, moderationNotes: notes }),
+      body: JSON.stringify({ action, moderationNotes: notes, jobCategory: category }),
     });
     setPending(null);
+    if (!res.ok) return;
+    const data = await res.json();
+    setJob((j) => ({ ...j, ...data.job }));
+    router.refresh();
+  }
+
+  async function saveCategory() {
+    setCategorySaving(true);
+    const res = await fetch(`/api/admin/jobs/${job.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobCategory: category }),
+    });
+    setCategorySaving(false);
     if (!res.ok) return;
     const data = await res.json();
     setJob((j) => ({ ...j, ...data.job }));
@@ -96,6 +119,39 @@ export function AdminJobReview({
 
         <Card>
           <CardContent className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {labels.jobCategory}
+              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">{labels.uncategorized}</option>
+                  {jobCategoryOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={saveCategory}
+                  disabled={categorySaving}
+                  className="h-9"
+                >
+                  {categorySaving ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : null}
+                  {labels.saveCategory}
+                </Button>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {labels.adminNotes}

@@ -1,6 +1,7 @@
 import {
   Building2,
   Briefcase,
+  Tags,
   CalendarClock,
   ExternalLink,
   FileText,
@@ -19,6 +20,7 @@ import {
   employmentTypeLabel,
   formatApplicationDeadline,
   formatSalaryRange,
+  jobCategoryLabel,
   parseLanguageRequirementTokens,
   type JobPostingLocale,
   seniorityLabel,
@@ -32,6 +34,7 @@ export type RecruiterJobPosting = {
   title: string;
   company?: string;
   logoUrl?: string | null;
+  jobCategory: string;
   jdLink: string | null;
   location: string;
   employmentType: string;
@@ -216,6 +219,7 @@ export function RecruiterJobPostingCard({
   const employmentLabel =
     employmentTypeLabel(job.employmentType, locale) || "Employment";
   const workplaceLabel = workplaceTypeLabel(job.workplaceType, locale);
+  const categoryLabel = jobCategoryLabel(job.jobCategory, locale);
   const seniority = seniorityLabel(job.seniority, locale);
   const visaSupport = visaSupportLabel(job.visaSupport, locale);
   const applicationDeadline = formatApplicationDeadline(job.applicationDeadline, locale);
@@ -302,6 +306,12 @@ export function RecruiterJobPostingCard({
             <Briefcase className="h-3 w-3" />
             {employmentLabel}
           </Badge>
+          {categoryLabel ? (
+            <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Tags className="h-3 w-3" />
+              {categoryLabel}
+            </Badge>
+          ) : null}
           {workplaceLabel ? (
             <Badge variant="secondary" className="gap-1 text-[10px]">
               <Laptop className="h-3 w-3" />

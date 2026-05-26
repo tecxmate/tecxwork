@@ -92,6 +92,7 @@ export const jobOpenings = pgTable("job_openings", {
     .notNull()
     .references(() => recruiters.id),
   title: text("title").notNull(),
+  jobCategory: text("job_category").notNull().default(""),
   jdLink: text("jd_link"),
   location: text("location").notNull().default(""),
   employmentType: text("employment_type").notNull().default(""),

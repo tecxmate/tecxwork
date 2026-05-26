@@ -28,6 +28,7 @@ async function getRecruiterPostedJobs() {
     .select({
       id: jobOpenings.id,
       title: jobOpenings.title,
+      jobCategory: jobOpenings.jobCategory,
       description: jobOpenings.description,
       jdLink: jobOpenings.jdLink,
       location: jobOpenings.location,

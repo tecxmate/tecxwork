@@ -66,6 +66,7 @@ async function getPublicJobs() {
       id: jobOpenings.id,
       recruiterId: recruiters.id,
       title: jobOpenings.title,
+      jobCategory: jobOpenings.jobCategory,
       jdLink: jobOpenings.jdLink,
       location: jobOpenings.location,
       employmentType: jobOpenings.employmentType,
