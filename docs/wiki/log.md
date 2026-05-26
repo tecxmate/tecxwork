@@ -495,3 +495,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Implemented additive job-level categories for Business/general, Tech/Engineering, and Service/Hospitality across schema, admin tagging, public filtering, and job cards.
 - Ran `db:update:job-category` and backfilled 84 blank existing jobs only: 38 Business, 38 Tech/Engineering, 8 Service/Hospitality; follow-up dry-run found 0 blanks.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-27] fix | PWA install identity
+attributed_to: [niko]   belongs_to: [public-homepage]
+- Niko shared an iOS Add to Home Screen screenshot where the install sheet used the event name and a fallback V icon.
+- Updated PWA manifest/root metadata so the installed app name is `tecxwork` and iOS gets an explicit tecxwork Apple touch icon.
+- Updated `docs/wiki/topics/public-homepage.md`.
