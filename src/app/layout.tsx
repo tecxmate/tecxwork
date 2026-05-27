@@ -72,6 +72,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: titleLine,
       description: `${branding.organizerShort} ${branding.displayYear} — ${branding.tagline}. Book your interview slot now.`,
+      url: "/",
       type: "website",
       locale: "en_US",
       siteName: "TECXWORK",
