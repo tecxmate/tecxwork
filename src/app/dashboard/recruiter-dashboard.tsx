@@ -448,6 +448,8 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const [proposeTimeInput, setProposeTimeInput] = useState("");
   const [proposeNote, setProposeNote] = useState("");
   const [proposeError, setProposeError] = useState<string | null>(null);
+  const [proposeBusy, setProposeBusy] = useState<{ start: Date; end: Date }[]>([]);
+  const [proposeForce, setProposeForce] = useState(false);
   const router = useRouter();
 
   const [sortBy, setSortBy] = useState<"date" | "name">("date");
@@ -496,6 +498,20 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     setProposeTimeInput(local);
     setProposeNote("");
     setProposeError(null);
+    setProposeBusy([]);
+    setProposeForce(false);
+    void fetch(`/api/bookings/${id}/applicant-busy`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.ranges) return;
+        setProposeBusy(
+          data.ranges.map((r: { start: string; end: string }) => ({
+            start: new Date(r.start),
+            end: new Date(r.end),
+          }))
+        );
+      })
+      .catch(() => {});
   }
 
   async function handleRetractProposal(id: number) {
@@ -535,6 +551,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       body: JSON.stringify({
         proposedTime: proposed.toISOString(),
         note: proposeNote.trim() || undefined,
+        force: proposeForce || undefined,
       }),
     });
     if (res.ok) {
@@ -547,6 +564,13 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       );
       setProposeModal(null);
       router.refresh();
+    } else if (res.status === 409) {
+      const data = await res.json().catch(() => ({}));
+      setProposeForce(true);
+      setProposeError(
+        data.message ??
+          "Student is already booked with another company at this time. Click again to suggest anyway."
+      );
     } else {
       const data = await res.json().catch(() => ({}));
       setProposeError(data.error ?? "Failed to propose new time.");
@@ -783,12 +807,67 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
             <label className="mb-1 block text-xs font-medium text-muted-foreground">
               {messages.dashboard.bookings.proposeTimeLabel}
             </label>
-            <input
-              type="datetime-local"
-              value={proposeTimeInput}
-              onChange={(e) => setProposeTimeInput(e.target.value)}
-              className="mb-4 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            {(() => {
+              const proposedDate = proposeTimeInput ? new Date(proposeTimeInput) : null;
+              const proposedEnd = proposedDate
+                ? new Date(proposedDate.getTime() + 30 * 60 * 1000)
+                : null;
+              const conflict =
+                proposedDate && proposedEnd
+                  ? proposeBusy.find(
+                      (r) =>
+                        proposedDate.getTime() < r.end.getTime() &&
+                        proposedEnd.getTime() > r.start.getTime()
+                    ) ?? null
+                  : null;
+              return (
+                <>
+                  <input
+                    type="datetime-local"
+                    value={proposeTimeInput}
+                    onChange={(e) => {
+                      setProposeTimeInput(e.target.value);
+                      setProposeForce(false);
+                      setProposeError(null);
+                    }}
+                    className={cn(
+                      "mb-2 w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2",
+                      conflict
+                        ? "border-destructive focus:ring-destructive"
+                        : "border-input focus:ring-primary"
+                    )}
+                  />
+                  {proposeBusy.length > 0 && (
+                    <div className="mb-4">
+                      <p className="mb-1 text-xs text-muted-foreground">
+                        Student is busy with other companies:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {proposeBusy.map((r, i) => {
+                          const isHit =
+                            conflict &&
+                            r.start.getTime() === conflict.start.getTime() &&
+                            r.end.getTime() === conflict.end.getTime();
+                          return (
+                            <span
+                              key={i}
+                              className={cn(
+                                "rounded-full border px-2 py-0.5 text-[11px]",
+                                isHit
+                                  ? "border-destructive bg-destructive/10 text-destructive"
+                                  : "border-muted-foreground/30 bg-muted text-muted-foreground"
+                              )}
+                            >
+                              {format(r.start, "EEE HH:mm")}–{format(r.end, "HH:mm")}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
             <textarea
               value={proposeNote}
               onChange={(e) => setProposeNote(e.target.value)}
@@ -810,7 +889,9 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                 {acting === proposeModal.id ? (
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                 ) : null}
-                {messages.dashboard.bookings.proposeConfirm}
+                {proposeForce
+                  ? "Suggest anyway"
+                  : messages.dashboard.bookings.proposeConfirm}
               </Button>
             </div>
           </div>

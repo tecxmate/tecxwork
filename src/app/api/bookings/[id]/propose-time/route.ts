@@ -5,6 +5,9 @@ import { getRecruiterFromSession } from "@/lib/auth";
 import { parseJsonBody, proposeTimeSchema } from "@/lib/validation";
 import { sendRescheduleProposalEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
+import { getApplicantBusyRanges, overlapsBusy } from "@/lib/applicant-busy";
+
+const PROPOSAL_DURATION_MS = 30 * 60 * 1000;
 
 /**
  * POST /api/bookings/[id]/propose-time
@@ -31,7 +34,7 @@ export async function POST(
 
   const parsed = await parseJsonBody(req, proposeTimeSchema);
   if (!parsed.ok) return parsed.response;
-  const { proposedTime, note } = parsed.data;
+  const { proposedTime, note, force } = parsed.data;
 
   const proposedDate = new Date(proposedTime);
   if (isNaN(proposedDate.getTime())) {
@@ -65,6 +68,26 @@ export async function POST(
       },
       { status: 400 }
     );
+  }
+
+  if (!force) {
+    const proposedEnd = new Date(proposedDate.getTime() + PROPOSAL_DURATION_MS);
+    const busy = await getApplicantBusyRanges(booking.applicantEmail, bookingId);
+    const hit = overlapsBusy(proposedDate, proposedEnd, busy);
+    if (hit) {
+      return NextResponse.json(
+        {
+          error: "applicant_busy",
+          message:
+            "The student is already booked with another company at this time. Re-submit with force=true to suggest anyway.",
+          conflict: {
+            start: hit.start.toISOString(),
+            end: hit.end.toISOString(),
+          },
+        },
+        { status: 409 }
+      );
+    }
   }
 
   const [rec] = await db

@@ -114,6 +114,8 @@ export const cancelBookingSchema = z.object({
 export const proposeTimeSchema = z.object({
   proposedTime: z.string().min(1, "Proposed time is required"),
   note: z.string().trim().max(2000).optional(),
+  /** Override applicant-busy soft-guard. Recruiter has confirmed offline. */
+  force: z.boolean().optional(),
 });
 
 export const respondProposalSchema = z.object({
