@@ -521,3 +521,7 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Migration `0005_reschedule_proposed.sql` adds `reschedule_proposed` to `booking_status`, `booking_reschedule_proposed` to `notification_type`, and `proposed_time`/`proposed_by_email` columns on `bookings`.
 - Recruiter can also Change time (re-propose) or Retract (back to pending) on an awaiting-student booking without waiting for student response.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-27] update | Category filter routes to /jobs/cat/<slug>
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- The `/jobs` category select now navigates to the shareable category page (`/jobs/cat/business`, `/jobs/cat/tech`, `/jobs/cat/service`) instead of filtering in place; selecting "All" routes back to `/jobs`. The category-locked variant of the page (e.g. `/jobs/cat/tech`) still hides the select, so behavior on that page is unchanged.

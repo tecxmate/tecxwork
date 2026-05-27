@@ -2,6 +2,9 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { jobCategorySlugFromValue } from "@/lib/job-category-routes";
+import type { JobCategoryValue } from "@/lib/job-posting";
 import {
   Briefcase,
   Building2,
@@ -198,6 +201,7 @@ export function RecruiterJobsBrowser({
   labels: JobsBrowserLabels;
   lockedCategory?: string;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -205,6 +209,15 @@ export function RecruiterJobsBrowser({
   const [employmentFilter, setEmploymentFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
+
+  function handleCategorySelect(value: string) {
+    if (!value) {
+      router.push("/jobs");
+      return;
+    }
+    const slug = jobCategorySlugFromValue(value as JobCategoryValue);
+    router.push(`/jobs/cat/${slug}`);
+  }
 
   const filterLabels = labels.filters ?? {
     all: "All",
@@ -336,7 +349,7 @@ export function RecruiterJobsBrowser({
           {!lockedCategory ? (
             <select
               value={categoryFilter}
-              onChange={(e) => handleFilterChange(setCategoryFilter)(e.target.value)}
+              onChange={(e) => handleCategorySelect(e.target.value)}
               className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">{filterLabels.category}: {filterLabels.all}</option>
