@@ -2,7 +2,9 @@ import { ImageResponse } from "next/og";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getEventBranding } from "@/lib/event-branding";
 
-export const runtime = "edge";
+// Generate on demand, not at build time. Satori (used by ImageResponse) is
+// stricter about CSS at prerender time; skip prerender to avoid those failures.
+export const dynamic = "force-dynamic";
 export const alt = `V-GEN TRIDENT — ${EVENT_CONFIG.organizerShort} Career Fair ${EVENT_CONFIG.displayYear}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
