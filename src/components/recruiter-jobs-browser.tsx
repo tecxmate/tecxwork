@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { jobCategorySlugFromValue } from "@/lib/job-category-routes";
@@ -306,8 +306,18 @@ export function RecruiterJobsBrowser({
     setCurrentPage(1);
   };
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const isFirstPageEffect = useRef(true);
+  useEffect(() => {
+    if (isFirstPageEffect.current) {
+      isFirstPageEffect.current = false;
+      return;
+    }
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentPage]);
+
   return (
-    <section className="space-y-4">
+    <section ref={sectionRef} className="space-y-4 scroll-mt-20">
       <div className="mx-auto max-w-3xl space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

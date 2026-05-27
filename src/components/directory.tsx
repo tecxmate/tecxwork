@@ -46,6 +46,16 @@ export function Directory() {
     setPage(1);
   }, [debouncedQuery]);
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const isFirstPageEffect = useRef(true);
+  useEffect(() => {
+    if (isFirstPageEffect.current) {
+      isFirstPageEffect.current = false;
+      return;
+    }
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [page]);
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -144,7 +154,7 @@ export function Directory() {
   }, [loading, messages, total, totalPages, page]);
 
   return (
-    <section className="space-y-4 sm:space-y-6">
+    <section ref={sectionRef} className="space-y-4 sm:space-y-6 scroll-mt-20">
       <div className="space-y-3">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
