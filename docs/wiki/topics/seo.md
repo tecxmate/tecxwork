@@ -13,6 +13,37 @@ date: 2026-05-28
 
 The product brand is **tecxwork** but the site lives at `work.tecxmate.com`. Google had no signal that "tecxwork" is a real entity: domain didn't contain it, `<title>` didn't contain it, no JSON-LD Organization claimed it, no backlinks reinforced it. Without entity signal, Google defaults to the closest dictionary-ish match — "texwork" (TeXworks, the LaTeX editor) — and offers "did you mean texwork".
 
+## JobPosting structured data on `/jobs/[id]`
+
+`src/app/jobs/[id]/page.tsx` emits a `JobPosting` JSON-LD block per public job, intended for **Google Jobs** eligibility (the rich card with the briefcase icon in regular Google results).
+
+Field mapping (DB column → schema.org):
+
+| schema.org | Source | Notes |
+|---|---|---|
+| `title` | `job.title` | required |
+| `description` | description + responsibilities + requirements + benefits, wrapped in `<p>` | required; Google expects HTML, line breaks → `<br/>` |
+| `datePosted` | `job.createdAt` (ISO) | required |
+| `validThrough` | `job.applicationDeadline` parsed to ISO | only set if parseable |
+| `hiringOrganization` | `recruiter.company` + `recruiter.logoUrl` | required |
+| `jobLocation` | `job.location` (country hard-coded `TW`) | always set |
+| `jobLocationType` | `"TELECOMMUTE"` when `workplaceType` includes "remote" | also sets `applicantLocationRequirements` to Taiwan |
+| `employmentType` | mapped via `EMPLOYMENT_TYPE_MAP` | full-time → FULL_TIME, etc. Google enum |
+| `baseSalary` | `MonetaryAmount` with `QuantitativeValue` (min/max + `unitText`) | unit via `SALARY_PERIOD_MAP`: month → MONTH, year → YEAR, hour → HOUR |
+| `identifier` | `{ name: "tecxwork", value: job.id }` | required for de-dup |
+| `inLanguage` | `job.languageRequirement` | optional |
+| `directApply` | `false` | we don't host a Google-compliant apply endpoint yet |
+
+Page metadata also extended: title `"<job> — <company> | tecxwork (Vietnamese Jobs in Taiwan)"`, OG, canonical to `/jobs/<id>`.
+
+**Quality gates Google enforces** (failures → no rich card, no warning in console UI):
+- `description` shorter than ~50 chars → silently dropped
+- Missing `jobLocation` for non-remote jobs → dropped
+- Missing `validThrough` is allowed but expired postings drop after ~30 days from `datePosted` regardless
+- `baseSalary` with `value: 0` → dropped
+
+If a real listing looks fine in [Rich Results Test](https://search.google.com/test/rich-results) but doesn't show in Google Jobs after a week, the issue is almost always **data thinness in the DB row** (e.g., empty description, no employment type). Push recruiters to fill all fields.
+
 ## What's wired (on-page)
 
 - `src/app/robots.ts` — allows public routes, disallows /admin /api /dashboard /profile /login /register etc., references sitemap.
