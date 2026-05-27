@@ -75,8 +75,11 @@ export const studentEnMessages = {
   jobsPage: {
     badge: "Job Board",
     title: "Recruiter-Posted Jobs",
+    categoryTitleSuffix: "Jobs",
     subtitle:
       "Browse open positions published directly by participating recruiters.",
+    categorySubtitle:
+      "Browse {category} openings published directly by participating recruiters.",
     searchPlaceholder: "Search jobs, companies, or locations...",
     resultsCount: "jobs found",
     viewDetails: "View details",

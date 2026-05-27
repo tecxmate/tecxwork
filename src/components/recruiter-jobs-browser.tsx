@@ -191,10 +191,12 @@ export function RecruiterJobsBrowser({
   jobs,
   locale,
   labels,
+  lockedCategory,
 }: {
   jobs: RecruiterBrowseJob[];
   locale: JobPostingLocale;
   labels: JobsBrowserLabels;
+  lockedCategory?: string;
 }) {
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
@@ -234,7 +236,9 @@ export function RecruiterJobsBrowser({
 
     return jobs.filter((job) => {
       if (locationFilter && job.location !== locationFilter) return false;
-      if (categoryFilter && job.jobCategory !== categoryFilter) return false;
+      if (!lockedCategory && categoryFilter && job.jobCategory !== categoryFilter) {
+        return false;
+      }
       if (companyFilter && job.company !== companyFilter) return false;
       if (employmentFilter && job.employmentType !== employmentFilter) return false;
 
@@ -258,6 +262,7 @@ export function RecruiterJobsBrowser({
     jobs,
     locale,
     locationFilter,
+    lockedCategory,
     categoryFilter,
     companyFilter,
     employmentFilter,
@@ -270,7 +275,10 @@ export function RecruiterJobsBrowser({
   }, [filteredJobs, currentPage]);
 
   const hasActiveFilters =
-    locationFilter || categoryFilter || companyFilter || employmentFilter;
+    locationFilter ||
+    (!lockedCategory && categoryFilter) ||
+    companyFilter ||
+    employmentFilter;
 
   const clearFilters = () => {
     setLocationFilter("");
@@ -325,18 +333,20 @@ export function RecruiterJobsBrowser({
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <select
-            value={categoryFilter}
-            onChange={(e) => handleFilterChange(setCategoryFilter)(e.target.value)}
-            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">{filterLabels.category}: {filterLabels.all}</option>
-            {categoryOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          {!lockedCategory ? (
+            <select
+              value={categoryFilter}
+              onChange={(e) => handleFilterChange(setCategoryFilter)(e.target.value)}
+              className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">{filterLabels.category}: {filterLabels.all}</option>
+              {categoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          ) : null}
           <select
             value={employmentFilter}
             onChange={(e) => handleFilterChange(setEmploymentFilter)(e.target.value)}

@@ -501,3 +501,9 @@ attributed_to: [niko]   belongs_to: [public-homepage]
 - Niko shared an iOS Add to Home Screen screenshot where the install sheet used the event name and a fallback V icon.
 - Updated PWA manifest/root metadata so the installed app name is `tecxwork` and iOS gets an explicit tecxwork Apple touch icon.
 - Updated `docs/wiki/topics/public-homepage.md`.
+
+## [2026-05-27] chat | Shareable job category links
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Niko asked for client-shareable category pages such as `/jobs/tech` and `/jobs/business`.
+- Current `/jobs/[id]` detail route makes exact `/jobs/<category>` a route-dispatch choice; implemented `/jobs/cat/<slug>` as one dynamic category page that reuses the shared jobs listing.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

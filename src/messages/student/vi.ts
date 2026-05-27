@@ -70,7 +70,10 @@ export const studentViMessages = {
     ...studentEnMessages.jobsPage,
     badge: "Bảng việc làm",
     title: "Việc làm từ nhà tuyển dụng",
+    categoryTitleSuffix: "việc làm",
     subtitle: "Xem các vị trí được đăng trực tiếp bởi nhà tuyển dụng tham gia.",
+    categorySubtitle:
+      "Xem các vị trí {category} được đăng trực tiếp bởi nhà tuyển dụng tham gia.",
     searchPlaceholder: "Tìm việc, công ty hoặc địa điểm...",
     resultsCount: "việc làm",
     viewDetails: "Xem chi tiết",
