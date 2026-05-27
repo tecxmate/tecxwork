@@ -75,11 +75,21 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: "en_US",
       siteName: "TECXWORK",
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: "tecxwork",
+          type: "image/png",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: titleLine,
       description: `Career fair for Vietnamese students in Taiwan. ${branding.displayDate} at ${branding.hostedAt}.`,
+      images: ["/opengraph-image"],
     },
   };
 }

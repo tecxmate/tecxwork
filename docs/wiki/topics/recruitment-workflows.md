@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-26
+updated: 2026-05-28
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -82,3 +82,5 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - 2026-05-15: Company gallery photos on recruiter detail pages open into a full-screen viewer with previous/next controls, Escape close, and full-photo `object-contain` display.
 - 2026-05-15: Public recruiter cards now constrain long industry badges the same way position chips are constrained, preventing mobile directory/homepage cards from widening the viewport.
 - 2026-05-12: [LinkedIn-style job detail apply flow](../decisions/2026-05-12-linkedin-style-job-apply-flow.md) moved job-click intent to `/jobs/[id]` apply and made company identity the company-page navigation affordance.
+- 2026-05-28: Cross-company conflict hint added to recruiter "propose time" — modal shows student's confirmed busy ranges at other companies (times only, no company/position) and the server soft-blocks overlaps with `409 applicant_busy` unless `force: true`. Recruiter override surfaces as a "Suggest anyway" button. Helper at `src/lib/applicant-busy.ts`, endpoint at `GET /api/bookings/[id]/applicant-busy`.
+- 2026-05-28: **Known gap** — the applicant-busy guard only covers the recruiter propose-time path. `POST /api/bookings/review` (accept) and the student-initiated booking flow are still unguarded, so a student can still be double-booked via those two paths. Reuse `getApplicantBusyRanges` + `overlapsBusy` when extending. Privacy axis is different for the student-side check: the student is allowed to see *which* company they're already booked with; recruiters are not.
