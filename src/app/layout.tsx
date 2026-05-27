@@ -42,9 +42,9 @@ function getMetadataBase(): URL {
     process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_BASE_URL;
 
   try {
-    return new URL(configured ?? "https://tecxwork.com");
+    return new URL(configured ?? "https://work.tecxmate.com");
   } catch {
-    return new URL("https://tecxwork.com");
+    return new URL("https://work.tecxmate.com");
   }
 }
 
