@@ -418,6 +418,103 @@ export async function sendWaitlistEmail(data: WaitlistEmailData) {
   }
 }
 
+type RescheduleProposalEmailData = {
+  applicantName: string;
+  applicantEmail: string;
+  company: string;
+  position?: string;
+  originalTime?: Date;
+  proposedTime: Date;
+  recruiterNote?: string;
+};
+
+export async function sendRescheduleProposalEmail(
+  data: RescheduleProposalEmailData
+) {
+  const resend = getResend();
+  if (!resend) {
+    console.log("RESEND_API_KEY not set — skipping reschedule proposal email");
+    return;
+  }
+
+  const branding = await getEventBranding();
+  const subject = `New interview time proposed — ${data.company}`;
+  const safeApplicantName = escapeHtml(data.applicantName);
+  const safeCompany = escapeHtml(data.company);
+  const safePosition = data.position ? escapeHtml(data.position) : "";
+  const safeNote = data.recruiterNote ? escapeHtml(data.recruiterNote) : "";
+  const formatTime = (d: Date) =>
+    d.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Taipei",
+    });
+  const proposedTimeStr = escapeHtml(formatTime(data.proposedTime));
+  const originalTimeStr = data.originalTime
+    ? escapeHtml(formatTime(data.originalTime))
+    : "";
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: data.applicantEmail,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">New interview time proposed</h2>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+            Hi ${safeApplicantName}, <strong>${safeCompany}</strong>${safePosition ? ` (${safePosition})` : ""} has suggested a new interview time.
+          </p>
+
+          <div style="background: #f3eeff; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            ${originalTimeStr ? `<p style="margin: 0 0 8px; font-size: 13px; color: #6b21a8;">Original request: <strong>${originalTimeStr}</strong></p>` : ""}
+            <p style="margin: 0; font-size: 15px; color: #4c1d95;">
+              Proposed time: <strong>${proposedTimeStr}</strong> (Asia/Taipei)
+            </p>
+          </div>
+
+          ${safeNote ? `
+          <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <p style="margin: 0 0 8px; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Message from the recruiter</p>
+            <p style="margin: 0; font-size: 14px; color: #333; white-space: pre-wrap;">${safeNote}</p>
+          </div>
+          ` : ''}
+
+          <p style="font-size: 14px; color: #666; margin-bottom: 24px;">
+            Open the platform to accept the new time or decline.
+          </p>
+
+          <div style="margin-bottom: 24px;">
+            <a href="${getPublicBaseUrl()}/dashboard" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+              Review proposal
+            </a>
+          </div>
+
+          <p style="font-size: 12px; color: #999; margin-top: 32px;">
+            ${branding.name}<br>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
+          </p>
+        </div>
+      `,
+    });
+    console.log("Reschedule proposal email result:", JSON.stringify(result));
+    await logEmail("reschedule_proposed", data.applicantEmail, subject, true);
+  } catch (err) {
+    console.error("Failed to send reschedule proposal email:", err);
+    await logEmail(
+      "reschedule_proposed",
+      data.applicantEmail,
+      subject,
+      false,
+      String(err)
+    );
+  }
+}
+
 type StudentReminderData = {
   name: string;
   email: string;

@@ -48,6 +48,8 @@ export async function getRecruiterDashboardData() {
       status: bookings.status,
       createdAt: bookings.createdAt,
       requestedTime: bookings.requestedTime,
+      proposedTime: bookings.proposedTime,
+      proposedByEmail: bookings.proposedByEmail,
       slotId: bookings.slotId,
       applicantSlotId: bookings.applicantSlotId,
       slotStart: slots.startTime,

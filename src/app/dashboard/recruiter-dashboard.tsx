@@ -39,6 +39,8 @@ type Booking = {
   status: string;
   createdAt: Date | null;
   requestedTime: Date | null;
+  proposedTime: Date | null;
+  proposedByEmail: string | null;
   slotId: number | null;
   applicantSlotId: number | null;
   slotStart: Date | null;
@@ -438,6 +440,14 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const [acting, setActing] = useState<number | null>(null);
   const [rejectModal, setRejectModal] = useState<{ id: number; name: string; type: "reject" | "cancel" } | null>(null);
   const [rejectNote, setRejectNote] = useState("");
+  const [proposeModal, setProposeModal] = useState<{
+    id: number;
+    name: string;
+    requestedTime: Date | null;
+  } | null>(null);
+  const [proposeTimeInput, setProposeTimeInput] = useState("");
+  const [proposeNote, setProposeNote] = useState("");
+  const [proposeError, setProposeError] = useState<string | null>(null);
   const router = useRouter();
 
   const [sortBy, setSortBy] = useState<"date" | "name">("date");
@@ -477,6 +487,73 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     setRejectNote("");
   }
 
+  function openProposeModal(id: number, name: string, requestedTime: Date | null) {
+    setProposeModal({ id, name, requestedTime });
+    // Pre-fill with the requested time so the recruiter only needs to tweak it.
+    const seed = requestedTime ? new Date(requestedTime) : new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const local = `${seed.getFullYear()}-${pad(seed.getMonth() + 1)}-${pad(seed.getDate())}T${pad(seed.getHours())}:${pad(seed.getMinutes())}`;
+    setProposeTimeInput(local);
+    setProposeNote("");
+    setProposeError(null);
+  }
+
+  async function handleRetractProposal(id: number) {
+    setActing(id);
+    const res = await fetch(`/api/bookings/${id}/propose-time`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setItems(
+        items.map((b) =>
+          b.id === id
+            ? { ...b, status: "pending", proposedTime: null, proposedByEmail: null }
+            : b
+        )
+      );
+      router.refresh();
+    }
+    setActing(null);
+  }
+
+  async function confirmPropose() {
+    if (!proposeModal) return;
+    if (!proposeTimeInput) {
+      setProposeError("Please pick a time.");
+      return;
+    }
+    const proposed = new Date(proposeTimeInput);
+    if (isNaN(proposed.getTime())) {
+      setProposeError("Invalid time.");
+      return;
+    }
+    setActing(proposeModal.id);
+    setProposeError(null);
+    const res = await fetch(`/api/bookings/${proposeModal.id}/propose-time`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        proposedTime: proposed.toISOString(),
+        note: proposeNote.trim() || undefined,
+      }),
+    });
+    if (res.ok) {
+      setItems(
+        items.map((b) =>
+          b.id === proposeModal.id
+            ? { ...b, status: "reschedule_proposed", proposedTime: proposed }
+            : b
+        )
+      );
+      setProposeModal(null);
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setProposeError(data.error ?? "Failed to propose new time.");
+    }
+    setActing(null);
+  }
+
   async function confirmReject() {
     if (!rejectModal) return;
     if (rejectModal.type === "reject") {
@@ -503,6 +580,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const pending = sortedItems.filter((b) => b.status === "pending");
   const accepted = sortedItems.filter((b) => b.status === "accepted");
   const waitlisted = sortedItems.filter((b) => b.status === "waitlisted");
+  const awaitingStudent = sortedItems.filter((b) => b.status === "reschedule_proposed");
   const other = sortedItems.filter((b) => b.status === "rejected" || b.status === "cancelled");
 
   // Design system status border colors
@@ -510,6 +588,7 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     pending: "border-orange-500/60 dark:border-orange-500/50",
     accepted: "border-emerald-500/60 dark:border-emerald-500/50",
     waitlisted: "border-primary/60 dark:border-primary/50",
+    reschedule_proposed: "border-amber-500/60 dark:border-amber-500/50",
     rejected: "border-destructive/60 dark:border-destructive/50",
     cancelled: "border-border",
   };
@@ -518,8 +597,11 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     const isPending = b.status === "pending";
     const isWaitlisted = b.status === "waitlisted";
     const isAccepted = b.status === "accepted";
+    const isProposed = b.status === "reschedule_proposed";
     const isActing = acting === b.id;
-    const timeLabel = b.requestedTime
+    const timeLabel = isProposed && b.proposedTime
+      ? `${format(new Date(b.proposedTime), "MMM d, HH:mm")} (proposed)`
+      : b.requestedTime
       ? format(new Date(b.requestedTime), "MMM d, HH:mm")
       : undefined;
 
@@ -543,6 +625,9 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                   {messages.dashboard.bookings.waitlist}
                 </Button>
               )}
+              <Button size="sm" variant="outline" disabled={isActing} onClick={() => openProposeModal(b.id, b.applicantName, b.requestedTime)} className="h-8">
+                {messages.dashboard.bookings.suggestTime}
+              </Button>
               <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "reject")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
                 {messages.dashboard.bookings.reject}
               </Button>
@@ -552,6 +637,17 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
             <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "cancel")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
               {messages.dashboard.bookings.cancelInterview}
             </Button>
+            ) : null}
+            {isProposed ? (
+              <>
+                <Button size="sm" variant="outline" disabled={isActing} onClick={() => openProposeModal(b.id, b.applicantName, b.proposedTime ?? b.requestedTime)} className="h-8">
+                  {messages.dashboard.bookings.changeProposedTime}
+                </Button>
+                <Button size="sm" variant="outline" disabled={isActing} onClick={() => handleRetractProposal(b.id)} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
+                  {isActing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  {messages.dashboard.bookings.retractProposal}
+                </Button>
+              </>
             ) : null}
           </>
         }
@@ -606,6 +702,19 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
         </div>
       )}
 
+      {/* Awaiting student response on proposed new time */}
+      {awaitingStudent.length > 0 && (
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/15 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+              {awaitingStudent.length}
+            </span>
+            {messages.dashboard.bookings.awaitingStudent}
+          </h3>
+          <div className="space-y-2">{awaitingStudent.map(renderBooking)}</div>
+        </div>
+      )}
+
       {/* Accepted */}
       {accepted.length > 0 && (
         <div>
@@ -651,6 +760,61 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
             <p className="text-muted-foreground">{messages.dashboard.bookings.noApplications}</p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Suggest-time modal */}
+      {proposeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-heading text-lg font-semibold">
+                {messages.dashboard.bookings.proposeTitle}
+              </h3>
+              <button
+                onClick={() => setProposeModal(null)}
+                className="rounded-full p-1 hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {messages.dashboard.bookings.proposeDescription.replace("{name}", proposeModal.name)}
+            </p>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              {messages.dashboard.bookings.proposeTimeLabel}
+            </label>
+            <input
+              type="datetime-local"
+              value={proposeTimeInput}
+              onChange={(e) => setProposeTimeInput(e.target.value)}
+              className="mb-4 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <textarea
+              value={proposeNote}
+              onChange={(e) => setProposeNote(e.target.value)}
+              placeholder={messages.dashboard.bookings.notePlaceholder ?? "Optional: Add a message for the student..."}
+              rows={3}
+              className="mb-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {proposeError && (
+              <p className="mb-3 text-xs text-destructive">{proposeError}</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setProposeModal(null)}>
+                {messages.common?.cancel ?? "Cancel"}
+              </Button>
+              <Button
+                disabled={acting === proposeModal.id}
+                onClick={confirmPropose}
+              >
+                {acting === proposeModal.id ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : null}
+                {messages.dashboard.bookings.proposeConfirm}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Rejection/Cancellation Modal */}

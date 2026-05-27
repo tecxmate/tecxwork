@@ -111,6 +111,15 @@ export const cancelBookingSchema = z.object({
   note: z.string().trim().max(2000).optional(),
 });
 
+export const proposeTimeSchema = z.object({
+  proposedTime: z.string().min(1, "Proposed time is required"),
+  note: z.string().trim().max(2000).optional(),
+});
+
+export const respondProposalSchema = z.object({
+  action: z.enum(["accept", "decline"]),
+});
+
 /* ---------- helper ---------- */
 
 /**

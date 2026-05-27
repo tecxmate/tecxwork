@@ -507,3 +507,11 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Niko asked for client-shareable category pages such as `/jobs/tech` and `/jobs/business`.
 - Current `/jobs/[id]` detail route makes exact `/jobs/<category>` a route-dispatch choice; implemented `/jobs/cat/<slug>` as one dynamic category page that reuses the shared jobs listing.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
+
+## [2026-05-27] feature | Recruiter reschedule proposal + slot pending count
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Pending applications were piling up because students booked times recruiters couldn't honor; added recruiter "Suggest time" action so a pending booking transitions to `reschedule_proposed` with a `proposed_time` field. Student receives email + in-app notification and can Accept (claims a slot at the proposed time and confirms) or Decline (cancels).
+- Added pending-count badge per time on the student slot picker (counts pending/waitlisted/reschedule_proposed for that recruiter+time) so students can self-route to less-popular slots.
+- Migration `0005_reschedule_proposed.sql` adds `reschedule_proposed` to `booking_status`, `booking_reschedule_proposed` to `notification_type`, and `proposed_time`/`proposed_by_email` columns on `bookings`.
+- Recruiter can also Change time (re-propose) or Retract (back to pending) on an awaiting-student booking without waiting for student response.
+- Updated `docs/wiki/topics/recruitment-workflows.md`.

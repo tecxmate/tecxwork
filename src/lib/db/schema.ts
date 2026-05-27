@@ -28,6 +28,7 @@ export const bookingStatusEnum = pgEnum("booking_status", [
   "rejected",
   "waitlisted",
   "cancelled",
+  "reschedule_proposed",
 ]);
 export const bookingDirectionEnum = pgEnum("booking_direction", [
   "applicant_books_recruiter",
@@ -44,6 +45,7 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "booking_rejected",
   "booking_waitlisted",
   "booking_cancelled",
+  "booking_reschedule_proposed",
   "interview_reminder",
   "system",
 ]);
@@ -236,6 +238,10 @@ export const bookings = pgTable("bookings", {
   position: text("position"),
   /** The time the student requested — slot assigned on acceptance */
   requestedTime: timestamp("requested_time", { withTimezone: true }),
+  /** Recruiter-proposed alternate time; set when status = reschedule_proposed */
+  proposedTime: timestamp("proposed_time", { withTimezone: true }),
+  /** Email of the recruiter who proposed the alternate time (audit trail) */
+  proposedByEmail: text("proposed_by_email"),
   applicantName: text("applicant_name").notNull(),
   applicantEmail: text("applicant_email").notNull(),
   cvLink: text("cv_link").notNull(),

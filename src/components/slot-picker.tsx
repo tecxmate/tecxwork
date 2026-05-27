@@ -14,6 +14,7 @@ type Slot = {
   endTime: string;
   total: number;
   available: number;
+  pending: number;
 };
 
 export function SlotPicker({
@@ -173,6 +174,21 @@ export function SlotPicker({
                     )}
                   >
                     {slot.available}
+                  </span>
+                )}
+                {/* Show how many others have applied at this time so students
+                    can self-route away from popular slots. */}
+                {slot.pending > 0 && !isFull && (
+                  <span
+                    className={cn(
+                      "absolute -bottom-1 -right-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-[9px] font-semibold",
+                      isSelected
+                        ? "bg-primary-foreground/90 text-primary"
+                        : "bg-amber-500 text-white"
+                    )}
+                    title={`${slot.pending} other ${slot.pending === 1 ? "applicant is" : "applicants are"} waiting for this time`}
+                  >
+                    {slot.pending} waiting
                   </span>
                 )}
               </button>

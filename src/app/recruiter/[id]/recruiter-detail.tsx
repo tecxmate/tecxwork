@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   ArrowRight,
   LogIn,
+  Loader2,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -193,8 +194,16 @@ export function RecruiterDetail({
   const [infoExpanded, setInfoExpanded] = useState(true);
   const [jobs] = useState<JobOpening[]>(initialJobs);
   const [appliedPositions, setAppliedPositions] = useState<
-    { position: string; requestedTime: string; status: string }[]
+    {
+      id: number;
+      position: string;
+      requestedTime: string;
+      proposedTime: string | null;
+      status: string;
+    }[]
   >([]);
+  const [respondingId, setRespondingId] = useState<number | null>(null);
+  const [respondError, setRespondError] = useState<string | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(
     initialJobs.length > 0 ? initialJobs[0].id : null
   );
@@ -240,12 +249,24 @@ export function RecruiterDetail({
       .then((r) => r.json())
       .then((d) => {
         const bookingsList = (d.bookings ?? [])
-          .filter((b: { status: string }) => b.status === "pending" || b.status === "accepted" || b.status === "waitlisted")
-          .map((b: { position: string; requestedTime: string; status: string }) => ({
-            position: b.position,
-            requestedTime: b.requestedTime,
-            status: b.status,
-          }));
+          .filter((b: { status: string }) =>
+            ["pending", "accepted", "waitlisted", "reschedule_proposed"].includes(b.status)
+          )
+          .map(
+            (b: {
+              id: number;
+              position: string;
+              requestedTime: string;
+              proposedTime: string | null;
+              status: string;
+            }) => ({
+              id: b.id,
+              position: b.position,
+              requestedTime: b.requestedTime,
+              proposedTime: b.proposedTime,
+              status: b.status,
+            })
+          );
         setAppliedPositions(bookingsList);
       })
       .catch(() => {});
@@ -332,17 +353,46 @@ export function RecruiterDetail({
   };
 
   const handleDone = () => {
-    // After successful booking, refresh applied positions
+    // After successful booking, refresh applied positions.
+    // The new booking row's id isn't returned here; refetch on next mount picks it up.
     if (selectedPosition && selectedSlot) {
       setAppliedPositions([
         ...appliedPositions,
-        { position: selectedPosition, requestedTime: selectedSlot.startTime, status: "pending" },
+        {
+          id: 0,
+          position: selectedPosition,
+          requestedTime: selectedSlot.startTime,
+          proposedTime: null,
+          status: "pending",
+        },
       ]);
     }
     setSelectedSlot(null);
     setSelectedPosition(null);
     setStep("positions");
   };
+
+  async function respondToProposal(bookingId: number, action: "accept" | "decline") {
+    setRespondingId(bookingId);
+    setRespondError(null);
+    const res = await fetch(`/api/bookings/${bookingId}/respond-proposal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    if (res.ok) {
+      const newStatus = action === "accept" ? "accepted" : "cancelled";
+      setAppliedPositions((prev) =>
+        prev
+          .map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+          .filter((b) => b.status !== "cancelled")
+      );
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setRespondError(data.error ?? "Could not respond to proposal.");
+    }
+    setRespondingId(null);
+  }
 
   const getBookingForPosition = (positionTitle: string) =>
     appliedPositions.find((b) => b.position === positionTitle);
@@ -626,15 +676,18 @@ export function RecruiterDetail({
                       jobs.map((job) => {
                         const alreadyApplied = isPositionApplied(job.title);
                         const booking = getBookingForPosition(job.title);
+                        const isProposed = booking?.status === "reschedule_proposed";
                         return (
                           <RecruiterJobPostingCard
                             key={job.id}
                             job={job}
                             locale={postingLocale}
                             className={cn(
-                              alreadyApplied
-                                ? "border-green-200 bg-green-50/50 dark:border-green-900/30 dark:bg-green-900/10"
-                                : ""
+                              isProposed
+                                ? "border-amber-300 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-900/10"
+                                : alreadyApplied
+                                  ? "border-green-200 bg-green-50/50 dark:border-green-900/30 dark:bg-green-900/10"
+                                  : ""
                             )}
                             labels={{
                               seniority: messages.recruiterDetail.card.seniority,
@@ -652,7 +705,16 @@ export function RecruiterDetail({
                               noJd: messages.recruiterDetail.noJobDescription,
                             }}
                             status={
-                              alreadyApplied && booking ? (
+                              isProposed && booking?.proposedTime ? (
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                    {messages.recruiterDetail.newTimeProposed}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {format(new Date(booking.proposedTime), "MMM d, HH:mm")}
+                                  </span>
+                                </div>
+                              ) : alreadyApplied && booking ? (
                                 <div className="flex flex-col gap-0.5">
                                   <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                     <CheckCircle2 className="h-3 w-3" />
@@ -667,7 +729,31 @@ export function RecruiterDetail({
                               ) : undefined
                             }
                             action={
-                              !alreadyApplied ? (
+                              isProposed && booking ? (
+                                <div className="flex shrink-0 flex-col gap-1">
+                                  <Button
+                                    size="sm"
+                                    disabled={respondingId === booking.id}
+                                    onClick={() => respondToProposal(booking.id, "accept")}
+                                    className="h-8 bg-emerald-600 text-white hover:bg-emerald-700"
+                                  >
+                                    {respondingId === booking.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      messages.recruiterDetail.acceptProposal
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={respondingId === booking.id}
+                                    onClick={() => respondToProposal(booking.id, "decline")}
+                                    className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10"
+                                  >
+                                    {messages.recruiterDetail.declineProposal}
+                                  </Button>
+                                </div>
+                              ) : !alreadyApplied ? (
                                 <Button
                                   size="sm"
                                   onClick={() => handleSelectPosition(job.title)}
@@ -711,7 +797,50 @@ export function RecruiterDetail({
                                 {recruiter.company}
                               </p>
                             </div>
-                            {isPositionApplied(selectedJob.title) ? (
+                            {(() => {
+                              const selBooking = getBookingForPosition(selectedJob.title);
+                              const isSelProposed = selBooking?.status === "reschedule_proposed";
+                              if (isSelProposed && selBooking?.proposedTime) {
+                                return (
+                                  <div className="flex flex-col items-end gap-1.5">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                      {messages.recruiterDetail.newTimeProposed}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {format(new Date(selBooking.proposedTime), "MMM d, HH:mm")}
+                                    </span>
+                                    <div className="flex gap-1.5">
+                                      <Button
+                                        size="sm"
+                                        disabled={respondingId === selBooking.id}
+                                        onClick={() => respondToProposal(selBooking.id, "accept")}
+                                        className="h-8 bg-emerald-600 text-white hover:bg-emerald-700"
+                                      >
+                                        {respondingId === selBooking.id ? (
+                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                          messages.recruiterDetail.acceptProposal
+                                        )}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        disabled={respondingId === selBooking.id}
+                                        onClick={() => respondToProposal(selBooking.id, "decline")}
+                                        className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10"
+                                      >
+                                        {messages.recruiterDetail.declineProposal}
+                                      </Button>
+                                    </div>
+                                    {respondError && (
+                                      <p className="text-xs text-destructive">{respondError}</p>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                            {isPositionApplied(selectedJob.title) && getBookingForPosition(selectedJob.title)?.status !== "reschedule_proposed" ? (
                               <div className="flex flex-col items-end gap-0.5">
                                 <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                   <CheckCircle2 className="h-3.5 w-3.5" />
@@ -728,7 +857,7 @@ export function RecruiterDetail({
                                   </span>
                                 )}
                               </div>
-                            ) : (
+                            ) : !isPositionApplied(selectedJob.title) ? (
                               <Button
                                 onClick={() => handleSelectPosition(selectedJob.title)}
                               >
@@ -744,7 +873,7 @@ export function RecruiterDetail({
                                   </>
                                 )}
                               </Button>
-                            )}
+                            ) : null}
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-4">

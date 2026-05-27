@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, slots } from "@/lib/db";
-import { eq, and, gte, lt, sql } from "drizzle-orm";
+import { db, slots, bookings } from "@/lib/db";
+import { eq, and, gte, lt, sql, inArray } from "drizzle-orm";
 
 /**
  * GET /api/slots?recruiterId=X&date=YYYY-MM-DD
@@ -24,6 +24,8 @@ export async function GET(req: NextRequest) {
   const dayStart = new Date(`${date}T00:00:00+08:00`);
   const dayEnd = new Date(`${date}T23:59:59+08:00`);
 
+  const recruiterIdNum = parseInt(recruiterId);
+
   // Group slots by start_time, count total and available
   const result = await db
     .select({
@@ -35,7 +37,7 @@ export async function GET(req: NextRequest) {
     .from(slots)
     .where(
       and(
-        eq(slots.recruiterId, parseInt(recruiterId)),
+        eq(slots.recruiterId, recruiterIdNum),
         gte(slots.startTime, dayStart),
         lt(slots.startTime, dayEnd)
       )
@@ -43,5 +45,36 @@ export async function GET(req: NextRequest) {
     .groupBy(slots.startTime, slots.endTime)
     .orderBy(slots.startTime);
 
-  return NextResponse.json({ slots: result });
+  // Pending applications for this recruiter and day, grouped by requested_time.
+  // Mode A bookings don't lock a slot until accept, so a student picking a busy
+  // time can be useful to know about. We expose this so students can self-route.
+  const pending = await db
+    .select({
+      startTime: bookings.requestedTime,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.recruiterId, recruiterIdNum),
+        inArray(bookings.status, ["pending", "waitlisted", "reschedule_proposed"]),
+        gte(bookings.requestedTime, dayStart),
+        lt(bookings.requestedTime, dayEnd)
+      )
+    )
+    .groupBy(bookings.requestedTime);
+
+  const pendingByTime = new Map<string, number>();
+  for (const row of pending) {
+    if (row.startTime) {
+      pendingByTime.set(new Date(row.startTime).toISOString(), row.count);
+    }
+  }
+
+  const enriched = result.map((slot) => ({
+    ...slot,
+    pending: pendingByTime.get(new Date(slot.startTime).toISOString()) ?? 0,
+  }));
+
+  return NextResponse.json({ slots: enriched });
 }

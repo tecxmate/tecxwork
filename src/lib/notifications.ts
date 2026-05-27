@@ -7,6 +7,7 @@ type NotificationType =
   | "booking_rejected"
   | "booking_waitlisted"
   | "booking_cancelled"
+  | "booking_reschedule_proposed"
   | "interview_reminder"
   | "system";
 
@@ -46,7 +47,7 @@ export async function createNotification(params: CreateNotificationParams) {
 export async function createBookingNotification(params: {
   recipientEmail: string;
   recipientRole: RecipientRole;
-  status: "pending" | "accepted" | "rejected" | "waitlisted" | "cancelled";
+  status: "pending" | "accepted" | "rejected" | "waitlisted" | "cancelled" | "reschedule_proposed";
   companyName?: string;
   applicantName?: string;
   position?: string;
@@ -61,6 +62,7 @@ export async function createBookingNotification(params: {
     rejected: "booking_rejected",
     waitlisted: "booking_waitlisted",
     cancelled: "booking_cancelled",
+    reschedule_proposed: "booking_reschedule_proposed",
   };
 
   let title: string;
@@ -98,6 +100,10 @@ export async function createBookingNotification(params: {
       case "cancelled":
         title = "Interview Cancelled";
         message = `Your interview with ${companyName} for ${position} has been cancelled.${note ? ` Note: ${note}` : ""}`;
+        break;
+      case "reschedule_proposed":
+        title = "New Time Proposed";
+        message = `${companyName} suggested a new interview time${timeStr ? `: ${timeStr}` : ""}. Accept or decline in the app.${note ? ` Note: ${note}` : ""}`;
         break;
       default:
         title = "Booking Update";

@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       position: bookings.position,
       status: bookings.status,
       requestedTime: bookings.requestedTime,
+      proposedTime: bookings.proposedTime,
     })
     .from(bookings)
     .where(
