@@ -538,3 +538,8 @@ attributed_to: [niko]   belongs_to: [public-homepage, design-system]
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - Installed `@vercel/analytics` and mounted `<Analytics />` in `src/app/layout.tsx` so visitor/page-view counts are captured during the pre-event window.
 - Cookieless by default; no PIPA consent banner required. Free hobby tier covers ~2.5k events/month — bumps to Pro tier limits automatically if the project is on Pro.
+
+## [2026-05-28] update | OG image is now the cursive wordmark
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- Replaced the V-GEN TRIDENT layout in `src/app/opengraph-image.tsx` with a minimal "tecxwork" wordmark: white background, Instrument Serif italic, `#8C52FF`. Font binary fetched from Google Fonts at request time and passed to `ImageResponse` via `fonts:` (Satori needs the binary, not a CSS family).
+- Reasoning: niko asked the link preview to mirror the in-app brand mark rather than carry event-specific copy. Decoupling from `EVENT_CONFIG` also means OG no longer needs touching when the event changes.
