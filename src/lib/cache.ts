@@ -26,7 +26,7 @@ export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
  * Cached recruiters list - 5 minute TTL
  */
 export async function getCachedRecruiters() {
-  const key = "recruiters:list:v3";
+  const key = "recruiters:list:v4";
   const cached = await cache.get(key);
 
   if (cached) {
@@ -48,8 +48,7 @@ async function fetchRecruiters() {
       logoUrl: recruiters.logoUrl,
     })
     .from(recruiters)
-    .innerJoin(users, eq(recruiters.userId, users.id))
-    .orderBy(recruiters.company);
+    .innerJoin(users, eq(recruiters.userId, users.id));
 
   const approvedJobs = await db
     .select({
@@ -75,12 +74,19 @@ async function fetchRecruiters() {
     jobsByRecruiter.set(job.recruiterId, current);
   }
 
-  return recruiterList.map((recruiter) => {
-    const jobs = jobsByRecruiter.get(recruiter.id);
-    return {
-      ...recruiter,
-      positions: jobs?.titles ?? [],
-      jdAvailable: jobs?.hasJdLink ?? false,
-    };
-  });
+  return recruiterList
+    .map((recruiter) => {
+      const jobs = jobsByRecruiter.get(recruiter.id);
+      return {
+        ...recruiter,
+        positions: jobs?.titles ?? [],
+        jdAvailable: jobs?.hasJdLink ?? false,
+      };
+    })
+    .sort((a, b) => {
+      if (b.positions.length !== a.positions.length) {
+        return b.positions.length - a.positions.length;
+      }
+      return a.company.localeCompare(b.company);
+    });
 }
