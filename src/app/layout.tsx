@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { BrandSplash } from "@/components/brand-splash";
 import { MobileBottomNavClient } from "@/components/mobile-bottom-nav-client";
@@ -118,6 +119,7 @@ export default async function RootLayout({
             </Suspense>
           </StudentLocaleProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
