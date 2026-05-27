@@ -9,9 +9,9 @@ import {
   Calendar,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/countdown";
 import { InstallPrompt } from "@/components/install-prompt";
+import { RecruiterCard } from "@/components/recruiter-card";
 import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
@@ -43,20 +43,29 @@ async function getPublicRecruiters() {
     .select({
       recruiterId: jobOpenings.recruiterId,
       title: jobOpenings.title,
+      jdLink: jobOpenings.jdLink,
     })
     .from(jobOpenings)
     .where(eq(jobOpenings.moderationStatus, "approved"));
 
-  const jobsByRecruiter = new Map<number, string[]>();
+  const jobsByRecruiter = new Map<
+    number,
+    { titles: string[]; hasJdLink: boolean }
+  >();
   for (const job of approvedJobs) {
-    const titles = jobsByRecruiter.get(job.recruiterId) ?? [];
-    titles.push(job.title);
-    jobsByRecruiter.set(job.recruiterId, titles);
+    const current = jobsByRecruiter.get(job.recruiterId) ?? {
+      titles: [],
+      hasJdLink: false,
+    };
+    current.titles.push(job.title);
+    current.hasJdLink = current.hasJdLink || Boolean(job.jdLink);
+    jobsByRecruiter.set(job.recruiterId, current);
   }
 
   return recruiterList.map((recruiter) => ({
     ...recruiter,
-    positions: jobsByRecruiter.get(recruiter.id) ?? [],
+    positions: jobsByRecruiter.get(recruiter.id)?.titles ?? [],
+    jdAvailable: jobsByRecruiter.get(recruiter.id)?.hasJdLink ?? false,
   }));
 }
 
@@ -256,65 +265,9 @@ export default async function LandingPage() {
             </div>
 
             {publicRecruiters.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {publicRecruiters.map((recruiter) => (
-                  <Link
-                    key={recruiter.id}
-                    href={`/recruiter/${recruiter.id}`}
-                    className="group block min-w-0"
-                  >
-                    <Card className="flex h-full flex-col gap-3 p-4 transition-all duration-200 ease-out group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] group-hover:-translate-y-0.5 sm:p-5">
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary sm:h-12 sm:w-12">
-                          {recruiter.logoUrl ? (
-                            <img
-                              src={recruiter.logoUrl}
-                              alt={`${recruiter.company} logo`}
-                              className="h-full w-full object-contain"
-                            />
-                          ) : (
-                            <Building2 className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
-                          )}
-                        </div>
-                        <Badge variant="secondary" className="min-w-0 max-w-[calc(100%-3.25rem)] !shrink text-xs">
-                          <span className="block truncate">{recruiter.industry}</span>
-                        </Badge>
-                      </div>
-                      <div>
-                        <h3 className="font-heading text-base font-semibold group-hover:text-primary sm:text-lg">
-                          {recruiter.company}
-                        </h3>
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                          {recruiter.description || messages.landing.joinMoreOpportunities}
-                        </p>
-                      </div>
-                      {recruiter.positions.length > 0 && (
-                        <div className="flex min-w-0 max-w-full flex-wrap gap-1">
-                          {recruiter.positions.slice(0, 2).map((pos) => (
-                            <Badge
-                              key={pos}
-                              variant="outline"
-                              className="min-w-0 max-w-full !shrink text-[10px] font-normal sm:text-xs"
-                            >
-                              <span className="block truncate">{pos}</span>
-                            </Badge>
-                          ))}
-                          {recruiter.positions.length > 2 && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] font-normal sm:text-xs"
-                            >
-                              +{recruiter.positions.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                      <div className="mt-auto flex items-center gap-1 text-xs font-medium text-primary">
-                        {messages.landing.viewPositions}
-                        <ArrowRight className="h-3 w-3" />
-                      </div>
-                    </Card>
-                  </Link>
+                  <RecruiterCard key={recruiter.id} recruiter={recruiter} />
                 ))}
               </div>
             ) : (

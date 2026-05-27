@@ -508,6 +508,12 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Current `/jobs/[id]` detail route makes exact `/jobs/<category>` a route-dispatch choice; implemented `/jobs/cat/<slug>` as one dynamic category page that reuses the shared jobs listing.
 - Updated `docs/wiki/topics/recruitment-workflows.md`.
 
+## [2026-05-27] fix | Homepage company cards
+attributed_to: [niko]   belongs_to: [public-homepage]
+- Niko noted that homepage company cards still used the old design compared with the company directory tab.
+- Updated the homepage company section to reuse the shared `RecruiterCard` design and data shape.
+- Updated `docs/wiki/topics/public-homepage.md`.
+
 ## [2026-05-27] feature | Recruiter reschedule proposal + slot pending count
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Pending applications were piling up because students booked times recruiters couldn't honor; added recruiter "Suggest time" action so a pending booking transitions to `reschedule_proposed` with a `proposed_time` field. Student receives email + in-app notification and can Accept (claims a slot at the proposed time and confirms) or Decline (cancels).
