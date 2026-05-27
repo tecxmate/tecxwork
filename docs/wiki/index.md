@@ -45,6 +45,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Admin panel](topics/admin-panel.md) — area: event-config + uploads
 - [Recruiter dashboard](topics/recruiter-dashboard.md) — area: company profile + slots
 - [Public homepage](topics/public-homepage.md) — area: landing page + hero
+- [Link previews](topics/link-previews.md) — OG image + per-surface scraper quirks; Messenger needs cacheable headers
 - [Hero carousel](topics/hero-carousel.md) — homepage hero section: localization, aspect ratio, touch behavior
 - [Photo uploads](topics/photo-uploads.md) — `ImageUpload` / `MultiImageUpload`, per-type guidelines, `homepageImages` schema
 - [Event time configuration](topics/event-time-config.md) — admin time form, slot regeneration, Asia/Taipei roundtrip
