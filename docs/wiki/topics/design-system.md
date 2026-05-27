@@ -34,3 +34,6 @@ related: [tecxmate]
 - **Style**: Always lowercase `tecxmate`.
 - **Font**: Instrument Serif Italic, Thin weight.
 - **Color**: Primary purple on white, or white on purple/black.
+
+## Component Rules
+- **Client-hook components must declare `"use client"`.** Any component that calls `useStudentI18n`, `useRecruiterI18n`, or any other `useContext`-based hook needs `"use client"` at the top of the file — even if the component looks purely presentational. `next build` will not catch the omission; failure surfaces only at runtime as a streamed Server Component error (e.g. a `$RX("B:1", "<digest>")` boundary marker in the rendered HTML and "This page couldn't load" in the browser). See 2026-05-27 log entry for the `recruiter-card.tsx` regression.
