@@ -54,6 +54,9 @@ export default async function OGImage() {
           weight: 400,
         },
       ],
+      headers: {
+        "cache-control": "public, max-age=31536000, immutable",
+      },
     }
   );
 }
