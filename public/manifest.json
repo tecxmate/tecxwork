@@ -1,7 +1,8 @@
 {
-  "name": "tecxwork",
+  "name": "tecxwork — Vietnamese Jobs in Taiwan",
   "short_name": "tecxwork",
-  "description": "VSATW JOB FAIR 2026: V-GEN TRIDENT — Book interviews, browse companies",
+  "description": "tecxwork: Vietnamese engineers, workers & students hiring in Taiwan. 越南人才台灣工作. Việc làm Đài Loan cho người Việt. Browse companies, book interviews.",
+  "lang": "en",
   "id": "/",
   "start_url": "/",
   "scope": "/",

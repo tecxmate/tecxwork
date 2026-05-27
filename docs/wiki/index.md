@@ -55,6 +55,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Tecxmate Design System](topics/design-system.md) — visual language, typography, components, brand colors
 - [Recruitment Workflows & Booking Engine](topics/recruitment-workflows.md) — admin, recruiter, and student flows; booking modes
 - [Data Privacy & CV Sharing](topics/data-privacy.md) — Google Drive targeted sharing, PIPA consent, cross-border transfer
+- [SEO & AI-search visibility](topics/seo.md) — robots/sitemap/JSON-LD/hreflang wiring + off-page brand-signal playbook to kill "did you mean texwork"
 
 ## Log
 - [log.md](log.md) — append-only chronological record
