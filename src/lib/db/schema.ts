@@ -247,6 +247,14 @@ export const bookings = pgTable("bookings", {
   cvLink: text("cv_link").notNull(),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
   status: bookingStatusEnum("status").notNull().default("pending"),
+  /** Multi-round interviews — round 1 is the initial application. */
+  roundNumber: integer("round_number").notNull().default(1),
+  /** Free-text stage name for this round, e.g. "Phone screen", "Technical". */
+  roundLabel: text("round_label"),
+  /** Links a round to the prior round in the same candidate pipeline. */
+  parentBookingId: integer("parent_booking_id"),
+  /** Recruiter's verdict for this round: advanced | hired | rejected | no_show. */
+  outcome: text("outcome"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

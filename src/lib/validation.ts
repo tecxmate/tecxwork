@@ -122,6 +122,16 @@ export const respondProposalSchema = z.object({
   action: z.enum(["accept", "decline"]),
 });
 
+export const nextRoundSchema = z.object({
+  proposedTime: z.string().min(1, "Proposed time is required"),
+  label: z.string().trim().max(80).optional(),
+  note: z.string().trim().max(2000).optional(),
+});
+
+export const setOutcomeSchema = z.object({
+  outcome: z.enum(["advanced", "hired", "rejected", "no_show"]).nullable(),
+});
+
 /* ---------- helper ---------- */
 
 /**

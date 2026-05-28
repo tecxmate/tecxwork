@@ -18,6 +18,7 @@ import {
   X,
   LayoutList,
   LayoutGrid,
+  Plus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,10 @@ type Booking = {
   requestedTime: Date | null;
   proposedTime: Date | null;
   proposedByEmail: string | null;
+  roundNumber: number;
+  roundLabel: string | null;
+  parentBookingId: number | null;
+  outcome: string | null;
   slotId: number | null;
   applicantSlotId: number | null;
   slotStart: Date | null;
@@ -256,7 +261,7 @@ function BookingSummaryCard({
           {cvLabel}
         </a>
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-3">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
             {booking.applicantId ? (
               <Link
                 href={`/applicant/${booking.applicantId}`}
@@ -268,6 +273,32 @@ function BookingSummaryCard({
               <p className="truncate text-sm font-semibold">
                 {booking.applicantName}
               </p>
+            )}
+            {(booking.roundNumber > 1 || booking.roundLabel) && (
+              <span className="inline-flex shrink-0 items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                Round {booking.roundNumber}
+                {booking.roundLabel ? ` · ${booking.roundLabel}` : ""}
+              </span>
+            )}
+            {booking.outcome && (
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  booking.outcome === "hired"
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                    : booking.outcome === "rejected"
+                      ? "bg-destructive/10 text-destructive"
+                      : booking.outcome === "no_show"
+                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                        : "bg-muted text-muted-foreground"
+                )}
+              >
+                {booking.outcome === "advanced"
+                  ? "Advanced →"
+                  : booking.outcome === "no_show"
+                    ? "No-show"
+                    : booking.outcome.charAt(0).toUpperCase() + booking.outcome.slice(1)}
+              </span>
             )}
           </div>
           <div className="grid gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-[minmax(9rem,0.9fr)_minmax(14rem,1.2fr)_minmax(9rem,0.8fr)]">
@@ -450,6 +481,14 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
   const [proposeError, setProposeError] = useState<string | null>(null);
   const [proposeBusy, setProposeBusy] = useState<{ start: Date; end: Date }[]>([]);
   const [proposeForce, setProposeForce] = useState(false);
+  const [nextRoundModal, setNextRoundModal] = useState<{
+    id: number;
+    name: string;
+    nextRound: number;
+  } | null>(null);
+  const [nextRoundTime, setNextRoundTime] = useState("");
+  const [nextRoundLabel, setNextRoundLabel] = useState("");
+  const [nextRoundError, setNextRoundError] = useState<string | null>(null);
   const router = useRouter();
 
   const [sortBy, setSortBy] = useState<"date" | "name">("date");
@@ -578,6 +617,62 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
     setActing(null);
   }
 
+  function openNextRoundModal(b: Booking) {
+    setNextRoundModal({
+      id: b.id,
+      name: b.applicantName,
+      nextRound: b.roundNumber + 1,
+    });
+    setNextRoundTime("");
+    setNextRoundLabel("");
+    setNextRoundError(null);
+  }
+
+  async function confirmNextRound() {
+    if (!nextRoundModal) return;
+    if (!nextRoundTime) {
+      setNextRoundError("Please pick a time.");
+      return;
+    }
+    const proposed = new Date(nextRoundTime);
+    if (isNaN(proposed.getTime())) {
+      setNextRoundError("Invalid time.");
+      return;
+    }
+    setActing(nextRoundModal.id);
+    setNextRoundError(null);
+    const res = await fetch(`/api/bookings/${nextRoundModal.id}/next-round`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        proposedTime: proposed.toISOString(),
+        label: nextRoundLabel.trim() || undefined,
+      }),
+    });
+    if (res.ok) {
+      setNextRoundModal(null);
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setNextRoundError(data.error ?? "Failed to add next round.");
+    }
+    setActing(null);
+  }
+
+  async function handleSetOutcome(id: number, outcome: string | null) {
+    setActing(id);
+    const res = await fetch(`/api/bookings/${id}/outcome`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ outcome }),
+    });
+    if (res.ok) {
+      setItems(items.map((b) => (b.id === id ? { ...b, outcome } : b)));
+      router.refresh();
+    }
+    setActing(null);
+  }
+
   async function confirmReject() {
     if (!rejectModal) return;
     if (rejectModal.type === "reject") {
@@ -658,9 +753,24 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
             </>
             ) : null}
             {isAccepted ? (
-            <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "cancel")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
-              {messages.dashboard.bookings.cancelInterview}
-            </Button>
+            <>
+              <Button size="sm" disabled={isActing} onClick={() => openNextRoundModal(b)} className="h-8">
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                Next round
+              </Button>
+              {b.outcome !== "hired" ? (
+                <Button size="sm" variant="outline" disabled={isActing} onClick={() => handleSetOutcome(b.id, "hired")} className="h-8 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400">
+                  Mark hired
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" disabled={isActing} onClick={() => handleSetOutcome(b.id, null)} className="h-8">
+                  Clear outcome
+                </Button>
+              )}
+              <Button size="sm" variant="outline" disabled={isActing} onClick={() => openRejectModal(b.id, b.applicantName, "cancel")} className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10">
+                {messages.dashboard.bookings.cancelInterview}
+              </Button>
+            </>
             ) : null}
             {isProposed ? (
               <>
@@ -892,6 +1002,64 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
                 {proposeForce
                   ? "Suggest anyway"
                   : messages.dashboard.bookings.proposeConfirm}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Next-round Modal */}
+      {nextRoundModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-heading text-lg font-semibold">
+                Add round {nextRoundModal.nextRound}
+              </h3>
+              <button
+                onClick={() => setNextRoundModal(null)}
+                className="rounded-full p-1 hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Propose round {nextRoundModal.nextRound} for {nextRoundModal.name}. They
+              accept or decline the new time, just like a reschedule.
+            </p>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Round name (optional)
+            </label>
+            <input
+              value={nextRoundLabel}
+              onChange={(e) => setNextRoundLabel(e.target.value)}
+              placeholder="e.g. Technical interview"
+              className="mb-4 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Proposed time
+            </label>
+            <input
+              type="datetime-local"
+              value={nextRoundTime}
+              onChange={(e) => setNextRoundTime(e.target.value)}
+              className="mb-4 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {nextRoundError && (
+              <p className="mb-3 text-xs text-destructive">{nextRoundError}</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setNextRoundModal(null)}>
+                {messages.common?.cancel ?? "Cancel"}
+              </Button>
+              <Button
+                disabled={acting === nextRoundModal.id}
+                onClick={confirmNextRound}
+              >
+                {acting === nextRoundModal.id ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : null}
+                Propose round
               </Button>
             </div>
           </div>
