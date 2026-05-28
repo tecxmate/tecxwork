@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, type ComponentType } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -204,6 +204,25 @@ type FeedbackReportRow = {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+type SettingsPanelId =
+  | "general"
+  | "branding"
+  | "feedback"
+  | "timeframe"
+  | "tools";
+
+const SETTINGS_PANELS: {
+  id: SettingsPanelId;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+}[] = [
+  { id: "general", label: "General", icon: Settings },
+  { id: "branding", label: "Event Branding", icon: Calendar },
+  { id: "feedback", label: "Feedback & bugs", icon: Mail },
+  { id: "timeframe", label: "Interview Time Frame", icon: Clock },
+  { id: "tools", label: "Tools & Media", icon: BookOpen },
+];
+
 // Round-trip a UTC ISO string through a <input type="datetime-local"> in
 // Asia/Taipei. The input is timezone-naive, so we explicitly format and
 // parse against UTC+8 instead of the browser's local zone.
@@ -322,9 +341,10 @@ export function AdminDashboard({
   );
   const [hpSaving, setHpSaving] = useState(false);
   const [hpSaved, setHpSaved] = useState(false);
-  const [timeFrameOpen, setTimeFrameOpen] = useState(false);
-  const [toolsOpen, setToolsOpen] = useState(false);
-  const [brandingOpen, setBrandingOpen] = useState(false);
+  const [timeFrameOpen, setTimeFrameOpen] = useState(true);
+  const [toolsOpen, setToolsOpen] = useState(true);
+  const [brandingOpen, setBrandingOpen] = useState(true);
+  const [activePanel, setActivePanel] = useState<SettingsPanelId>("general");
   const [branding, setBrandingState] = useState(initialBranding);
   const [brandingSaving, setBrandingSaving] = useState(false);
   const [brandingSaved, setBrandingSaved] = useState(false);
@@ -905,8 +925,48 @@ export function AdminDashboard({
                 </div>
               </div>
 
-              {/* Settings: 2-Column Layout */}
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="lg:grid lg:grid-cols-[210px_minmax(0,1fr)] lg:items-start lg:gap-6">
+                {/* Left: settings section nav */}
+                <nav className="-mx-1 mb-4 flex gap-1 overflow-x-auto px-1 lg:sticky lg:top-20 lg:mx-0 lg:mb-0 lg:flex-col lg:overflow-visible lg:px-0">
+                  {SETTINGS_PANELS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setActivePanel(p.id);
+                        if (p.id === "feedback" && !feedbackLoaded) {
+                          void (async () => {
+                            try {
+                              const res = await fetch("/api/admin/feedback");
+                              if (!res.ok) throw new Error("Failed to load");
+                              const data = await res.json();
+                              setFeedbackReports(data.reports ?? []);
+                              setFeedbackLoaded(true);
+                            } catch (err) {
+                              setFeedbackError(
+                                err instanceof Error ? err.message : "Failed"
+                              );
+                            }
+                          })();
+                        }
+                      }}
+                      className={cn(
+                        "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                        activePanel === p.id
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <p.icon className="h-4 w-4 shrink-0" />
+                      <span className="whitespace-nowrap">{p.label}</span>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* Right: active panel content */}
+                <div className="min-w-0 space-y-4">
+                  {activePanel === "general" && (
+              <div className="grid gap-4">
                 {/* Left Column: Platform Settings */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -1060,8 +1120,9 @@ export function AdminDashboard({
                 </Card>
 
               </div>
+                  )}
 
-              {/* Event Branding (admin-editable for next year's fair) */}
+                  {activePanel === "branding" && (
               <div className="rounded-lg border bg-card">
                 <button
                   type="button"
@@ -1210,8 +1271,9 @@ export function AdminDashboard({
                   </div>
                 )}
               </div>
+                  )}
 
-              {/* Feedback inbox */}
+                  {activePanel === "feedback" && (
               <div className="rounded-lg border bg-card">
                 <button
                   type="button"
@@ -1278,7 +1340,9 @@ export function AdminDashboard({
                   </div>
                 )}
               </div>
+                  )}
 
+                  {activePanel === "timeframe" && (
               <div className="rounded-lg border bg-card">
                 <button
                   type="button"
@@ -1439,8 +1503,9 @@ export function AdminDashboard({
                 </div>
                 )}
               </div>
+                  )}
 
-              {/* Collapsible Tools Section */}
+                  {activePanel === "tools" && (
               <div className="rounded-lg border bg-card">
                 <button
                   type="button"
@@ -1607,6 +1672,9 @@ export function AdminDashboard({
                   </div>
                 </div>
                 )}
+              </div>
+                  )}
+                </div>
               </div>
             </>
           ) : section === "recruiters" ? (
