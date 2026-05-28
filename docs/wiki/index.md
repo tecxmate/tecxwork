@@ -58,6 +58,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Recruitment Workflows & Booking Engine](topics/recruitment-workflows.md) — admin, recruiter, and student flows; booking modes
 - [Data Privacy & CV Sharing](topics/data-privacy.md) — Google Drive targeted sharing, PIPA consent, cross-border transfer
 - [SEO & AI-search visibility](topics/seo.md) — robots/sitemap/JSON-LD/hreflang wiring + off-page brand-signal playbook to kill "did you mean texwork"
+- [Local Backup & Disaster Recovery](topics/backup-dr.md) — `scripts/backup.mjs` mirrors Neon + Vercel Blob locally; hourly launchd; multi-PC setup guide
 
 ## Log
 - [log.md](log.md) — append-only chronological record

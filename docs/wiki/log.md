@@ -741,3 +741,7 @@ attributed_to: [niko]   belongs_to: [tecxwork, data-privacy]
 ## [2026-05-29] tweak | Removed redundant stat cards from Overview
 attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 - Dropped the row of stat cards (Recruiters/Students/Slots/Booking Requests/Emails) from the Overview panel — the same numbers are now conveyed by the StatBars (slot utilization, email quota, active interviews, participant mix) and the time-series charts. Also removed the now-unused `statsCards` array.
+
+## [2026-05-29] doc | Backup/DR topic page with multi-PC setup guide
+attributed_to: [niko]   belongs_to: [tecxwork, backup-dr]
+- Created `topics/backup-dr.md` documenting the local backup system (Neon `pg_dump` + Vercel Blob mirror), the direct-vs-pooler connection detail, the verified run, launchd scheduling, a step-by-step **second-machine setup guide** (clone → libpq → .env.local with DATABASE_URL+BLOB_READ_WRITE_TOKEN → test → customize+load plist; cron/Task Scheduler for non-mac), and restore commands. Indexed in `index.md`.
