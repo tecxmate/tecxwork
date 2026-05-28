@@ -341,9 +341,6 @@ export function AdminDashboard({
   );
   const [hpSaving, setHpSaving] = useState(false);
   const [hpSaved, setHpSaved] = useState(false);
-  const [timeFrameOpen, setTimeFrameOpen] = useState(true);
-  const [toolsOpen, setToolsOpen] = useState(true);
-  const [brandingOpen, setBrandingOpen] = useState(true);
   const [activePanel, setActivePanel] = useState<SettingsPanelId>("general");
   const [branding, setBrandingState] = useState(initialBranding);
   const [brandingSaving, setBrandingSaving] = useState(false);
@@ -419,7 +416,6 @@ export function AdminDashboard({
     }, 1000);
     return () => window.clearTimeout(timer);
   }, [brandingDirty, branding, saveBranding]);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackReports, setFeedbackReports] = useState<FeedbackReportRow[]>([]);
   const [feedbackLoaded, setFeedbackLoaded] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
@@ -927,7 +923,7 @@ export function AdminDashboard({
 
               <div className="lg:grid lg:grid-cols-[210px_minmax(0,1fr)] lg:items-start lg:gap-6">
                 {/* Left: settings section nav */}
-                <nav className="-mx-1 mb-4 flex gap-1 overflow-x-auto px-1 lg:sticky lg:top-20 lg:mx-0 lg:mb-0 lg:flex-col lg:overflow-visible lg:px-0">
+                <nav className="sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-30 -mx-4 mb-4 flex gap-1 overflow-x-auto border-b bg-background/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:top-20 lg:z-auto lg:mx-0 lg:mb-0 lg:flex-col lg:overflow-visible lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
                   {SETTINGS_PANELS.map((p) => (
                     <button
                       key={p.id}
@@ -1124,19 +1120,8 @@ export function AdminDashboard({
 
                   {activePanel === "branding" && (
               <div className="rounded-lg border bg-card">
-                <button
-                  type="button"
-                  onClick={() => setBrandingOpen(!brandingOpen)}
-                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
-                >
-                  <span className="flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-muted-foreground" />
-                    Event Branding
-                  </span>
-                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", brandingOpen && "rotate-180")} />
-                </button>
-                {brandingOpen && (
-                  <div className="border-t px-4 py-4">
+                {(
+                  <div className="px-4 py-4">
                     <div
                       onBlur={() => {
                         // Flush an immediate save when leaving a field with
@@ -1275,38 +1260,8 @@ export function AdminDashboard({
 
                   {activePanel === "feedback" && (
               <div className="rounded-lg border bg-card">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const next = !feedbackOpen;
-                    setFeedbackOpen(next);
-                    if (next && !feedbackLoaded) {
-                      try {
-                        const res = await fetch("/api/admin/feedback");
-                        if (!res.ok) throw new Error("Failed to load");
-                        const data = await res.json();
-                        setFeedbackReports(data.reports ?? []);
-                        setFeedbackLoaded(true);
-                      } catch (err) {
-                        setFeedbackError(err instanceof Error ? err.message : "Failed");
-                      }
-                    }
-                  }}
-                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
-                >
-                  <span className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    Feedback &amp; bug reports
-                    {feedbackLoaded && (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                        {feedbackReports.filter((r) => r.status === "open").length} open
-                      </span>
-                    )}
-                  </span>
-                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", feedbackOpen && "rotate-180")} />
-                </button>
-                {feedbackOpen && (
-                  <div className="border-t px-4 py-4">
+                {(
+                  <div className="px-4 py-4">
                     {feedbackError && (
                       <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                         {feedbackError}
@@ -1344,19 +1299,8 @@ export function AdminDashboard({
 
                   {activePanel === "timeframe" && (
               <div className="rounded-lg border bg-card">
-                <button
-                  type="button"
-                  onClick={() => setTimeFrameOpen(!timeFrameOpen)}
-                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
-                >
-                  <span className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    {admin.timeFrame.title}
-                  </span>
-                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", timeFrameOpen && "rotate-180")} />
-                </button>
-                {timeFrameOpen && (
-                  <div className="border-t px-4 py-4">
+                {(
+                  <div className="px-4 py-4">
                     <form
                       onSubmit={async (e) => {
                         e.preventDefault();
@@ -1507,16 +1451,8 @@ export function AdminDashboard({
 
                   {activePanel === "tools" && (
               <div className="rounded-lg border bg-card">
-                <button
-                  type="button"
-                  onClick={() => setToolsOpen(!toolsOpen)}
-                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
-                >
-                  <span>Tools & Media</span>
-                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", toolsOpen && "rotate-180")} />
-                </button>
-                {toolsOpen && (
-                <div className="border-t px-4 py-4">
+                {(
+                <div className="px-4 py-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-3">
                       <label className="text-xs font-medium text-muted-foreground">Tools</label>
