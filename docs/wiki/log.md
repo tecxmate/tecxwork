@@ -646,9 +646,10 @@ attributed_to: [niko]   belongs_to: [public-homepage, design-system]
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - `recruiter-jobs-browser.tsx`: wrapped search + filter selects + "N jobs found" count in a `lg:sticky lg:top-16` container (with `lg:bg-background` so the list scrolls under it cleanly) so filters stay reachable while scrolling the job list on desktop. Removed the decorative `Filter` funnel icon (and its now-unused import). Mobile unchanged (non-sticky).
 
-## [2026-05-29] idea | Pending: redesign Browse "Participating Companies" header as photo hero
+## [2026-05-29] idea | Redesign Browse "Participating Companies" header as photo hero — IMPLEMENTED, see [[page-hero]]
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
-- NOT YET IMPLEMENTED. niko requested (then interrupted to switch tasks): on `/browse`, merge the "Participating Companies" title block with the banner photo below it into a single hero — background image with the title/subtitle overlaid on a front layer.
+- SUPERSEDED: this was implemented in a parallel session as the `PageHero` component (`src/components/page-hero.tsx`, now on `/browse` and `/jobs`). Full design + adaptive-luminance details live in `topics/page-hero.md`. The notes below are the original (now historical) request; trust the topic page for current behavior.
+- niko requested (then interrupted to switch tasks): on `/browse`, merge the "Participating Companies" title block with the banner photo below it into a single hero — background image with the title/subtitle overlaid on a front layer.
 - Requirements stated: (1) text color should adapt light/dark based on the photo so it stays readable; (2) add a semitransparent layer between photo and text to make text stand out.
 - Current state: `src/app/browse/page.tsx` renders the title in a separate `<section className="border-b bg-card …">` (lines ~49-58), with the photo carousel `<PageImageCarousel images={pageImages} />` as a distinct block below it. Photos come from `getPageImages("browse")`.
 - Implementation notes for whoever picks this up:
