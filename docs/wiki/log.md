@@ -673,3 +673,7 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - The result count + "Clear filters" moved down into the left list column (above the list), so the sticky line stays a clean single row.
 - Detail pane sticky offset bumped `lg:top-24` → `lg:top-[124px]` so it tucks below the now full-width sticky search bar (no overlap); its max-height adjusted to `calc(100vh-9rem)`.
 - Mobile unchanged behaviorally: bar is a non-sticky block (search full width, selects in a 2-col grid).
+
+## [2026-05-29] fix | Long job locations overflowed the browser list column
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- `JobListRow` location line truncated its `<span>` but the flex parent `<p>` lacked `min-w-0`, so with min-width:auto the span couldn't shrink and long locations (e.g. full Vietnamese industrial-park addresses) spilled past the 380px list column into the detail pane. Added `min-w-0` to both the `<p>` and the `<span>`. Classic flex truncation gotcha.
