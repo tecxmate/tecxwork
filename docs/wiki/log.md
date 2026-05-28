@@ -607,3 +607,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - Why: niko's directive — these eight are event sponsors and must lead the directory regardless of how many jobs they post.
 - Stack: `src/lib/cache.ts` `fetchRecruiters()` gained `SPONSOR_PRIORITY` (ordered keyword list) + `normalizeCompany()` (NFD diacritic strip, đ→d, lowercase, alnum-only) + `sponsorRank()`. Matching is substring-on-normalized-name so full legal names resolve (e.g. "Indovina Bank (IVB)" → rank 0, "Việt Hoa Co., Ltd" → rank 6). Non-sponsors get `Infinity`. Cache key bumped v4 → v5 to flush the prior order.
 - Caveat: matching is keyword-contains. If a future non-sponsor company name happens to contain one of these tokens (e.g. "ssb", "ivb"), it would be wrongly promoted. Tokens chosen to be distinctive; revisit if a collision appears.
+
+## [2026-05-29] ingest | Align job-card footers across grid row
+attributed_to: [niko]   belongs_to: [public-homepage, recruiter-dashboard]
+- Job cards in the homepage/jobs grid had footers ("View details"/"No JD link") floating at different heights because content length varies per card.
+- Fix in `recruiter-job-posting-card.tsx`: Card is now `flex h-full flex-col` (fills grid cell; CSS-grid row stretch equalizes heights) and the footer row got `mt-auto pt-2` to pin to the bottom. Footers now align across the row.
+- Tradeoff noted: short cards show whitespace above the pinned footer; optional follow-up is capping compact-mode body to one section.

@@ -227,11 +227,11 @@ export function RecruiterJobPostingCard({
   return (
     <Card
       className={cn(
-        "min-w-0 border-border/70 p-4 transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]",
+        "flex h-full min-w-0 flex-col border-border/70 p-4 transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]",
         className
       )}
     >
-      <div className="space-y-3">
+      <div className="flex flex-1 flex-col space-y-3">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             {job.company ? (
@@ -381,7 +381,7 @@ export function RecruiterJobPostingCard({
         <TextBlock label={labels.requirements} value={job.requirements} compact={compact} />
         <TextBlock label={labels.benefits} value={job.benefits} compact={compact} />
 
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
           {job.jdLink ? (
             <a
               href={job.jdLink}
