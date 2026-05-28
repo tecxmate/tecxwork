@@ -16,6 +16,7 @@ export const studentEnMessages = {
     myCompany: "My Company",
     overview: "Overview",
     recruiters: "Recruiters",
+    platform: "Platform",
   },
   common: {
     back: "Back",

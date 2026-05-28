@@ -677,3 +677,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 ## [2026-05-29] fix | Long job locations overflowed the browser list column
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - `JobListRow` location line truncated its `<span>` but the flex parent `<p>` lacked `min-w-0`, so with min-width:auto the span couldn't shrink and long locations (e.g. full Vietnamese industrial-park addresses) spilled past the 380px list column into the detail pane. Added `min-w-0` to both the `<p>` and the `<span>`. Classic flex truncation gotcha.
+
+## [2026-05-29] tweak | Admin "Settings" → "Platform", promoted to 5th nav item
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
+- Renamed the admin Settings entry to "Platform" and moved it from the top-bar overflow menu / gear icon into the main nav as the 5th item (`/admin/settings`), on both desktop top nav and mobile bottom nav.
+- Stack: added the item to `navItemsByRole.admin` in `src/lib/navigation.ts` (icon `SlidersHorizontal`); added `nav.platform` to en/vi/zh-TW student messages ("Platform" / "Nền tảng" / "平台") and mapped `/admin/settings → messages.nav.platform` in both `desktop-top-nav.tsx` and `mobile-bottom-nav.tsx`. Removed the standalone Settings gear from `app-topbar.tsx` and the "Settings" row from `app-topbar-account-actions.tsx` (mobile dropdown). Active-tab highlighting already worked since `admin-dashboard` maps `section==="settings"` → `/admin/settings` for `currentPath`.
+- Mobile bottom nav handles 5 items automatically (grid `repeat(items.length)`, with icon-only fallback when labels don't fit).

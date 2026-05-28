@@ -4,6 +4,7 @@ import {
   Building2,
   CalendarClock,
   Home,
+  SlidersHorizontal,
   User,
   Users,
 } from "lucide-react";
@@ -98,6 +99,12 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Interviews",
       icon: CalendarClock,
       matches: ["/admin/interviews"],
+    },
+    {
+      href: "/admin/settings",
+      label: "Platform",
+      icon: SlidersHorizontal,
+      matches: ["/admin/settings"],
     },
   ],
 };

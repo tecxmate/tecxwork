@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogIn, LogOut, Settings, UserRound } from "lucide-react";
+import { LogIn, LogOut, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useStudentI18n } from "@/components/student-locale-provider";
@@ -61,15 +61,6 @@ export function AppTopBarAccountActions({
               <LogOut className="h-4 w-4" />
             </button>
           </div>
-          {role === "admin" ? (
-            <Link
-              href="/admin/settings"
-              className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              <Settings className="h-4 w-4" />
-              Settings
-            </Link>
-          ) : null}
         </>
       ) : (
         <>

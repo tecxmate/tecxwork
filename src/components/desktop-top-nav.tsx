@@ -35,6 +35,7 @@ export function DesktopTopNav({
       if (href === "/admin/recruiters") return messages.nav.recruiters;
       if (href === "/admin/applicants") return messages.nav.applicants;
       if (href === "/admin/jobs") return messages.nav.jobs;
+      if (href === "/admin/settings") return messages.nav.platform;
     }
     return fallback;
   }
