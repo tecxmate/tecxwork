@@ -43,6 +43,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [tecxwork web app](topics/tecxwork.md) — the product itself (area: full stack)
 - [V-GEN TRIDENT 2026](topics/v-gen-trident-2026.md) — flagship career fair event
 - [Admin panel](topics/admin-panel.md) — area: event-config + uploads
+- [Capacity analytics](topics/capacity-analytics.md) — Overview chart: per-company slot supply vs booking-request demand, status buckets, query
 - [Recruiter dashboard](topics/recruiter-dashboard.md) — area: company profile + slots
 - [Public homepage](topics/public-homepage.md) — area: landing page + hero
 - [Link previews](topics/link-previews.md) — OG image + per-surface scraper quirks; Messenger needs cacheable headers

@@ -757,3 +757,7 @@ attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 - Extended the admin Overview capacity chart to two bars per company: top = interview slots (Booked + Available = total capacity / supply); bottom = booking requests (Accepted + Unconfirmed + Rejected / demand). Added a caption noting the two axes don't sum.
 - Rationale (Niko's question "how do we show that logically?"): slots and bookings are different units — many requests can target one slot; rejected/cancelled free slots — so they're shown as parallel bars rather than one stack. "Accepted" ≈ "Booked" serves as a consistency check.
 - `AdminAnalytics.capacity` now also carries accepted/unconfirmed/rejected. Status buckets reuse existing convention: unconfirmed = pending+waitlisted+reschedule_proposed; rejected = rejected+cancelled. Query LEFT JOINs slot + booking subqueries per recruiter; validated live.
+
+## [2026-05-29] ingest | Capacity analytics topic page
+attributed_to: [niko]   belongs_to: [capacity-analytics]
+- Created topics/capacity-analytics.md documenting the supply-vs-demand chart: why slots and requests are two parallel bars (different units, don't sum), the status buckets, the accepted≈booked consistency check, the LEFT-JOIN query, and rendering notes. Linked from index.
