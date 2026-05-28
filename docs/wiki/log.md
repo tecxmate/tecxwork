@@ -659,3 +659,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 ## [2026-05-29] ingest | PageHero threshold-tuning note
 attributed_to: [niko]   belongs_to: [page-hero]
 - Recorded the open item for PageHero: dark↔light text uses a single `luma > 0.6` cutoff; if a real photo wrong-foots the color, nudge the cutoff / widen the sampled band / add a per-image override. Not built yet.
+
+## [2026-05-29] tweak | Polish jobs-browser sticky filter section
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage, design-system]
+- Fixed the seam where the scrolling job list peeked through above the stuck filter bar: lowered the sticky offset to `lg:top-14` (tucks under the ~60px top bar) and dropped its z to `lg:z-[9]` (below the header's z-10) so the header covers the overlap. Bg bleeds ±4px (`lg:-mx-1`/`lg:px-1`) to kill edge slivers.
+- Added a frosted "stuck" treatment: `lg:bg-background/85 lg:backdrop-blur` + `lg:border-b` + `lg:shadow-sm`.
+- Filters reworked from ragged `flex-wrap` into an even `grid grid-cols-2 gap-2`; selects unified via `FILTER_SELECT_CLASS` (h-9, rounded-lg, shadow-sm, hover border). Result count + "Clear filters" now share one row (count left, clear right).
+- Desktop-only; mobile keeps the plain non-sticky block.

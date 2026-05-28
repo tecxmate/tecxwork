@@ -33,6 +33,9 @@ import type { RecruiterJobPosting } from "@/components/recruiter-job-posting-car
 
 const ITEMS_PER_PAGE = 12;
 
+const FILTER_SELECT_CLASS =
+  "h-9 w-full min-w-0 cursor-pointer truncate rounded-lg border border-input bg-background px-3 text-sm shadow-sm transition-colors hover:border-input/80 focus:outline-none focus:ring-2 focus:ring-ring";
+
 type JobsBrowserLabels = {
   viewDetails: string;
   searchPlaceholder: string;
@@ -348,7 +351,7 @@ export function RecruiterJobsBrowser({
     <section ref={sectionRef} className="scroll-mt-20 lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
       {/* Left: search, filters, and job list */}
       <div className="space-y-3">
-        <div className="space-y-3 lg:sticky lg:top-16 lg:z-10 lg:bg-background lg:pb-3">
+        <div className="space-y-3 lg:sticky lg:top-14 lg:z-[9] lg:-mx-1 lg:border-b lg:border-border/60 lg:bg-background/85 lg:px-1 lg:pb-3 lg:pt-3 lg:shadow-sm lg:backdrop-blur">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -364,11 +367,11 @@ export function RecruiterJobsBrowser({
           />
         </div>
 
-        <div className="flex w-full max-w-full flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <select
             value={locationFilter}
             onChange={(e) => handleFilterChange(setLocationFilter)(e.target.value)}
-            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className={FILTER_SELECT_CLASS}
           >
             <option value="">{filterLabels.location}: {filterLabels.all}</option>
             {uniqueLocations.map((loc) => (
@@ -378,7 +381,7 @@ export function RecruiterJobsBrowser({
           <select
             value={companyFilter}
             onChange={(e) => handleFilterChange(setCompanyFilter)(e.target.value)}
-            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className={FILTER_SELECT_CLASS}
           >
             <option value="">{filterLabels.company}: {filterLabels.all}</option>
             {uniqueCompanies.map((c) => (
@@ -389,7 +392,7 @@ export function RecruiterJobsBrowser({
             <select
               value={categoryFilter}
               onChange={(e) => handleCategorySelect(e.target.value)}
-              className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className={FILTER_SELECT_CLASS}
             >
               <option value="">{filterLabels.category}: {filterLabels.all}</option>
               {categoryOptions.map((option) => (
@@ -402,29 +405,31 @@ export function RecruiterJobsBrowser({
           <select
             value={employmentFilter}
             onChange={(e) => handleFilterChange(setEmploymentFilter)(e.target.value)}
-            className="h-8 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className={FILTER_SELECT_CLASS}
           >
             <option value="">{filterLabels.employmentType}: {filterLabels.all}</option>
             {uniqueEmploymentTypes.map((t) => (
               <option key={t} value={t}>{employmentTypeLabel(t, locale) || t}</option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-medium text-muted-foreground">
+            {filteredJobs.length} {labels.resultsCount}
+          </p>
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-8 gap-1 px-2 text-xs"
+              className="h-7 shrink-0 gap-1 px-2 text-xs"
             >
               <X className="h-3 w-3" />
               {filterLabels.clearFilters}
             </Button>
           )}
         </div>
-
-        <p className="text-sm text-muted-foreground">
-          {filteredJobs.length} {labels.resultsCount}
-        </p>
         </div>
 
         {filteredJobs.length === 0 ? (
