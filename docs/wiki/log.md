@@ -745,3 +745,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 ## [2026-05-29] doc | Backup/DR topic page with multi-PC setup guide
 attributed_to: [niko]   belongs_to: [tecxwork, backup-dr]
 - Created `topics/backup-dr.md` documenting the local backup system (Neon `pg_dump` + Vercel Blob mirror), the direct-vs-pooler connection detail, the verified run, launchd scheduling, a step-by-step **second-machine setup guide** (clone → libpq → .env.local with DATABASE_URL+BLOB_READ_WRITE_TOKEN → test → customize+load plist; cron/Task Scheduler for non-mac), and restore commands. Indexed in `index.md`.
+
+## [2026-05-29] decide | Per-company slot capacity chart in admin Overview
+attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
+- Added a capacity graph to the admin Overview: horizontal stacked bar per company showing Booked (green) + Available (light) = total interview slots, sorted by capacity desc, with an overall "X/Y booked (Z%)" fill-rate header.
+- Data added to `AdminAnalytics.capacity` in `admin-data.ts` via `LEFT JOIN slots ... COUNT(*) FILTER (WHERE status='booked') ... HAVING COUNT(s.id) > 0`. "Booked" is measured by slots.status='booked' (not accepted-bookings count). Companies with zero slots are omitted.
+- Rendered in `overview-charts.tsx` (`CapacityChart`), full width below the 2-col grid; scrollable (max-h-480) with ~30px/company so 30+ companies fit. Validated query against live DB.

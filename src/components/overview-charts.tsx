@@ -51,6 +51,65 @@ function ChartCard({
   );
 }
 
+function CapacityChart({
+  data,
+}: {
+  data: AdminAnalytics["capacity"];
+}) {
+  const rows = data.map((d) => ({
+    company: d.company,
+    booked: d.booked,
+    remaining: Math.max(0, d.total - d.booked),
+    total: d.total,
+  }));
+  const totalSlots = rows.reduce((s, r) => s + r.total, 0);
+  const totalBooked = rows.reduce((s, r) => s + r.booked, 0);
+  const fillRate = totalSlots ? Math.round((totalBooked / totalSlots) * 100) : 0;
+  // ~30px per company row, with room for axis/legend.
+  const innerHeight = Math.max(220, rows.length * 30 + 48);
+
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">
+          Interview slot capacity by company
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {totalBooked}/{totalSlots} booked ({fillRate}%)
+        </p>
+      </div>
+      <div className="max-h-[480px] w-full overflow-y-auto">
+        <div style={{ height: innerHeight }} className="w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              layout="vertical"
+              data={rows}
+              margin={{ left: 8, top: 4, right: 14, bottom: 0 }}
+              barCategoryGap="20%"
+            >
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+              <XAxis type="number" allowDecimals={false} {...axisProps} />
+              <YAxis
+                type="category"
+                dataKey="company"
+                width={130}
+                interval={0}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip {...tooltipStyle} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="booked" name="Booked" stackId="cap" fill={GREEN} radius={[2, 0, 0, 2]} />
+              <Bar dataKey="remaining" name="Available" stackId="cap" fill={PURPLE_LIGHT} radius={[0, 2, 2, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const tooltipStyle = {
   contentStyle: {
     borderRadius: 8,
@@ -67,7 +126,8 @@ export default function OverviewCharts({
   analytics: AdminAnalytics;
 }) {
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="space-y-3">
+      <div className="grid gap-3 lg:grid-cols-2">
       <ChartCard title="Registrations (cumulative)">
         <AreaChart data={analytics.registrations} margin={{ left: 4, top: 4, right: 14, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
@@ -143,6 +203,11 @@ export default function OverviewCharts({
           />
         </AreaChart>
       </ChartCard>
+      </div>
+
+      {analytics.capacity.length > 0 ? (
+        <CapacityChart data={analytics.capacity} />
+      ) : null}
     </div>
   );
 }

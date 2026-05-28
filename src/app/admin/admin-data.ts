@@ -36,6 +36,7 @@ export type AdminAnalytics = {
   }[];
   emails: { date: string; success: number; failed: number }[];
   jobs: { date: string; count: number; cumulative: number }[];
+  capacity: { company: string; total: number; booked: number }[];
 };
 
 /** YYYY-MM-DD list from start..end inclusive (UTC-midnight stepping). */
@@ -68,7 +69,7 @@ async function getAnalytics(): Promise<AdminAnalytics> {
     return (res.rows ?? (res as unknown as T[])) ?? [];
   };
 
-  const [studentRows, recruiterRows, bookingRows, emailRows, jobRows] =
+  const [studentRows, recruiterRows, bookingRows, emailRows, jobRows, capacityRows] =
     await Promise.all([
       rowsOf<{ d: string; n: number }>(
         sql`SELECT ${DAY} AS d, COUNT(*)::int AS n FROM applicant_profiles GROUP BY 1`
@@ -84,6 +85,16 @@ async function getAnalytics(): Promise<AdminAnalytics> {
       ),
       rowsOf<{ d: string; n: number }>(
         sql`SELECT ${DAY} AS d, COUNT(*)::int AS n FROM job_openings GROUP BY 1`
+      ),
+      rowsOf<{ company: string; total: number; booked: number }>(
+        sql`SELECT r.company AS company,
+              COUNT(s.id)::int AS total,
+              COUNT(s.id) FILTER (WHERE s.status = 'booked')::int AS booked
+            FROM recruiters r
+            LEFT JOIN slots s ON s.recruiter_id = r.id
+            GROUP BY r.company
+            HAVING COUNT(s.id) > 0
+            ORDER BY total DESC, r.company`
       ),
     ]);
 
@@ -165,7 +176,13 @@ async function getAnalytics(): Promise<AdminAnalytics> {
     ...(emailByDay.get(date) ?? { success: 0, failed: 0 }),
   }));
 
-  return { registrations, bookings: bookingsSeries, emails, jobs };
+  const capacity = capacityRows.map((r) => ({
+    company: r.company,
+    total: Number(r.total),
+    booked: Number(r.booked),
+  }));
+
+  return { registrations, bookings: bookingsSeries, emails, jobs, capacity };
 }
 
 export async function getAdminDashboardData() {
