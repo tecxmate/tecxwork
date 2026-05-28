@@ -645,3 +645,12 @@ attributed_to: [niko]   belongs_to: [public-homepage, design-system]
 ## [2026-05-29] tweak | Jobs browser: sticky search/filters on desktop, drop funnel icon
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - `recruiter-jobs-browser.tsx`: wrapped search + filter selects + "N jobs found" count in a `lg:sticky lg:top-16` container (with `lg:bg-background` so the list scrolls under it cleanly) so filters stay reachable while scrolling the job list on desktop. Removed the decorative `Filter` funnel icon (and its now-unused import). Mobile unchanged (non-sticky).
+
+## [2026-05-29] idea | Pending: redesign Browse "Participating Companies" header as photo hero
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- NOT YET IMPLEMENTED. niko requested (then interrupted to switch tasks): on `/browse`, merge the "Participating Companies" title block with the banner photo below it into a single hero — background image with the title/subtitle overlaid on a front layer.
+- Requirements stated: (1) text color should adapt light/dark based on the photo so it stays readable; (2) add a semitransparent layer between photo and text to make text stand out.
+- Current state: `src/app/browse/page.tsx` renders the title in a separate `<section className="border-b bg-card …">` (lines ~49-58), with the photo carousel `<PageImageCarousel images={pageImages} />` as a distinct block below it. Photos come from `getPageImages("browse")`.
+- Implementation notes for whoever picks this up:
+  - Per-photo light/dark text is the hard part. Auto-detecting luminance client-side via canvas hits CORS on blob-hosted images; cleanest robust route is a fixed dark gradient overlay + white text (guarantees contrast regardless of photo) rather than true per-image adaptation. If true adaptation is required, compute average luminance server-side at upload time and store a `textOnImage: "light"|"dark"` flag, or sample a downscaled version.
+  - The carousel rotates multiple images, so any per-image text color must update per slide.
