@@ -600,3 +600,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel, recruitment-workflow
 - Data: `getAdminDashboardData` recruiter query + the `Recruiter` type now also load `description`, `websiteUrl`, `logoUrl`, `galleryUrls`.
 - Conflict posture: admin and recruiter write the same `recruiters` row; last-write-wins is acceptable for low-frequency logo/detail edits. v1 ships with NO recruiter notification (admin is assisting). Both decisions per niko.
 - Not browser-tested yet (typecheck + lint clean only). Verify the modal + logo upload in the running app before relying on it.
+
+## [2026-05-29] feature | Sponsor-priority sort in company directory
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- `/browse` company list now pins sponsors to the top in a fixed order: IVB → Gtalent → Mdor → Tripod → Chinli → SSB Shoes → Việt Hoa → Yongzhan. After sponsors, the prior rule applies: sort by number of approved jobs (desc), then company name.
+- Why: niko's directive — these eight are event sponsors and must lead the directory regardless of how many jobs they post.
+- Stack: `src/lib/cache.ts` `fetchRecruiters()` gained `SPONSOR_PRIORITY` (ordered keyword list) + `normalizeCompany()` (NFD diacritic strip, đ→d, lowercase, alnum-only) + `sponsorRank()`. Matching is substring-on-normalized-name so full legal names resolve (e.g. "Indovina Bank (IVB)" → rank 0, "Việt Hoa Co., Ltd" → rank 6). Non-sponsors get `Infinity`. Cache key bumped v4 → v5 to flush the prior order.
+- Caveat: matching is keyword-contains. If a future non-sponsor company name happens to contain one of these tokens (e.g. "ssb", "ivb"), it would be wrongly promoted. Tokens chosen to be distinctive; revisit if a collision appears.
