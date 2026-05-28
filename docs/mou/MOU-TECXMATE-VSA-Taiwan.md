@@ -10,7 +10,7 @@
 **BÊN B: TECXMATE COMPANY LIMITED**
 - Người đại diện: .........................................................
 - Chức vụ: .........................................................
-- Địa chỉ: Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam
+- Địa chỉ: Villa Park, Ho Chi Minh City, Vietnam
 - Mã số thuế: 0319431089
 - Điện thoại: (+84) 0337460602
 - Email: official@tecxmate.com

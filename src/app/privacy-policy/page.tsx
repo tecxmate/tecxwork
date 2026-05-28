@@ -22,7 +22,7 @@ export default async function PrivacyPolicyPage() {
 
       <div className="space-y-6 text-sm leading-relaxed">
         <p>
-          This Privacy Policy explains how <strong>TECXMATE COMPANY LIMITED</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), headquartered at Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam, and our event partner, the <strong>Vietnamese Student Association in Taiwan (VSATW)</strong>, collect, process, store, and transfer your personal data when you use the TECXWORK platform (&quot;Platform&quot;).
+          This Privacy Policy explains how <strong>TECXMATE COMPANY LIMITED</strong> (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), headquartered at Villa Park, Ho Chi Minh City, Vietnam, and our event partner, the <strong>Vietnamese Student Association in Taiwan (VSATW)</strong>, collect, process, store, and transfer your personal data when you use the TECXWORK platform (&quot;Platform&quot;).
         </p>
 
         <p>
@@ -118,7 +118,7 @@ export default async function PrivacyPolicyPage() {
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Data Controller:</strong> TECXMATE COMPANY LIMITED</li>
           <li><strong>Email:</strong> official@tecxmate.com</li>
-          <li><strong>Address:</strong> Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam</li>
+          <li><strong>Address:</strong> Villa Park, Ho Chi Minh City, Vietnam</li>
           <li><strong>Local Partner:</strong> Vietnamese Student Association in Taiwan (VSATW)</li>
         </ul>
       </div>

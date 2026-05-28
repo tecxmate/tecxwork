@@ -12,6 +12,8 @@ By accessing or using the Platform, you agree to be bound by these Terms. If you
 
 V-GEN is a digital recruitment and scheduling platform designed to facilitate connections between university students ("Applicants") and verified corporate recruiters ("Recruiters") during physical or virtual career fair events in Taiwan.
 
+**Non-Profit Platform:** This is an entirely non-profit website. There are no payments or financial transactions that happen on or off the website, in or out of TECXWORK or TECXMATE.
+
 ## 2. Eligibility
 
 You must be at least 18 years old (or the age of legal majority in Taiwan) to create an account on the Platform. By registering, you represent and warrant that you meet this age requirement and that all registration information you submit is accurate and truthful.
@@ -67,4 +69,4 @@ Any dispute arising out of or in connection with these Terms, including any ques
 If you have any questions about these Terms, please contact us at:
 *   **Email:** official@tecxmate.com
 *   **Company:** TECXMATE COMPANY LIMITED
-*   **Address:** Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam
+*   **Address:** Villa Park, Ho Chi Minh City, Vietnam

@@ -2,7 +2,7 @@
 
 **Effective Date:** April 30, 2026
 
-This Privacy Policy explains how **TECXMATE COMPANY LIMITED** ("Company", "we", "us", or "our"), headquartered at Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam, and our event partner, the **Vietnamese Student Association in Taiwan (VSATW)**, collect, process, store, and transfer your personal data when you use the V-GEN platform ("Platform").
+This Privacy Policy explains how **TECXMATE COMPANY LIMITED** ("Company", "we", "us", or "our"), headquartered at Villa Park, Ho Chi Minh City, Vietnam, and our event partner, the **Vietnamese Student Association in Taiwan (VSATW)**, collect, process, store, and transfer your personal data when you use the V-GEN platform ("Platform").
 
 This policy is designed to comply with the **Taiwan Personal Data Protection Act (PDPA)** and **Vietnam’s Personal Data Protection Decree (Decree 13/2023/ND-CP)**.
 
@@ -89,5 +89,5 @@ If you have any questions or concerns about this Privacy Policy, please contact:
 
 * **Data Controller:** TECXMATE COMPANY LIMITED
 * **Email:** <official@tecxmate.com>
-* **Address:** Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam
+* **Address:** Villa Park, Ho Chi Minh City, Vietnam
 * **Local Partner:** Vietnamese Student Association in Taiwan (VSATW)

@@ -31,7 +31,7 @@ A technology consultancy and software development company based in Vietnam (Ho C
 
 ## Legal & Compliance
 - **Entity**: TECXMATE COMPANY LIMITED
-- **Address**: Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam.
+- **Address**: Villa Park, Ho Chi Minh City, Vietnam.
 - **MST (Tax Code)**: 0319431089.
 - **MOU**: Partnered with VSATW for V-GEN TRIDENT 2026.
 - **Data Policy**: Manages user data on behalf of VSATW, adhering to Taiwan PIPA and Vietnam PDPD.

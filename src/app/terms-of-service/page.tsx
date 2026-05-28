@@ -123,7 +123,7 @@ export default async function TermsOfServicePage() {
         <ul className="list-disc pl-5 space-y-1 mb-4">
           <li><strong>Email:</strong> official@tecxmate.com</li>
           <li><strong>Company:</strong> TECXMATE COMPANY LIMITED</li>
-          <li><strong>Address:</strong> Villa Park Complex, Phu Huu Ward, Ho Chi Minh City, Vietnam</li>
+          <li><strong>Address:</strong> Villa Park, Ho Chi Minh City, Vietnam</li>
         </ul>
       </div>
       </main>
