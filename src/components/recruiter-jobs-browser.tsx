@@ -151,9 +151,9 @@ function JobListRow({
             {job.company}
           </p>
           {job.location ? (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <p className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 shrink-0" />
-              <span className="truncate">{job.location}</span>
+              <span className="min-w-0 truncate">{job.location}</span>
             </p>
           ) : null}
         </div>
