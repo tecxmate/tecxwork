@@ -349,6 +349,7 @@ export function RecruiterJobsBrowser({
     <section ref={sectionRef} className="scroll-mt-20 lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
       {/* Left: search, filters, and job list */}
       <div className="space-y-3">
+        <div className="space-y-3 lg:sticky lg:top-16 lg:z-10 lg:bg-background lg:pb-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -365,7 +366,6 @@ export function RecruiterJobsBrowser({
         </div>
 
         <div className="flex w-full max-w-full flex-wrap items-center gap-2">
-          <Filter className="h-4 w-4 shrink-0 text-muted-foreground" />
           <select
             value={locationFilter}
             onChange={(e) => handleFilterChange(setLocationFilter)(e.target.value)}

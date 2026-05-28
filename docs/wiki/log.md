@@ -635,3 +635,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage, admin-panel]
 ## [2026-05-29] ingest | Move /jobs search+filters into the left pane
 attributed_to: [niko]   belongs_to: [public-homepage]
 - Per Niko, the full-width search/filter bar now lives inside the left column of the two-pane /jobs layout (above the job list), so it spans only the list width instead of the whole page. The grid wrapper now encloses the entire section; right detail pane unchanged.
+
+## [2026-05-29] decide | Photo-background page header with adaptive text (PageHero)
+attributed_to: [niko]   belongs_to: [public-homepage, design-system]
+- Replaced the plain title section + separate PageImageCarousel strip on /browse and /jobs with `PageHero`: page photo as full background, title/subtitle overlaid, semi-transparent scrim between, and text color that adapts light/dark to the photo's luminance for readability.
+- Luminance sampled via 32×32 canvas over the central band; CORS works on the blob host so detection is live, with SSR/fallback defaulting to light-text + dark-scrim (always readable). Crossfade carousel replaces horizontal scroll since text is now fixed on top.
+- Deleted orphaned `page-image-carousel.tsx`. Created topics/page-hero.md.
