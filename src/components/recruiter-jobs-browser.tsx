@@ -9,7 +9,6 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
-  Filter,
   MapPin,
   Search,
   Tags,
@@ -426,6 +425,7 @@ export function RecruiterJobsBrowser({
         <p className="text-sm text-muted-foreground">
           {filteredJobs.length} {labels.resultsCount}
         </p>
+        </div>
 
         {filteredJobs.length === 0 ? (
           <Card className="flex flex-col items-center justify-center py-16 text-center">

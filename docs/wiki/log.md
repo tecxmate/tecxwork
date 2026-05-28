@@ -641,3 +641,7 @@ attributed_to: [niko]   belongs_to: [public-homepage, design-system]
 - Replaced the plain title section + separate PageImageCarousel strip on /browse and /jobs with `PageHero`: page photo as full background, title/subtitle overlaid, semi-transparent scrim between, and text color that adapts light/dark to the photo's luminance for readability.
 - Luminance sampled via 32×32 canvas over the central band; CORS works on the blob host so detection is live, with SSR/fallback defaulting to light-text + dark-scrim (always readable). Crossfade carousel replaces horizontal scroll since text is now fixed on top.
 - Deleted orphaned `page-image-carousel.tsx`. Created topics/page-hero.md.
+
+## [2026-05-29] tweak | Jobs browser: sticky search/filters on desktop, drop funnel icon
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- `recruiter-jobs-browser.tsx`: wrapped search + filter selects + "N jobs found" count in a `lg:sticky lg:top-16` container (with `lg:bg-background` so the list scrolls under it cleanly) so filters stay reachable while scrolling the job list on desktop. Removed the decorative `Filter` funnel icon (and its now-unused import). Mobile unchanged (non-sticky).
