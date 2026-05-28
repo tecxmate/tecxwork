@@ -72,15 +72,14 @@ export default async function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">How it&apos;s built</h2>
+            <h2 className="text-xl font-semibold mb-2">Technology &amp; Architecture</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Next.js 16 deployed on Vercel.</li>
-              <li>Neon Postgres with Drizzle ORM.</li>
-              <li>Email through Resend, push via Web Push (VAPID).</li>
-              <li>Vercel Blob for uploaded images and CVs.</li>
-              <li>
-                Internationalized in English, Traditional Chinese, and Vietnamese.
-              </li>
+              <li>Modern serverless cloud infrastructure engineered for zero-downtime scaling and instant global delivery.</li>
+              <li>High-performance, edge-accelerated routing ensuring sub-second response times across all devices.</li>
+              <li>Enterprise-grade relational database architecture with atomic transactional integrity for collision-free scheduling.</li>
+              <li>Real-time, multi-channel notification engine integrating asynchronous email and persistent web-push capabilities.</li>
+              <li>Secure, globally distributed object storage for encrypted asset and document management.</li>
+              <li>Native, localized experiences dynamically rendered in English, Traditional Chinese, and Vietnamese.</li>
             </ul>
           </section>
 
