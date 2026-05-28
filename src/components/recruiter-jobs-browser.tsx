@@ -348,11 +348,10 @@ export function RecruiterJobsBrowser({
   };
 
   return (
-    <section ref={sectionRef} className="scroll-mt-20 lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
-      {/* Left: search, filters, and job list */}
-      <div className="space-y-3">
-        <div className="space-y-3 lg:sticky lg:top-14 lg:z-[9] lg:-mx-1 lg:border-b lg:border-border/60 lg:bg-background/85 lg:px-1 lg:pb-3 lg:pt-3 lg:shadow-sm lg:backdrop-blur">
-        <div className="relative">
+    <section ref={sectionRef} className="scroll-mt-20 space-y-3">
+      {/* Full-width sticky search + filters — one line on desktop, spans both panes */}
+      <div className="space-y-2 lg:sticky lg:top-14 lg:z-[9] lg:-mx-1 lg:flex lg:items-center lg:gap-2 lg:space-y-0 lg:border-b lg:border-border/60 lg:bg-background/85 lg:px-1 lg:pb-3 lg:pt-3 lg:shadow-sm lg:backdrop-blur">
+        <div className="relative lg:min-w-[200px] lg:flex-[1.4]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
@@ -367,11 +366,11 @@ export function RecruiterJobsBrowser({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-[2] lg:items-center lg:gap-2">
           <select
             value={locationFilter}
             onChange={(e) => handleFilterChange(setLocationFilter)(e.target.value)}
-            className={FILTER_SELECT_CLASS}
+            className={`${FILTER_SELECT_CLASS} lg:flex-1`}
           >
             <option value="">{filterLabels.location}: {filterLabels.all}</option>
             {uniqueLocations.map((loc) => (
@@ -381,7 +380,7 @@ export function RecruiterJobsBrowser({
           <select
             value={companyFilter}
             onChange={(e) => handleFilterChange(setCompanyFilter)(e.target.value)}
-            className={FILTER_SELECT_CLASS}
+            className={`${FILTER_SELECT_CLASS} lg:flex-1`}
           >
             <option value="">{filterLabels.company}: {filterLabels.all}</option>
             {uniqueCompanies.map((c) => (
@@ -392,7 +391,7 @@ export function RecruiterJobsBrowser({
             <select
               value={categoryFilter}
               onChange={(e) => handleCategorySelect(e.target.value)}
-              className={FILTER_SELECT_CLASS}
+              className={`${FILTER_SELECT_CLASS} lg:flex-1`}
             >
               <option value="">{filterLabels.category}: {filterLabels.all}</option>
               {categoryOptions.map((option) => (
@@ -405,7 +404,7 @@ export function RecruiterJobsBrowser({
           <select
             value={employmentFilter}
             onChange={(e) => handleFilterChange(setEmploymentFilter)(e.target.value)}
-            className={FILTER_SELECT_CLASS}
+            className={`${FILTER_SELECT_CLASS} lg:flex-1`}
           >
             <option value="">{filterLabels.employmentType}: {filterLabels.all}</option>
             {uniqueEmploymentTypes.map((t) => (
@@ -413,97 +412,102 @@ export function RecruiterJobsBrowser({
             ))}
           </select>
         </div>
-
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium text-muted-foreground">
-            {filteredJobs.length} {labels.resultsCount}
-          </p>
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="h-7 shrink-0 gap-1 px-2 text-xs"
-            >
-              <X className="h-3 w-3" />
-              {filterLabels.clearFilters}
-            </Button>
-          )}
-        </div>
-        </div>
-
-        {filteredJobs.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center py-16 text-center">
-            <Briefcase className="h-10 w-10 text-muted-foreground/50" />
-            <p className="mt-4 text-lg font-medium text-muted-foreground">
-              {labels.noMatchTitle}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {labels.noMatchSubtitle}
-            </p>
-          </Card>
-        ) : (
-          <div className="space-y-2.5">
-            {paginatedJobs.map((job) => (
-              <JobListRow
-                key={job.id}
-                job={job}
-                locale={locale}
-                labels={labels}
-                selected={isDesktop && job.id === selectedJobId}
-                onSelect={() => handleRowSelect(job.id)}
-              />
-            ))}
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  {filterLabels.page} {currentPage} {filterLabels.of} {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Right: detail pane (desktop only) */}
-      <div className="hidden lg:block lg:sticky lg:top-24">
-        {selectedJob ? (
-          <div className="max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-border/70 bg-card p-6">
-            <JobDetailApply
-              key={selectedJob.id}
-              job={selectedJob}
-              locale={locale}
-              messages={messages}
-              isApplicant={isApplicant}
-            />
-          </div>
-        ) : (
-          <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 p-10 text-center">
-            <Briefcase className="h-10 w-10 text-muted-foreground/40" />
-            <p className="mt-4 text-sm text-muted-foreground">
-              {labels.selectPrompt}
+      {/* Two panes */}
+      <div className="lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
+        {/* Left: result count + job list */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              {filteredJobs.length} {labels.resultsCount}
             </p>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-7 shrink-0 gap-1 px-2 text-xs"
+              >
+                <X className="h-3 w-3" />
+                {filterLabels.clearFilters}
+              </Button>
+            )}
           </div>
-        )}
+
+          {filteredJobs.length === 0 ? (
+            <Card className="flex flex-col items-center justify-center py-16 text-center">
+              <Briefcase className="h-10 w-10 text-muted-foreground/50" />
+              <p className="mt-4 text-lg font-medium text-muted-foreground">
+                {labels.noMatchTitle}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {labels.noMatchSubtitle}
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-2.5">
+              {paginatedJobs.map((job) => (
+                <JobListRow
+                  key={job.id}
+                  job={job}
+                  locale={locale}
+                  labels={labels}
+                  selected={isDesktop && job.id === selectedJobId}
+                  onSelect={() => handleRowSelect(job.id)}
+                />
+              ))}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {filterLabels.page} {currentPage} {filterLabels.of} {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right: detail pane (desktop only) */}
+        <div className="hidden lg:sticky lg:top-[124px] lg:block">
+          {selectedJob ? (
+            <div className="max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl border border-border/70 bg-card p-6">
+              <JobDetailApply
+                key={selectedJob.id}
+                job={selectedJob}
+                locale={locale}
+                messages={messages}
+                isApplicant={isApplicant}
+              />
+            </div>
+          ) : (
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 p-10 text-center">
+              <Briefcase className="h-10 w-10 text-muted-foreground/40" />
+              <p className="mt-4 text-sm text-muted-foreground">
+                {labels.selectPrompt}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

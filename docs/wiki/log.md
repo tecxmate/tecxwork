@@ -666,3 +666,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage, design-system]
 - Added a frosted "stuck" treatment: `lg:bg-background/85 lg:backdrop-blur` + `lg:border-b` + `lg:shadow-sm`.
 - Filters reworked from ragged `flex-wrap` into an even `grid grid-cols-2 gap-2`; selects unified via `FILTER_SELECT_CLASS` (h-9, rounded-lg, shadow-sm, hover border). Result count + "Clear filters" now share one row (count left, clear right).
 - Desktop-only; mobile keeps the plain non-sticky block.
+
+## [2026-05-29] tweak | Jobs browser: search+filters as one full-width sticky line over both panes
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- Moved the search box + filter selects out of the left list column into a single full-width bar above the two-pane grid (list | detail). On desktop it's one row (`lg:flex`): search `flex-[1.4]`, the filter group `flex-[2]` with each select `lg:flex-1`. Sticky `lg:top-14 lg:z-[9]` with the frosted backdrop/border/shadow.
+- The result count + "Clear filters" moved down into the left list column (above the list), so the sticky line stays a clean single row.
+- Detail pane sticky offset bumped `lg:top-24` → `lg:top-[124px]` so it tucks below the now full-width sticky search bar (no overlap); its max-height adjusted to `calc(100vh-9rem)`.
+- Mobile unchanged behaviorally: bar is a non-sticky block (search full width, selects in a 2-col grid).
