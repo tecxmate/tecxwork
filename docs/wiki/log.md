@@ -631,3 +631,7 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage, admin-panel]
   - API: `PUT /api/admin/recruiters/pin` takes `{ order: number[] }` (full ordered list of pinned ids), rewrites all ranks in one transaction (dense 0-based via SQL CASE), unpins everything not in the list, then invalidates cache. Admin-only.
   - UI: admin Recruiters section gained a "Featured companies" card — ordered list with ↑/↓/unpin per row + a "Pin a company" dropdown. Optimistically updates parent state via `onRecruiterUpdated`.
 - IMPORTANT: the `pinned_rank` migration must also be run against the Vercel **production** DATABASE_URL before deploy if prod uses a different Neon DB than the dev `.env.local`. (The app reads `process.env.DATABASE_URL`; the local `DATABASE_URL_UNPOOLED` points at a different/empty endpoint — don't be fooled by it.)
+
+## [2026-05-29] ingest | Move /jobs search+filters into the left pane
+attributed_to: [niko]   belongs_to: [public-homepage]
+- Per Niko, the full-width search/filter bar now lives inside the left column of the two-pane /jobs layout (above the job list), so it spans only the list width instead of the whole page. The grid wrapper now encloses the entire section; right detail pane unchanged.

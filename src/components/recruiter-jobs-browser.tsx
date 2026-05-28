@@ -346,7 +346,8 @@ export function RecruiterJobsBrowser({
   };
 
   return (
-    <section ref={sectionRef} className="space-y-4 scroll-mt-20">
+    <section ref={sectionRef} className="scroll-mt-20 lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
+      {/* Left: search, filters, and job list */}
       <div className="space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -425,21 +426,18 @@ export function RecruiterJobsBrowser({
         <p className="text-sm text-muted-foreground">
           {filteredJobs.length} {labels.resultsCount}
         </p>
-      </div>
 
-      {filteredJobs.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-16 text-center">
-          <Briefcase className="h-10 w-10 text-muted-foreground/50" />
-          <p className="mt-4 text-lg font-medium text-muted-foreground">
-            {labels.noMatchTitle}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {labels.noMatchSubtitle}
-          </p>
-        </Card>
-      ) : (
-        <div className="lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
-          {/* Left: job list */}
+        {filteredJobs.length === 0 ? (
+          <Card className="flex flex-col items-center justify-center py-16 text-center">
+            <Briefcase className="h-10 w-10 text-muted-foreground/50" />
+            <p className="mt-4 text-lg font-medium text-muted-foreground">
+              {labels.noMatchTitle}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {labels.noMatchSubtitle}
+            </p>
+          </Card>
+        ) : (
           <div className="space-y-2.5">
             {paginatedJobs.map((job) => (
               <JobListRow
@@ -478,30 +476,30 @@ export function RecruiterJobsBrowser({
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          {/* Right: detail pane (desktop only) */}
-          <div className="hidden lg:block lg:sticky lg:top-24">
-            {selectedJob ? (
-              <div className="max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-border/70 bg-card p-6">
-                <JobDetailApply
-                  key={selectedJob.id}
-                  job={selectedJob}
-                  locale={locale}
-                  messages={messages}
-                  isApplicant={isApplicant}
-                />
-              </div>
-            ) : (
-              <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 p-10 text-center">
-                <Briefcase className="h-10 w-10 text-muted-foreground/40" />
-                <p className="mt-4 text-sm text-muted-foreground">
-                  {labels.selectPrompt}
-                </p>
-              </div>
-            )}
+      {/* Right: detail pane (desktop only) */}
+      <div className="hidden lg:block lg:sticky lg:top-24">
+        {selectedJob ? (
+          <div className="max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-border/70 bg-card p-6">
+            <JobDetailApply
+              key={selectedJob.id}
+              job={selectedJob}
+              locale={locale}
+              messages={messages}
+              isApplicant={isApplicant}
+            />
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 p-10 text-center">
+            <Briefcase className="h-10 w-10 text-muted-foreground/40" />
+            <p className="mt-4 text-sm text-muted-foreground">
+              {labels.selectPrompt}
+            </p>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
