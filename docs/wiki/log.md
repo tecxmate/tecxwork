@@ -654,3 +654,7 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - Implementation notes for whoever picks this up:
   - Per-photo light/dark text is the hard part. Auto-detecting luminance client-side via canvas hits CORS on blob-hosted images; cleanest robust route is a fixed dark gradient overlay + white text (guarantees contrast regardless of photo) rather than true per-image adaptation. If true adaptation is required, compute average luminance server-side at upload time and store a `textOnImage: "light"|"dark"` flag, or sample a downscaled version.
   - The carousel rotates multiple images, so any per-image text color must update per slide.
+
+## [2026-05-29] ingest | PageHero threshold-tuning note
+attributed_to: [niko]   belongs_to: [page-hero]
+- Recorded the open item for PageHero: dark↔light text uses a single `luma > 0.6` cutoff; if a real photo wrong-foots the color, nudge the cutoff / widen the sampled band / add a per-image override. Not built yet.

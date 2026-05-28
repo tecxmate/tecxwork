@@ -30,3 +30,7 @@ date: 2026-05-29
 - Text gets a `text-shadow` only in light-text mode (extra insurance over busy dark photos).
 - No images → renders the original plain `bg-card` centered header (graceful fallback), so pages without uploaded images look unchanged.
 - The old `PageImageCarousel` was deleted (it was only used by these two pages). See [[hero-carousel]] for the *homepage* hero, which is a separate component.
+
+## Tuning / open items
+
+- The dark↔light cutoff is a single constant: `darkText = luma > 0.6`. If a specific photo sits near the threshold and the text color "wrong-foots," options are: nudge the `0.6` cutoff, widen the sampled band, or add a per-page/per-image override (e.g. an admin-set `forceTextColor`). Not built yet — revisit if a real uploaded image looks wrong on the live deploy.
