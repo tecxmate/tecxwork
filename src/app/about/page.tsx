@@ -74,12 +74,12 @@ export default async function AboutPage() {
           <section>
             <h2 className="text-xl font-semibold mb-2">Technology &amp; Architecture</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Modern serverless cloud infrastructure engineered for zero-downtime scaling and instant global delivery.</li>
-              <li>High-performance, edge-accelerated routing ensuring sub-second response times across all devices.</li>
-              <li>Enterprise-grade relational database architecture with atomic transactional integrity for collision-free scheduling.</li>
-              <li>Real-time, multi-channel notification engine integrating asynchronous email and persistent web-push capabilities.</li>
-              <li>Secure, globally distributed object storage for encrypted asset and document management.</li>
-              <li>Native, localized experiences dynamically rendered in English, Traditional Chinese, and Vietnamese.</li>
+              <li>Built on modern, secure cloud infrastructure that stays fast and reliable even when thousands of people use it at once.</li>
+              <li>Smart, global routing so pages load instantly, no matter where you are or what device you are using.</li>
+              <li>A robust database system that carefully manages every interview booking, ensuring schedules never overlap.</li>
+              <li>A reliable notification system that instantly sends emails and alerts to keep everyone updated.</li>
+              <li>Secure file storage that keeps your uploaded resumes and images safe and private.</li>
+              <li>Designed from the ground up to support multiple languages seamlessly.</li>
             </ul>
           </section>
 
