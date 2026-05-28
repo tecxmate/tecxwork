@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -14,6 +15,18 @@ import {
 } from "recharts";
 
 import type { AdminAnalytics } from "@/app/admin/admin-data";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+}
 
 const PURPLE = "#8C52FF";
 const PURPLE_LIGHT = "#C4A6FF";
@@ -65,6 +78,8 @@ function CapacityChart({
     unconfirmed: d.unconfirmed,
     rejected: d.rejected,
   }));
+  const isMobile = useIsMobile();
+  const labelWidth = isMobile ? 96 : 200;
   const totalSlots = rows.reduce((s, r) => s + r.total, 0);
   const totalBooked = rows.reduce((s, r) => s + r.booked, 0);
   const fillRate = totalSlots ? Math.round((totalBooked / totalSlots) * 100) : 0;
@@ -101,9 +116,9 @@ function CapacityChart({
               <YAxis
                 type="category"
                 dataKey="company"
-                width={200}
+                width={labelWidth}
                 interval={0}
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }}
                 tickLine={false}
                 axisLine={false}
               />
