@@ -22,6 +22,7 @@ export function AppTopBar({
   showActionsOnMobile = false,
   accountLabels,
   notificationLabels,
+  rightStatus,
 }: {
   href?: string;
   navRole?: NavRole;
@@ -31,6 +32,7 @@ export function AppTopBar({
   showActionsOnMobile?: boolean;
   accountLabels?: AppTopBarAccountLabels;
   notificationLabels?: NotificationBellLabels;
+  rightStatus?: React.ReactNode;
 }) {
   const navItems = navRole ? navItemsByRole[navRole] : [];
   const showStudentLanguageSwitcher =
@@ -60,6 +62,7 @@ export function AppTopBar({
                 {desktopActions}
               </div>
             ) : null}
+            {rightStatus}
             <AppTopBarActions
               mobileOverflow={mobileOverflow}
               desktopChildren={

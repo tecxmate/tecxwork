@@ -779,6 +779,28 @@ export function AdminDashboard({
             {messages.common.logout}
           </Button>
         }
+        rightStatus={
+          section === "settings" ? (
+            <div
+              className={cn(
+                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium",
+                settingsStatusClassName
+              )}
+              role="status"
+              aria-live="polite"
+              title={settingsStatusDetail || settingsStatusLabel}
+            >
+              {isSettingsSaving ? (
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+              ) : hasSettingsError ? (
+                <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
+              ) : (
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              )}
+              <span className="hidden sm:inline">{settingsStatusLabel}</span>
+            </div>
+          ) : undefined
+        }
       />
 
       <main className="w-full min-w-0 max-w-full flex-1 px-4 py-6 sm:px-6 sm:py-8">
@@ -806,31 +828,6 @@ export function AdminDashboard({
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div
-                className={cn(
-                  "sticky top-3 z-20 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80",
-                  settingsStatusClassName
-                )}
-                role="status"
-                aria-live="polite"
-              >
-                <span className="flex min-w-0 items-center gap-2 font-medium">
-                  {isSettingsSaving ? (
-                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-                  ) : hasSettingsError ? (
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
-                  ) : (
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                  )}
-                  <span className="truncate">{settingsStatusLabel}</span>
-                </span>
-                {settingsStatusDetail ? (
-                  <span className="hidden min-w-0 truncate text-right opacity-80 sm:block">
-                    {settingsStatusDetail}
-                  </span>
-                ) : null}
               </div>
 
               {/* Settings: 2-Column Layout */}
