@@ -33,6 +33,8 @@ import {
   MapPin,
   CheckCircle2,
   Building2,
+  Pencil,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -64,6 +66,10 @@ type Recruiter = {
   contactEmail: string;
   email: string;
   createdAt: Date | string;
+  description?: string | null;
+  websiteUrl?: string | null;
+  logoUrl?: string | null;
+  galleryUrls?: string[] | null;
 };
 
 type Applicant = {
@@ -645,6 +651,12 @@ export function AdminDashboard({
       setRecruiters(recruiters.filter((x) => x.id !== r.id));
       router.refresh();
     }
+  }
+
+  function handleRecruiterUpdated(updated: Recruiter) {
+    setRecruiters((current) =>
+      current.map((x) => (x.id === updated.id ? { ...x, ...updated } : x))
+    );
   }
 
   async function handleDeleteRecruiterApproval(approval: RecruiterApproval) {
@@ -1568,6 +1580,7 @@ export function AdminDashboard({
               onApprovalCreated={(approval) =>
                 setRecruiterApprovals((current) => [...current, approval])
               }
+              onRecruiterUpdated={handleRecruiterUpdated}
             />
           ) : section === "applicants" ? (
             <PeopleSection
@@ -2485,12 +2498,14 @@ function RecruitersSection({
   onDeleteRecruiter,
   onDeleteApproval,
   onApprovalCreated,
+  onRecruiterUpdated,
 }: {
   recruiters: Recruiter[];
   approvals: RecruiterApproval[];
   onDeleteRecruiter: (r: Recruiter) => void;
   onDeleteApproval: (approval: RecruiterApproval) => void;
   onApprovalCreated: (approval: RecruiterApproval) => void;
+  onRecruiterUpdated: (r: Recruiter) => void;
 }) {
   const router = useRouter();
   const { messages, locale } = useStudentI18n();
@@ -2509,6 +2524,80 @@ function RecruitersSection({
   const [newIndustry, setNewIndustry] = useState("Technology");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
+
+  // Edit recruiter modal
+  const [editing, setEditing] = useState<Recruiter | null>(null);
+  const [editForm, setEditForm] = useState({
+    company: "",
+    industry: "",
+    contactEmail: "",
+    description: "",
+    websiteUrl: "",
+    logoUrl: "" as string | null,
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  function openEdit(r: Recruiter) {
+    setEditing(r);
+    setEditForm({
+      company: r.company ?? "",
+      industry: r.industry ?? "",
+      contactEmail: r.contactEmail ?? "",
+      description: r.description ?? "",
+      websiteUrl: r.websiteUrl ?? "",
+      logoUrl: r.logoUrl ?? null,
+    });
+    setEditError("");
+  }
+
+  async function handleLogoUpload(file: File) {
+    setUploadingLogo(true);
+    setEditError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("type", "logo");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setEditForm((f) => ({ ...f, logoUrl: data.url }));
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
+  async function handleSaveEdit() {
+    if (!editing) return;
+    setSavingEdit(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/admin/recruiters?id=${editing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company: editForm.company.trim(),
+          industry: editForm.industry.trim(),
+          contactEmail: editForm.contactEmail.trim(),
+          description: editForm.description.trim(),
+          websiteUrl: editForm.websiteUrl.trim() || null,
+          logoUrl: editForm.logoUrl,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save");
+      onRecruiterUpdated({ ...editing, ...data.recruiter });
+      setEditing(null);
+      router.refresh();
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   async function handleAddRecruiter(e: React.FormEvent) {
     e.preventDefault();
@@ -2775,13 +2864,22 @@ function RecruitersSection({
                     })}
                   </td>
                   <td className="px-3 py-2.5">
-                    <button
-                      onClick={() => onDeleteRecruiter(r)}
-                      className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={interpolate(admin.people.removeRecruiterAria, { company: r.company })}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => openEdit(r)}
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                        aria-label={`Edit ${r.company}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => onDeleteRecruiter(r)}
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={interpolate(admin.people.removeRecruiterAria, { company: r.company })}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -2789,6 +2887,133 @@ function RecruitersSection({
           </tbody>
         </table>
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-background p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-heading text-lg font-semibold">
+                Edit {editing.company}
+              </h3>
+              <button
+                onClick={() => setEditing(null)}
+                className="rounded-full p-1 hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                {editForm.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={editForm.logoUrl}
+                    alt="Logo"
+                    className="h-14 w-14 rounded-lg border object-contain"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-lg border bg-muted">
+                    <Building2 className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex flex-col gap-1">
+                  <label className="cursor-pointer text-sm text-primary hover:underline">
+                    {uploadingLogo ? "Uploading…" : "Upload logo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingLogo}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) void handleLogoUpload(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {editForm.logoUrl && (
+                    <button
+                      onClick={() => setEditForm((f) => ({ ...f, logoUrl: null }))}
+                      className="text-left text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      Remove logo
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Company
+                </label>
+                <input
+                  value={editForm.company}
+                  onChange={(e) => setEditForm((f) => ({ ...f, company: e.target.value }))}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Industry
+                </label>
+                <input
+                  value={editForm.industry}
+                  onChange={(e) => setEditForm((f) => ({ ...f, industry: e.target.value }))}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Contact email
+                </label>
+                <input
+                  type="email"
+                  value={editForm.contactEmail}
+                  onChange={(e) => setEditForm((f) => ({ ...f, contactEmail: e.target.value }))}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Website
+                </label>
+                <input
+                  value={editForm.websiteUrl}
+                  onChange={(e) => setEditForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+                  placeholder="https://…"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Description
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  rows={4}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            {editError && (
+              <p className="mt-3 text-xs text-destructive">{editError}</p>
+            )}
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>
+                Cancel
+              </Button>
+              <Button disabled={savingEdit || uploadingLogo} onClick={handleSaveEdit}>
+                {savingEdit ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

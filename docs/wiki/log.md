@@ -592,3 +592,11 @@ attributed_to: [niko]   belongs_to: [tecxwork, seo]
 - Added `JobPosting` structured data per job for Google Jobs eligibility: title, HTML description (desc + responsibilities + requirements + benefits), datePosted from createdAt, validThrough from applicationDeadline, hiringOrganization with logo, jobLocation (country=TW) or jobLocationType=TELECOMMUTE, mapped employmentType + salary unitText, identifier, inLanguage.
 - Page metadata also enriched (title includes "tecxwork (Vietnamese Jobs in Taiwan)", canonical, OG).
 - Captured quality gates Google enforces silently (short description, missing location, expired validThrough) in topics/seo.md so recruiter onboarding pushes complete data.
+
+## [2026-05-28] feature | Admin can edit recruiter profile + logo on their behalf
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel, recruitment-workflows]
+- Admins can now edit a recruiter's company profile from the admin Recruiters tab: company, industry, contact email, website, description, and logo (upload via existing `/api/upload` type=logo). Pencil icon next to the delete button opens an edit modal.
+- Backend: new `PATCH /api/admin/recruiters?id=<id>` (admin-session gated). Deliberately EXCLUDES `interviewerCount` — that field triggers slot regeneration in the recruiter's own `/api/me/recruiter` editor, so admin-side editing stays free of booking/slot side-effects. No migration (writes existing `recruiters` columns).
+- Data: `getAdminDashboardData` recruiter query + the `Recruiter` type now also load `description`, `websiteUrl`, `logoUrl`, `galleryUrls`.
+- Conflict posture: admin and recruiter write the same `recruiters` row; last-write-wins is acceptable for low-frequency logo/detail edits. v1 ships with NO recruiter notification (admin is assisting). Both decisions per niko.
+- Not browser-tested yet (typecheck + lint clean only). Verify the modal + logo upload in the running app before relying on it.

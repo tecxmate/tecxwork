@@ -85,6 +85,64 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ recruiter }, { status: 201 });
 }
 
+/**
+ * PATCH ?id=... — Admin edits a recruiter's company profile on their behalf.
+ * Scope: company, industry, contactEmail, description, websiteUrl, logoUrl,
+ * galleryUrls. Deliberately excludes interviewerCount, which triggers slot
+ * regeneration and is left to the recruiter's own profile editor.
+ */
+export async function PATCH(req: NextRequest) {
+  if (!(await getAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "id is required" }, { status: 400 });
+  }
+  const recruiterId = parseInt(id);
+  if (isNaN(recruiterId)) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+
+  const body = await req.json();
+  const {
+    company,
+    industry,
+    contactEmail,
+    description,
+    websiteUrl,
+    logoUrl,
+    galleryUrls,
+  } = body;
+
+  const updates: Record<string, unknown> = {};
+  if (typeof company === "string" && company.trim()) updates.company = company.trim();
+  if (typeof industry === "string") updates.industry = industry.trim();
+  if (typeof contactEmail === "string") updates.contactEmail = contactEmail.trim();
+  if (typeof description === "string") updates.description = description.trim();
+  if (typeof websiteUrl === "string" || websiteUrl === null) updates.websiteUrl = websiteUrl;
+  if (typeof logoUrl === "string" || logoUrl === null) updates.logoUrl = logoUrl;
+  if (Array.isArray(galleryUrls)) updates.galleryUrls = galleryUrls.slice(0, 4);
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  }
+
+  const [updated] = await db
+    .update(recruiters)
+    .set(updates)
+    .where(eq(recruiters.id, recruiterId))
+    .returning();
+
+  if (!updated) {
+    return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ recruiter: updated });
+}
+
 /** DELETE ?id=... — Remove recruiter + user + their slots + bookings */
 export async function DELETE(req: NextRequest) {
   if (!(await getAdminSession())) {
