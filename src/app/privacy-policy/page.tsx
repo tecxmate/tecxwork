@@ -92,8 +92,8 @@ export default async function PrivacyPolicyPage() {
 
         <h2 className="text-xl font-semibold mt-8 mb-4">6. Data Retention</h2>
         <ul className="list-disc pl-5 space-y-1 mb-4">
-          <li><strong>Single-Event Model:</strong> If the Platform is utilized strictly for a single event, your personal data (including profile and booking records) will be permanently deleted from our active databases within <strong>30 days</strong> after the conclusion of the event, unless you explicitly opt-in to keep your account active for future events (&quot;Talent Passport&quot;).</li>
-          <li><strong>Talent Passport:</strong> If you opt-in to persistent storage, we will retain your account and profile data until you manually delete your account.</li>
+          <li><strong>Continuous Career Support:</strong> To save you time and provide a seamless experience for future career fairs and networking opportunities, we securely retain your profile, CV, and application history. This ensures your &quot;Talent Passport&quot; is always ready for your next career move, without the need to rebuild your profile from scratch.</li>
+          <li><strong>User Control:</strong> You retain full control over your data. We will safely store your information to benefit your ongoing career journey, but you may request the permanent deletion of your account and personal data at any time.</li>
         </ul>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">7. Your Rights (Taiwan PDPA Article 3)</h2>
