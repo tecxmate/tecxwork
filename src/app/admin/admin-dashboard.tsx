@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -325,10 +325,80 @@ export function AdminDashboard({
   const [timeFrameOpen, setTimeFrameOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [brandingOpen, setBrandingOpen] = useState(false);
-  const [branding, setBranding] = useState(initialBranding);
+  const [branding, setBrandingState] = useState(initialBranding);
   const [brandingSaving, setBrandingSaving] = useState(false);
   const [brandingSaved, setBrandingSaved] = useState(false);
   const [brandingError, setBrandingError] = useState("");
+  const [brandingDirty, setBrandingDirty] = useState(false);
+  const brandingRef = useRef(branding);
+  brandingRef.current = branding;
+  const brandingInFlight = useRef(false);
+  const brandingVersion = useRef(0);
+  // Editing any branding field marks the section dirty (orange in the
+  // top-bar status); a debounced effect below autosaves shortly after.
+  const setBranding = useCallback((next: typeof initialBranding) => {
+    setBrandingState(next);
+    setBrandingDirty(true);
+    brandingVersion.current += 1;
+  }, []);
+  const saveBranding = useCallback(async () => {
+    if (brandingInFlight.current) return;
+    brandingInFlight.current = true;
+    const savedVersion = brandingVersion.current;
+    const b = brandingRef.current;
+    setBrandingSaving(true);
+    setBrandingSaved(false);
+    setBrandingError("");
+    const payload: Record<string, string | boolean | null> = {
+      eventName: b.eventName,
+      emailEventName: b.emailEventName,
+      tagline: b.tagline,
+      organizer: b.organizer,
+      organizerShort: b.organizerShort,
+      hostedAt: b.hostedAt,
+      hostedAtFull: b.hostedAtFull,
+      displayDate: b.displayDate,
+      displayYear: b.displayYear,
+      location: b.location,
+      heroOverlayEnabled: b.heroOverlayEnabled,
+    };
+    if (b.eventDate) payload.eventDate = b.eventDate;
+    if (b.eventEndDate) payload.eventEndDate = b.eventEndDate;
+    try {
+      const res = await fetch("/api/admin/branding", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setBrandingError(d.error || "Failed to save");
+        return;
+      }
+      // Only clear dirty if no further edits landed while this save ran;
+      // otherwise leave it set so the debounce picks up the newer values.
+      if (brandingVersion.current === savedVersion) {
+        setBrandingDirty(false);
+      }
+      setBrandingSaved(true);
+      setTimeout(() => setBrandingSaved(false), 3000);
+      router.refresh();
+    } catch {
+      setBrandingError("Failed to save");
+    } finally {
+      setBrandingSaving(false);
+      brandingInFlight.current = false;
+    }
+  }, [router]);
+  // Debounce: save ~1s after the last branding edit. Effect body only
+  // schedules a timer (no synchronous setState) to stay lint-clean.
+  useEffect(() => {
+    if (!brandingDirty) return;
+    const timer = window.setTimeout(() => {
+      void saveBranding();
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [brandingDirty, branding, saveBranding]);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackReports, setFeedbackReports] = useState<FeedbackReportRow[]>([]);
   const [feedbackLoaded, setFeedbackLoaded] = useState(false);
@@ -417,18 +487,23 @@ export function AdminDashboard({
     brandingSaved ||
     tfSaved ||
     hpSaved;
+  const hasUnsavedChanges = brandingDirty;
   const settingsStatusLabel = hasSettingsError
     ? "Some changes failed"
     : isSettingsSaving
       ? "Saving changes..."
-      : hasRecentSave
-        ? "Changes saved"
-        : "All changes saved";
+      : hasUnsavedChanges
+        ? "Unsaved changes"
+        : hasRecentSave
+          ? "Changes saved"
+          : "All changes saved";
   const settingsStatusClassName = hasSettingsError
     ? "border-destructive/30 bg-destructive/10 text-destructive"
     : isSettingsSaving
       ? "border-primary/30 bg-primary/10 text-primary"
-      : "border-[#30D158]/30 bg-[#30D158]/10 text-[#1f8f3a]";
+      : hasUnsavedChanges
+        ? "border-[#FF9F0A]/30 bg-[#FF9F0A]/10 text-[#b26a00]"
+        : "border-[#30D158]/30 bg-[#30D158]/10 text-[#1f8f3a]";
   const settingsStatusDetail = hasSettingsError
     ? settingsMessage || currencyError || brandingError || tfError || "Review the section with an error."
     : settingsStatus === "saved"
@@ -792,7 +867,7 @@ export function AdminDashboard({
             >
               {isSettingsSaving ? (
                 <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-              ) : hasSettingsError ? (
+              ) : hasSettingsError || hasUnsavedChanges ? (
                 <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
               ) : (
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
@@ -1001,46 +1076,17 @@ export function AdminDashboard({
                 </button>
                 {brandingOpen && (
                   <div className="border-t px-4 py-4">
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        setBrandingSaving(true);
-                        setBrandingSaved(false);
-                        setBrandingError("");
-                        const payload: Record<string, string | boolean | null> = {
-                          eventName: branding.eventName,
-                          emailEventName: branding.emailEventName,
-                          tagline: branding.tagline,
-                          organizer: branding.organizer,
-                          organizerShort: branding.organizerShort,
-                          hostedAt: branding.hostedAt,
-                          hostedAtFull: branding.hostedAtFull,
-                          displayDate: branding.displayDate,
-                          displayYear: branding.displayYear,
-                          location: branding.location,
-                          heroOverlayEnabled: branding.heroOverlayEnabled,
-                        };
-                        if (branding.eventDate) payload.eventDate = branding.eventDate;
-                        if (branding.eventEndDate) payload.eventEndDate = branding.eventEndDate;
-                        const res = await fetch("/api/admin/branding", {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(payload),
-                        });
-                        if (!res.ok) {
-                          const d = await res.json().catch(() => ({}));
-                          setBrandingError(d.error || "Failed to save");
-                        } else {
-                          setBrandingSaved(true);
-                          setTimeout(() => setBrandingSaved(false), 3000);
-                        }
-                        setBrandingSaving(false);
-                        router.refresh();
+                    <div
+                      onBlur={() => {
+                        // Flush an immediate save when leaving a field with
+                        // pending edits (protects against navigating away
+                        // before the 1s debounce fires).
+                        if (brandingDirty) void saveBranding();
                       }}
                       className="space-y-3"
                     >
                       <p className="text-xs text-muted-foreground">
-                        These fields control the event name and surrounding branding shown in metadata, emails, and the homepage. Update them when running a new fair — no redeploy required.
+                        These fields control the event name and surrounding branding shown in metadata, emails, and the homepage. Changes autosave — no redeploy required.
                       </p>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex flex-col gap-1 text-xs">
@@ -1160,14 +1206,7 @@ export function AdminDashboard({
                           onCheckedChange={(v) => setBranding({ ...branding, heroOverlayEnabled: v })}
                         />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button type="submit" size="sm" disabled={brandingSaving}>
-                          {brandingSaving ? "Saving…" : "Save branding"}
-                        </Button>
-                        {brandingSaved && <span className="text-xs text-green-600">Saved</span>}
-                        {brandingError && <span className="text-xs text-red-600">{brandingError}</span>}
-                      </div>
-                    </form>
+                    </div>
                   </div>
                 )}
               </div>
