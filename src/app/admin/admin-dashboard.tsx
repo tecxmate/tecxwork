@@ -539,12 +539,6 @@ export function AdminDashboard({
   const addableSalaryCurrencyOptions = allSalaryCurrencyOptions.filter(
     (option) => !salaryCurrencyOptions.includes(option.value)
   );
-  const statsCards = [
-    { label: admin.stats.recruiters, value: stats.totalRecruiters, icon: Users },
-    { label: admin.stats.students, value: stats.totalApplicants, icon: GraduationCap },
-    { label: admin.stats.slots, value: `${bookedSlots}/${stats.totalSlots}`, icon: Calendar },
-    { label: "Booking Requests", value: stats.totalBookings, icon: Briefcase },
-  ];
   const hasSettingsError =
     settingsStatus === "error" ||
     Boolean(currencyError) ||
@@ -999,43 +993,6 @@ export function AdminDashboard({
                 <div className="min-w-0 space-y-4">
                   {activePanel === "overview" && (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {statsCards.map((stat) => (
-                          <div
-                            key={stat.label}
-                            className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5"
-                          >
-                            <stat.icon className="h-4 w-4 shrink-0 text-primary" />
-                            <span className="text-lg font-bold tabular-nums">
-                              {stat.value}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {stat.label}
-                            </span>
-                          </div>
-                        ))}
-                        {emailStats && (
-                          <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5">
-                            <Mail className="h-4 w-4 shrink-0 text-primary" />
-                            <span
-                              className={cn(
-                                "text-lg font-bold tabular-nums",
-                                emailStats.today.percentUsed >= 90
-                                  ? "text-red-500"
-                                  : emailStats.today.percentUsed >= 70
-                                    ? "text-yellow-600"
-                                    : ""
-                              )}
-                            >
-                              {emailStats.today.sent}/{emailStats.today.limit}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              Emails
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
                       <div className="grid gap-3 sm:grid-cols-2">
                         <StatBar
                           label="Slot utilization"

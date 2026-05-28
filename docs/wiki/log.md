@@ -728,3 +728,15 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 - The `getAnalytics()` added for the Overview charts crashed the admin server render (generic "Server Components render" error on every admin page, since `getAdminDashboardData` runs for all sections). Cause: reusing a raw `sql()` day-expression in both `.select({d: day})` and `.groupBy(day)` of a drizzle query builder trips an internal alias path.
 - Fix: rewrote the 5 aggregations as raw `db.execute(sql\`SELECT to_char((created_at AT TIME ZONE 'Asia/Taipei')::date,'YYYY-MM-DD') AS d, COUNT(*)::int AS n FROM <table> GROUP BY 1[, status|success]\`)` and read `.rows`. Verified against the live DB via the app's own `db.execute`. No more query-builder column/alias machinery.
 - Lesson: for grouped aggregations with a computed day key, prefer raw `db.execute` over `.select()/.groupBy()` with a shared `sql()` chunk.
+
+## [2026-05-29] ops | Local disaster-recovery backup script (Neon + Vercel Blob)
+attributed_to: [niko]   belongs_to: [tecxwork, data-privacy]
+- `scripts/backup.mjs` mirrors the Neon Postgres DB and all Vercel Blob objects to the personal PC for off-platform DR. `pnpm backup` runs it once. Per run: `pg_dump` → `~/tecxwork-backups/db/tecxwork_<ts>.sql.gz` (keeps newest 48, `DB_RETENTION` env-tunable), and an incremental Blob mirror → `~/tecxwork-backups/blob/<pathname>` (skips files already present with the same size). Backup dir overridable via `BACKUP_DIR`.
+- Reads creds from `.env.local`; uses the **unpooled** connection (`DATABASE_URL_UNPOOLED` / `POSTGRES_URL_NON_POOLING`) because pg_dump doesn't work through Neon's pooler. `pg_dump` auto-detected (found at `/opt/homebrew/opt/libpq/bin/pg_dump`, v18.2 — forward-compatible with Neon's PG; no `brew install` was needed despite it being absent from PATH).
+- Hourly scheduling via `scripts/com.tecxwork.backup.plist` (launchd, `StartInterval 3600`, `RunAtLoad`). Not yet installed — load it deliberately with `launchctl load ~/Library/LaunchAgents/...`.
+- **Why:** niko wants a guaranteed local copy of all data in case anything happens to the hosted services.
+- ⚠️ Caveat surfaced during the first test run: the DB reached via `DATABASE_URL_UNPOOLED` was nearly empty (0 recruiters/users/schools, only event_config had 1 row), while Blob had 155 real objects (106 MB). niko should confirm that connection string points at the intended (production) database before relying on this as a safety net.
+
+## [2026-05-29] tweak | Removed redundant stat cards from Overview
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
+- Dropped the row of stat cards (Recruiters/Students/Slots/Booking Requests/Emails) from the Overview panel — the same numbers are now conveyed by the StatBars (slot utilization, email quota, active interviews, participant mix) and the time-series charts. Also removed the now-unused `statsCards` array.
