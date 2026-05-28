@@ -1,7 +1,6 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { jobCategorySlugFromValue } from "@/lib/job-category-routes";
 import type { JobCategoryValue } from "@/lib/job-posting";
@@ -21,14 +20,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { JobDetailApply } from "@/components/job-detail-apply";
+import { cn } from "@/lib/utils";
 import {
   employmentTypeLabel,
   formatApplicationDeadline,
-  formatSalaryRange,
   getJobCategoryOptions,
   jobCategoryLabel,
   type JobPostingLocale,
 } from "@/lib/job-posting";
+import type { StudentMessages } from "@/lib/student-messages";
 import type { RecruiterJobPosting } from "@/components/recruiter-job-posting-card";
 
 const ITEMS_PER_PAGE = 12;
@@ -39,6 +40,7 @@ type JobsBrowserLabels = {
   resultsCount: string;
   noMatchTitle: string;
   noMatchSubtitle: string;
+  selectPrompt: string;
   card: {
     applicationDeadline: string;
   };
@@ -78,35 +80,50 @@ function getPreviewText(job: RecruiterBrowseJob) {
   return firstLine;
 }
 
-function JobTeaserCard({
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isDesktop;
+}
+
+function JobListRow({
   job,
   locale,
   labels,
+  selected,
+  onSelect,
 }: {
   job: RecruiterBrowseJob;
   locale: JobPostingLocale;
   labels: JobsBrowserLabels;
+  selected: boolean;
+  onSelect: () => void;
 }) {
-  const salary = formatSalaryRange({
-    salaryMin: job.salaryMin,
-    salaryMax: job.salaryMax,
-    salaryCurrency: job.salaryCurrency,
-    salaryPeriod: job.salaryPeriod,
-    locale,
-  });
   const employment = employmentTypeLabel(job.employmentType, locale);
   const category = jobCategoryLabel(job.jobCategory, locale);
   const deadline = formatApplicationDeadline(job.applicationDeadline, locale);
   const preview = getPreviewText(job);
 
   return (
-    <article className="group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]">
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-current={selected}
+      className={cn(
+        "group relative flex w-full min-w-0 flex-col gap-2 rounded-2xl border bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]",
+        selected
+          ? "border-primary/60 shadow-[0_0_0_1px_rgba(140,82,255,0.35)] lg:bg-primary/[0.03]"
+          : "border-border/70"
+      )}
+    >
       <div className="flex min-w-0 items-start gap-3">
-        <Link
-          href={`/recruiter/${job.recruiterId}`}
-          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={`View ${job.company}`}
-        >
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg">
           {job.logoUrl ? (
             <img
               src={job.logoUrl}
@@ -115,36 +132,32 @@ function JobTeaserCard({
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center rounded-lg border border-border/60 bg-secondary">
-              <Building2 className="h-7 w-7 text-primary" />
+              <Building2 className="h-6 w-6 text-primary" />
             </span>
           )}
-        </Link>
-        <div className="min-w-0 flex-1 space-y-1">
-          <Link
-            href={`/jobs/${job.id}`}
-            className="line-clamp-2 text-base font-semibold leading-tight hover:text-primary"
+        </span>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <p
+            className={cn(
+              "line-clamp-2 text-base font-semibold leading-tight",
+              selected ? "text-primary" : "group-hover:text-primary"
+            )}
           >
             {job.title}
-          </Link>
-          <Link
-            href={`/recruiter/${job.recruiterId}`}
-            className="line-clamp-1 text-sm text-muted-foreground hover:text-primary hover:underline"
-          >
+          </p>
+          <p className="line-clamp-1 text-sm text-muted-foreground">
             {job.company}
-          </Link>
+          </p>
+          {job.location ? (
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate">{job.location}</span>
+            </p>
+          ) : null}
         </div>
       </div>
 
-      <div className="mt-3 flex min-w-0 max-w-full flex-wrap gap-1.5 overflow-hidden">
-        {job.location ? (
-          <Badge
-            variant="secondary"
-            className="min-w-0 max-w-full shrink justify-start gap-1 text-[10px]"
-          >
-            <MapPin className="h-3 w-3 shrink-0" />
-            <span className="min-w-0 truncate">{job.location}</span>
-          </Badge>
-        ) : null}
+      <div className="flex min-w-0 max-w-full flex-wrap gap-1.5 overflow-hidden">
         {employment ? (
           <Badge variant="secondary" className="gap-1 text-[10px]">
             <Briefcase className="h-3 w-3" />
@@ -155,11 +168,6 @@ function JobTeaserCard({
           <Badge variant="secondary" className="gap-1 text-[10px]">
             <Tags className="h-3 w-3" />
             {category}
-          </Badge>
-        ) : null}
-        {salary ? (
-          <Badge className="min-w-0 max-w-full shrink justify-start text-[10px]">
-            <span className="min-w-0 truncate">{salary}</span>
           </Badge>
         ) : null}
         {deadline ? (
@@ -175,39 +183,38 @@ function JobTeaserCard({
       </div>
 
       {preview ? (
-        <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{preview}</p>
+        <p className="line-clamp-2 text-sm text-muted-foreground lg:hidden">
+          {preview}
+        </p>
       ) : null}
-
-      <div className="mt-auto flex items-end justify-end pt-4">
-        <Link
-          href={`/jobs/${job.id}`}
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-        >
-          {labels.viewDetails}
-        </Link>
-      </div>
-    </article>
+    </button>
   );
 }
 
 export function RecruiterJobsBrowser({
   jobs,
   locale,
+  messages,
+  isApplicant,
   labels,
   lockedCategory,
 }: {
   jobs: RecruiterBrowseJob[];
   locale: JobPostingLocale;
+  messages: StudentMessages;
+  isApplicant: boolean;
   labels: JobsBrowserLabels;
   lockedCategory?: string;
 }) {
   const router = useRouter();
+  const isDesktop = useIsDesktop();
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [employmentFilter, setEmploymentFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const deferredQuery = useDeferredValue(query);
 
   function handleCategorySelect(value: string) {
@@ -316,9 +323,31 @@ export function RecruiterJobsBrowser({
     sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [currentPage]);
 
+  // On desktop, keep a valid job selected for the detail pane.
+  useEffect(() => {
+    if (!isDesktop) return;
+    const stillVisible = paginatedJobs.some((j) => j.id === selectedJobId);
+    if (!stillVisible) {
+      setSelectedJobId(paginatedJobs[0]?.id ?? null);
+    }
+  }, [isDesktop, paginatedJobs, selectedJobId]);
+
+  const selectedJob = useMemo(
+    () => filteredJobs.find((j) => j.id === selectedJobId) ?? null,
+    [filteredJobs, selectedJobId]
+  );
+
+  const handleRowSelect = (id: number) => {
+    if (isDesktop) {
+      setSelectedJobId(id);
+    } else {
+      router.push(`/jobs/${id}`);
+    }
+  };
+
   return (
     <section ref={sectionRef} className="space-y-4 scroll-mt-20">
-      <div className="mx-auto max-w-3xl space-y-3">
+      <div className="space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -409,44 +438,69 @@ export function RecruiterJobsBrowser({
           </p>
         </Card>
       ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
+          {/* Left: job list */}
+          <div className="space-y-2.5">
             {paginatedJobs.map((job) => (
-              <JobTeaserCard
+              <JobListRow
                 key={job.id}
                 job={job}
                 locale={locale}
                 labels={labels}
+                selected={isDesktop && job.id === selectedJobId}
+                onSelect={() => handleRowSelect(job.id)}
               />
             ))}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {filterLabels.page} {currentPage} {filterLabels.of} {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {filterLabels.page} {currentPage} {filterLabels.of} {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </>
+          {/* Right: detail pane (desktop only) */}
+          <div className="hidden lg:block lg:sticky lg:top-24">
+            {selectedJob ? (
+              <div className="max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-border/70 bg-card p-6">
+                <JobDetailApply
+                  key={selectedJob.id}
+                  job={selectedJob}
+                  locale={locale}
+                  messages={messages}
+                  isApplicant={isApplicant}
+                />
+              </div>
+            ) : (
+              <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 p-10 text-center">
+                <Briefcase className="h-10 w-10 text-muted-foreground/40" />
+                <p className="mt-4 text-sm text-muted-foreground">
+                  {labels.selectPrompt}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </section>
   );

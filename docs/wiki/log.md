@@ -613,3 +613,21 @@ attributed_to: [niko]   belongs_to: [public-homepage, recruiter-dashboard]
 - Job cards in the homepage/jobs grid had footers ("View details"/"No JD link") floating at different heights because content length varies per card.
 - Fix in `recruiter-job-posting-card.tsx`: Card is now `flex h-full flex-col` (fills grid cell; CSS-grid row stretch equalizes heights) and the footer row got `mt-auto pt-2` to pin to the bottom. Footers now align across the row.
 - Tradeoff noted: short cards show whitespace above the pinned footer; optional follow-up is capping compact-mode body to one section.
+
+## [2026-05-29] decide | LinkedIn-style two-pane /jobs on desktop
+attributed_to: [niko]   belongs_to: [public-homepage, recruitment-workflows]
+- Desktop /jobs now uses a split layout: compact job list on the left (logo + title + company + location + tags), selected job's full detail + apply flow on the right. Mobile keeps tap-to-navigate to /jobs/[id].
+- Implemented in `recruiter-jobs-browser.tsx`: replaced the 3-col teaser grid with `lg:grid-cols-[minmax(320px,380px)_1fr]`; new `JobListRow` (button) + reused `JobDetailApply` in a sticky right pane keyed by job id so apply/booking state resets per selection.
+- `useIsDesktop` (matchMedia 1024px) decides select-in-pane vs router.push; desktop auto-selects first visible job and re-selects when pagination/filters change. `jobs-list-page.tsx` now passes `messages` + `isApplicant` down.
+- Niko's directive: "don't have to do 100% like LinkedIn, just go in that direction, job name on the left and details on the right; migrate gracefully."
+
+## [2026-05-29] feature | Admin-controlled company pinning replaces sponsor keyword sort
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage, admin-panel]
+- Replaced the hardcoded `SPONSOR_PRIORITY` keyword sort (added earlier same week) with admin-managed pinning. Admins now pin/unpin and reorder the top companies in the Browse directory via the admin Recruiters section; no code change needed when sponsors change.
+- Why: niko wanted operators — not the codebase — to control which companies lead `/browse`. Keyword matching was brittle (substring collisions, name-variant drift).
+- Stack:
+  - Schema: `recruiters.pinned_rank integer NULL` (NULL = unpinned). Migration `src/lib/db/add-recruiter-pinned-rank-column.ts` + `db:update:recruiter-pinned-rank` script; applied to the live DB (host `ep-lingering-sun`, 34 recruiters).
+  - Sort: `src/lib/cache.ts` `fetchRecruiters()` now orders pinned first by `pinnedRank` asc, then unpinned by approved-job count desc + alpha. Cache key bumped v5 → v6. Added `invalidateRecruitersCache()` (`cache.expireTag("recruiters")`) so pin edits show immediately rather than waiting out the 5-min TTL.
+  - API: `PUT /api/admin/recruiters/pin` takes `{ order: number[] }` (full ordered list of pinned ids), rewrites all ranks in one transaction (dense 0-based via SQL CASE), unpins everything not in the list, then invalidates cache. Admin-only.
+  - UI: admin Recruiters section gained a "Featured companies" card — ordered list with ↑/↓/unpin per row + a "Pin a company" dropdown. Optimistically updates parent state via `onRecruiterUpdated`.
+- IMPORTANT: the `pinned_rank` migration must also be run against the Vercel **production** DATABASE_URL before deploy if prod uses a different Neon DB than the dev `.env.local`. (The app reads `process.env.DATABASE_URL`; the local `DATABASE_URL_UNPOOLED` points at a different/empty endpoint — don't be fooled by it.)

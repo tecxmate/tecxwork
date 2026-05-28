@@ -152,12 +152,15 @@ export async function JobsListPage({
             <RecruiterJobsBrowser
               jobs={jobs}
               locale={locale}
+              messages={messages}
+              isApplicant={session?.role === "applicant"}
               labels={{
                 viewDetails: messages.jobsPage.viewDetails,
                 searchPlaceholder: messages.jobsPage.searchPlaceholder,
                 resultsCount: messages.jobsPage.resultsCount,
                 noMatchTitle: messages.jobsPage.noMatchTitle,
                 noMatchSubtitle: messages.jobsPage.noMatchSubtitle,
+                selectPrompt: messages.jobsPage.subtitle,
                 card: {
                   applicationDeadline: messages.jobsPage.card.applicationDeadline,
                 },
