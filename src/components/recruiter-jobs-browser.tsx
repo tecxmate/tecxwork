@@ -350,7 +350,7 @@ export function RecruiterJobsBrowser({
   return (
     <section ref={sectionRef} className="scroll-mt-20 space-y-3">
       {/* Full-width sticky search + filters — one line on desktop, spans both panes */}
-      <div className="space-y-2 lg:sticky lg:top-14 lg:z-[9] lg:-mx-1 lg:flex lg:items-center lg:gap-2 lg:space-y-0 lg:border-b lg:border-border/60 lg:bg-background/85 lg:px-1 lg:pb-3 lg:pt-3 lg:shadow-sm lg:backdrop-blur">
+      <div className="space-y-2 lg:sticky lg:top-14 lg:z-[9] lg:flex lg:items-center lg:gap-2 lg:space-y-0 lg:bg-background/80 lg:py-3 lg:backdrop-blur">
         <div className="relative lg:min-w-[200px] lg:flex-[1.4]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
