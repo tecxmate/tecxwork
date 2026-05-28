@@ -69,7 +69,7 @@ export default function OverviewCharts({
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <ChartCard title="Registrations (cumulative)">
-        <AreaChart data={analytics.registrations} margin={{ left: -18, top: 4, right: 4 }}>
+        <AreaChart data={analytics.registrations} margin={{ left: 4, top: 4, right: 14, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis
             dataKey="date"
@@ -77,7 +77,7 @@ export default function OverviewCharts({
             minTickGap={28}
             {...axisProps}
           />
-          <YAxis allowDecimals={false} width={36} {...axisProps} />
+          <YAxis allowDecimals={false} width={40} {...axisProps} />
           <Tooltip {...tooltipStyle} />
           <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
           <Area
@@ -102,10 +102,10 @@ export default function OverviewCharts({
       </ChartCard>
 
       <ChartCard title="Booking requests / day">
-        <BarChart data={analytics.bookings} margin={{ left: -18, top: 4, right: 4 }}>
+        <BarChart data={analytics.bookings} margin={{ left: 4, top: 4, right: 14, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={28} {...axisProps} />
-          <YAxis allowDecimals={false} width={36} {...axisProps} />
+          <YAxis allowDecimals={false} width={40} {...axisProps} />
           <Tooltip {...tooltipStyle} />
           <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
           <Bar dataKey="accepted" name="Accepted" stackId="b" fill={GREEN} radius={[0, 0, 0, 0]} />
@@ -115,10 +115,10 @@ export default function OverviewCharts({
       </ChartCard>
 
       <ChartCard title="Emails sent / day">
-        <BarChart data={analytics.emails} margin={{ left: -18, top: 4, right: 4 }}>
+        <BarChart data={analytics.emails} margin={{ left: 4, top: 4, right: 14, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={28} {...axisProps} />
-          <YAxis allowDecimals={false} width={36} {...axisProps} />
+          <YAxis allowDecimals={false} width={40} {...axisProps} />
           <Tooltip {...tooltipStyle} />
           <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
           <Bar dataKey="success" name="Sent" stackId="e" fill={PURPLE} />
@@ -127,10 +127,10 @@ export default function OverviewCharts({
       </ChartCard>
 
       <ChartCard title="Jobs posted (cumulative)">
-        <AreaChart data={analytics.jobs} margin={{ left: -18, top: 4, right: 4 }}>
+        <AreaChart data={analytics.jobs} margin={{ left: 4, top: 4, right: 14, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={28} {...axisProps} />
-          <YAxis allowDecimals={false} width={36} {...axisProps} />
+          <YAxis allowDecimals={false} width={40} {...axisProps} />
           <Tooltip {...tooltipStyle} />
           <Area
             type="monotone"
