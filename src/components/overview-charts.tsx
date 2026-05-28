@@ -61,31 +61,40 @@ function CapacityChart({
     booked: d.booked,
     remaining: Math.max(0, d.total - d.booked),
     total: d.total,
+    accepted: d.accepted,
+    unconfirmed: d.unconfirmed,
+    rejected: d.rejected,
   }));
   const totalSlots = rows.reduce((s, r) => s + r.total, 0);
   const totalBooked = rows.reduce((s, r) => s + r.booked, 0);
   const fillRate = totalSlots ? Math.round((totalBooked / totalSlots) * 100) : 0;
-  // ~34px per company row, with room for axis/legend.
-  const innerHeight = Math.max(220, rows.length * 34 + 48);
+  // Two bars per company (slots + requests) → ~46px per row.
+  const innerHeight = Math.max(240, rows.length * 46 + 56);
 
   return (
     <div className="rounded-lg border bg-card p-3">
-      <div className="mb-2 flex items-baseline justify-between gap-2">
+      <div className="mb-1 flex items-baseline justify-between gap-2">
         <p className="text-xs font-medium text-muted-foreground">
-          Interview slot capacity by company
+          Slot capacity vs booking requests by company
         </p>
         <p className="text-xs text-muted-foreground">
-          {totalBooked}/{totalSlots} booked ({fillRate}%)
+          {totalBooked}/{totalSlots} slots booked ({fillRate}%)
         </p>
       </div>
-      <div className="max-h-[480px] w-full overflow-y-auto">
+      <p className="mb-2 text-[11px] leading-tight text-muted-foreground/80">
+        Top bar = interview slots (booked + available). Bottom bar = booking
+        requests (accepted + unconfirmed + rejected). The two measure different
+        things, so they don&apos;t add up.
+      </p>
+      <div className="max-h-[560px] w-full overflow-y-auto">
         <div style={{ height: innerHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
               data={rows}
               margin={{ left: 8, top: 4, right: 14, bottom: 0 }}
-              barCategoryGap="20%"
+              barCategoryGap="22%"
+              barGap={2}
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
               <XAxis type="number" allowDecimals={false} {...axisProps} />
@@ -100,8 +109,13 @@ function CapacityChart({
               />
               <Tooltip {...tooltipStyle} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="booked" name="Booked" stackId="cap" fill={GREEN} radius={[2, 0, 0, 2]} />
-              <Bar dataKey="remaining" name="Available" stackId="cap" fill={PURPLE_LIGHT} radius={[0, 2, 2, 0]} />
+              {/* Supply: interview slots */}
+              <Bar dataKey="booked" name="Booked (slot)" stackId="cap" fill={PURPLE} radius={[2, 0, 0, 2]} />
+              <Bar dataKey="remaining" name="Available (slot)" stackId="cap" fill={PURPLE_LIGHT} radius={[0, 2, 2, 0]} />
+              {/* Demand: booking requests */}
+              <Bar dataKey="accepted" name="Accepted" stackId="req" fill={GREEN} radius={[2, 0, 0, 2]} />
+              <Bar dataKey="unconfirmed" name="Unconfirmed" stackId="req" fill={AMBER} />
+              <Bar dataKey="rejected" name="Rejected" stackId="req" fill={RED} radius={[0, 2, 2, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

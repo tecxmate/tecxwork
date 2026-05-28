@@ -36,7 +36,14 @@ export type AdminAnalytics = {
   }[];
   emails: { date: string; success: number; failed: number }[];
   jobs: { date: string; count: number; cumulative: number }[];
-  capacity: { company: string; total: number; booked: number }[];
+  capacity: {
+    company: string;
+    total: number;
+    booked: number;
+    accepted: number;
+    unconfirmed: number;
+    rejected: number;
+  }[];
 };
 
 /** YYYY-MM-DD list from start..end inclusive (UTC-midnight stepping). */
@@ -86,14 +93,36 @@ async function getAnalytics(): Promise<AdminAnalytics> {
       rowsOf<{ d: string; n: number }>(
         sql`SELECT ${DAY} AS d, COUNT(*)::int AS n FROM job_openings GROUP BY 1`
       ),
-      rowsOf<{ company: string; total: number; booked: number }>(
+      rowsOf<{
+        company: string;
+        total: number;
+        booked: number;
+        accepted: number;
+        unconfirmed: number;
+        rejected: number;
+      }>(
         sql`SELECT r.company AS company,
-              COUNT(s.id)::int AS total,
-              COUNT(s.id) FILTER (WHERE s.status = 'booked')::int AS booked
+              COALESCE(sl.total, 0)::int AS total,
+              COALESCE(sl.booked, 0)::int AS booked,
+              COALESCE(bk.accepted, 0)::int AS accepted,
+              COALESCE(bk.unconfirmed, 0)::int AS unconfirmed,
+              COALESCE(bk.rejected, 0)::int AS rejected
             FROM recruiters r
-            LEFT JOIN slots s ON s.recruiter_id = r.id
-            GROUP BY r.company
-            HAVING COUNT(s.id) > 0
+            LEFT JOIN (
+              SELECT recruiter_id,
+                COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE status = 'booked') AS booked
+              FROM slots GROUP BY recruiter_id
+            ) sl ON sl.recruiter_id = r.id
+            LEFT JOIN (
+              SELECT recruiter_id,
+                COUNT(*) FILTER (WHERE status = 'accepted') AS accepted,
+                COUNT(*) FILTER (WHERE status IN ('pending', 'waitlisted', 'reschedule_proposed')) AS unconfirmed,
+                COUNT(*) FILTER (WHERE status IN ('rejected', 'cancelled')) AS rejected
+              FROM bookings GROUP BY recruiter_id
+            ) bk ON bk.recruiter_id = r.id
+            WHERE COALESCE(sl.total, 0) > 0
+               OR COALESCE(bk.accepted, 0) + COALESCE(bk.unconfirmed, 0) + COALESCE(bk.rejected, 0) > 0
             ORDER BY total DESC, r.company`
       ),
     ]);
@@ -180,6 +209,9 @@ async function getAnalytics(): Promise<AdminAnalytics> {
     company: r.company,
     total: Number(r.total),
     booked: Number(r.booked),
+    accepted: Number(r.accepted),
+    unconfirmed: Number(r.unconfirmed),
+    rejected: Number(r.rejected),
   }));
 
   return { registrations, bookings: bookingsSeries, emails, jobs, capacity };

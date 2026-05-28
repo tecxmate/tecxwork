@@ -751,3 +751,9 @@ attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 - Added a capacity graph to the admin Overview: horizontal stacked bar per company showing Booked (green) + Available (light) = total interview slots, sorted by capacity desc, with an overall "X/Y booked (Z%)" fill-rate header.
 - Data added to `AdminAnalytics.capacity` in `admin-data.ts` via `LEFT JOIN slots ... COUNT(*) FILTER (WHERE status='booked') ... HAVING COUNT(s.id) > 0`. "Booked" is measured by slots.status='booked' (not accepted-bookings count). Companies with zero slots are omitted.
 - Rendered in `overview-charts.tsx` (`CapacityChart`), full width below the 2-col grid; scrollable (max-h-480) with ~30px/company so 30+ companies fit. Validated query against live DB.
+
+## [2026-05-29] decide | Capacity chart now shows supply vs demand per company
+attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
+- Extended the admin Overview capacity chart to two bars per company: top = interview slots (Booked + Available = total capacity / supply); bottom = booking requests (Accepted + Unconfirmed + Rejected / demand). Added a caption noting the two axes don't sum.
+- Rationale (Niko's question "how do we show that logically?"): slots and bookings are different units — many requests can target one slot; rejected/cancelled free slots — so they're shown as parallel bars rather than one stack. "Accepted" ≈ "Booked" serves as a consistency check.
+- `AdminAnalytics.capacity` now also carries accepted/unconfirmed/rejected. Status buckets reuse existing convention: unconfirmed = pending+waitlisted+reschedule_proposed; rejected = rejected+cancelled. Query LEFT JOINs slot + booking subqueries per recruiter; validated live.
