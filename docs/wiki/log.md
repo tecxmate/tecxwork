@@ -761,3 +761,7 @@ attributed_to: [niko]   belongs_to: [admin-panel, recruitment-workflows]
 ## [2026-05-29] ingest | Capacity analytics topic page
 attributed_to: [niko]   belongs_to: [capacity-analytics]
 - Created topics/capacity-analytics.md documenting the supply-vs-demand chart: why slots and requests are two parallel bars (different units, don't sum), the status buckets, the accepted≈booked consistency check, the LEFT-JOIN query, and rendering notes. Linked from index.
+
+## [2026-05-29] ingest | Document how total slots is calculated
+attributed_to: [niko]   belongs_to: [capacity-analytics]
+- Added a "How total slots is calculated" section to topics/capacity-analytics.md: total = time windows × interviewerCount (per admin/timeframe regeneration), with the windows formula, an example, and the caveat that default onboarding (recruiter-onboarding.ts) seeds only 1 interviewer until regenerated.

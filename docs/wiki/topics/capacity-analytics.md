@@ -28,6 +28,27 @@ So the two bars are parallel, with a caption stating they don't add up.
 
 **Consistency check this enables:** `Accepted` ≈ `Booked` in a healthy state (an accepted booking occupies a slot). Divergence is a red flag. "High Unconfirmed, zero Booked" flags a company sitting on un-actioned requests.
 
+## How "total slots" is calculated
+
+**Total slots per company = (time windows in the day) × (recruiter's `interviewerCount`).**
+
+Authoritative path: `src/app/api/admin/timeframe/route.ts` (~lines 270–296), run when the admin sets/updates the event time frame and regenerates unbooked slots for all recruiters:
+
+```
+for (t = startMinutes; t + slotDuration <= endMinutes; t += slotDuration + bufferMinutes) {
+  for (i = 1; i <= rec.interviewerCount; i++) {
+    newSlots.push({ ...startTime, interviewerNumber: i });
+  }
+}
+```
+
+- **Time windows** = how many `slotDuration`-long blocks fit between `startHour:startMinute` and `endHour:endMinute`, stepping by `slotDuration + bufferMinutes`.
+- Each window emits **one slot row per interviewer** (`interviewerNumber` 1…`interviewerCount`). Every `(window, interviewer)` pair is a distinct `slots` row, and the chart's `total` is `COUNT(*)` over those rows — hence interviewers × windows.
+
+Example: event 10:00–17:30, 15-min slots, 0 buffer → 30 windows. `interviewerCount = 1` → ~30 slots; `= 2` → ~60.
+
+**Caveat — default onboarding seeds only 1 interviewer.** `src/lib/recruiter-onboarding.ts` (~lines 27–38, `ensureDefaultRecruiterSlots`) creates windows × 1 (no interviewer loop; `interviewerNumber` defaults to 1). The interviewer multiplication only applies after the admin regenerates via the timeframe form or the recruiter sets their `interviewerCount`. So a company still on default onboarding shows windows × 1 until then.
+
 ## Status buckets (reused project-wide convention)
 
 Mirrors the daily booking chart in the same file / `getAnalytics`:
