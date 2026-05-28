@@ -714,3 +714,11 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 - Moved the stat cards (Recruiters / Students / Slots / Booking Requests / Emails) out of the always-on header strip into a dedicated "Overview" panel — now the first tab in the Platform split-panel left nav, and the default `activePanel`.
 - Added lightweight CSS visualizations (no charting lib, all point-in-time since there's no time-series data): `StatBar` helper renders labeled progress bars for Slot utilization (booked/total), Email quota today (color-toned by % used), and Active interviews (active/total bookings), plus a two-segment "Participant mix" bar (recruiters vs students, with a students-per-recruiter ratio).
 - Stack (`admin-dashboard.tsx`): added `"overview"` to `SettingsPanelId`/`SETTINGS_PANELS` (icon `BarChart3`), module-level `StatBar` component, and the panel JSX. Data all came from existing `stats`/`bookedSlots`/`emailStats` — no new fetches.
+
+## [2026-05-29] feature | Admin Overview time-series charts (Recharts)
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
+- The Overview tab now shows four time-series charts under the stat bars: cumulative registrations (students vs recruiters, area), booking requests/day (stacked accepted/in-progress/declined), emails sent/day (sent vs failed), and cumulative jobs posted.
+- Data: confirmed real history exists (students 93 over ~19 days from Apr 13; bookings, emails via `email_logs`, recruiters, jobs all timestamped). New `getAnalytics()` in `admin-data.ts` runs 5 grouped queries aggregated in Asia/Taipei, gap-fills a date spine (min→today), and computes running totals. Returned as a new `analytics` prop (`AdminAnalytics` type).
+- **TZ gotcha (important):** casting `created_at::date` returns a JS Date whose `toISOString()` slices to the WRONG day (Taipei midnight = prior-day UTC). Fixed by selecting the day as TEXT via `to_char((created_at AT TIME ZONE 'Asia/Taipei')::date,'YYYY-MM-DD')` — stable across server TZ.
+- UI: `src/components/overview-charts.tsx` (Recharts v3), dynamically imported with `ssr:false` in `admin-dashboard.tsx` so it stays out of the public bundle and avoids SSR/hydration issues. Booking buckets: accepted / in-progress (pending+waitlisted+reschedule_proposed) / declined (rejected+cancelled).
+- Added `recharts` dependency (admin-only, lazy-loaded). Build passes.

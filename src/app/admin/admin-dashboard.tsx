@@ -49,6 +49,17 @@ const QRCard = dynamic(() => import("@/components/qr-code").then((m) => m.QRCard
   ssr: false,
   loading: () => <div className="h-[120px] w-[120px] animate-pulse rounded-lg bg-muted" />,
 });
+const OverviewCharts = dynamic(() => import("@/components/overview-charts"), {
+  ssr: false,
+  loading: () => (
+    <div className="grid gap-3 lg:grid-cols-2">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="h-[230px] animate-pulse rounded-lg border bg-muted/40" />
+      ))}
+    </div>
+  ),
+});
+import type { AdminAnalytics } from "@/app/admin/admin-data";
 import { ImageUpload } from "@/components/image-upload";
 import { AppTopBar } from "@/components/app-topbar";
 import { useStudentI18n } from "@/components/student-locale-provider";
@@ -312,6 +323,7 @@ export function AdminDashboard({
   initialBrowsePageImages,
   initialJobsPageImages,
   initialBranding,
+  analytics,
   section,
 }: {
   recruiters: Recruiter[];
@@ -345,6 +357,7 @@ export function AdminDashboard({
     eventEndDate: string | null;
     heroOverlayEnabled: boolean;
   };
+  analytics: AdminAnalytics;
   section: AdminSection;
 }) {
   const { messages } = useStudentI18n();
@@ -1092,6 +1105,8 @@ export function AdminDashboard({
                           </p>
                         </div>
                       </div>
+
+                      <OverviewCharts analytics={analytics} />
                     </div>
                   )}
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { count, eq } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 
 import { getSession } from "@/lib/auth";
 import {
@@ -13,10 +13,154 @@ import {
   recruiterEmailApprovals,
   users,
   jobOpenings,
+  emailLogs,
 } from "@/lib/db";
 import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 
 export type AdminOnboardingMode = "minimal" | "full";
+
+const TAIPEI = "Asia/Taipei";
+
+export type AdminAnalytics = {
+  registrations: {
+    date: string;
+    students: number;
+    recruiters: number;
+    cumulativeStudents: number;
+    cumulativeRecruiters: number;
+  }[];
+  bookings: {
+    date: string;
+    accepted: number;
+    inProgress: number;
+    declined: number;
+  }[];
+  emails: { date: string; success: number; failed: number }[];
+  jobs: { date: string; count: number; cumulative: number }[];
+};
+
+/** YYYY-MM-DD list from start..end inclusive (UTC-midnight stepping). */
+function dateSpine(start: string, end: string): string[] {
+  const out: string[] = [];
+  if (!start || !end || start > end) return out;
+  let cursor = new Date(`${start}T00:00:00Z`).getTime();
+  const last = new Date(`${end}T00:00:00Z`).getTime();
+  const DAY = 86_400_000;
+  // hard cap to avoid an unbounded loop on bad input
+  for (let i = 0; cursor <= last && i < 800; i += 1, cursor += DAY) {
+    out.push(new Date(cursor).toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+/**
+ * Daily time-series for the admin Overview, aggregated in Asia/Taipei.
+ * Gap-filled from the earliest event across metrics through today so the
+ * charts stay continuous, with running totals for the cumulative views.
+ */
+async function getAnalytics(): Promise<AdminAnalytics> {
+  // Return the Taipei calendar day as a TEXT 'YYYY-MM-DD' so it's immune to
+  // how the driver/runtime would parse a `date` value across timezones.
+  const day = sql<string>`to_char((created_at AT TIME ZONE ${TAIPEI})::date, 'YYYY-MM-DD')`;
+
+  const [studentRows, recruiterRows, bookingRows, emailRows, jobRows] =
+    await Promise.all([
+      db
+        .select({ d: day, n: count() })
+        .from(applicantProfiles)
+        .groupBy(day),
+      db.select({ d: day, n: count() }).from(recruiters).groupBy(day),
+      db
+        .select({ d: day, status: bookings.status, n: count() })
+        .from(bookings)
+        .groupBy(day, bookings.status),
+      db
+        .select({ d: day, success: emailLogs.success, n: count() })
+        .from(emailLogs)
+        .groupBy(day, emailLogs.success),
+      db.select({ d: day, n: count() }).from(jobOpenings).groupBy(day),
+    ]);
+
+  const asKey = (d: unknown): string => String(d).slice(0, 10);
+
+  const allDates = [
+    ...studentRows,
+    ...recruiterRows,
+    ...bookingRows,
+    ...emailRows,
+    ...jobRows,
+  ].map((r) => asKey(r.d));
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: TAIPEI });
+  const start = allDates.length ? allDates.reduce((a, b) => (a < b ? a : b)) : today;
+  const spine = dateSpine(start, today);
+
+  const studentByDay = new Map<string, number>();
+  for (const r of studentRows) studentByDay.set(asKey(r.d), Number(r.n));
+  const recruiterByDay = new Map<string, number>();
+  for (const r of recruiterRows) recruiterByDay.set(asKey(r.d), Number(r.n));
+  const jobByDay = new Map<string, number>();
+  for (const r of jobRows) jobByDay.set(asKey(r.d), Number(r.n));
+
+  const bookingByDay = new Map<
+    string,
+    { accepted: number; inProgress: number; declined: number }
+  >();
+  for (const r of bookingRows) {
+    const key = asKey(r.d);
+    const bucket =
+      bookingByDay.get(key) ?? { accepted: 0, inProgress: 0, declined: 0 };
+    const n = Number(r.n);
+    if (r.status === "accepted") bucket.accepted += n;
+    else if (r.status === "rejected" || r.status === "cancelled")
+      bucket.declined += n;
+    else bucket.inProgress += n; // pending, waitlisted, reschedule_proposed
+    bookingByDay.set(key, bucket);
+  }
+
+  const emailByDay = new Map<string, { success: number; failed: number }>();
+  for (const r of emailRows) {
+    const key = asKey(r.d);
+    const bucket = emailByDay.get(key) ?? { success: 0, failed: 0 };
+    if (r.success) bucket.success += Number(r.n);
+    else bucket.failed += Number(r.n);
+    emailByDay.set(key, bucket);
+  }
+
+  let cumS = 0;
+  let cumR = 0;
+  const registrations = spine.map((date) => {
+    const students = studentByDay.get(date) ?? 0;
+    const recs = recruiterByDay.get(date) ?? 0;
+    cumS += students;
+    cumR += recs;
+    return {
+      date,
+      students,
+      recruiters: recs,
+      cumulativeStudents: cumS,
+      cumulativeRecruiters: cumR,
+    };
+  });
+
+  let cumJ = 0;
+  const jobs = spine.map((date) => {
+    const c = jobByDay.get(date) ?? 0;
+    cumJ += c;
+    return { date, count: c, cumulative: cumJ };
+  });
+
+  const bookingsSeries = spine.map((date) => ({
+    date,
+    ...(bookingByDay.get(date) ?? { accepted: 0, inProgress: 0, declined: 0 }),
+  }));
+
+  const emails = spine.map((date) => ({
+    date,
+    ...(emailByDay.get(date) ?? { success: 0, failed: 0 }),
+  }));
+
+  return { registrations, bookings: bookingsSeries, emails, jobs };
+}
 
 export async function getAdminDashboardData() {
   const session = await getSession();
@@ -160,6 +304,8 @@ export async function getAdminDashboardData() {
   const onboardingMode: AdminOnboardingMode =
     config?.onboardingMode === "minimal" ? "minimal" : "full";
 
+  const analytics = await getAnalytics();
+
   return {
     recruiters: recruiterList,
     applicants: applicantList,
@@ -167,6 +313,7 @@ export async function getAdminDashboardData() {
     jobs: jobList,
     domains,
     recruiterApprovals,
+    analytics,
     stats: {
       totalRecruiters: recruiterList.length,
       totalBookings: bookingCount.count,
