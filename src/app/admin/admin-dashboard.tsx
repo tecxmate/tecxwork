@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ import {
   CheckCircle2,
   Building2,
   Pencil,
+  Star,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,7 @@ type Recruiter = {
   websiteUrl?: string | null;
   logoUrl?: string | null;
   galleryUrls?: string[] | null;
+  pinnedRank?: number | null;
 };
 
 type Applicant = {
@@ -2642,6 +2644,71 @@ function RecruitersSection({
     );
   }
 
+  // --- Featured / pinned companies (lead the public /browse directory) ---
+  const [savingPins, setSavingPins] = useState(false);
+  const [pinError, setPinError] = useState("");
+  const [addPinId, setAddPinId] = useState("");
+
+  const pinnedRecruiters = useMemo(
+    () =>
+      recruiters
+        .filter((r) => r.pinnedRank != null)
+        .sort((a, b) => (a.pinnedRank ?? 0) - (b.pinnedRank ?? 0)),
+    [recruiters]
+  );
+  const unpinnedRecruiters = useMemo(
+    () =>
+      recruiters
+        .filter((r) => r.pinnedRank == null)
+        .sort((a, b) => a.company.localeCompare(b.company)),
+    [recruiters]
+  );
+
+  async function savePinOrder(ids: number[]) {
+    setSavingPins(true);
+    setPinError("");
+    try {
+      const res = await fetch("/api/admin/recruiters/pin", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: ids }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save pin order");
+      // Reflect new ranks in parent state without a full refetch.
+      for (const r of recruiters) {
+        const idx = ids.indexOf(r.id);
+        const nextRank = idx === -1 ? null : idx;
+        if ((r.pinnedRank ?? null) !== nextRank) {
+          onRecruiterUpdated({ ...r, pinnedRank: nextRank });
+        }
+      }
+    } catch (err) {
+      setPinError(err instanceof Error ? err.message : "Failed to save pin order");
+    } finally {
+      setSavingPins(false);
+    }
+  }
+
+  function movePin(index: number, dir: -1 | 1) {
+    const ids = pinnedRecruiters.map((r) => r.id);
+    const target = index + dir;
+    if (target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    void savePinOrder(ids);
+  }
+
+  function unpin(id: number) {
+    void savePinOrder(pinnedRecruiters.map((r) => r.id).filter((x) => x !== id));
+  }
+
+  function pinSelected() {
+    const id = parseInt(addPinId, 10);
+    if (Number.isNaN(id)) return;
+    setAddPinId("");
+    void savePinOrder([...pinnedRecruiters.map((r) => r.id), id]);
+  }
+
   const filteredRecruiters = recruiters
     .filter((r) => {
       if (!query.trim()) return true;
@@ -2798,6 +2865,97 @@ function RecruitersSection({
           </table>
         </div>
       ) : null}
+
+      {/* Featured / pinned companies */}
+      <Card>
+        <CardContent className="space-y-3 py-4">
+          <div className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-primary" />
+            <h3 className="font-heading text-sm font-semibold">
+              Featured companies
+            </h3>
+            {savingPins && (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Pinned companies lead the public Browse directory in this order.
+            Unpinned companies follow, sorted by number of jobs posted.
+          </p>
+
+          {pinnedRecruiters.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No pinned companies yet.</p>
+          ) : (
+            <ol className="space-y-1.5">
+              {pinnedRecruiters.map((r, index) => (
+                <li
+                  key={r.id}
+                  className="flex items-center gap-2 rounded-lg border bg-muted/20 px-2.5 py-1.5"
+                >
+                  <span className="w-5 text-center text-xs font-semibold text-muted-foreground">
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {r.company}
+                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => movePin(index, -1)}
+                      disabled={savingPins || index === 0}
+                      className="cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label={`Move ${r.company} up`}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => movePin(index, 1)}
+                      disabled={savingPins || index === pinnedRecruiters.length - 1}
+                      className="cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label={`Move ${r.company} down`}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => unpin(r.id)}
+                      disabled={savingPins}
+                      className="cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label={`Unpin ${r.company}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+
+          <div className="flex items-center gap-2 pt-1">
+            <select
+              value={addPinId}
+              onChange={(e) => setAddPinId(e.target.value)}
+              disabled={savingPins || unpinnedRecruiters.length === 0}
+              className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            >
+              <option value="">Pin a company…</option>
+              {unpinnedRecruiters.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.company}
+                </option>
+              ))}
+            </select>
+            <Button
+              size="sm"
+              onClick={pinSelected}
+              disabled={savingPins || !addPinId}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Pin
+            </Button>
+          </div>
+
+          {pinError && <p className="text-xs text-destructive">{pinError}</p>}
+        </CardContent>
+      </Card>
 
       {/* Search */}
       <div className="relative max-w-sm">

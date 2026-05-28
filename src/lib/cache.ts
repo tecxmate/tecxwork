@@ -6,33 +6,9 @@ import { eq } from "drizzle-orm";
 const cache = getCache({ namespace: "app" });
 const CACHE_TTL = 300; // 5 minutes
 
-// Sponsors are pinned to the top of the company directory in this exact
-// order. Matched by normalized keyword so full legal names still resolve
-// (e.g. "Indovina Bank (IVB)" → "ivb"). Order = display priority.
-const SPONSOR_PRIORITY = [
-  "ivb",
-  "gtalent",
-  "mdor",
-  "tripod",
-  "chinli",
-  "ssb",
-  "viethoa",
-  "yongzhan",
-];
-
-function normalizeCompany(name: string): string {
-  return name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-function sponsorRank(company: string): number {
-  const normalized = normalizeCompany(company);
-  const index = SPONSOR_PRIORITY.findIndex((kw) => normalized.includes(kw));
-  return index === -1 ? Number.POSITIVE_INFINITY : index;
+/** Invalidate the cached company directory (call after admin edits/pins). */
+export async function invalidateRecruitersCache() {
+  await cache.expireTag("recruiters");
 }
 
 /**
@@ -55,7 +31,7 @@ export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
  * Cached recruiters list - 5 minute TTL
  */
 export async function getCachedRecruiters() {
-  const key = "recruiters:list:v5";
+  const key = "recruiters:list:v6";
   const cached = await cache.get(key);
 
   if (cached) {
@@ -75,6 +51,7 @@ async function fetchRecruiters() {
       industry: recruiters.industry,
       description: recruiters.description,
       logoUrl: recruiters.logoUrl,
+      pinnedRank: recruiters.pinnedRank,
     })
     .from(recruiters)
     .innerJoin(users, eq(recruiters.userId, users.id));
@@ -113,11 +90,13 @@ async function fetchRecruiters() {
       };
     })
     .sort((a, b) => {
-      const rankA = sponsorRank(a.company);
-      const rankB = sponsorRank(b.company);
+      // Admin-pinned companies lead, ordered by ascending pinnedRank.
+      const rankA = a.pinnedRank ?? Number.POSITIVE_INFINITY;
+      const rankB = b.pinnedRank ?? Number.POSITIVE_INFINITY;
       if (rankA !== rankB) {
         return rankA - rankB;
       }
+      // Unpinned (and any rank ties): most approved jobs first, then A→Z.
       if (b.positions.length !== a.positions.length) {
         return b.positions.length - a.positions.length;
       }

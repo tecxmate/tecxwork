@@ -81,6 +81,9 @@ export const recruiters = pgTable("recruiters", {
   websiteUrl: text("website_url"),
   galleryUrls: text("gallery_urls").array().notNull().default([]),
   interviewerCount: integer("interviewer_count").notNull().default(1),
+  // Admin-controlled directory pin. NULL = unpinned (sorts after pinned ones).
+  // Lower rank shows first; ranks are 0-based and dense among pinned recruiters.
+  pinnedRank: integer("pinned_rank"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

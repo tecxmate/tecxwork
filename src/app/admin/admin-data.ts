@@ -35,6 +35,7 @@ export async function getAdminDashboardData() {
       websiteUrl: recruiters.websiteUrl,
       logoUrl: recruiters.logoUrl,
       galleryUrls: recruiters.galleryUrls,
+      pinnedRank: recruiters.pinnedRank,
     })
     .from(recruiters)
     .innerJoin(users, eq(recruiters.userId, users.id))
