@@ -459,25 +459,53 @@ export function RecruiterJobsBrowser({
               ))}
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-4">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 pt-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="h-8 w-8 p-0"
+                    aria-label={`${filterLabels.page} ${currentPage - 1}`}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {filterLabels.page} {currentPage} {filterLabels.of} {totalPages}
-                  </span>
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, index) => {
+                    let pageNumber: number;
+                    if (totalPages <= 7) {
+                      pageNumber = index + 1;
+                    } else if (currentPage <= 4) {
+                      pageNumber = index + 1;
+                    } else if (currentPage >= totalPages - 3) {
+                      pageNumber = totalPages - 6 + index;
+                    } else {
+                      pageNumber = currentPage - 3 + index;
+                    }
+
+                    return (
+                      <button
+                        key={pageNumber}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        aria-current={pageNumber === currentPage}
+                        className={cn(
+                          "h-8 w-8 rounded-md text-sm font-medium transition-colors",
+                          pageNumber === currentPage
+                            ? "bg-primary text-primary-foreground"
+                            : "border border-input hover:bg-muted"
+                        )}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="h-8 w-8 p-0"
+                    aria-label={`${filterLabels.page} ${currentPage + 1}`}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
