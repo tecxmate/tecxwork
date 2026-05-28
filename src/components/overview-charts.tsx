@@ -65,8 +65,8 @@ function CapacityChart({
   const totalSlots = rows.reduce((s, r) => s + r.total, 0);
   const totalBooked = rows.reduce((s, r) => s + r.booked, 0);
   const fillRate = totalSlots ? Math.round((totalBooked / totalSlots) * 100) : 0;
-  // ~30px per company row, with room for axis/legend.
-  const innerHeight = Math.max(220, rows.length * 30 + 48);
+  // ~34px per company row, with room for axis/legend.
+  const innerHeight = Math.max(220, rows.length * 34 + 48);
 
   return (
     <div className="rounded-lg border bg-card p-3">
@@ -92,7 +92,7 @@ function CapacityChart({
               <YAxis
                 type="category"
                 dataKey="company"
-                width={130}
+                width={200}
                 interval={0}
                 tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                 tickLine={false}
