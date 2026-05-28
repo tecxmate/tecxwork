@@ -722,3 +722,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 - **TZ gotcha (important):** casting `created_at::date` returns a JS Date whose `toISOString()` slices to the WRONG day (Taipei midnight = prior-day UTC). Fixed by selecting the day as TEXT via `to_char((created_at AT TIME ZONE 'Asia/Taipei')::date,'YYYY-MM-DD')` — stable across server TZ.
 - UI: `src/components/overview-charts.tsx` (Recharts v3), dynamically imported with `ssr:false` in `admin-dashboard.tsx` so it stays out of the public bundle and avoids SSR/hydration issues. Booking buckets: accepted / in-progress (pending+waitlisted+reschedule_proposed) / declined (rejected+cancelled).
 - Added `recharts` dependency (admin-only, lazy-loaded). Build passes.
+
+## [2026-05-29] fix | Analytics query crashed all admin pages (drizzle sql reuse)
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
+- The `getAnalytics()` added for the Overview charts crashed the admin server render (generic "Server Components render" error on every admin page, since `getAdminDashboardData` runs for all sections). Cause: reusing a raw `sql()` day-expression in both `.select({d: day})` and `.groupBy(day)` of a drizzle query builder trips an internal alias path.
+- Fix: rewrote the 5 aggregations as raw `db.execute(sql\`SELECT to_char((created_at AT TIME ZONE 'Asia/Taipei')::date,'YYYY-MM-DD') AS d, COUNT(*)::int AS n FROM <table> GROUP BY 1[, status|success]\`)` and read `.rows`. Verified against the live DB via the app's own `db.execute`. No more query-builder column/alias machinery.
+- Lesson: for grouped aggregations with a computed day key, prefer raw `db.execute` over `.select()/.groupBy()` with a shared `sql()` chunk.

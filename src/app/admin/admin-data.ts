@@ -13,7 +13,6 @@ import {
   recruiterEmailApprovals,
   users,
   jobOpenings,
-  emailLogs,
 } from "@/lib/db";
 import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 
@@ -59,26 +58,33 @@ function dateSpine(start: string, end: string): string[] {
  * charts stay continuous, with running totals for the cumulative views.
  */
 async function getAnalytics(): Promise<AdminAnalytics> {
-  // Return the Taipei calendar day as a TEXT 'YYYY-MM-DD' so it's immune to
-  // how the driver/runtime would parse a `date` value across timezones.
-  const day = sql<string>`to_char((created_at AT TIME ZONE ${TAIPEI})::date, 'YYYY-MM-DD')`;
+  // Raw SQL via db.execute — the day key is selected as TEXT 'YYYY-MM-DD'
+  // (Asia/Taipei) so it's immune to how the driver parses a `date` across
+  // timezones, and raw SQL sidesteps the query-builder's column/alias
+  // machinery (which mis-handles a reused sql() expression in select+groupBy).
+  const DAY = sql`to_char((created_at AT TIME ZONE 'Asia/Taipei')::date, 'YYYY-MM-DD')`;
+  const rowsOf = async <T>(query: ReturnType<typeof sql>): Promise<T[]> => {
+    const res = (await db.execute(query)) as unknown as { rows?: T[] };
+    return (res.rows ?? (res as unknown as T[])) ?? [];
+  };
 
   const [studentRows, recruiterRows, bookingRows, emailRows, jobRows] =
     await Promise.all([
-      db
-        .select({ d: day, n: count() })
-        .from(applicantProfiles)
-        .groupBy(day),
-      db.select({ d: day, n: count() }).from(recruiters).groupBy(day),
-      db
-        .select({ d: day, status: bookings.status, n: count() })
-        .from(bookings)
-        .groupBy(day, bookings.status),
-      db
-        .select({ d: day, success: emailLogs.success, n: count() })
-        .from(emailLogs)
-        .groupBy(day, emailLogs.success),
-      db.select({ d: day, n: count() }).from(jobOpenings).groupBy(day),
+      rowsOf<{ d: string; n: number }>(
+        sql`SELECT ${DAY} AS d, COUNT(*)::int AS n FROM applicant_profiles GROUP BY 1`
+      ),
+      rowsOf<{ d: string; n: number }>(
+        sql`SELECT ${DAY} AS d, COUNT(*)::int AS n FROM recruiters GROUP BY 1`
+      ),
+      rowsOf<{ d: string; status: string; n: number }>(
+        sql`SELECT ${DAY} AS d, status, COUNT(*)::int AS n FROM bookings GROUP BY 1, status`
+      ),
+      rowsOf<{ d: string; success: boolean; n: number }>(
+        sql`SELECT ${DAY} AS d, success, COUNT(*)::int AS n FROM email_logs GROUP BY 1, success`
+      ),
+      rowsOf<{ d: string; n: number }>(
+        sql`SELECT ${DAY} AS d, COUNT(*)::int AS n FROM job_openings GROUP BY 1`
+      ),
     ]);
 
   const asKey = (d: unknown): string => String(d).slice(0, 10);
