@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   Users,
   Calendar,
+  BarChart3,
   BookOpen,
   Briefcase,
   ChevronDown,
@@ -205,6 +206,7 @@ type FeedbackReportRow = {
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 type SettingsPanelId =
+  | "overview"
   | "general"
   | "branding"
   | "feedback"
@@ -216,12 +218,56 @@ const SETTINGS_PANELS: {
   label: string;
   icon: ComponentType<{ className?: string }>;
 }[] = [
+  { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "general", label: "General", icon: Settings },
   { id: "branding", label: "Event Branding", icon: Calendar },
   { id: "feedback", label: "Feedback & bugs", icon: Mail },
   { id: "timeframe", label: "Interview Time Frame", icon: Clock },
   { id: "tools", label: "Tools & Media", icon: BookOpen },
 ];
+
+function StatBar({
+  label,
+  value,
+  max,
+  caption,
+  tone = "primary",
+}: {
+  label: string;
+  value: number;
+  max: number;
+  caption?: string;
+  tone?: "primary" | "green" | "amber" | "red";
+}) {
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+  const barColor =
+    tone === "red"
+      ? "bg-red-500"
+      : tone === "amber"
+        ? "bg-yellow-500"
+        : tone === "green"
+          ? "bg-[#30D158]"
+          : "bg-primary";
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        <span className="text-sm font-semibold tabular-nums">
+          {value}/{max}
+        </span>
+      </div>
+      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn("h-full rounded-full transition-all", barColor)}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {caption ? (
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{caption}</p>
+      ) : null}
+    </div>
+  );
+}
 
 // Round-trip a UTC ISO string through a <input type="datetime-local"> in
 // Asia/Taipei. The input is timezone-naive, so we explicitly format and
@@ -341,7 +387,7 @@ export function AdminDashboard({
   );
   const [hpSaving, setHpSaving] = useState(false);
   const [hpSaved, setHpSaved] = useState(false);
-  const [activePanel, setActivePanel] = useState<SettingsPanelId>("general");
+  const [activePanel, setActivePanel] = useState<SettingsPanelId>("overview");
   const [branding, setBrandingState] = useState(initialBranding);
   const [brandingSaving, setBrandingSaving] = useState(false);
   const [brandingSaved, setBrandingSaved] = useState(false);
@@ -898,29 +944,6 @@ export function AdminDashboard({
         <div className="mx-auto w-full min-w-0 max-w-6xl space-y-8">
           {section === "settings" ? (
             <>
-              {/* Stats + Quick Actions Row */}
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                  {statsCards.map((stat) => (
-                    <div key={stat.label} className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
-                      <stat.icon className="h-4 w-4 text-primary" />
-                      <span className="text-lg font-bold">{stat.value}</span>
-                      <span className="text-xs text-muted-foreground">{stat.label}</span>
-                    </div>
-                  ))}
-                  {emailStats && (
-                    <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
-                      <Mail className="h-4 w-4 text-primary" />
-                      <span className={cn(
-                        "text-lg font-bold tabular-nums",
-                        emailStats.today.percentUsed >= 90 ? "text-red-500" : emailStats.today.percentUsed >= 70 ? "text-yellow-600" : ""
-                      )}>{emailStats.today.sent}/{emailStats.today.limit}</span>
-                      <span className="text-xs text-muted-foreground">Emails</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
               <div className="lg:grid lg:grid-cols-[210px_minmax(0,1fr)] lg:items-start lg:gap-6">
                 {/* Left: settings section nav */}
                 <nav className="sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-30 -mx-4 mb-4 flex gap-1 overflow-x-auto border-b bg-background/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:top-20 lg:z-auto lg:mx-0 lg:mb-0 lg:flex-col lg:overflow-visible lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
@@ -961,6 +984,117 @@ export function AdminDashboard({
 
                 {/* Right: active panel content */}
                 <div className="min-w-0 space-y-4">
+                  {activePanel === "overview" && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {statsCards.map((stat) => (
+                          <div
+                            key={stat.label}
+                            className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5"
+                          >
+                            <stat.icon className="h-4 w-4 shrink-0 text-primary" />
+                            <span className="text-lg font-bold tabular-nums">
+                              {stat.value}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {stat.label}
+                            </span>
+                          </div>
+                        ))}
+                        {emailStats && (
+                          <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5">
+                            <Mail className="h-4 w-4 shrink-0 text-primary" />
+                            <span
+                              className={cn(
+                                "text-lg font-bold tabular-nums",
+                                emailStats.today.percentUsed >= 90
+                                  ? "text-red-500"
+                                  : emailStats.today.percentUsed >= 70
+                                    ? "text-yellow-600"
+                                    : ""
+                              )}
+                            >
+                              {emailStats.today.sent}/{emailStats.today.limit}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              Emails
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <StatBar
+                          label="Slot utilization"
+                          value={bookedSlots}
+                          max={stats.totalSlots}
+                          caption={`${bookedSlots} booked · ${stats.availableSlots} open`}
+                        />
+                        {emailStats && (
+                          <StatBar
+                            label="Email quota (today)"
+                            value={emailStats.today.sent}
+                            max={emailStats.today.limit}
+                            tone={
+                              emailStats.today.percentUsed >= 90
+                                ? "red"
+                                : emailStats.today.percentUsed >= 70
+                                  ? "amber"
+                                  : "green"
+                            }
+                            caption={`${Math.max(
+                              0,
+                              emailStats.today.limit - emailStats.today.sent
+                            )} remaining today`}
+                          />
+                        )}
+                        <StatBar
+                          label="Active interviews"
+                          value={stats.activeBookings}
+                          max={stats.totalBookings}
+                          caption={`${stats.activeBookings} active of ${stats.totalBookings} requests`}
+                        />
+                        <div className="rounded-lg border bg-card p-3">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              Participant mix
+                            </span>
+                            <span className="text-sm font-semibold tabular-nums">
+                              {stats.totalRecruiters > 0
+                                ? (
+                                    stats.totalApplicants /
+                                    stats.totalRecruiters
+                                  ).toFixed(1)
+                                : "—"}
+                              :1
+                            </span>
+                          </div>
+                          <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full bg-primary"
+                              style={{
+                                width: `${
+                                  stats.totalRecruiters + stats.totalApplicants >
+                                  0
+                                    ? (stats.totalRecruiters /
+                                        (stats.totalRecruiters +
+                                          stats.totalApplicants)) *
+                                      100
+                                    : 0
+                                }%`,
+                              }}
+                            />
+                            <div className="h-full flex-1 bg-primary/30" />
+                          </div>
+                          <p className="mt-1.5 text-[11px] text-muted-foreground">
+                            {stats.totalRecruiters} recruiters ·{" "}
+                            {stats.totalApplicants} students
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {activePanel === "general" && (
               <div className="grid gap-4">
                 {/* Left Column: Platform Settings */}

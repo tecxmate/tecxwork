@@ -708,3 +708,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 - Removed the redundant in-pane collapsible headers (icon + title + chevron) from the four settings sub-sections (branding/feedback/timeframe/tools) — the left nav is now the only section label. The collapse machinery is gone: deleted the `brandingOpen`/`feedbackOpen`/`timeFrameOpen`/`toolsOpen` state; each block's content always renders inside its `{activePanel === id && (…)}` gate. Feedback still lazy-loads via the nav button's fetch.
 - Mobile: the section nav is now a sticky horizontal tab strip — `sticky top-[calc(env(safe-area-inset-top)+3.5rem)] z-30` with a bottom border + `bg-background/90 backdrop-blur`, full-bleed via `-mx-4 sm:-mx-6`. Desktop keeps the sticky vertical sidebar (`lg:top-20`, chrome reset via `lg:` overrides).
+
+## [2026-05-29] feature | Admin Platform: dedicated Overview tab with stat bars
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
+- Moved the stat cards (Recruiters / Students / Slots / Booking Requests / Emails) out of the always-on header strip into a dedicated "Overview" panel — now the first tab in the Platform split-panel left nav, and the default `activePanel`.
+- Added lightweight CSS visualizations (no charting lib, all point-in-time since there's no time-series data): `StatBar` helper renders labeled progress bars for Slot utilization (booked/total), Email quota today (color-toned by % used), and Active interviews (active/total bookings), plus a two-segment "Participant mix" bar (recruiters vs students, with a students-per-recruiter ratio).
+- Stack (`admin-dashboard.tsx`): added `"overview"` to `SettingsPanelId`/`SETTINGS_PANELS` (icon `BarChart3`), module-level `StatBar` component, and the panel JSX. Data all came from existing `stats`/`bookedSlots`/`emailStats` — no new fetches.
