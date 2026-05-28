@@ -101,7 +101,7 @@ function CapacityChart({
         requests (accepted + unconfirmed + rejected). The two measure different
         things, so they don&apos;t add up.
       </p>
-      <div className="max-h-[560px] w-full overflow-y-auto">
+      <div className="max-h-[560px] w-full select-none overflow-y-auto outline-none [-webkit-tap-highlight-color:transparent] [&_*]:outline-none [&_*]:[-webkit-tap-highlight-color:transparent]">
         <div style={{ height: innerHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
