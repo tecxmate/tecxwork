@@ -1891,24 +1891,24 @@ function JobModerationSection({
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold">{job.title}</div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
+            <span className="flex min-w-0 max-w-full items-center gap-1">
               <Building2 className="h-3 w-3 shrink-0" />
               <span className="truncate">{job.company}</span>
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex min-w-0 max-w-full items-center gap-1">
               <MapPin className="h-3 w-3 shrink-0" />
               <span className="truncate">{job.location}</span>
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex shrink-0 items-center gap-1">
               <Clock className="h-3 w-3 shrink-0" /> {job.employmentType}
             </span>
             {category ? (
-              <span className="flex items-center gap-1">
+              <span className="flex shrink-0 items-center gap-1">
                 <Briefcase className="h-3 w-3 shrink-0" />
                 {category}
               </span>
             ) : null}
-            <span className="flex items-center gap-1">
+            <span className="flex shrink-0 items-center gap-1">
               <Calendar className="h-3 w-3 shrink-0" />
               {new Date(job.createdAt).toLocaleDateString(localeTag)}
             </span>

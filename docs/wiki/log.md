@@ -765,3 +765,8 @@ attributed_to: [niko]   belongs_to: [capacity-analytics]
 ## [2026-05-29] ingest | Document how total slots is calculated
 attributed_to: [niko]   belongs_to: [capacity-analytics]
 - Added a "How total slots is calculated" section to topics/capacity-analytics.md: total = time windows × interviewerCount (per admin/timeframe regeneration), with the windows formula, an example, and the caveat that default onboarding (recruiter-onboarding.ts) seeds only 1 interviewer until regenerated.
+
+## [2026-05-29] fix | Admin Jobs tab broke mobile viewport (horizontal overflow)
+attributed_to: [niko]   belongs_to: [admin-panel]
+- Job Moderation cards used `truncate` (white-space:nowrap) on company/location meta spans whose flex parents lacked `min-w-0`, so a long value couldn't shrink and forced the document ~2.7x wider than the mobile viewport. Confirmed cause: a job `location` value 177 chars long.
+- Fix in admin-dashboard.tsx renderJobItem: company/location meta items get `min-w-0 max-w-full` (so truncate engages); the short non-truncating items (type/category/date) get `shrink-0`.
