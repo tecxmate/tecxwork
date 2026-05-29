@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import {
   GraduationCap,
   Building2,
-  ShieldCheck,
   ArrowRight,
   Users,
   ArrowLeft,
@@ -56,14 +55,6 @@ export default async function GetStartedPage() {
       loginHref: "/login",
       signupHref: "/recruiter/signup",
     },
-    {
-      id: "admin",
-      icon: ShieldCheck,
-      title: messages.getStarted.adminTitle,
-      description: messages.getStarted.adminDescription,
-      loginHref: "/login",
-      signupHref: null,
-    },
   ];
 
   return (
@@ -98,7 +89,7 @@ export default async function GetStartedPage() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
             {roles.map((role) => (
               <Card
                 key={role.id}

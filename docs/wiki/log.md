@@ -783,3 +783,7 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 ## [2026-05-29] tweak | Homepage company preview matches Companies-tab order
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - The homepage "Participating Companies" preview ran its own `orderBy(recruiters.company)` (alphabetical) query, so its order didn't match `/browse`. Switched `getPublicRecruiters()` in `src/app/page.tsx` to `(await getCachedRecruiters()).slice(0, 6)` — the same canonical source the Companies tab uses (pinned first, then approved-job count, then A→Z), so the preview's first 6 mirror the directory and benefit from the shared cache.
+
+## [2026-05-29] tweak | Removed "I'm an admin" card from get-started
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- Dropped the admin role card from `/get-started` (it only ever said "contact admin" — no self-signup). The role grid is now 2 columns (Student, Recruiter), centered. Admin login is unaffected: `/login` is credential-based and still authenticates admins and redirects them to `/admin`. Left the message strings (`getStarted.adminTitle/adminDescription`) in place — harmless, unreferenced.
