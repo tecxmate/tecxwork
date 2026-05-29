@@ -55,6 +55,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Legal Compliance](topics/taiwan-compliance.md) — PIPA/PDPA, MOL licenses, work permits
 - [Taiwan Legal and Operational Framework](topics/taiwan-legal-operational-framework.md) — Legal requirements, resources, and stakeholders for operations in Taiwan
 - [Architecture Overview](topics/architecture-overview.md) — tech stack, concurrency, data isolation, Neon/Vercel
+- [Drizzle + Postgres gotchas](topics/drizzle-sql-gotchas.md) — query pitfalls (reused sql in select+groupBy, all-parameter CASE, ::date slicing) + fixes
 - [Tecxmate Design System](topics/design-system.md) — visual language, typography, components, brand colors
 - [Recruitment Workflows & Booking Engine](topics/recruitment-workflows.md) — admin, recruiter, and student flows; booking modes
 - [Data Privacy & CV Sharing](topics/data-privacy.md) — Google Drive targeted sharing, PIPA consent, cross-border transfer
