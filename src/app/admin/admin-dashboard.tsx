@@ -941,7 +941,7 @@ export function AdminDashboard({
               ) : (
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
               )}
-              <span className="hidden sm:inline">{settingsStatusLabel}</span>
+              <span>{settingsStatusLabel}</span>
             </div>
           ) : undefined
         }
