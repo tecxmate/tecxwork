@@ -20,53 +20,16 @@ import { LogoutButton } from "@/components/logout-button";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getEventBranding } from "@/lib/event-branding";
 import { getSession } from "@/lib/auth";
-import { db, recruiters, jobOpenings, users, eventConfig } from "@/lib/db";
+import { getCachedRecruiters } from "@/lib/cache";
+import { db, recruiters, jobOpenings, eventConfig } from "@/lib/db";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
 import { eq } from "drizzle-orm";
 
 async function getPublicRecruiters() {
-  const recruiterList = await db
-    .select({
-      id: recruiters.id,
-      company: recruiters.company,
-      industry: recruiters.industry,
-      description: recruiters.description,
-      logoUrl: recruiters.logoUrl,
-    })
-    .from(recruiters)
-    .innerJoin(users, eq(recruiters.userId, users.id))
-    .orderBy(recruiters.company)
-    .limit(6);
-
-  const approvedJobs = await db
-    .select({
-      recruiterId: jobOpenings.recruiterId,
-      title: jobOpenings.title,
-      jdLink: jobOpenings.jdLink,
-    })
-    .from(jobOpenings)
-    .where(eq(jobOpenings.moderationStatus, "approved"));
-
-  const jobsByRecruiter = new Map<
-    number,
-    { titles: string[]; hasJdLink: boolean }
-  >();
-  for (const job of approvedJobs) {
-    const current = jobsByRecruiter.get(job.recruiterId) ?? {
-      titles: [],
-      hasJdLink: false,
-    };
-    current.titles.push(job.title);
-    current.hasJdLink = current.hasJdLink || Boolean(job.jdLink);
-    jobsByRecruiter.set(job.recruiterId, current);
-  }
-
-  return recruiterList.map((recruiter) => ({
-    ...recruiter,
-    positions: jobsByRecruiter.get(recruiter.id)?.titles ?? [],
-    jdAvailable: jobsByRecruiter.get(recruiter.id)?.hasJdLink ?? false,
-  }));
+  // Reuse the canonical directory order (pinned first, then approved-job
+  // count, then A→Z) so the homepage preview matches the Companies tab.
+  return (await getCachedRecruiters()).slice(0, 6);
 }
 
 async function getPublicJobs() {

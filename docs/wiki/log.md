@@ -779,3 +779,7 @@ attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 - `PUT /api/admin/recruiters/pin` returned 500 ("Failed query") when pinning a company. Cause: the rank update used `case "id" when $1 then $2 ... end` where every THEN branch was a bind parameter — Postgres can't infer the CASE result type from all-parameter branches.
 - Fix: replaced the single CASE update with one typed `UPDATE ... SET pinned_rank = <index>` per id inside the transaction (pinned set is small). `pinnedRank: index` binds as a typed int against the int column, so no inference issue. Verified end-to-end against the live DB.
+
+## [2026-05-29] tweak | Homepage company preview matches Companies-tab order
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- The homepage "Participating Companies" preview ran its own `orderBy(recruiters.company)` (alphabetical) query, so its order didn't match `/browse`. Switched `getPublicRecruiters()` in `src/app/page.tsx` to `(await getCachedRecruiters()).slice(0, 6)` — the same canonical source the Companies tab uses (pinned first, then approved-job count, then A→Z), so the preview's first 6 mirror the directory and benefit from the shared cache.
