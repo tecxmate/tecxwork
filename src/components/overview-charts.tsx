@@ -109,14 +109,18 @@ function CapacityChart({
         </p>
       </div>
       <div className="max-h-[560px] w-full select-none overflow-y-auto outline-none [-webkit-tap-highlight-color:transparent] [&_*]:outline-none [&_*]:[-webkit-tap-highlight-color:transparent]">
-        <div className="sticky top-0 z-10 -mx-3 mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-card px-3 pb-2 pt-0.5 text-[11px] text-muted-foreground">
-          <span className="font-medium text-foreground">Slots:</span>
-          <LegendItem color={PURPLE} label="Booked" />
-          <LegendItem color={PURPLE_LIGHT} label="Available" />
-          <span className="ml-1 font-medium text-foreground">Requests:</span>
-          <LegendItem color={GREEN} label="Accepted" />
-          <LegendItem color={AMBER} label="Unconfirmed" />
-          <LegendItem color={RED} label="Rejected" />
+        <div className="sticky top-0 z-10 -mx-3 mb-1 flex flex-col gap-1 border-b bg-card px-3 pb-2 pt-0.5 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-medium text-foreground">Slots:</span>
+            <LegendItem color={PURPLE} label="Booked" />
+            <LegendItem color={PURPLE_LIGHT} label="Available" />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-medium text-foreground">Requests:</span>
+            <LegendItem color={GREEN} label="Accepted" />
+            <LegendItem color={AMBER} label="Unconfirmed" />
+            <LegendItem color={RED} label="Rejected" />
+          </div>
         </div>
         <div style={{ height: innerHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
