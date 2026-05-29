@@ -64,6 +64,18 @@ function ChartCard({
   );
 }
 
+function LegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span
+        className="h-2 w-2 shrink-0 rounded-full"
+        style={{ background: color }}
+      />
+      {label}
+    </span>
+  );
+}
+
 function CapacityChart({
   data,
 }: {
@@ -96,12 +108,16 @@ function CapacityChart({
           {totalBooked}/{totalSlots} slots booked ({fillRate}%)
         </p>
       </div>
-      <p className="mb-2 text-[11px] leading-tight text-muted-foreground/80">
-        Top bar = interview slots (booked + available). Bottom bar = booking
-        requests (accepted + unconfirmed + rejected). The two measure different
-        things, so they don&apos;t add up.
-      </p>
       <div className="max-h-[560px] w-full select-none overflow-y-auto outline-none [-webkit-tap-highlight-color:transparent] [&_*]:outline-none [&_*]:[-webkit-tap-highlight-color:transparent]">
+        <div className="sticky top-0 z-10 -mx-3 mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-card px-3 pb-2 pt-0.5 text-[11px] text-muted-foreground">
+          <span className="font-medium text-foreground">Slots:</span>
+          <LegendItem color={PURPLE} label="Booked" />
+          <LegendItem color={PURPLE_LIGHT} label="Available" />
+          <span className="ml-1 font-medium text-foreground">Requests:</span>
+          <LegendItem color={GREEN} label="Accepted" />
+          <LegendItem color={AMBER} label="Unconfirmed" />
+          <LegendItem color={RED} label="Rejected" />
+        </div>
         <div style={{ height: innerHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -123,7 +139,6 @@ function CapacityChart({
                 axisLine={false}
               />
               <Tooltip {...tooltipStyle} />
-              <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
               {/* Supply: interview slots */}
               <Bar dataKey="booked" name="Booked (slot)" stackId="cap" fill={PURPLE} radius={[2, 0, 0, 2]} />
               <Bar dataKey="remaining" name="Available (slot)" stackId="cap" fill={PURPLE_LIGHT} radius={[0, 2, 2, 0]} />

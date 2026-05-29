@@ -770,3 +770,7 @@ attributed_to: [niko]   belongs_to: [capacity-analytics]
 attributed_to: [niko]   belongs_to: [admin-panel]
 - Job Moderation cards used `truncate` (white-space:nowrap) on company/location meta spans whose flex parents lacked `min-w-0`, so a long value couldn't shrink and forced the document ~2.7x wider than the mobile viewport. Confirmed cause: a job `location` value 177 chars long.
 - Fix in admin-dashboard.tsx renderJobItem: company/location meta items get `min-w-0 max-w-full` (so truncate engages); the short non-truncating items (type/category/date) get `shrink-0`.
+
+## [2026-05-29] tweak | Capacity chart: sticky custom legend replaces explainer
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
+- On the Overview "Slot capacity vs booking requests by company" chart, replaced the prose "Top bar = slots / Bottom bar = requests" note and the scrolling Recharts `<Legend>` with a custom legend pinned `sticky top-0` at the top of the chart's scroll area (grouped "Slots: Booked/Available · Requests: Accepted/Unconfirmed/Rejected"). It stays visible while scrolling the per-company rows.
