@@ -774,3 +774,8 @@ attributed_to: [niko]   belongs_to: [admin-panel]
 ## [2026-05-29] tweak | Capacity chart: sticky custom legend replaces explainer
 attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
 - On the Overview "Slot capacity vs booking requests by company" chart, replaced the prose "Top bar = slots / Bottom bar = requests" note and the scrolling Recharts `<Legend>` with a custom legend pinned `sticky top-0` at the top of the chart's scroll area (grouped "Slots: Booked/Available · Requests: Accepted/Unconfirmed/Rejected"). It stays visible while scrolling the per-company rows.
+
+## [2026-05-29] fix | Company pin endpoint 500 (un-inferrable SQL CASE)
+attributed_to: [niko]   belongs_to: [tecxwork, admin-panel]
+- `PUT /api/admin/recruiters/pin` returned 500 ("Failed query") when pinning a company. Cause: the rank update used `case "id" when $1 then $2 ... end` where every THEN branch was a bind parameter — Postgres can't infer the CASE result type from all-parameter branches.
+- Fix: replaced the single CASE update with one typed `UPDATE ... SET pinned_rank = <index>` per id inside the transaction (pinned set is small). `pinnedRank: index` binds as a typed int against the int column, so no inference issue. Verified end-to-end against the live DB.

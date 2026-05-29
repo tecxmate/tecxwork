@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inArray, isNotNull, notInArray, sql } from "drizzle-orm";
+import { eq, isNotNull, notInArray } from "drizzle-orm";
 
 import { db, recruiters } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
@@ -44,23 +44,22 @@ export async function PUT(req: NextRequest) {
         .update(recruiters)
         .set({ pinnedRank: null })
         .where(isNotNull(recruiters.pinnedRank));
-    } else {
-      await tx
-        .update(recruiters)
-        .set({ pinnedRank: null })
-        .where(notInArray(recruiters.id, ids));
+      return;
+    }
 
-      // Assign dense 0-based ranks following the requested order.
-      const cases = sql.join(
-        ids.map((id, index) => sql`when ${id} then ${index}`),
-        sql` `
-      );
+    await tx
+      .update(recruiters)
+      .set({ pinnedRank: null })
+      .where(notInArray(recruiters.id, ids));
+
+    // Assign dense 0-based ranks following the requested order. One typed
+    // UPDATE per id — avoids an all-parameter SQL CASE whose result type
+    // Postgres can't infer. The pinned set is small (sponsors), so this is fine.
+    for (let index = 0; index < ids.length; index += 1) {
       await tx
         .update(recruiters)
-        .set({
-          pinnedRank: sql`case ${recruiters.id} ${cases} end`,
-        })
-        .where(inArray(recruiters.id, ids));
+        .set({ pinnedRank: index })
+        .where(eq(recruiters.id, ids[index]));
     }
   });
 
