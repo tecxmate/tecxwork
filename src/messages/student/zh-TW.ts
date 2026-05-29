@@ -148,7 +148,7 @@ export const studentZhTwMessages = {
     recruiterDescription: "查看你的面試行程、瀏覽學生檔案，並直接邀請候選人。",
     adminTitle: "我是管理員",
     adminDescription: "管理招募方權限、活動設定，並總覽博覽會的所有預約。",
-    contactAdmin: "請聯絡管理員開通",
+    contactAdmin: "請聯絡管理員審核後註冊",
   },
   login: {
     ...studentEnMessages.login,

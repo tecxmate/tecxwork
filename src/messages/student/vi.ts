@@ -147,7 +147,7 @@ export const studentViMessages = {
     recruiterDescription: "Xem lịch phỏng vấn, duyệt hồ sơ sinh viên và trực tiếp đặt lịch với ứng viên.",
     adminTitle: "Tôi là quản trị viên",
     adminDescription: "Quản lý quyền truy cập của nhà tuyển dụng, thiết lập sự kiện và giám sát tất cả các lịch hẹn.",
-    contactAdmin: "Liên hệ quản trị để được cấp quyền",
+    contactAdmin: "Liên hệ quản trị để được duyệt đăng ký",
   },
   login: {
     ...studentEnMessages.login,

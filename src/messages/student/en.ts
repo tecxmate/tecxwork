@@ -144,7 +144,7 @@ export const studentEnMessages = {
     adminTitle: "I'm an Admin",
     adminDescription:
       "Manage recruiter access, event settings, and oversee all bookings for the recruitment fair.",
-    contactAdmin: "Contact admin for access",
+    contactAdmin: "Contact admin for approval to sign up",
   },
   login: {
     welcomeBack: "Welcome back",

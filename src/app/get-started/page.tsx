@@ -53,7 +53,7 @@ export default async function GetStartedPage() {
       title: messages.getStarted.recruiterTitle,
       description: messages.getStarted.recruiterDescription,
       loginHref: "/login",
-      signupHref: "/recruiter/signup",
+      signupHref: null,
     },
   ];
 

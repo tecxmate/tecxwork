@@ -787,3 +787,7 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 ## [2026-05-29] tweak | Removed "I'm an admin" card from get-started
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - Dropped the admin role card from `/get-started` (it only ever said "contact admin" — no self-signup). The role grid is now 2 columns (Student, Recruiter), centered. Admin login is unaffected: `/login` is credential-based and still authenticates admins and redirects them to `/admin`. Left the message strings (`getStarted.adminTitle/adminDescription`) in place — harmless, unreferenced.
+
+## [2026-05-29] tweak | Recruiter card: signup gated behind admin approval
+attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
+- On `/get-started`, the recruiter card's "Sign Up" link was replaced with the contact-admin message (`recruiter.signupHref` → null). Recruiters must be approved first (existing `recruiterEmailApprovals` flow); the public card no longer links straight to `/recruiter/signup`. Reworded `getStarted.contactAdmin` in en/vi/zh-TW to "Contact admin for approval to sign up" (the admin card that previously shared this string was removed earlier today). `/recruiter/signup` itself is unchanged for approved recruiters who have the link.
