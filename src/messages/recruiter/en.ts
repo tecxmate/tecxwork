@@ -139,6 +139,8 @@ export const recruiterEnMessages = {
       location: "Location",
       employmentType: "Employment type",
       workplaceType: "Workplace type",
+      jobCategory: "Job category",
+      selectJobCategory: "Select a category",
       seniority: "Seniority",
       languageRequirement: "Language requirement",
       visaSupport: "Visa/work permit support",

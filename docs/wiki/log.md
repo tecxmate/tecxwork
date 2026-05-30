@@ -791,3 +791,11 @@ attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 ## [2026-05-29] tweak | Recruiter card: signup gated behind admin approval
 attributed_to: [niko]   belongs_to: [tecxwork, public-homepage]
 - On `/get-started`, the recruiter card's "Sign Up" link was replaced with the contact-admin message (`recruiter.signupHref` → null). Recruiters must be approved first (existing `recruiterEmailApprovals` flow); the public card no longer links straight to `/recruiter/signup`. Reworded `getStarted.contactAdmin` in en/vi/zh-TW to "Contact admin for approval to sign up" (the admin card that previously shared this string was removed earlier today). `/recruiter/signup` itself is unchanged for approved recruiters who have the link.
+
+## [2026-05-30] fix | Recruiters can now set/edit job category; patched Tripod Tech PCB STARter
+attributed_to: [niko]   belongs_to: [recruiter-dashboard, admin-panel]
+- Bug: recruiter's edit-job form had no category field; categories were assigned only by `tag-existing-job-categories.ts` auto-classifier whose `business` regex matches "management trainee", which mislabeled Tripod Tech's PCB engineering trainee job as Business.
+- Fix:
+  1. Added `jobCategory` select to recruiter form (`recruiter-dashboard-company.tsx`); accepted+validated in `/api/me/jobs` POST and `/api/me/jobs/[id]` PUT against `JOB_CATEGORY_VALUES`. Added EN/zh-TW labels.
+  2. Patched job id=94 ("2026 PCB STARter Management Trainee") in DB: business → tech_engineering.
+- Follow-up worth considering: nudge the auto-classifier so `tech_engineering` matches "engineering" before `business` catches "management trainee", and stop defaulting unknown jobs to `business` (use empty / uncategorized instead).

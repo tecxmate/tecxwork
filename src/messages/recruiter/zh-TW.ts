@@ -138,6 +138,8 @@ export const recruiterZhTwMessages = {
       location: "工作地點",
       employmentType: "聘用類型",
       workplaceType: "工作型態",
+      jobCategory: "職缺分類",
+      selectJobCategory: "選擇分類",
       seniority: "資歷層級",
       languageRequirement: "語言要求",
       visaSupport: "簽證／工作許可支援",

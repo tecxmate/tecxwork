@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 import {
   EMPLOYMENT_TYPE_VALUES,
+  JOB_CATEGORY_VALUES,
   normalizeSalaryCurrencyOptions,
   SALARY_CURRENCY_VALUES,
   SALARY_PERIOD_VALUES,
@@ -210,6 +211,17 @@ export async function PUT(
       );
     }
     updates.workplaceType = workplaceType;
+  }
+
+  if ("jobCategory" in body) {
+    const jobCategory = toCleanString(body.jobCategory);
+    if (jobCategory && !JOB_CATEGORY_VALUES.has(jobCategory)) {
+      return NextResponse.json(
+        { error: "Invalid job category" },
+        { status: 400 }
+      );
+    }
+    updates.jobCategory = jobCategory;
   }
 
   if ("salaryCurrency" in body) {

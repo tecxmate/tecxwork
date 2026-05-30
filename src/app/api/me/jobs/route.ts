@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 import {
   EMPLOYMENT_TYPE_VALUES,
+  JOB_CATEGORY_VALUES,
   normalizeSalaryCurrencyOptions,
   SALARY_CURRENCY_VALUES,
   SALARY_PERIOD_VALUES,
@@ -104,6 +105,7 @@ export async function POST(req: NextRequest) {
   const benefits = toCleanString(body.benefits);
   const employmentType = toCleanString(body.employmentType);
   const workplaceType = toCleanString(body.workplaceType);
+  const jobCategory = toCleanString(body.jobCategory);
   const rawSalaryCurrency = toCleanString(body.salaryCurrency).toUpperCase();
   const salaryCurrency = rawSalaryCurrency || "TWD";
   const salaryPeriod = toCleanString(body.salaryPeriod) || "month";
@@ -126,6 +128,12 @@ export async function POST(req: NextRequest) {
   if (workplaceType && !WORKPLACE_TYPE_VALUES.has(workplaceType)) {
     return NextResponse.json(
       { error: "Invalid workplace type" },
+      { status: 400 }
+    );
+  }
+  if (jobCategory && !JOB_CATEGORY_VALUES.has(jobCategory)) {
+    return NextResponse.json(
+      { error: "Invalid job category" },
       { status: 400 }
     );
   }
@@ -194,6 +202,7 @@ export async function POST(req: NextRequest) {
       location,
       employmentType,
       workplaceType,
+      jobCategory,
       salaryMin,
       salaryMax,
       salaryCurrency,

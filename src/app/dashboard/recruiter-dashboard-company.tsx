@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   getEmploymentTypeOptions,
+  getJobCategoryOptions,
   getLanguageRequirementOptions,
   getSalaryCurrencyOptions,
   getSalaryPeriodOptions,
@@ -44,6 +45,7 @@ type JobOpening = {
   location: string;
   employmentType: string;
   workplaceType: string;
+  jobCategory: string;
   salaryMin: number | null;
   salaryMax: number | null;
   salaryCurrency: string;
@@ -66,6 +68,7 @@ type JobDraft = {
   location: string;
   employmentType: string;
   workplaceType: string;
+  jobCategory: string;
   salaryMin: string;
   salaryMax: string;
   salaryCurrency: string;
@@ -97,6 +100,7 @@ const EMPTY_JOB_DRAFT: JobDraft = {
   location: "",
   employmentType: "",
   workplaceType: "",
+  jobCategory: "",
   salaryMin: "",
   salaryMax: "",
   salaryCurrency: "TWD",
@@ -129,6 +133,7 @@ function toDraft(job: JobOpening, salaryCurrencyOptions?: string[]): JobDraft {
     location: job.location ?? "",
     employmentType: job.employmentType ?? "",
     workplaceType: job.workplaceType ?? "",
+    jobCategory: job.jobCategory ?? "",
     salaryMin: job.salaryMin !== null ? String(job.salaryMin) : "",
     salaryMax: job.salaryMax !== null ? String(job.salaryMax) : "",
     salaryCurrency: normalizeSalaryCurrency(
@@ -154,6 +159,7 @@ function buildJobPayload(draft: JobDraft, salaryCurrencyOptions?: string[]) {
     location: draft.location.trim(),
     employmentType: draft.employmentType,
     workplaceType: draft.workplaceType,
+    jobCategory: draft.jobCategory,
     salaryMin: toNullableInt(draft.salaryMin),
     salaryMax: toNullableInt(draft.salaryMax),
     salaryCurrency: normalizeSalaryCurrency(
@@ -735,6 +741,24 @@ export function RecruiterCompanyTab({
           >
             <option value="">{companyMessages.workplaceType}</option>
             {getWorkplaceTypeOptions(locale).map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">
+            {companyMessages.jobCategory}
+          </label>
+          <select
+            value={draft.jobCategory}
+            onChange={(e) => onChange("jobCategory", e.target.value)}
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+          >
+            <option value="">{companyMessages.selectJobCategory}</option>
+            {getJobCategoryOptions(locale).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
