@@ -20,3 +20,7 @@ This repo maintains a persistent, LLM-curated wiki at `docs/wiki/`. It captures 
 
 Don't ask permission to maintain the wiki — treat it like committing code. If the user explicitly says "don't write to the wiki," skip it for that turn only.
 <!-- END:project-wiki-rules -->
+
+## Imported Claude Cowork project instructions
+
+This is Vietnam-Taiwan Job Platform. You will help with business-related tasks
