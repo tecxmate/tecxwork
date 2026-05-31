@@ -805,3 +805,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Student report: "New Time Proposed" notification was received, but could not be clicked; email opened the platform only, without taking the student to Accept/Decline.
 - Root cause: reschedule proposal email linked to `/dashboard`, in-app notifications had no click action, and push notifications defaulted to `/`.
 - Fix: proposal messages now carry `/recruiter/<id>?proposal=<bookingId>`; notification rows open metadata URLs; recruiter detail selects the proposed job from the query. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] ingest | Ubuntu hourly local backup setup
+attributed_to: [niko]   belongs_to: [backup-dr]
+- Added Linux user-systemd units for the TECXWORK local backup on `/home/niko/repos/tecxwork`: hourly timer plus oneshot service writing to `/home/niko/tecxwork-backups`.
+- Environment findings: Node v20.20.2 is present via nvm; `npm ci` is blocked by an out-of-sync lockfile; `postgresql-client`/`pg_dump` and `.env.local` are still required before live DB dumps can succeed.
+- Updated topics/backup-dr.md with the Ubuntu systemd install path and logs.

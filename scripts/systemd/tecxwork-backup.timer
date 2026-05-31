@@ -1,0 +1,11 @@
+[Unit]
+Description=Run TECXWORK local backup hourly
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Persistent=true
+Unit=tecxwork-backup.service
+
+[Install]
+WantedBy=timers.target

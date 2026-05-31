@@ -1,0 +1,14 @@
+[Unit]
+Description=TECXWORK local backup
+Documentation=file:/home/niko/repos/tecxwork/docs/wiki/topics/backup-dr.md
+ConditionPathExists=/home/niko/repos/tecxwork/.env.local
+ConditionPathExists=/usr/bin/pg_dump
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/niko/repos/tecxwork
+Environment=BACKUP_DIR=/home/niko/tecxwork-backups
+ExecStartPre=/usr/bin/mkdir -p /home/niko/tecxwork-backups
+ExecStart=/home/niko/.nvm/versions/node/v20.20.2/bin/node /home/niko/repos/tecxwork/scripts/backup.mjs
+StandardOutput=append:/home/niko/tecxwork-backups/backup.log
+StandardError=append:/home/niko/tecxwork-backups/backup.err.log

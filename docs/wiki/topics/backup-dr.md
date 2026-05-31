@@ -3,7 +3,7 @@ title: Local Backup & Disaster Recovery
 type: topic
 slug: backup-dr
 date: 2026-05-29
-updated: 2026-05-29
+updated: 2026-06-01
 attributed_to: [niko]
 belongs_to: [tecxwork, architecture-overview]
 source: chat
@@ -63,7 +63,15 @@ Both machines keep independent local copies (no conflict — each mirrors the sa
 
 ### Non-macOS second machine
 The script itself runs anywhere with Node (`node scripts/backup.mjs`); only the scheduler differs:
-- **Linux:** cron — `0 * * * * cd /path/to/tecxwork && /usr/bin/node scripts/backup.mjs`
+- **Linux:** user systemd — this repo includes `scripts/systemd/tecxwork-backup.service` and `scripts/systemd/tecxwork-backup.timer`, configured for Niko's Ubuntu checkout at `/home/niko/repos/tecxwork`, Node at `/home/niko/.nvm/versions/node/v20.20.2/bin/node`, and backups at `/home/niko/tecxwork-backups`. Install with:
+  ```
+  mkdir -p ~/.config/systemd/user
+  cp scripts/systemd/tecxwork-backup.service scripts/systemd/tecxwork-backup.timer ~/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable --now tecxwork-backup.timer
+  systemctl --user list-timers tecxwork-backup.timer
+  ```
+  The timer runs 5 minutes after boot and then 1 hour after each completed run (`Persistent=true` catches missed runs). The service has systemd path conditions for `/home/niko/repos/tecxwork/.env.local` and `/usr/bin/pg_dump`; it skips cleanly until secrets and `postgresql-client` are installed. Logs append to `~/tecxwork-backups/backup.log` and `backup.err.log`.
 - **Windows:** Task Scheduler running the same command hourly.
 
 ## Restoring
