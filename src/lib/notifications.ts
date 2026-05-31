@@ -23,6 +23,9 @@ type CreateNotificationParams = {
 };
 
 export async function createNotification(params: CreateNotificationParams) {
+  const pushUrl =
+    typeof params.metadata?.url === "string" ? params.metadata.url : "/";
+
   const [notification] = await db
     .insert(notifications)
     .values({
@@ -38,7 +41,7 @@ export async function createNotification(params: CreateNotificationParams) {
   sendPushNotification(params.recipientEmail, {
     title: params.title,
     message: params.message,
-    url: "/",
+    url: pushUrl,
   }).catch(() => {});
 
   return notification;
@@ -53,6 +56,9 @@ export async function createBookingNotification(params: {
   position?: string;
   interviewTime?: Date;
   note?: string;
+  bookingId?: number;
+  recruiterId?: number;
+  actionUrl?: string;
 }) {
   const { recipientRole, status, companyName, applicantName, position, interviewTime, note } = params;
 
@@ -137,6 +143,9 @@ export async function createBookingNotification(params: {
       position,
       interviewTime: interviewTime?.toISOString(),
       note,
+      bookingId: params.bookingId,
+      recruiterId: params.recruiterId,
+      url: params.actionUrl,
     },
   });
 }

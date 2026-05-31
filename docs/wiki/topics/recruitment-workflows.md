@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-05-28
+updated: 2026-06-01
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -43,6 +43,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-06-01: Fixed reschedule proposal navigation after student reports that "New Time Proposed" notifications/email opened the site but did not take them to an actionable Accept/Decline state. Proposal emails and in-app/push notifications now carry `/recruiter/<id>?proposal=<bookingId>`, notification rows open their metadata URL, and the recruiter detail page selects the proposed job when opened with that query.
 - 2026-05-27: Added recruiter-driven reschedule proposals to unblock piles of pending bookings. New booking status `reschedule_proposed` plus `proposed_time` and `proposed_by_email` columns on `bookings`. Recruiter dashboard exposes a "Suggest time" action on pending/waitlisted applications; on submit the student gets an email + in-app notification and can Accept (runs the same slot-claim transaction as recruiter acceptance, swapping `requested_time` to the proposed time) or Decline (cancels). The student slot picker also shows a per-time "X waiting" badge counting pending/waitlisted/reschedule_proposed bookings for that recruiter+time so students can self-route away from popular slots. Migration `0005_reschedule_proposed.sql` adds the enum values and columns.
 - 2026-05-27: Implemented shareable category links under `/jobs/cat/<slug>`, with `/jobs/cat/tech`, `/jobs/cat/business`, and `/jobs/cat/service` served by one dynamic page at `/jobs/cat/[category]`. The route validates slugs, filters approved jobs by `job_category`, hides the category dropdown inside category-specific pages, and reuses the shared `/jobs` listing component instead of duplicating three pages.
 - 2026-05-26: Implemented job-level category tagging with an additive `job_openings.job_category` text field defaulting to blank, admin-only category assignment in job review/moderation, public `/jobs` filtering, and localized labels for Business/general, Tech/Engineering, and Service/Hospitality. Ran the additive migration and backfilled 84 previously blank jobs only, resulting in 38 Business, 38 Tech/Engineering, and 8 Service/Hospitality tags; rerunning the backfill dry-run reported 0 blank categories.

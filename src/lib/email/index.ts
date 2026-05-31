@@ -426,6 +426,7 @@ type RescheduleProposalEmailData = {
   originalTime?: Date;
   proposedTime: Date;
   recruiterNote?: string;
+  actionUrl?: string;
 };
 
 export async function sendRescheduleProposalEmail(
@@ -457,6 +458,7 @@ export async function sendRescheduleProposalEmail(
   const originalTimeStr = data.originalTime
     ? escapeHtml(formatTime(data.originalTime))
     : "";
+  const actionUrl = safeUrl(data.actionUrl ?? `${getPublicBaseUrl()}/browse`);
 
   try {
     const result = await resend.emails.send({
@@ -489,7 +491,7 @@ export async function sendRescheduleProposalEmail(
           </p>
 
           <div style="margin-bottom: 24px;">
-            <a href="${getPublicBaseUrl()}/dashboard" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+            <a href="${actionUrl}" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
               Review proposal
             </a>
           </div>

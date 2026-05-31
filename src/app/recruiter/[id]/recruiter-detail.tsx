@@ -177,6 +177,7 @@ type Props = {
   isAuthenticated: boolean;
   eventLocation: string;
   slotDuration: number;
+  initialProposalBookingId: number | null;
 };
 
 export function RecruiterDetail({
@@ -185,6 +186,7 @@ export function RecruiterDetail({
   isAuthenticated,
   eventLocation,
   slotDuration,
+  initialProposalBookingId,
 }: Props) {
   const { messages, locale } = useStudentI18n();
   const router = useRouter();
@@ -268,9 +270,22 @@ export function RecruiterDetail({
             })
           );
         setAppliedPositions(bookingsList);
+        if (initialProposalBookingId) {
+          const proposedBooking = bookingsList.find(
+            (b: { id: number; status: string }) =>
+              b.id === initialProposalBookingId &&
+              b.status === "reschedule_proposed"
+          );
+          if (proposedBooking) {
+            const proposedJob = jobs.find((job) => job.title === proposedBooking.position);
+            if (proposedJob) {
+              setSelectedJobId(proposedJob.id);
+            }
+          }
+        }
       })
       .catch(() => {});
-  }, [recruiter.id, isAuthenticated]);
+  }, [recruiter.id, isAuthenticated, initialProposalBookingId, jobs]);
 
   useEffect(() => {
     if (selectedGalleryIndex === null) return;

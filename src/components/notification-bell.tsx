@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, BellRing, Check, X, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,9 @@ type Notification = {
   message: string;
   read: boolean;
   createdAt: string;
+  metadata?: {
+    url?: string;
+  };
 };
 
 export type NotificationBellLabels = {
@@ -42,6 +46,7 @@ export function NotificationBell({
   labels?: NotificationBellLabels;
 }) {
   const labels = labelsProp ?? DEFAULT_LABELS;
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -130,6 +135,26 @@ export function NotificationBell({
     setUnreadCount((c) => Math.max(0, c - 1));
   }
 
+  async function openNotification(notification: Notification) {
+    const url = notification.metadata?.url;
+    if (!url || !url.startsWith("/")) return;
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+    setOpen(false);
+    router.push(url);
+  }
+
+  function handleNotificationKeyDown(
+    event: KeyboardEvent<HTMLDivElement>,
+    notification: Notification
+  ) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openNotification(notification);
+    }
+  }
+
   const button = (
     <button
       onClick={() => setOpen(!open)}
@@ -190,8 +215,13 @@ export function NotificationBell({
             {notifications.map((n) => (
               <div
                 key={n.id}
+                role={n.metadata?.url ? "button" : undefined}
+                tabIndex={n.metadata?.url ? 0 : undefined}
+                onClick={() => openNotification(n)}
+                onKeyDown={(event) => handleNotificationKeyDown(event, n)}
                 className={cn(
                   "flex gap-3 px-4 py-3 transition-colors",
+                  n.metadata?.url && "cursor-pointer hover:bg-muted",
                   !n.read && "bg-primary/5"
                 )}
               >
@@ -208,7 +238,10 @@ export function NotificationBell({
                 </div>
                 {!n.read && (
                   <button
-                    onClick={() => markAsRead(n.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      markAsRead(n.id);
+                    }}
                     className="shrink-0 self-start rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                     title={labels.markAsRead}
                   >
@@ -258,8 +291,13 @@ export function NotificationBell({
             {notifications.map((n) => (
               <div
                 key={n.id}
+                role={n.metadata?.url ? "button" : undefined}
+                tabIndex={n.metadata?.url ? 0 : undefined}
+                onClick={() => openNotification(n)}
+                onKeyDown={(event) => handleNotificationKeyDown(event, n)}
                 className={cn(
                   "flex gap-3 rounded-md px-3 py-2 transition-colors",
+                  n.metadata?.url && "cursor-pointer",
                   n.read ? "bg-transparent hover:bg-muted" : "bg-primary/5"
                 )}
               >
@@ -276,7 +314,10 @@ export function NotificationBell({
                 </div>
                 {!n.read && (
                   <button
-                    onClick={() => markAsRead(n.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      markAsRead(n.id);
+                    }}
                     className="shrink-0 self-start rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                     title={labels.markAsRead}
                   >

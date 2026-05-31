@@ -799,3 +799,9 @@ attributed_to: [niko]   belongs_to: [recruiter-dashboard, admin-panel]
   1. Added `jobCategory` select to recruiter form (`recruiter-dashboard-company.tsx`); accepted+validated in `/api/me/jobs` POST and `/api/me/jobs/[id]` PUT against `JOB_CATEGORY_VALUES`. Added EN/zh-TW labels.
   2. Patched job id=94 ("2026 PCB STARter Management Trainee") in DB: business → tech_engineering.
 - Follow-up worth considering: nudge the auto-classifier so `tech_engineering` matches "engineering" before `business` catches "management trainee", and stop defaulting unknown jobs to `business` (use empty / uncategorized instead).
+
+## [2026-06-01] fix | Reschedule proposal notification/email lacked actionable deep link
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Student report: "New Time Proposed" notification was received, but could not be clicked; email opened the platform only, without taking the student to Accept/Decline.
+- Root cause: reschedule proposal email linked to `/dashboard`, in-app notifications had no click action, and push notifications defaulted to `/`.
+- Fix: proposal messages now carry `/recruiter/<id>?proposal=<bookingId>`; notification rows open metadata URLs; recruiter detail selects the proposed job from the query. Updated topics/recruitment-workflows.md.

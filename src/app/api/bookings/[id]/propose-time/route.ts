@@ -3,7 +3,7 @@ import { db, bookings, recruiters, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getRecruiterFromSession } from "@/lib/auth";
 import { parseJsonBody, proposeTimeSchema } from "@/lib/validation";
-import { sendRescheduleProposalEmail } from "@/lib/email";
+import { getPublicBaseUrl, sendRescheduleProposalEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { getApplicantBusyRanges, overlapsBusy } from "@/lib/applicant-busy";
 
@@ -110,6 +110,9 @@ export async function POST(
     .where(eq(bookings.id, bookingId));
 
   if (rec) {
+    const proposalPath = `/recruiter/${auth.recruiterId}?proposal=${bookingId}`;
+    const proposalUrl = `${getPublicBaseUrl()}${proposalPath}`;
+
     sendRescheduleProposalEmail({
       applicantName: booking.applicantName,
       applicantEmail: booking.applicantEmail,
@@ -118,6 +121,7 @@ export async function POST(
       originalTime: booking.requestedTime ?? undefined,
       proposedTime: proposedDate,
       recruiterNote: note,
+      actionUrl: proposalUrl,
     }).catch(() => {});
 
     createBookingNotification({
@@ -128,6 +132,9 @@ export async function POST(
       position: booking.position ?? undefined,
       interviewTime: proposedDate,
       note,
+      bookingId,
+      recruiterId: auth.recruiterId,
+      actionUrl: proposalPath,
     }).catch(() => {});
   }
 

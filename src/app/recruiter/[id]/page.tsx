@@ -7,12 +7,19 @@ import { RecruiterDetail } from "./recruiter-detail";
 
 export default async function RecruiterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const recruiterId = parseInt(id);
   if (isNaN(recruiterId)) notFound();
+  const proposalParam = Array.isArray(query.proposal)
+    ? query.proposal[0]
+    : query.proposal;
+  const proposalBookingId = proposalParam ? parseInt(proposalParam) : null;
 
   const session = await getSession();
 
@@ -70,6 +77,11 @@ export default async function RecruiterPage({
       isAuthenticated={!!session}
       eventLocation={branding.location}
       slotDuration={branding.slotDuration}
+      initialProposalBookingId={
+        proposalBookingId && !isNaN(proposalBookingId)
+          ? proposalBookingId
+          : null
+      }
     />
   );
 }
