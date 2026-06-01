@@ -371,17 +371,16 @@ export function NotificationBell({
     <div className="relative">
       {button}
 
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border bg-card shadow-lg">
-            {panel}
-          </div>
-        </>
-      )}
+      {open ? (
+        <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+      ) : null}
+      <div
+        data-open={open}
+        aria-hidden={!open}
+        className="dropdown-panel absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border bg-card shadow-lg"
+      >
+        {panel}
+      </div>
     </div>
   );
 }

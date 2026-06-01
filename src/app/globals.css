@@ -316,6 +316,24 @@ header.app-header::after {
 .stagger-fade-in > *:nth-child(8) { animation-delay: 350ms; }
 .stagger-fade-in > *:nth-child(n+9) { animation-delay: 400ms; }
 
+/* Dropdown / popover panels — symmetric open + close (bell, hamburger menu).
+   Always mounted; toggle data-open so the close animation plays too. */
+.dropdown-panel {
+  transform-origin: top right;
+  transition:
+    opacity var(--duration-base) var(--ease-fluid),
+    transform var(--duration-base) var(--ease-fluid);
+}
+.dropdown-panel[data-open="false"] {
+  opacity: 0;
+  transform: scale(0.96) translateY(-4px);
+  pointer-events: none;
+}
+.dropdown-panel[data-open="true"] {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
 /* Smooth transitions for interactive elements */
 @layer utilities {
   .transition-premium {

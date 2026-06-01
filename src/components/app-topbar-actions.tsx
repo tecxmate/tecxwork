@@ -61,28 +61,28 @@ export function AppTopBarActions({
         )}
       </button>
       {open ? (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-40 cursor-default bg-transparent"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="menu"
-            className="absolute right-0 top-11 z-50 flex w-[280px] flex-col items-stretch gap-1 rounded-xl border border-border bg-background/80 p-1.5 text-sm shadow-2xl backdrop-blur-xl animate-fade-in-scale stagger-fade-in sm:w-80"
-          >
-            {mobileItems.map((item, index) => (
-              <div key={index} className="flex w-full flex-col items-stretch gap-1">
-                {item}
-                {index < mobileItems.length - 1 && (
-                  <div className="my-0.5 h-px w-full bg-border" />
-                )}
-              </div>
-            ))}
-          </div>
-        </>
+        <button
+          type="button"
+          className="fixed inset-0 z-40 cursor-default bg-transparent"
+          aria-label="Close menu"
+          onClick={() => setOpen(false)}
+        />
       ) : null}
+      <div
+        role="menu"
+        data-open={open}
+        aria-hidden={!open}
+        className="dropdown-panel absolute right-0 top-11 z-50 flex w-[280px] flex-col items-stretch gap-1 rounded-xl border border-border bg-background/80 p-1.5 text-sm shadow-2xl backdrop-blur-xl sm:w-80"
+      >
+        {mobileItems.map((item, index) => (
+          <div key={index} className="flex w-full flex-col items-stretch gap-1">
+            {item}
+            {index < mobileItems.length - 1 && (
+              <div className="my-0.5 h-px w-full bg-border" />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

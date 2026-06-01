@@ -954,3 +954,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 - Bell is now a standalone icon to the LEFT of the hamburger (was inside the overflow menu), styled to match the hamburger (h-9 w-9, rounded-lg, border). Still gated on logged-in (showNotifications, non-guest).
 - Unread indicator changed from a count badge to a purple dot (bg-purple-500). Notification messages no longer line-clamp-2 (full text, break-words); popover widened to w-80 with max-w-[calc(100vw-1rem)] so it can't be cut off on small screens.
+
+## [2026-06-01] ui+feature | Welcome notification in bell; symmetric dropdown animation
+attributed_to: [niko]   belongs_to: [tecxwork, design-system]
+- /api/push-subscription now also inserts a one-time in-app "system" welcome notification (deduped per user) so the welcome shows in the bell, not just as a system push.
+- Added shared `.dropdown-panel` CSS (globals.css) using --duration-base/--ease-fluid; bell popover and hamburger menu are now always-mounted with data-open toggling, giving matched, symmetric open AND close animations. Removed stagger-fade-in (the slow open) from the hamburger.
