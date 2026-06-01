@@ -42,3 +42,27 @@ export async function sendPushNotification(
     }
   }
 }
+
+/**
+ * Send a push to a single subscription (the device that just subscribed),
+ * rather than fanning out to every device for the user.
+ */
+export async function sendPushToSubscription(
+  sub: { endpoint: string; p256dh: string; auth: string },
+  payload: { title: string; message: string; url?: string }
+) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+
+  try {
+    await webpush.sendNotification(
+      { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+      JSON.stringify(payload)
+    );
+  } catch (err: unknown) {
+    if ((err as { statusCode?: number }).statusCode === 410) {
+      await db
+        .delete(pushSubscriptions)
+        .where(eq(pushSubscriptions.endpoint, sub.endpoint));
+    }
+  }
+}

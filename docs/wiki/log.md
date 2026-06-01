@@ -945,3 +945,7 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Deleted redundant `tecxwork` Vercel project (both it and `app` auto-built main -> double-build load that fed the outage). Migrated VAPID web-push keys to `app` (it was missing them; stripped a literal \n corruption), relinked local repo to `app`, redeployed.
 - Refreshed topics/architecture-overview.md Data Infrastructure section to current state: Singapore region, single `app` project, free-tier DB resilience (pool error handler + event_config cache), caching model, cookie-dynamic pages.
 - created decisions/2026-06-01-vercel-project-consolidation.md
+
+## [2026-06-01] feature | Welcome push on enable (self-test confirmation)
+attributed_to: [niko]   belongs_to: [tecxwork]
+- /api/push-subscription now fires a one-off "🔔 Notifications enabled" push to the just-subscribed device after a successful subscribe. New helper sendPushToSubscription() in lib/web-push.ts targets a single endpoint (vs sendPushNotification fan-out). Fixes the silent-enable UX gap and gives every user a built-in self-test.

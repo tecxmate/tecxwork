@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, pushSubscriptions } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { sendPushToSubscription } from "@/lib/web-push";
 import { and, eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
@@ -32,6 +33,16 @@ export async function POST(req: NextRequest) {
         auth: keys.auth,
       },
     });
+
+  // Confirm to the device that just subscribed that push is working.
+  sendPushToSubscription(
+    { endpoint, p256dh: keys.p256dh, auth: keys.auth },
+    {
+      title: "🔔 Notifications enabled",
+      message: "You'll get interview updates from TECXWORK right here.",
+      url: "/",
+    }
+  ).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }
