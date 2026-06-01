@@ -388,7 +388,7 @@ export async function getAdminDashboardData() {
     initialJobModerationEnabled: config?.jobModerationEnabled ?? true,
     initialStudentCancellationEnabled:
       config?.studentCancellationEnabled ?? false,
-    initialJobsPageHeroEnabled: config?.jobsPageHeroEnabled ?? true,
+    initialJobsPageHeroEnabled: config?.jobsPageHeroEnabled ?? false,
     initialSalaryCurrencyOptions: normalizeSalaryCurrencyOptions(
       config?.salaryCurrencyOptions
     ),

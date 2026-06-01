@@ -23,7 +23,7 @@ export async function GET() {
     onboardingMode: config?.onboardingMode ?? "full",
     jobModerationEnabled: config?.jobModerationEnabled ?? true,
     studentCancellationEnabled: config?.studentCancellationEnabled ?? false,
-    jobsPageHeroEnabled: config?.jobsPageHeroEnabled ?? true,
+    jobsPageHeroEnabled: config?.jobsPageHeroEnabled ?? false,
     salaryCurrencyOptions: normalizeSalaryCurrencyOptions(
       config?.salaryCurrencyOptions
     ),

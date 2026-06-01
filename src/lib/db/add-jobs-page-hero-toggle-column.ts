@@ -39,10 +39,20 @@ async function main() {
 
   await sql`
     ALTER TABLE event_config
-    ADD COLUMN IF NOT EXISTS jobs_page_hero_enabled boolean NOT NULL DEFAULT true
+    ADD COLUMN IF NOT EXISTS jobs_page_hero_enabled boolean NOT NULL DEFAULT false
   `;
 
-  console.log("Ensured event_config.jobs_page_hero_enabled exists");
+  await sql`
+    ALTER TABLE event_config
+    ALTER COLUMN jobs_page_hero_enabled SET DEFAULT false
+  `;
+
+  await sql`
+    UPDATE event_config
+    SET jobs_page_hero_enabled = false
+  `;
+
+  console.log("Ensured event_config.jobs_page_hero_enabled defaults to false");
 }
 
 main().catch((error) => {

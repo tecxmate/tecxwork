@@ -912,3 +912,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [page-hero]
 - Added `event_config.jobs_page_hero_enabled` defaulting true, with an admin Platform → Tools & Media switch to show/hide the `/jobs` recruiter-posted jobs banner without deleting uploaded images.
 - Ran the additive live migration on 2026-06-01. Updated topics/page-hero.md.
+
+## [2026-06-01] change | Jobs page banner defaults off
+attributed_to: [niko]   belongs_to: [page-hero]
+- Changed `event_config.jobs_page_hero_enabled` to default false and updated fallbacks so `/jobs` hides the recruiter-posted jobs banner unless admins explicitly enable it.
+- Updated the live DB default and current row to false on 2026-06-01. Updated topics/page-hero.md.

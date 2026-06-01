@@ -22,5 +22,5 @@ export async function getJobsPageHeroEnabled() {
     .from(eventConfig)
     .limit(1);
 
-  return config?.jobsPageHeroEnabled ?? true;
+  return config?.jobsPageHeroEnabled ?? false;
 }

@@ -29,7 +29,7 @@ date: 2026-05-29
 - Luminance is sampled per image and indexed by the active slide; switching slides re-evaluates `darkText`.
 - Text gets a `text-shadow` only in light-text mode (extra insurance over busy dark photos).
 - No images → renders the original plain `bg-card` centered header (graceful fallback), so pages without uploaded images look unchanged.
-- `/jobs` has an admin-controlled `event_config.jobs_page_hero_enabled` flag (default `true`) surfaced in Platform → Tools & Media beside the Jobs page image uploads. Turning it off hides the recruiter-posted jobs banner without deleting uploaded images.
+- `/jobs` has an admin-controlled `event_config.jobs_page_hero_enabled` flag (default `false`) surfaced in Platform → Tools & Media beside the Jobs page image uploads. Turning it on shows the recruiter-posted jobs banner without requiring image reupload.
 - The old `PageImageCarousel` was deleted (it was only used by these two pages). See [[hero-carousel]] for the *homepage* hero, which is a separate component.
 
 ## Tuning / open items
