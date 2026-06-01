@@ -75,8 +75,8 @@ type BookingEmailData = {
   recruiterName: string;
   recruiterEmail: string;
   company: string;
-  slotStart: Date;
-  slotEnd: Date;
+  slotStart: Date | string;
+  slotEnd: Date | string;
   cvLink: string;
   direction: "applicant_books_recruiter" | "recruiter_books_applicant";
 };
@@ -92,7 +92,15 @@ type ApplicationSubmittedEmailData = {
   applicantProfileUrl: string;
 };
 
-function formatTime(date: Date): string {
+function asDate(value: Date | string): Date | null {
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatTime(value: Date | string): string {
+  const date = asDate(value);
+  if (!date) return String(value);
+
   return date.toLocaleString("en-US", {
     weekday: "long",
     year: "numeric",

@@ -834,3 +834,13 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Fresh Linux dev dependency install activated the current `react-hooks/set-state-in-effect` lint rule, failing on `src/components/recruiter-jobs-browser.tsx`.
 - Replaced the desktop detail-pane state-repair effect with derived `visibleSelectedJobId`; full `npm run lint -- --quiet` and `npx tsc --noEmit` now pass. Updated topics/tecxwork.md.
+
+## [2026-06-01] fix | Confirmation email raw UTC timestamp
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Student screenshot showed an accepted interview confirmation email displaying `2026-06-06 07:30:00+00`, which looked like 7:30 AM instead of the intended Asia/Taipei time.
+- Root cause: raw SQL slot claims can return timestamp strings; email formatting called `.toLocaleString()` without coercing strings to `Date`, so strings rendered unchanged. Email and notification formatting now normalize `Date | string` times before display. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] fix | Mobile proposal response feedback
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Student screenshot showed tapping Accept on a mobile reschedule proposal appeared to do nothing; live DB still had the SSB booking in `reschedule_proposed` and the new audit log had no response row.
+- Code audit found mobile proposal errors were invisible because `respondError` only rendered in the desktop panel. Added mobile/desktop success and error notices, network-error handling, and `finally` cleanup for the loading state. Updated topics/recruitment-workflows.md.

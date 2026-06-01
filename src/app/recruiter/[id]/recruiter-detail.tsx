@@ -205,7 +205,11 @@ export function RecruiterDetail({
     }[]
   >([]);
   const [respondingId, setRespondingId] = useState<number | null>(null);
-  const [respondError, setRespondError] = useState<string | null>(null);
+  const [respondNotice, setRespondNotice] = useState<{
+    bookingId: number;
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(
     initialJobs.length > 0 ? initialJobs[0].id : null
   );
@@ -389,24 +393,48 @@ export function RecruiterDetail({
 
   async function respondToProposal(bookingId: number, action: "accept" | "decline") {
     setRespondingId(bookingId);
-    setRespondError(null);
-    const res = await fetch(`/api/bookings/${bookingId}/respond-proposal`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
-    if (res.ok) {
+    setRespondNotice(null);
+
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/respond-proposal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          data.error ?? messages.recruiterDetail.proposalResponseFailed
+        );
+      }
+
       const newStatus = action === "accept" ? "accepted" : "cancelled";
       setAppliedPositions((prev) =>
         prev
           .map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
           .filter((b) => b.status !== "cancelled")
       );
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setRespondError(data.error ?? "Could not respond to proposal.");
+      setRespondNotice({
+        bookingId,
+        type: "success",
+        message:
+          action === "accept"
+            ? messages.recruiterDetail.proposalAccepted
+            : messages.recruiterDetail.proposalDeclined,
+      });
+    } catch (error) {
+      setRespondNotice({
+        bookingId,
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : messages.recruiterDetail.proposalResponseFailed,
+      });
+    } finally {
+      setRespondingId(null);
     }
-    setRespondingId(null);
   }
 
   const getBookingForPosition = (positionTitle: string) =>
@@ -677,6 +705,19 @@ export function RecruiterDetail({
             <div className="lg:col-span-3">
               {step === "positions" && (
                 <>
+                  {respondNotice && (
+                    <div
+                      className={cn(
+                        "mb-3 rounded-lg border px-3 py-2 text-sm",
+                        respondNotice.type === "success"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300"
+                          : "border-destructive/30 bg-destructive/10 text-destructive"
+                      )}
+                    >
+                      {respondNotice.message}
+                    </div>
+                  )}
+
                   {/* Mobile: show all jobs as cards */}
                   <div className="space-y-2 lg:hidden">
                     {jobs.length === 0 ? (
@@ -767,6 +808,12 @@ export function RecruiterDetail({
                                   >
                                     {messages.recruiterDetail.declineProposal}
                                   </Button>
+                                  {respondNotice?.bookingId === booking.id &&
+                                    respondNotice.type === "error" && (
+                                      <p className="max-w-32 text-right text-xs text-destructive">
+                                        {respondNotice.message}
+                                      </p>
+                                    )}
                                 </div>
                               ) : !alreadyApplied ? (
                                 <Button
@@ -847,9 +894,12 @@ export function RecruiterDetail({
                                         {messages.recruiterDetail.declineProposal}
                                       </Button>
                                     </div>
-                                    {respondError && (
-                                      <p className="text-xs text-destructive">{respondError}</p>
-                                    )}
+                                    {respondNotice?.bookingId === selBooking.id &&
+                                      respondNotice.type === "error" && (
+                                        <p className="text-xs text-destructive">
+                                          {respondNotice.message}
+                                        </p>
+                                      )}
                                   </div>
                                 );
                               }

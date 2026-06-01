@@ -12,6 +12,7 @@ type NotificationType =
   | "system";
 
 type RecipientRole = "admin" | "recruiter" | "applicant";
+type TimeInput = Date | string;
 
 type CreateNotificationParams = {
   recipientEmail: string;
@@ -54,13 +55,20 @@ export async function createBookingNotification(params: {
   companyName?: string;
   applicantName?: string;
   position?: string;
-  interviewTime?: Date;
+  interviewTime?: TimeInput;
   note?: string;
   bookingId?: number;
   recruiterId?: number;
   actionUrl?: string;
 }) {
   const { recipientRole, status, companyName, applicantName, position, interviewTime, note } = params;
+  const interviewDate = interviewTime
+    ? interviewTime instanceof Date
+      ? interviewTime
+      : new Date(interviewTime)
+    : null;
+  const hasValidInterviewDate =
+    interviewDate !== null && !Number.isNaN(interviewDate.getTime());
 
   const typeMap: Record<string, NotificationType> = {
     pending: "booking_pending",
@@ -75,8 +83,8 @@ export async function createBookingNotification(params: {
   let message: string;
 
   if (recipientRole === "applicant") {
-    const timeStr = interviewTime
-      ? interviewTime.toLocaleString("en-US", {
+    const timeStr = hasValidInterviewDate
+      ? interviewDate.toLocaleString("en-US", {
           month: "short",
           day: "numeric",
           hour: "2-digit",
@@ -141,7 +149,9 @@ export async function createBookingNotification(params: {
       companyName,
       applicantName,
       position,
-      interviewTime: interviewTime?.toISOString(),
+      interviewTime: hasValidInterviewDate
+        ? interviewDate.toISOString()
+        : undefined,
       note,
       bookingId: params.bookingId,
       recruiterId: params.recruiterId,
