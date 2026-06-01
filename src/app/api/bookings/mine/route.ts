@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
   const result = await db
     .select({
       id: bookings.id,
+      jobOpeningId: bookings.jobOpeningId,
       position: bookings.position,
       status: bookings.status,
       requestedTime: bookings.requestedTime,

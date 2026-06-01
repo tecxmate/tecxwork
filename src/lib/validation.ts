@@ -95,6 +95,7 @@ export const applicantSignupSchema = z.object({
 
 export const createBookingSchema = z.object({
   recruiterId: z.number().int().positive(),
+  jobOpeningId: z.number().int().positive().optional(),
   startTime: z.string().min(1),
   position: z.string().trim().min(1),
   cvLink: z.string().trim().url().optional(),

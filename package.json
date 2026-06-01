@@ -28,6 +28,7 @@
     "db:update:student-profile-columns": "npx tsx src/lib/db/add-student-profile-columns.ts",
     "db:update:work-experiences": "npx tsx src/lib/db/add-work-experiences-column.ts",
     "db:update:booking-reschedule-logs": "npx tsx src/lib/db/add-booking-reschedule-logs-table.ts",
+    "db:update:booking-job-opening-id": "npx tsx src/lib/db/add-booking-job-opening-id-column.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",
     "db:seed:schools": "npx tsx src/lib/db/import-schools.ts",
     "test": "vitest run",

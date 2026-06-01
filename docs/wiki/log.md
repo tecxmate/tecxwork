@@ -844,3 +844,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Student screenshot showed tapping Accept on a mobile reschedule proposal appeared to do nothing; live DB still had the SSB booking in `reschedule_proposed` and the new audit log had no response row.
 - Code audit found mobile proposal errors were invisible because `respondError` only rendered in the desktop panel. Added mobile/desktop success and error notices, network-error handling, and `finally` cleanup for the loading state. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] fix | Stable job application matching
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Student report: after recruiter edits, the applicant side could look like no application existed, or show only generic "Applied" for waitlisted/pending/confirmed cases.
+- Root cause: booking state was matched to jobs by editable title text (`bookings.position === job.title`). Added `bookings.job_opening_id`, stable id matching in UI/API, duplicate blocking for waitlisted/reschedule-proposed applications, and explicit Pending review / Waitlisted / Interview confirmed labels.
+- Ran the live backfill: 124/145 bookings linked, including all 7 SSB bookings to job opening 47. Updated topics/recruitment-workflows.md.

@@ -192,12 +192,14 @@ export function RecruiterDetail({
   const router = useRouter();
   const [step, setStep] = useState<Step>("positions");
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
+  const [selectedJobOpeningId, setSelectedJobOpeningId] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [infoExpanded, setInfoExpanded] = useState(true);
   const [jobs] = useState<JobOpening[]>(initialJobs);
   const [appliedPositions, setAppliedPositions] = useState<
     {
       id: number;
+      jobOpeningId: number | null;
       position: string;
       requestedTime: string;
       proposedTime: string | null;
@@ -261,12 +263,14 @@ export function RecruiterDetail({
           .map(
             (b: {
               id: number;
+              jobOpeningId: number | null;
               position: string;
               requestedTime: string;
               proposedTime: string | null;
               status: string;
             }) => ({
               id: b.id,
+              jobOpeningId: b.jobOpeningId,
               position: b.position,
               requestedTime: b.requestedTime,
               proposedTime: b.proposedTime,
@@ -345,12 +349,13 @@ export function RecruiterDetail({
     }
   };
 
-  const handleSelectPosition = (title: string) => {
+  const handleSelectPosition = (title: string, jobOpeningId: number) => {
     if (!isAuthenticated) {
       router.push("/get-started");
       return;
     }
     setSelectedPosition(title);
+    setSelectedJobOpeningId(jobOpeningId);
     setStep("pick-slot");
   };
 
@@ -365,6 +370,7 @@ export function RecruiterDetail({
       setStep("pick-slot");
     } else if (step === "pick-slot") {
       setSelectedPosition(null);
+      setSelectedJobOpeningId(null);
       setStep("positions");
     } else {
       setStep("positions");
@@ -382,12 +388,14 @@ export function RecruiterDetail({
           position: selectedPosition,
           requestedTime: selectedSlot.startTime,
           proposedTime: null,
+          jobOpeningId: selectedJobOpeningId,
           status: "pending",
         },
       ]);
     }
     setSelectedSlot(null);
     setSelectedPosition(null);
+    setSelectedJobOpeningId(null);
     setStep("positions");
   };
 
@@ -437,10 +445,20 @@ export function RecruiterDetail({
     }
   }
 
-  const getBookingForPosition = (positionTitle: string) =>
-    appliedPositions.find((b) => b.position === positionTitle);
-  const isPositionApplied = (positionTitle: string) =>
-    appliedPositions.some((b) => b.position === positionTitle);
+  const getBookingForJob = (job: Pick<JobOpening, "id" | "title">) =>
+    appliedPositions.find((booking) =>
+      booking.jobOpeningId
+        ? booking.jobOpeningId === job.id
+        : booking.position === job.title
+    );
+  const isJobApplied = (job: Pick<JobOpening, "id" | "title">) =>
+    getBookingForJob(job) !== undefined;
+  const bookingStatusLabel = (status: string) => {
+    if (status === "accepted") return messages.recruiterDetail.interviewConfirmed;
+    if (status === "waitlisted") return messages.recruiterDetail.waitlisted;
+    if (status === "pending") return messages.recruiterDetail.pendingReview;
+    return messages.recruiterDetail.applied;
+  };
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -665,7 +683,7 @@ export function RecruiterDetail({
                     <CardContent className="space-y-1 pt-0">
                       {jobs.map((job) => {
                         const isSelected = selectedJobId === job.id;
-                        const alreadyApplied = isPositionApplied(job.title);
+                        const alreadyApplied = isJobApplied(job);
                         return (
                           <button
                             key={job.id}
@@ -730,8 +748,8 @@ export function RecruiterDetail({
                       </Card>
                     ) : (
                       jobs.map((job) => {
-                        const alreadyApplied = isPositionApplied(job.title);
-                        const booking = getBookingForPosition(job.title);
+                        const alreadyApplied = isJobApplied(job);
+                        const booking = getBookingForJob(job);
                         const isProposed = booking?.status === "reschedule_proposed";
                         return (
                           <RecruiterJobPostingCard
@@ -774,13 +792,15 @@ export function RecruiterDetail({
                                 <div className="flex flex-col gap-0.5">
                                   <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                     <CheckCircle2 className="h-3 w-3" />
-                                    {messages.recruiterDetail.applied}
+                                    {bookingStatusLabel(booking.status)}
                                   </span>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {interpolate(messages.recruiterDetail.interviewAt, {
-                                      time: format(new Date(booking.requestedTime), "MMM d, HH:mm"),
-                                    })}
-                                  </span>
+                                  {booking.status === "accepted" && (
+                                    <span className="text-[10px] text-muted-foreground">
+                                      {interpolate(messages.recruiterDetail.interviewAt, {
+                                        time: format(new Date(booking.requestedTime), "MMM d, HH:mm"),
+                                      })}
+                                    </span>
+                                  )}
                                 </div>
                               ) : undefined
                             }
@@ -818,7 +838,7 @@ export function RecruiterDetail({
                               ) : !alreadyApplied ? (
                                 <Button
                                   size="sm"
-                                  onClick={() => handleSelectPosition(job.title)}
+                                  onClick={() => handleSelectPosition(job.title, job.id)}
                                   className="shrink-0"
                                 >
                                   {isAuthenticated ? (
@@ -860,7 +880,7 @@ export function RecruiterDetail({
                               </p>
                             </div>
                             {(() => {
-                              const selBooking = getBookingForPosition(selectedJob.title);
+                              const selBooking = getBookingForJob(selectedJob);
                               const isSelProposed = selBooking?.status === "reschedule_proposed";
                               if (isSelProposed && selBooking?.proposedTime) {
                                 return (
@@ -905,26 +925,26 @@ export function RecruiterDetail({
                               }
                               return null;
                             })()}
-                            {isPositionApplied(selectedJob.title) && getBookingForPosition(selectedJob.title)?.status !== "reschedule_proposed" ? (
+                            {isJobApplied(selectedJob) && getBookingForJob(selectedJob)?.status !== "reschedule_proposed" ? (
                               <div className="flex flex-col items-end gap-0.5">
                                 <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                   <CheckCircle2 className="h-3.5 w-3.5" />
-                                  {messages.recruiterDetail.applied}
+                                  {bookingStatusLabel(getBookingForJob(selectedJob)!.status)}
                                 </span>
-                                {getBookingForPosition(selectedJob.title) && (
+                                {getBookingForJob(selectedJob)?.status === "accepted" && (
                                   <span className="text-xs text-muted-foreground">
                                     {interpolate(messages.recruiterDetail.interviewAt, {
                                       time: format(
-                                        new Date(getBookingForPosition(selectedJob.title)!.requestedTime),
+                                        new Date(getBookingForJob(selectedJob)!.requestedTime),
                                         "MMM d, HH:mm"
                                       ),
                                     })}
                                   </span>
                                 )}
                               </div>
-                            ) : !isPositionApplied(selectedJob.title) ? (
+                            ) : !isJobApplied(selectedJob) ? (
                               <Button
-                                onClick={() => handleSelectPosition(selectedJob.title)}
+                                onClick={() => handleSelectPosition(selectedJob.title, selectedJob.id)}
                               >
                                 {isAuthenticated ? (
                                   <>
@@ -1081,6 +1101,7 @@ export function RecruiterDetail({
               {step === "booking-form" && selectedSlot && selectedPosition && (
                 <BookingForm
                   recruiterId={recruiter.id}
+                  jobOpeningId={selectedJobOpeningId}
                   company={recruiter.company}
                   positions={[selectedPosition]}
                   slot={selectedSlot}

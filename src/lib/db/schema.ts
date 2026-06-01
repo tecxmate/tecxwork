@@ -236,6 +236,7 @@ export const bookings = pgTable("bookings", {
   recruiterId: integer("recruiter_id")
     .notNull()
     .references(() => recruiters.id),
+  jobOpeningId: integer("job_opening_id").references(() => jobOpenings.id),
   applicantId: integer("applicant_id").references(() => applicantProfiles.id),
   /** Denormalized for Mode A where applicant has no profile */
   position: text("position"),

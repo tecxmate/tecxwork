@@ -44,7 +44,12 @@ export function JobDetailApply({
   const [step, setStep] = useState<Step>("details");
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [appliedPositions, setAppliedPositions] = useState<
-    { position: string; requestedTime: string; status: string }[]
+    {
+      jobOpeningId: number | null;
+      position: string;
+      requestedTime: string;
+      status: string;
+    }[]
   >([]);
 
   useEffect(() => {
@@ -61,10 +66,12 @@ export function JobDetailApply({
           )
           .map(
             (booking: {
+              jobOpeningId: number | null;
               position: string;
               requestedTime: string;
               status: string;
             }) => ({
+              jobOpeningId: booking.jobOpeningId,
               position: booking.position,
               requestedTime: booking.requestedTime,
               status: booking.status,
@@ -75,9 +82,18 @@ export function JobDetailApply({
       .catch(() => {});
   }, [isApplicant, job.recruiterId]);
 
-  const alreadyApplied = appliedPositions.some(
-    (booking) => booking.position === job.title
+  const appliedBooking = appliedPositions.find((booking) =>
+    booking.jobOpeningId
+      ? booking.jobOpeningId === job.id
+      : booking.position === job.title
   );
+  const alreadyApplied = appliedBooking !== undefined;
+  const bookingStatusLabel = (status: string) => {
+    if (status === "accepted") return messages.recruiterDetail.interviewConfirmed;
+    if (status === "waitlisted") return messages.recruiterDetail.waitlisted;
+    if (status === "pending") return messages.recruiterDetail.pendingReview;
+    return messages.recruiterDetail.applied;
+  };
 
   const handleApply = () => {
     if (!isApplicant) {
@@ -101,6 +117,7 @@ export function JobDetailApply({
       setAppliedPositions([
         ...appliedPositions,
         {
+          jobOpeningId: job.id,
           position: job.title,
           requestedTime: selectedSlot.startTime,
           status: "pending",
@@ -154,6 +171,7 @@ export function JobDetailApply({
       <BookingForm
         recruiterId={job.recruiterId}
         company={job.company}
+        jobOpeningId={job.id}
         positions={[job.title]}
         slot={selectedSlot}
         onBack={handleBack}
@@ -183,7 +201,7 @@ export function JobDetailApply({
         alreadyApplied ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            {messages.recruiterDetail.applied}
+            {bookingStatusLabel(appliedBooking!.status)}
           </span>
         ) : undefined
       }

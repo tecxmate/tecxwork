@@ -35,6 +35,7 @@ type Profile = {
 
 export function BookingForm({
   recruiterId,
+  jobOpeningId,
   company,
   positions,
   slot,
@@ -42,6 +43,7 @@ export function BookingForm({
   onDone,
 }: {
   recruiterId: number;
+  jobOpeningId?: number | null;
   company: string;
   positions: string[];
   slot: SelectedSlot;
@@ -90,6 +92,7 @@ export function BookingForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recruiterId,
+          jobOpeningId,
           startTime: slot.startTime,
           position,
           cvLink: cvLink.trim(),
