@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-06-01 — Notification retention (90-day prune)](decisions/2026-06-01-notification-retention.md) — daily cron deletes notifications older than 90 days; also set the missing CRON_SECRET
 - [2026-06-01 — Cache event_config; ISR rejected](decisions/2026-06-01-event-config-cache.md) — runtime-cache the per-request branding query for DB-load resilience; pages are cookie-dynamic so ISR is a no-op
 - [2026-06-01 — Consolidate to one Vercel project](decisions/2026-06-01-vercel-project-consolidation.md) — delete redundant tecxwork project (was double-building main); migrate VAPID keys to app
 - [2026-06-01 — Move Vercel + Neon to Tokyo](decisions/2026-06-01-tokyo-region-migration.md) — co-locate both in hnd1/ap-northeast-1 for Taiwan users; DB-first migration runbook

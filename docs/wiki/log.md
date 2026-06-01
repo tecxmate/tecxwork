@@ -964,3 +964,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 - /api/push-subscription now also inserts a one-time in-app "system" welcome notification (deduped per user) so the welcome shows in the bell, not just as a system push.
 - Added shared `.dropdown-panel` CSS (globals.css) using --duration-base/--ease-fluid; bell popover and hamburger menu are now always-mounted with data-open toggling, giving matched, symmetric open AND close animations. Removed stagger-fade-in (the slow open) from the hamburger.
+
+## [2026-06-01] feature | Notification retention cron (90 days) + CRON_SECRET fix
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Added /api/cron/prune-notifications (daily 0 19 UTC) deleting notifications older than 90 days. Notifications previously had no retention (kept forever; mild PII).
+- Found CRON_SECRET was unset on the app project -> cron routes 503; crawl-jobs had no success log since 2026-04-29. Set CRON_SECRET (all targets); should revive crawl-jobs too.
+- created decisions/2026-06-01-notification-retention.md
