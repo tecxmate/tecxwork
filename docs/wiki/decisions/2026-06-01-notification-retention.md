@@ -29,9 +29,10 @@ older than **90 days**. Caps growth and bounds PII retention. Invisible to users
 ## Incidental fix: CRON_SECRET was missing
 `CRON_SECRET` was not set on the `app` project, so the cron routes returned 503.
 The crawl-jobs cron had no successful `crawl_logs` since 2026-04-29 — consistent
-with it failing on the missing secret. Set `CRON_SECRET` (app env, all targets),
-which both enables the prune cron and should revive crawl-jobs. Verify crawl-jobs
-resumes after the next 18:00 UTC run.
+with it failing on the missing secret. Set `CRON_SECRET` (app env, all targets) so the prune cron can run. NOTE: the
+crawl-jobs cron is intentionally NOT re-enabled — job crawling was deemed not
+legal and has been removed from `vercel.json` (2026-06-01). Its route/crawler
+code remains but is unscheduled.
 
 ## Files
 `src/app/api/cron/prune-notifications/route.ts`, `vercel.json` (crons).

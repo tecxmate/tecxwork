@@ -970,3 +970,7 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Added /api/cron/prune-notifications (daily 0 19 UTC) deleting notifications older than 90 days. Notifications previously had no retention (kept forever; mild PII).
 - Found CRON_SECRET was unset on the app project -> cron routes 503; crawl-jobs had no success log since 2026-04-29. Set CRON_SECRET (all targets); should revive crawl-jobs too.
 - created decisions/2026-06-01-notification-retention.md
+
+## [2026-06-01] infra | Disable job-crawl cron (legal)
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Removed the /api/cron/crawl-jobs schedule from vercel.json — job crawling is not legal; not to be re-enabled. Route/crawler code left in place but unscheduled. OPEN QUESTION: crawled external_jobs (503 rows) are still displayed on /jobs via getCachedExternalJobs — decide whether to stop surfacing them.

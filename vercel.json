@@ -2,10 +2,6 @@
   "regions": ["sin1"],
   "crons": [
     {
-      "path": "/api/cron/crawl-jobs",
-      "schedule": "0 18 * * *"
-    },
-    {
       "path": "/api/cron/prune-notifications",
       "schedule": "0 19 * * *"
     }
