@@ -917,3 +917,8 @@ attributed_to: [niko]   belongs_to: [page-hero]
 attributed_to: [niko]   belongs_to: [page-hero]
 - Changed `event_config.jobs_page_hero_enabled` to default false and updated fallbacks so `/jobs` hides the recruiter-posted jobs banner unless admins explicitly enable it.
 - Updated the live DB default and current row to false on 2026-06-01. Updated topics/page-hero.md.
+
+## [2026-06-01] fix | Deployed jobs address clipping
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Deployment still showed long `/jobs` list-card addresses painting into the desktop detail pane despite the first truncation pass.
+- Forced the list-card text column to `w-0 flex-1` and added overflow clipping to the card/header/list ancestors so address text cannot escape the left pane. Updated topics/recruitment-workflows.md.

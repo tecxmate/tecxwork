@@ -118,13 +118,13 @@ function JobListRow({
       onClick={onSelect}
       aria-current={selected}
       className={cn(
-        "group relative flex w-full min-w-0 flex-col gap-2 rounded-2xl border bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]",
+        "group relative flex w-full min-w-0 max-w-full flex-col gap-2 overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)]",
         selected
           ? "border-primary/60 shadow-[0_0_0_1px_rgba(140,82,255,0.35)] lg:bg-primary/[0.03]"
           : "border-border/70"
       )}
     >
-      <div className="flex min-w-0 items-start gap-3">
+      <div className="flex w-full min-w-0 max-w-full items-start gap-3 overflow-hidden">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg">
           {job.logoUrl ? (
             <img
@@ -138,7 +138,7 @@ function JobListRow({
             </span>
           )}
         </span>
-        <div className="min-w-0 flex-1 space-y-0.5">
+        <div className="w-0 min-w-0 flex-1 space-y-0.5 overflow-hidden">
           <p
             className={cn(
               "line-clamp-2 text-base font-semibold leading-tight",
@@ -151,7 +151,7 @@ function JobListRow({
             {job.company}
           </p>
           {job.location ? (
-            <p className="flex w-full min-w-0 max-w-full items-center gap-1 overflow-hidden text-xs text-muted-foreground">
+            <p className="grid w-full min-w-0 max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-1 overflow-hidden text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 shrink-0" />
               <span className="block min-w-0 flex-1 truncate">{job.location}</span>
             </p>
@@ -414,7 +414,7 @@ export function RecruiterJobsBrowser({
       {/* Two panes */}
       <div className="lg:grid lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start lg:gap-4">
         {/* Left: result count + job list */}
-        <div className="min-w-0 space-y-3">
+        <div className="min-w-0 overflow-hidden space-y-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-muted-foreground">
               {filteredJobs.length} {labels.resultsCount}
@@ -443,7 +443,7 @@ export function RecruiterJobsBrowser({
               </p>
             </Card>
           ) : (
-            <div className="min-w-0 space-y-2.5">
+            <div className="min-w-0 overflow-hidden space-y-2.5">
               {paginatedJobs.map((job) => (
                 <JobListRow
                   key={job.id}
