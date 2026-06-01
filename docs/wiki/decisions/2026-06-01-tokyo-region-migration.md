@@ -67,3 +67,12 @@ slower, not faster).
 
 ## Execution log
 (filled in as steps complete)
+
+### Execution (2026-06-01, completed)
+- New Neon project `tecxwork` in `ap-southeast-1` (Singapore), PG 17, Neon Auth OFF. Host `ep-delicate-lab-aos3iphg`.
+- `pg_dump -Fc` (direct host) → `pg_restore --no-owner --no-acl` (direct host). 402 KB dump.
+- Verified: all 20 tables row-for-row identical (users=150, applicant_profiles=113, recruiters=36, job_openings=127, schools=171, slots=432, external_jobs=503, etc.). 0 mismatches.
+- Cutover: `app` env `DATABASE_URL` + `DATABASE_URL_UNPOOLED` repointed to Singapore (all targets); `vercel.json` `regions:["sin1"]`; pushed `0fa373b`; redeployed.
+- Verified live: `x-vercel-id` shows `sin1`; site 200s; Singapore DB shows live app connections.
+- `.env.local` DATABASE_URL updated to Singapore. Dump file shredded.
+- **Old US-East DB (`ep-lingering-sun-an5htstv`, Vercel-Marketplace-managed) left intact as rollback** — delete it once confident (a few days).
