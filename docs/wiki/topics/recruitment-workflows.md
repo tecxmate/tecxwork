@@ -18,8 +18,9 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
    - Student CV export is available from `/profile`: students can preview a polished CV generated from profile data and export it through the browser print/Save as PDF flow, with the main-logo `tecxwork` wordmark font preserved in the print window.
 2. **Discovery**: Browse recruiter directory by industry or position, or browse recruiter-posted jobs.
 3. **Job-level apply**: Clicking a job opens that job's detail page with an immediate apply action. Company logos/names on job cards link to the company page for browsing all jobs from that recruiter.
-4. **Booking**: Select 15-minute slots on the event calendar.
-5. **Interview**: Attend physical or virtual session at the booked time.
+4. **Application summary**: `/profile` shows a student's application ledger: companies applied to, position, status, and interview/proposed time.
+5. **Booking**: Select 15-minute slots on the event calendar.
+6. **Interview**: Attend physical or virtual session at the booked time.
 
 ## 2. Recruiter Workflow
 1. **Onboarding**: Set up company profile and job openings.
@@ -43,6 +44,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-06-01: Added a student application summary to `/profile` so applicants can see which companies/jobs they applied to and whether each application is pending, waitlisted, reschedule-proposed, accepted, rejected, or cancelled. `/api/bookings/mine` now supports an all-bookings mode without `recruiterId`, joins recruiter company names, and normalizes slot/applicant-slot start times into `requestedTime` for display.
 - 2026-06-01: Fixed stale student-side time after accepting a reschedule proposal. The `respond-proposal` route accepted the booking with the proposed time in the database, but returned only `{ ok, status }`; the recruiter detail page changed local state to `accepted` without replacing `requestedTime`, so the mobile job card could keep showing the old requested time (for example SSB 14:30) immediately after success. The route now returns the accepted booking time and clears active proposal fields, and the student UI updates local `requestedTime` from that response.
 - 2026-06-01: Added admin booking time controls so operational fixes like the SSB 14:45 -> 14:50 correction do not require manual SQL. Admins can open the booking time editor from the admin bookings/interviews table, enter an Asia/Taipei datetime, and choose `Save proposal`, `Confirm slot`, or `Edit request`. Proposal and confirm actions require an exact available recruiter slot and write `booking_reschedule_logs` rows such as `admin_proposed`, `admin_confirmed`, or blocked/failed variants.
 - 2026-06-01: Manually corrected SSB booking 58 for PHAN MINH ANH after the impossible 14:45 proposal incident. Booking remained `reschedule_proposed`; `proposed_time` was changed from `2026-06-06T06:45:00Z` (14:45 Asia/Taipei, no slot) to `2026-06-06T06:50:00Z` (14:50 Asia/Taipei, available slots 2409/2410). Added `booking_reschedule_logs.action = manual_corrected_proposed_time` with the previous proposed time and available slot ids.

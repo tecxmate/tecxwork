@@ -870,3 +870,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Student screenshot after accepting the corrected SSB proposal showed success but still rendered the old 14:30 time on the job card.
 - Root cause was local UI state: the accept API returned only status, so the student page changed `status` to accepted without replacing `requestedTime`. The API now returns the accepted time and the UI updates it immediately. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] feature | Student application summary on profile
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Added a `/profile` application ledger showing companies/jobs the student applied to, status, and interview/proposed time.
+- Extended `/api/bookings/mine` to return all of the current student's bookings when no `recruiterId` is supplied, including recruiter company names and normalized booking times. Updated topics/recruitment-workflows.md.

@@ -1,9 +1,11 @@
 "use client";
 
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Building2,
+  CalendarClock,
   Check,
   CheckCircle2,
   Download,
@@ -100,6 +102,18 @@ type ProfileSavePayload = {
   description: string;
 };
 
+type ApplicationSummaryItem = {
+  id: number;
+  recruiterId: number;
+  jobOpeningId: number | null;
+  company: string;
+  position: string | null;
+  status: string;
+  requestedTime: string | null;
+  proposedTime: string | null;
+  createdAt: string | null;
+};
+
 function profileToDraft(profile: ProfileResponse): StudentRegistrationDraft {
   const schoolQuery = profile.schoolName
     ? profile.schoolNameEn
@@ -190,6 +204,39 @@ function formatDate(value: string) {
   const [year, month] = value.split("-");
   if (!year || !month) return value;
   return `${year}.${month}`;
+}
+
+function formatApplicationTime(
+  value: string | null,
+  localeTag: string
+): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString(localeTag, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Taipei",
+  });
+}
+
+function getApplicationStatusTone(status: string) {
+  if (status === "accepted") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300";
+  }
+  if (status === "reschedule_proposed") {
+    return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300";
+  }
+  if (status === "waitlisted") {
+    return "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/40 dark:bg-violet-900/20 dark:text-violet-300";
+  }
+  if (status === "rejected" || status === "cancelled") {
+    return "border-zinc-200 bg-zinc-50 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-400";
+  }
+  return "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/40 dark:bg-orange-900/20 dark:text-orange-300";
 }
 
 function escapeHtml(value: string) {
@@ -654,7 +701,7 @@ const CertificationEditor = memo(function CertificationEditor({
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { messages } = useStudentI18n();
+  const { messages, locale } = useStudentI18n();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -670,6 +717,9 @@ export default function ProfilePage() {
   const deferredSchoolQuery = useDeferredValue(draft.schoolQuery);
   const [lastSavedPayload, setLastSavedPayload] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [applications, setApplications] = useState<ApplicationSummaryItem[]>([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(true);
+  const [applicationsError, setApplicationsError] = useState("");
   const cvPrintRef = useRef<HTMLDivElement | null>(null);
 
   const profilePayload = useMemo(() => buildProfilePayload(draft), [draft]);
@@ -702,6 +752,28 @@ export default function ProfilePage() {
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
   }, [messages.profile.failedToLoadProfile, router]);
+
+  useEffect(() => {
+    fetch("/api/bookings/mine")
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Failed to load applications");
+        return r.json();
+      })
+      .then((data) => {
+        const nextApplications = Array.isArray(data.bookings)
+          ? data.bookings
+          : [];
+        setApplications(nextApplications);
+        setApplicationsError("");
+      })
+      .catch(() => {
+        setApplications([]);
+        setApplicationsError(
+          messages.profile.applicationsFailed ?? "Could not load applications."
+        );
+      })
+      .finally(() => setApplicationsLoading(false));
+  }, [messages.profile.applicationsFailed]);
 
   useEffect(() => {
     fetch("/api/taiwan-schools")
@@ -965,6 +1037,34 @@ export default function ProfilePage() {
   }, []);
 
   const profileCompletion = useMemo(() => calculateProfileCompletion(draft), [draft]);
+  const localeTag =
+    locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
+  const applicationCounts = useMemo(
+    () => ({
+      total: applications.length,
+      accepted: applications.filter((item) => item.status === "accepted").length,
+      active: applications.filter((item) =>
+        ["pending", "waitlisted", "reschedule_proposed"].includes(item.status)
+      ).length,
+    }),
+    [applications]
+  );
+  const applicationStatusLabel = useCallback(
+    (status: string) => {
+      if (status === "accepted") return messages.recruiterDetail.interviewConfirmed;
+      if (status === "waitlisted") return messages.recruiterDetail.waitlisted;
+      if (status === "pending") return messages.recruiterDetail.pendingReview;
+      if (status === "reschedule_proposed") return messages.recruiterDetail.newTimeProposed;
+      if (status === "rejected") {
+        return messages.profile.applicationRejected ?? "Rejected";
+      }
+      if (status === "cancelled") {
+        return messages.profile.applicationCancelled ?? "Cancelled";
+      }
+      return messages.recruiterDetail.applied;
+    },
+    [messages]
+  );
   const cvExportLabels = useMemo(
     () => ({
       summary: messages.profile.cvExportSummary ?? "Summary",
@@ -1177,6 +1277,110 @@ export default function ProfilePage() {
               )}
             </div>
           </QRCard>
+
+          <Card className="print:hidden">
+            <CardHeader className="pb-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <BriefcaseBusiness className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="font-heading text-xl font-bold">
+                      {messages.profile.applicationsTitle ?? "My Applications"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {messages.profile.applicationsSubtitle ??
+                        "Track companies you applied to and confirmed interviews."}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-2 text-xs">
+                  <span className="rounded-full bg-muted px-2.5 py-1 font-medium">
+                    {interpolate(messages.profile.applicationsTotal ?? "{count} total", {
+                      count: applicationCounts.total,
+                    })}
+                  </span>
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
+                    {interpolate(messages.profile.applicationsAccepted ?? "{count} accepted", {
+                      count: applicationCounts.accepted,
+                    })}
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {applicationsLoading ? (
+                <div className="flex items-center gap-2 rounded-lg border border-dashed px-4 py-5 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {messages.common.loading}
+                </div>
+              ) : applicationsError ? (
+                <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {applicationsError}
+                </div>
+              ) : applications.length === 0 ? (
+                <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
+                  {messages.profile.applicationsEmpty ??
+                    "No applications yet. Apply to companies from the Companies or Jobs tab."}
+                </div>
+              ) : (
+                <div className="divide-y rounded-lg border">
+                  {applications.map((application) => {
+                    const effectiveTime =
+                      application.proposedTime ?? application.requestedTime;
+                    const timeLabel = formatApplicationTime(effectiveTime, localeTag);
+
+                    return (
+                      <div
+                        key={application.id}
+                        className="grid gap-3 px-3 py-3 sm:grid-cols-[1fr_auto]"
+                      >
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Link
+                              href={`/recruiter/${application.recruiterId}`}
+                              className="font-semibold transition-colors hover:text-primary hover:underline"
+                            >
+                              {application.company}
+                            </Link>
+                            <span
+                              className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getApplicationStatusTone(application.status)}`}
+                            >
+                              {applicationStatusLabel(application.status)}
+                            </span>
+                          </div>
+                          <p className="truncate text-sm text-muted-foreground">
+                            {application.position ||
+                              messages.profile.applicationUntitledPosition ||
+                              "Position not specified"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground sm:justify-end">
+                          <CalendarClock className="h-4 w-4 shrink-0" />
+                          <span className="tabular-nums">
+                            {timeLabel ||
+                              messages.profile.applicationNoTime ||
+                              "No time set"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {applicationCounts.active > 0 ? (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {interpolate(
+                    messages.profile.applicationsActiveHint ??
+                      "{count} application(s) are still waiting for recruiter or student action.",
+                    { count: applicationCounts.active }
+                  )}
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
 
           <div ref={cvPrintRef} className="student-cv-print-only">
             <CvExportTemplate

@@ -343,6 +343,20 @@ export const studentEnMessages = {
     cvExportPreferences: "Preferences",
     cvExportLinks: "Links",
     cvExportCurrent: "Present",
+    applicationsTitle: "My Applications",
+    applicationsSubtitle:
+      "Track companies you applied to and confirmed interviews.",
+    applicationsTotal: "{count} total",
+    applicationsAccepted: "{count} accepted",
+    applicationsEmpty:
+      "No applications yet. Apply to companies from the Companies or Jobs tab.",
+    applicationsFailed: "Could not load applications.",
+    applicationsActiveHint:
+      "{count} application(s) are still waiting for recruiter or student action.",
+    applicationRejected: "Rejected",
+    applicationCancelled: "Cancelled",
+    applicationUntitledPosition: "Position not specified",
+    applicationNoTime: "No time set",
   },
   recruiterDetail: {
     openPositions: "Open Positions",

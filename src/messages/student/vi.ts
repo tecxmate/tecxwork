@@ -330,6 +330,20 @@ export const studentViMessages = {
     cvExportPreferences: "Nguyện vọng",
     cvExportLinks: "Liên kết",
     cvExportCurrent: "Hiện tại",
+    applicationsTitle: "Đơn ứng tuyển của tôi",
+    applicationsSubtitle:
+      "Theo dõi công ty bạn đã ứng tuyển và lịch phỏng vấn đã xác nhận.",
+    applicationsTotal: "{count} đơn",
+    applicationsAccepted: "{count} đã xác nhận",
+    applicationsEmpty:
+      "Bạn chưa ứng tuyển công ty nào. Hãy ứng tuyển từ tab Công ty hoặc Việc làm.",
+    applicationsFailed: "Không tải được danh sách ứng tuyển.",
+    applicationsActiveHint:
+      "{count} đơn vẫn đang chờ nhà tuyển dụng hoặc bạn phản hồi.",
+    applicationRejected: "Đã từ chối",
+    applicationCancelled: "Đã hủy",
+    applicationUntitledPosition: "Chưa có vị trí",
+    applicationNoTime: "Chưa có thời gian",
   },
   recruiterDetail: {
     ...studentEnMessages.recruiterDetail,
