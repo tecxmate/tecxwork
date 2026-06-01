@@ -52,6 +52,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Photo uploads](topics/photo-uploads.md) — `ImageUpload` / `MultiImageUpload`, per-type guidelines, `homepageImages` schema
 - [Event time configuration](topics/event-time-config.md) — admin time form, slot regeneration, Asia/Taipei roundtrip
 - [SaaS Strategy & Product Pivot](topics/saas-strategy.md) — multi-tenant transition, Talent Passport, AI matching
+- [Commercial Pricing](topics/commercial-pricing.md) — quote bands and positioning for tecxwork-style business systems
 - [Taiwan Legal Compliance](topics/taiwan-compliance.md) — PIPA/PDPA, MOL licenses, work permits
 - [Taiwan Legal and Operational Framework](topics/taiwan-legal-operational-framework.md) — Legal requirements, resources, and stakeholders for operations in Taiwan
 - [Architecture Overview](topics/architecture-overview.md) — tech stack, concurrency, data isolation, Neon/Vercel

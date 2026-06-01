@@ -886,6 +886,11 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Added default-off `event_config.student_cancellation_enabled` with admin Settings toggle, profile UI gating, and DELETE-route enforcement.
 - Ran the live migration on 2026-06-01; students cannot cancel by UI or direct API unless admin enables the toggle. Updated topics/recruitment-workflows.md.
 
+## [2026-06-01] chat | Commercial pricing guidance
+attributed_to: [niko]   belongs_to: [commercial-pricing]
+- Captured pricing guidance for tecxwork-style systems: 300k-500k NTD friendly/internal, 600k-900k NTD fair commercial, and 1.0m-1.6m NTD+ agency/enterprise.
+- Noted imood's 900k NTD / 9-month reference as project-retainer pricing rather than actual engineering-hour pricing. Created topics/commercial-pricing.md and updated the index.
+
 ## [2026-06-01] ingest | Animated icon GIF asset
 attributed_to: [niko]   belongs_to: [design-system]
 - Converted `public/icon-animated.svg` into `public/icon-animated.gif` for GIF-only surfaces by sampling the CSS animation into 77 frames at 100ms delay.
