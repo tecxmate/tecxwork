@@ -71,7 +71,9 @@ The script itself runs anywhere with Node (`node scripts/backup.mjs`); only the 
   systemctl --user enable --now tecxwork-backup.timer
   systemctl --user list-timers tecxwork-backup.timer
   ```
-  The timer runs 5 minutes after boot and then 1 hour after each completed run (`Persistent=true` catches missed runs). The service has systemd path conditions for `/home/niko/repos/tecxwork/.env.local` and `/usr/bin/pg_dump`; it skips cleanly until secrets and `postgresql-client` are installed. Logs append to `~/tecxwork-backups/backup.log` and `backup.err.log`.
+  The timer runs 5 minutes after boot and then 1 hour after each completed run (`Persistent=true` catches missed runs). The service has systemd conditions for `/home/niko/repos/tecxwork/.env.local`, `/usr/bin/pg_dump`, and `pg_dump` version 17+; it skips cleanly until secrets and a compatible PostgreSQL client are installed. Logs append to `~/tecxwork-backups/backup.log` and `backup.err.log`.
+
+  On the Ubuntu machine, PostgreSQL 17 client tools were installed from the official PGDG apt repository (`postgresql-common` helper script, then `postgresql-client-17`). Verified `pg_dump (PostgreSQL) 17.10`, matching the Neon server 17.10.
 - **Windows:** Task Scheduler running the same command hourly.
 
 ## Restoring

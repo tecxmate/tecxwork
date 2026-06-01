@@ -811,3 +811,15 @@ attributed_to: [niko]   belongs_to: [backup-dr]
 - Added Linux user-systemd units for the TECXWORK local backup on `/home/niko/repos/tecxwork`: hourly timer plus oneshot service writing to `/home/niko/tecxwork-backups`.
 - Environment findings: Node v20.20.2 is present via nvm; `npm ci` is blocked by an out-of-sync lockfile; `postgresql-client`/`pg_dump` and `.env.local` are still required before live DB dumps can succeed.
 - Updated topics/backup-dr.md with the Ubuntu systemd install path and logs.
+
+## [2026-06-01] ingest | Taildrop env installed; Blob backup verified
+attributed_to: [niko]   belongs_to: [backup-dr]
+- Copied `/home/niko/taildrop/.env.local` into the repo as private `0600` `/home/niko/repos/tecxwork/.env.local`.
+- Manual backup run verified Vercel Blob mirror: 177 objects downloaded to `/home/niko/tecxwork-backups/blob`.
+- DB backup still needs PostgreSQL 17+ client tools: Ubuntu `pg_dump` 16.14 aborts against Neon server 17.10. Added a systemd `ExecCondition` so hourly runs skip instead of failing until compatible `pg_dump` is installed.
+
+## [2026-06-01] ingest | PostgreSQL 17 client installed; backup verified
+attributed_to: [niko]   belongs_to: [backup-dr]
+- Added the official PGDG apt repository via `postgresql-common` and installed `postgresql-client-17`; `/usr/bin/pg_dump` now reports PostgreSQL 17.10.
+- Manual systemd backup run completed successfully: DB dump `tecxwork_2026-05-31T23-36-30-523Z.sql.gz` (328,453 bytes) plus Blob mirror check (177 objects, 0 newly downloaded, 177 unchanged).
+- Hourly `tecxwork-backup.timer` remains active; next run scheduled from the successful service activation.

@@ -8,6 +8,7 @@ ConditionPathExists=/usr/bin/pg_dump
 Type=oneshot
 WorkingDirectory=/home/niko/repos/tecxwork
 Environment=BACKUP_DIR=/home/niko/tecxwork-backups
+ExecCondition=/bin/sh -c "pg_dump --version | grep -Eq 'PostgreSQL\\) (1[7-9]|[2-9][0-9])\\.'"
 ExecStartPre=/usr/bin/mkdir -p /home/niko/tecxwork-backups
 ExecStart=/home/niko/.nvm/versions/node/v20.20.2/bin/node /home/niko/repos/tecxwork/scripts/backup.mjs
 StandardOutput=append:/home/niko/tecxwork-backups/backup.log
