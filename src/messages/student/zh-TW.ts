@@ -343,6 +343,10 @@ export const studentZhTwMessages = {
     applicationCancelled: "已取消",
     applicationUntitledPosition: "未指定職位",
     applicationNoTime: "尚未設定時間",
+    applicationCancel: "取消",
+    applicationCancelConfirm: "要撤回這筆投遞嗎？",
+    applicationCancelAcceptedConfirm: "要取消這場已確認的面談嗎？公司將收到通知。",
+    applicationCancelFailed: "無法取消投遞。",
   },
   recruiterDetail: {
     ...studentEnMessages.recruiterDetail,

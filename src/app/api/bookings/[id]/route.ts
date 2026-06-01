@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
+import {
+  db,
+  bookings,
+  slots,
+  applicantSlots,
+  recruiters,
+  eventConfig,
+} from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import {
   getApplicantFromSession,
   getRecruiterFromSession,
   getSession,
 } from "@/lib/auth";
-import { sendRejectionEmail } from "@/lib/email";
+import { sendApplicantCancellationEmail, sendRejectionEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { cancelBookingSchema } from "@/lib/validation";
+import { logBookingReschedule } from "@/lib/booking-reschedule-log";
 
 /**
  * DELETE /api/bookings/[id] — cancel a booking.
@@ -51,12 +59,26 @@ export async function DELETE(
   if (!booking) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
+  const actorEmail = session.email;
 
   // Authorization
   if (session.role === "applicant") {
     const auth = await getApplicantFromSession();
     if (!auth || auth.applicantId !== booking.applicantId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const [config] = await db
+      .select({
+        studentCancellationEnabled: eventConfig.studentCancellationEnabled,
+      })
+      .from(eventConfig)
+      .limit(1);
+    if (config?.studentCancellationEnabled !== true) {
+      return NextResponse.json(
+        { error: "Student cancellation is currently disabled." },
+        { status: 403 }
+      );
     }
   } else if (session.role === "recruiter") {
     const auth = await getRecruiterFromSession();
@@ -87,6 +109,29 @@ export async function DELETE(
     .set({ status: "cancelled" })
     .where(eq(bookings.id, bookingId));
 
+  await logBookingReschedule({
+    bookingId,
+    recruiterId: booking.recruiterId,
+    applicantId: booking.applicantId,
+    actorRole: session.role,
+    actorEmail,
+    action:
+      session.role === "applicant"
+        ? "student_cancelled"
+        : session.role === "recruiter"
+          ? "recruiter_cancelled"
+          : "admin_cancelled",
+    statusBefore: booking.status,
+    statusAfter: "cancelled",
+    requestedTime: booking.requestedTime,
+    proposedTime: booking.proposedTime,
+    metadata: {
+      releasedSlotId: booking.slotId,
+      releasedApplicantSlotId: booking.applicantSlotId,
+      note: note ?? null,
+    },
+  });
+
   // Send cancellation email to applicant (only when recruiter cancels)
   if (session.role === "recruiter" || session.role === "admin") {
     const [rec] = await db
@@ -110,6 +155,38 @@ export async function DELETE(
         companyName: rec.company,
         position: booking.position ?? undefined,
         note,
+      }).catch(() => {});
+    }
+  } else if (session.role === "applicant") {
+    const [rec] = await db
+      .select({
+        company: recruiters.company,
+        contactEmail: recruiters.contactEmail,
+      })
+      .from(recruiters)
+      .where(eq(recruiters.id, booking.recruiterId));
+
+    if (rec) {
+      sendApplicantCancellationEmail({
+        applicantName: booking.applicantName,
+        applicantEmail: booking.applicantEmail,
+        recruiterEmail: rec.contactEmail,
+        company: rec.company,
+        position: booking.position ?? undefined,
+        interviewTime: booking.requestedTime,
+      }).catch(() => {});
+
+      createBookingNotification({
+        recipientEmail: rec.contactEmail,
+        recipientRole: "recruiter",
+        status: "cancelled",
+        applicantName: booking.applicantName,
+        companyName: rec.company,
+        position: booking.position ?? undefined,
+        interviewTime: booking.requestedTime ?? undefined,
+        bookingId,
+        recruiterId: booking.recruiterId,
+        actionUrl: "/dashboard",
       }).catch(() => {});
     }
   }

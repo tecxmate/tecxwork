@@ -351,6 +351,9 @@ export const eventConfig = pgTable("event_config", {
   jobModerationEnabled: boolean("job_moderation_enabled")
     .notNull()
     .default(true),
+  studentCancellationEnabled: boolean("student_cancellation_enabled")
+    .notNull()
+    .default(false),
   modeLocked: boolean("mode_locked").notNull().default(false),
   emergencyFallback: boolean("emergency_fallback").notNull().default(false),
   fallbackUrl: text("fallback_url"),

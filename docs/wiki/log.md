@@ -875,3 +875,18 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Added a `/profile` application ledger showing companies/jobs the student applied to, status, and interview/proposed time.
 - Extended `/api/bookings/mine` to return all of the current student's bookings when no `recruiterId` is supplied, including recruiter company names and normalized booking times. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] feature | Student can cancel applications from profile
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Added Cancel controls to active rows in the student `/profile` application ledger with separate confirmation wording for confirmed interviews.
+- Student cancellations now write booking audit logs and notify recruiters by email plus in-app/push notification while preserving existing slot release and waitlist promotion behavior. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] feature | Student cancellation admin toggle
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Added default-off `event_config.student_cancellation_enabled` with admin Settings toggle, profile UI gating, and DELETE-route enforcement.
+- Ran the live migration on 2026-06-01; students cannot cancel by UI or direct API unless admin enables the toggle. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] ingest | Animated icon GIF asset
+attributed_to: [niko]   belongs_to: [design-system]
+- Converted `public/icon-animated.svg` into `public/icon-animated.gif` for GIF-only surfaces by sampling the CSS animation into 77 frames at 100ms delay.
+- Updated topics/design-system.md.

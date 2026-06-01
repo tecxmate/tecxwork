@@ -133,6 +133,10 @@ export async function createBookingNotification(params: {
         title = "Interview Scheduled";
         message = `Interview with ${applicantName} for ${position} confirmed.`;
         break;
+      case "cancelled":
+        title = "Booking Cancelled";
+        message = `${applicantName}'s booking for ${position} has been cancelled.${note ? ` Note: ${note}` : ""}`;
+        break;
       default:
         title = "Booking Update";
         message = `Booking with ${applicantName} updated.`;

@@ -357,6 +357,11 @@ export const studentEnMessages = {
     applicationCancelled: "Cancelled",
     applicationUntitledPosition: "Position not specified",
     applicationNoTime: "No time set",
+    applicationCancel: "Cancel",
+    applicationCancelConfirm: "Withdraw this application?",
+    applicationCancelAcceptedConfirm:
+      "Cancel this confirmed interview? The company will be notified.",
+    applicationCancelFailed: "Could not cancel application.",
   },
   recruiterDetail: {
     openPositions: "Open Positions",

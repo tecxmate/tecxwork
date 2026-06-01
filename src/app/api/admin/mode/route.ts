@@ -10,6 +10,7 @@ export async function GET() {
       mode: eventConfig.mode,
       onboardingMode: eventConfig.onboardingMode,
       jobModerationEnabled: eventConfig.jobModerationEnabled,
+      studentCancellationEnabled: eventConfig.studentCancellationEnabled,
       salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
       locked: eventConfig.modeLocked,
     })
@@ -20,6 +21,7 @@ export async function GET() {
     mode: config?.mode ?? "both",
     onboardingMode: config?.onboardingMode ?? "full",
     jobModerationEnabled: config?.jobModerationEnabled ?? true,
+    studentCancellationEnabled: config?.studentCancellationEnabled ?? false,
     salaryCurrencyOptions: normalizeSalaryCurrencyOptions(
       config?.salaryCurrencyOptions
     ),
@@ -33,7 +35,14 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { mode, onboardingMode, jobModerationEnabled, salaryCurrencyOptions, lock } = body;
+  const {
+    mode,
+    onboardingMode,
+    jobModerationEnabled,
+    studentCancellationEnabled,
+    salaryCurrencyOptions,
+    lock,
+  } = body;
 
   const [config] = await db
     .select({ id: eventConfig.id, locked: eventConfig.modeLocked })
@@ -60,6 +69,15 @@ export async function PUT(req: NextRequest) {
       .where(eq(eventConfig.id, config.id));
 
     return NextResponse.json({ jobModerationEnabled });
+  }
+
+  if (typeof studentCancellationEnabled === "boolean") {
+    await db
+      .update(eventConfig)
+      .set({ studentCancellationEnabled })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ studentCancellationEnabled });
   }
 
   if (Array.isArray(salaryCurrencyOptions)) {

@@ -344,6 +344,11 @@ export const studentViMessages = {
     applicationCancelled: "Đã hủy",
     applicationUntitledPosition: "Chưa có vị trí",
     applicationNoTime: "Chưa có thời gian",
+    applicationCancel: "Hủy",
+    applicationCancelConfirm: "Rút đơn ứng tuyển này?",
+    applicationCancelAcceptedConfirm:
+      "Hủy lịch phỏng vấn đã xác nhận này? Công ty sẽ được thông báo.",
+    applicationCancelFailed: "Không thể hủy đơn ứng tuyển.",
   },
   recruiterDetail: {
     ...studentEnMessages.recruiterDetail,

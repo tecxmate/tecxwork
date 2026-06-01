@@ -720,6 +720,9 @@ export default function ProfilePage() {
   const [applications, setApplications] = useState<ApplicationSummaryItem[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(true);
   const [applicationsError, setApplicationsError] = useState("");
+  const [studentCancellationEnabled, setStudentCancellationEnabled] =
+    useState(false);
+  const [cancellingApplicationId, setCancellingApplicationId] = useState<number | null>(null);
   const cvPrintRef = useRef<HTMLDivElement | null>(null);
 
   const profilePayload = useMemo(() => buildProfilePayload(draft), [draft]);
@@ -764,10 +767,14 @@ export default function ProfilePage() {
           ? data.bookings
           : [];
         setApplications(nextApplications);
+        setStudentCancellationEnabled(
+          data.studentCancellationEnabled === true
+        );
         setApplicationsError("");
       })
       .catch(() => {
         setApplications([]);
+        setStudentCancellationEnabled(false);
         setApplicationsError(
           messages.profile.applicationsFailed ?? "Could not load applications."
         );
@@ -1065,6 +1072,13 @@ export default function ProfilePage() {
     },
     [messages]
   );
+  const isCancellableApplication = useCallback(
+    (status: string) =>
+      ["pending", "accepted", "waitlisted", "reschedule_proposed"].includes(
+        status
+      ),
+    []
+  );
   const cvExportLabels = useMemo(
     () => ({
       summary: messages.profile.cvExportSummary ?? "Summary",
@@ -1123,6 +1137,45 @@ export default function ProfilePage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     await saveProfile();
+  }
+
+  async function handleCancelApplication(application: ApplicationSummaryItem) {
+    const confirmMessage =
+      application.status === "accepted"
+        ? messages.profile.applicationCancelAcceptedConfirm ??
+          "Cancel this confirmed interview? The company will be notified."
+        : messages.profile.applicationCancelConfirm ??
+          "Withdraw this application?";
+    if (!window.confirm(confirmMessage)) return;
+
+    setCancellingApplicationId(application.id);
+    try {
+      const res = await fetch(`/api/bookings/${application.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          data.error ??
+            messages.profile.applicationCancelFailed ??
+            "Could not cancel application."
+        );
+      }
+      setApplications((current) =>
+        current.map((item) =>
+          item.id === application.id ? { ...item, status: "cancelled" } : item
+        )
+      );
+    } catch (err) {
+      setApplicationsError(
+        err instanceof Error
+          ? err.message
+          : messages.profile.applicationCancelFailed ??
+              "Could not cancel application."
+      );
+    } finally {
+      setCancellingApplicationId(null);
+    }
   }
 
   function handleExportCv() {
@@ -1357,13 +1410,33 @@ export default function ProfilePage() {
                               "Position not specified"}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground sm:justify-end">
-                          <CalendarClock className="h-4 w-4 shrink-0" />
-                          <span className="tabular-nums">
-                            {timeLabel ||
-                              messages.profile.applicationNoTime ||
-                              "No time set"}
-                          </span>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground sm:justify-end">
+                          <div className="flex items-center gap-2">
+                            <CalendarClock className="h-4 w-4 shrink-0" />
+                            <span className="tabular-nums">
+                              {timeLabel ||
+                                messages.profile.applicationNoTime ||
+                                "No time set"}
+                            </span>
+                          </div>
+                          {studentCancellationEnabled &&
+                          isCancellableApplication(application.status) ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => void handleCancelApplication(application)}
+                              disabled={cancellingApplicationId === application.id}
+                              className="h-7 border-destructive/30 px-2 text-xs text-destructive hover:bg-destructive/10"
+                            >
+                              {cancellingApplicationId === application.id ? (
+                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                              ) : (
+                                <X className="mr-1 h-3 w-3" />
+                              )}
+                              {messages.profile.applicationCancel ?? "Cancel"}
+                            </Button>
+                          ) : null}
                         </div>
                       </div>
                     );

@@ -337,6 +337,7 @@ export function AdminDashboard({
   currentMode,
   initialOnboardingMode,
   initialJobModerationEnabled,
+  initialStudentCancellationEnabled,
   initialSalaryCurrencyOptions,
   initialLocked,
   timeFrame: initialTimeFrame,
@@ -357,6 +358,7 @@ export function AdminDashboard({
   currentMode: string;
   initialOnboardingMode: OnboardingMode;
   initialJobModerationEnabled: boolean;
+  initialStudentCancellationEnabled: boolean;
   initialSalaryCurrencyOptions: string[];
   initialLocked: boolean;
   timeFrame: { startHour: number; startMinute: number; endHour: number; endMinute: number; slotDuration: number; bufferMinutes: number };
@@ -388,6 +390,9 @@ export function AdminDashboard({
   const [onboardingMode, setOnboardingMode] = useState<OnboardingMode>(initialOnboardingMode);
   const [jobModerationEnabled, setJobModerationEnabled] = useState(
     initialJobModerationEnabled
+  );
+  const [studentCancellationEnabled, setStudentCancellationEnabled] = useState(
+    initialStudentCancellationEnabled
   );
   const [salaryCurrencyOptions, setSalaryCurrencyOptions] = useState(() =>
     normalizeSalaryCurrencyOptions(initialSalaryCurrencyOptions)
@@ -734,6 +739,34 @@ export function AdminDashboard({
     setSaving(false);
     setSettingsStatus("saved");
     setSettingsMessage("Job approval setting saved.");
+    setTimeout(() => setSettingsStatus("idle"), 2500);
+    router.refresh();
+  }
+
+  async function handleStudentCancellationToggle(nextEnabled: boolean) {
+    const previous = studentCancellationEnabled;
+    setSaving(true);
+    setSettingsStatus("saving");
+    setSettingsMessage("Saving student cancellation setting...");
+    setStudentCancellationEnabled(nextEnabled);
+    const res = await fetch("/api/admin/mode", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentCancellationEnabled: nextEnabled }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setStudentCancellationEnabled(previous);
+      setSettingsStatus("error");
+      setSettingsMessage(
+        data.error || "Student cancellation setting could not be saved."
+      );
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
+    setSettingsStatus("saved");
+    setSettingsMessage("Student cancellation setting saved.");
     setTimeout(() => setSettingsStatus("idle"), 2500);
     router.refresh();
   }
@@ -1181,6 +1214,23 @@ export function AdminDashboard({
                       <Switch
                         checked={jobModerationEnabled}
                         onCheckedChange={handleJobModerationToggle}
+                        disabled={saving}
+                      />
+                    </div>
+                    {/* Student cancellation */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
+                          <label className="text-sm">Allow Student Cancellation</label>
+                        </div>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          When enabled, students can cancel active applications/interviews from Profile.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={studentCancellationEnabled}
+                        onCheckedChange={handleStudentCancellationToggle}
                         disabled={saving}
                       />
                     </div>

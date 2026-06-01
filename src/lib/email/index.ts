@@ -302,6 +302,15 @@ type RejectionEmailData = {
   action: "rejected" | "cancelled";
 };
 
+type ApplicantCancellationEmailData = {
+  applicantName: string;
+  applicantEmail: string;
+  recruiterEmail: string;
+  company: string;
+  position?: string;
+  interviewTime?: Date | string | null;
+};
+
 type WaitlistEmailData = {
   applicantName: string;
   applicantEmail: string;
@@ -367,6 +376,61 @@ export async function sendRejectionEmail(data: RejectionEmailData) {
   } catch (err) {
     console.error("Failed to send rejection email:", err);
     await logEmail(data.action, data.applicantEmail, subject, false, String(err));
+  }
+}
+
+/**
+ * Notify recruiter when a student withdraws or cancels their own booking.
+ */
+export async function sendApplicantCancellationEmail(
+  data: ApplicantCancellationEmailData
+) {
+  const resend = getResend();
+  if (!resend) {
+    console.log("RESEND_API_KEY not set — skipping applicant cancellation email");
+    return;
+  }
+
+  const branding = await getEventBranding();
+  const subject = `Student Cancelled Booking — ${data.applicantName}`;
+  const safeApplicantName = escapeHtml(data.applicantName);
+  const safeApplicantEmail = escapeHtml(data.applicantEmail);
+  const safeCompany = escapeHtml(data.company);
+  const safePosition = escapeHtml(data.position ?? "Interview");
+  const timeStr = data.interviewTime ? formatTime(data.interviewTime) : "";
+
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: data.recruiterEmail,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">Student Cancelled Booking</h2>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+            A student cancelled or withdrew their booking with <strong>${safeCompany}</strong> for the ${branding.emailEventName}.
+          </p>
+
+          <div style="background: #f8f6f4; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #666; width: 120px;">Student</td><td style="padding: 6px 0; font-weight: 600;">${safeApplicantName}</td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Email</td><td style="padding: 6px 0;"><a href="mailto:${safeApplicantEmail}" style="color: #8C52FF;">${safeApplicantEmail}</a></td></tr>
+              <tr><td style="padding: 6px 0; color: #666;">Position</td><td style="padding: 6px 0; font-weight: 600;">${safePosition}</td></tr>
+              ${timeStr ? `<tr><td style="padding: 6px 0; color: #666;">Time</td><td style="padding: 6px 0; font-weight: 600;">${timeStr}</td></tr>` : ""}
+            </table>
+          </div>
+
+          <p style="font-size: 12px; color: #999; margin-top: 32px;">
+            ${branding.name}<br>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
+          </p>
+        </div>
+      `,
+    });
+    await logEmail("applicant_cancelled", data.recruiterEmail, subject, true);
+  } catch (err) {
+    console.error("Failed to send applicant cancellation email:", err);
+    await logEmail("applicant_cancelled", data.recruiterEmail, subject, false, String(err));
   }
 }
 

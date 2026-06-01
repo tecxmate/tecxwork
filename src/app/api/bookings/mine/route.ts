@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, recruiters, slots, applicantSlots } from "@/lib/db";
+import {
+  db,
+  bookings,
+  recruiters,
+  slots,
+  applicantSlots,
+  eventConfig,
+} from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { getApplicantFromSession } from "@/lib/auth";
 
@@ -47,8 +54,16 @@ export async function GET(req: NextRequest) {
 
   query = query.orderBy(bookings.createdAt);
   const result = await query;
+  const [config] = await db
+    .select({
+      studentCancellationEnabled: eventConfig.studentCancellationEnabled,
+    })
+    .from(eventConfig)
+    .limit(1);
 
   return NextResponse.json({
+    studentCancellationEnabled:
+      config?.studentCancellationEnabled ?? false,
     bookings: result.map(({ slotStart, applicantSlotStart, ...booking }) => ({
       ...booking,
       requestedTime: slotStart ?? applicantSlotStart ?? booking.requestedTime,
