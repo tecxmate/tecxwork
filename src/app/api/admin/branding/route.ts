@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { invalidateEventConfigCache } from "@/lib/event-branding";
 import { eq } from "drizzle-orm";
 
 const FIELDS = [
@@ -135,6 +136,7 @@ export async function PUT(req: NextRequest) {
   }
 
   await db.update(eventConfig).set(update).where(eq(eventConfig.id, config.id));
+  await invalidateEventConfigCache();
 
   return NextResponse.json({ ok: true, updated: Object.keys(update) });
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applicantSlots } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { eq, count, inArray } from "drizzle-orm";
-import { getEventBranding } from "@/lib/event-branding";
+import { getEventBranding, invalidateEventConfigCache } from "@/lib/event-branding";
 import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
 
 /**
@@ -203,6 +203,7 @@ async function handlePut(req: NextRequest) {
       bufferMinutes,
     })
     .where(eq(eventConfig.id, config.id));
+  await invalidateEventConfigCache();
 
   // Regenerate unbooked slots for all recruiters.
   // Cancelled/rejected bookings can still hold FK references to

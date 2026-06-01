@@ -933,3 +933,9 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Users are in Taiwan (all 171 schools Taiwan cities; event at MCUT). Both Vercel (iad1) and Neon (us-east-1) are in US East -> trans-Pacific latency. Chose Tokyo (hnd1 + ap-northeast-1) over Singapore. DB is 11 MB.
 - Rule: migrate DB first, flip Vercel region only after (must stay co-located). Old DB kept for instant rollback.
 - created decisions/2026-06-01-tokyo-region-migration.md
+
+## [2026-06-01] perf | Cache event_config; ISR rejected
+attributed_to: [niko]   belongs_to: [tecxwork]
+- getEventBranding now reads through the Vercel runtime cache (getCache, 1h TTL, tag "event-config"), invalidated from /api/admin/branding + /api/admin/timeframe. Cuts the per-request event_config query (runs on every page via root layout) -> DB-load resilience vs the free-tier connection ceiling.
+- ISR/static for public pages REJECTED: all classify as Dynamic (getSession/getStudentLocale read cookies server-side); revalidate would be a no-op. Region move already captured the latency upside.
+- created decisions/2026-06-01-event-config-cache.md
