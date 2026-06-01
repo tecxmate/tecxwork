@@ -890,3 +890,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [design-system]
 - Converted `public/icon-animated.svg` into `public/icon-animated.gif` for GIF-only surfaces by sampling the CSS animation into 77 frames at 100ms delay.
 - Updated topics/design-system.md.
+
+## [2026-06-01] ingest | Animated icon GIF high-framerate export
+attributed_to: [niko]   belongs_to: [design-system]
+- Re-exported `public/icon-animated.gif` with 462 sampled frames over the 7.7s combined animation loop.
+- Used a 20/20/10ms GIF delay pattern for an effective 60fps playback rate. Updated topics/design-system.md.
