@@ -890,3 +890,9 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [design-system]
 - Converted `public/icon-animated.svg` into `public/icon-animated.gif` for GIF-only surfaces by sampling the CSS animation into 77 frames at 100ms delay.
 - Updated topics/design-system.md.
+
+## [2026-06-01] fix | Neon pool crash hardening
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Prod instances crashed on unhandled WebSocket 'error' events from the Neon pool, amid "Too many database connection attempts" / control-plane failures / 300s timeouts.
+- Added pool.on('error') handler (stops the uncaught-exception crash) and neonConfig.poolQueryViaFetch = true (non-transaction queries via HTTP, cutting WebSocket churn). Transactions still use the WS pool.
+- created decisions/2026-06-01-neon-pool-crash-hardening.md

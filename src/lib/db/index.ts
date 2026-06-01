@@ -10,6 +10,13 @@ if (typeof WebSocket === "undefined") {
   neonConfig.webSocketConstructor = ws;
 }
 
+// Route single (non-transaction) queries over HTTP fetch instead of opening a
+// WebSocket per request. Interactive transactions still use the pool's
+// WebSocket. This drastically cuts connection churn that was exhausting Neon's
+// connection permits ("Too many database connection attempts" / control-plane
+// failures) and timing requests out.
+neonConfig.poolQueryViaFetch = true;
+
 let _db: NeonDatabase<typeof schema> | null = null;
 let _pool: Pool | null = null;
 
@@ -20,6 +27,14 @@ export function getDb(): NeonDatabase<typeof schema> {
       throw new Error("DATABASE_URL environment variable is not set");
     }
     _pool = new Pool({ connectionString: url });
+    // Without this listener, an error on an idle pooled client (e.g. Neon
+    // dropping the WebSocket when the control plane is overloaded) is emitted
+    // as an unhandled 'error' EventEmitter event, which Node escalates to an
+    // uncaught exception and crashes the whole function instance. Swallowing it
+    // here keeps the instance alive; the affected query still rejects normally.
+    _pool.on("error", (err: Error) => {
+      console.error("Neon pool error (ignored to avoid crashing instance):", err);
+    });
     _db = drizzle(_pool, { schema });
   }
   return _db;
