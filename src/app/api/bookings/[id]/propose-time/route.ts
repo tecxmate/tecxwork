@@ -6,6 +6,7 @@ import { parseJsonBody, proposeTimeSchema } from "@/lib/validation";
 import { getPublicBaseUrl, sendRescheduleProposalEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { getApplicantBusyRanges, overlapsBusy } from "@/lib/applicant-busy";
+import { logBookingReschedule } from "@/lib/booking-reschedule-log";
 
 const PROPOSAL_DURATION_MS = 30 * 60 * 1000;
 
@@ -75,6 +76,23 @@ export async function POST(
     const busy = await getApplicantBusyRanges(booking.applicantEmail, bookingId);
     const hit = overlapsBusy(proposedDate, proposedEnd, busy);
     if (hit) {
+      await logBookingReschedule({
+        bookingId,
+        recruiterId: booking.recruiterId,
+        applicantId: booking.applicantId,
+        actorRole: "recruiter",
+        actorEmail: auth.session.email,
+        action: "proposal_blocked_applicant_busy",
+        statusBefore: booking.status,
+        statusAfter: booking.status,
+        requestedTime: booking.requestedTime,
+        proposedTime: proposedDate,
+        metadata: {
+          conflictStart: hit.start.toISOString(),
+          conflictEnd: hit.end.toISOString(),
+        },
+      });
+
       return NextResponse.json(
         {
           error: "applicant_busy",
@@ -108,6 +126,23 @@ export async function POST(
       proposedByEmail: rec?.userEmail ?? null,
     })
     .where(eq(bookings.id, bookingId));
+
+  await logBookingReschedule({
+    bookingId,
+    recruiterId: booking.recruiterId,
+    applicantId: booking.applicantId,
+    actorRole: "recruiter",
+    actorEmail: auth.session.email,
+    action: "proposed",
+    statusBefore: booking.status,
+    statusAfter: "reschedule_proposed",
+    requestedTime: booking.requestedTime,
+    proposedTime: proposedDate,
+    metadata: {
+      forcedPastBusyGuard: force === true,
+      hadNote: Boolean(note),
+    },
+  });
 
   if (rec) {
     const proposalPath = `/recruiter/${auth.recruiterId}?proposal=${bookingId}`;
@@ -184,6 +219,19 @@ export async function DELETE(
     .update(bookings)
     .set({ status: "pending", proposedTime: null, proposedByEmail: null })
     .where(eq(bookings.id, bookingId));
+
+  await logBookingReschedule({
+    bookingId,
+    recruiterId: booking.recruiterId,
+    applicantId: booking.applicantId,
+    actorRole: "recruiter",
+    actorEmail: auth.session.email,
+    action: "retracted",
+    statusBefore: booking.status,
+    statusAfter: "pending",
+    requestedTime: booking.requestedTime,
+    proposedTime: booking.proposedTime,
+  });
 
   return NextResponse.json({ ok: true, status: "pending" });
 }

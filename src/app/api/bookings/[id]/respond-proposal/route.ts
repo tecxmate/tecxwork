@@ -9,6 +9,7 @@ import {
   sendRejectionEmail,
 } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
+import { logBookingReschedule } from "@/lib/booking-reschedule-log";
 
 /**
  * POST /api/bookings/[id]/respond-proposal
@@ -72,6 +73,19 @@ export async function POST(
       .update(bookings)
       .set({ status: "cancelled" })
       .where(eq(bookings.id, bookingId));
+
+    await logBookingReschedule({
+      bookingId,
+      recruiterId: booking.recruiterId,
+      applicantId: booking.applicantId,
+      actorRole: "applicant",
+      actorEmail: auth.session.email,
+      action: "declined",
+      statusBefore: booking.status,
+      statusAfter: "cancelled",
+      requestedTime: booking.requestedTime,
+      proposedTime: booking.proposedTime,
+    });
 
     if (rec) {
       sendRejectionEmail({
@@ -199,6 +213,23 @@ export async function POST(
   });
 
   if (!acceptanceResult.ok) {
+    await logBookingReschedule({
+      bookingId,
+      recruiterId: booking.recruiterId,
+      applicantId: booking.applicantId,
+      actorRole: "applicant",
+      actorEmail: auth.session.email,
+      action: "accept_failed",
+      statusBefore: booking.status,
+      statusAfter: booking.status,
+      requestedTime: booking.requestedTime,
+      proposedTime: booking.proposedTime,
+      metadata: {
+        error: acceptanceResult.error,
+        status: acceptanceResult.status,
+      },
+    });
+
     return NextResponse.json(
       { error: acceptanceResult.error },
       { status: acceptanceResult.status }
@@ -206,6 +237,22 @@ export async function POST(
   }
 
   const slot = acceptanceResult.slot;
+
+  await logBookingReschedule({
+    bookingId,
+    recruiterId: booking.recruiterId,
+    applicantId: booking.applicantId,
+    actorRole: "applicant",
+    actorEmail: auth.session.email,
+    action: "accepted",
+    statusBefore: booking.status,
+    statusAfter: "accepted",
+    requestedTime: proposedTime,
+    proposedTime,
+    metadata: {
+      slotId: slot.id,
+    },
+  });
 
   if (rec) {
     sendBookingEmails({

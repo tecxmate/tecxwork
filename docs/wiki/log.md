@@ -823,3 +823,14 @@ attributed_to: [niko]   belongs_to: [backup-dr]
 - Added the official PGDG apt repository via `postgresql-common` and installed `postgresql-client-17`; `/usr/bin/pg_dump` now reports PostgreSQL 17.10.
 - Manual systemd backup run completed successfully: DB dump `tecxwork_2026-05-31T23-36-30-523Z.sql.gz` (328,453 bytes) plus Blob mirror check (177 objects, 0 newly downloaded, 177 unchanged).
 - Hourly `tecxwork-backup.timer` remains active; next run scheduled from the successful service activation.
+
+## [2026-06-01] ingest | Booking reschedule audit logs
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Audited student/recruiter reschedule traces: recent `reschedule_proposed` email logs and notification rows exist, with 4 active proposal bookings, but there was no durable action log for propose/retract/accept/decline events.
+- Added `booking_reschedule_logs`, a DB update script, and non-blocking route logging for proposal creation, applicant-busy blocks, retraction, student accept/decline, and accept conflicts.
+- Created the live `booking_reschedule_logs` table on 2026-06-01; it starts empty because historical rows do not reliably preserve every action timestamp. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] fix | Linux fresh install surfaced React hooks lint
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Fresh Linux dev dependency install activated the current `react-hooks/set-state-in-effect` lint rule, failing on `src/components/recruiter-jobs-browser.tsx`.
+- Replaced the desktop detail-pane state-repair effect with derived `visibleSelectedJobId`; full `npm run lint -- --quiet` and `npx tsc --noEmit` now pass. Updated topics/tecxwork.md.

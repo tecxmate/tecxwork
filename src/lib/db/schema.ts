@@ -402,6 +402,28 @@ export const crawlLogs = pgTable("crawl_logs", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ---- Booking reschedule audit trail ----
+
+export const bookingRescheduleLogs = pgTable("booking_reschedule_logs", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id")
+    .notNull()
+    .references(() => bookings.id),
+  recruiterId: integer("recruiter_id").references(() => recruiters.id),
+  applicantId: integer("applicant_id").references(() => applicantProfiles.id),
+  actorRole: userRoleEnum("actor_role").notNull(),
+  actorEmail: text("actor_email"),
+  action: text("action").notNull(),
+  statusBefore: bookingStatusEnum("status_before"),
+  statusAfter: bookingStatusEnum("status_after"),
+  requestedTime: timestamp("requested_time", { withTimezone: true }),
+  proposedTime: timestamp("proposed_time", { withTimezone: true }),
+  metadata: jsonb("metadata").notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ---- Email tracking ----
 
 export const emailLogs = pgTable("email_logs", {

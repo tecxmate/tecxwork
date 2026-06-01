@@ -4,7 +4,9 @@ type: topic
 slug: tecxwork
 role: product
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-06-01
+attributed_to: [niko]
+belongs_to: [tecxmate]
 source: code
 status: active
 tags: [product]
@@ -25,3 +27,6 @@ Career-fair platform connecting recruiters and applicants. Multi-language (en, v
 - [Admin panel](admin-panel.md)
 - [Recruiter dashboard](recruiter-dashboard.md)
 - [Public homepage](public-homepage.md)
+
+## Development Notes
+- 2026-06-01: After switching from a Mac environment to a fresh Linux PC checkout, full lint surfaced `react-hooks/set-state-in-effect` from the current `eslint-config-next` / `eslint-plugin-react-hooks` install. The failing job browser pattern was not Linux-specific; the fresh dev dependency tree made the rule active. Fixed `src/components/recruiter-jobs-browser.tsx` by deriving the visible selected job for the desktop detail pane instead of synchronously correcting selection state inside an effect.

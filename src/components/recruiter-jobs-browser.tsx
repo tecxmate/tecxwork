@@ -325,18 +325,15 @@ export function RecruiterJobsBrowser({
     sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [currentPage]);
 
-  // On desktop, keep a valid job selected for the detail pane.
-  useEffect(() => {
-    if (!isDesktop) return;
+  const visibleSelectedJobId = useMemo(() => {
+    if (!isDesktop) return selectedJobId;
     const stillVisible = paginatedJobs.some((j) => j.id === selectedJobId);
-    if (!stillVisible) {
-      setSelectedJobId(paginatedJobs[0]?.id ?? null);
-    }
+    return stillVisible ? selectedJobId : (paginatedJobs[0]?.id ?? null);
   }, [isDesktop, paginatedJobs, selectedJobId]);
 
   const selectedJob = useMemo(
-    () => filteredJobs.find((j) => j.id === selectedJobId) ?? null,
-    [filteredJobs, selectedJobId]
+    () => filteredJobs.find((j) => j.id === visibleSelectedJobId) ?? null,
+    [filteredJobs, visibleSelectedJobId]
   );
 
   const handleRowSelect = (id: number) => {
@@ -453,7 +450,7 @@ export function RecruiterJobsBrowser({
                   job={job}
                   locale={locale}
                   labels={labels}
-                  selected={isDesktop && job.id === selectedJobId}
+                  selected={isDesktop && job.id === visibleSelectedJobId}
                   onSelect={() => handleRowSelect(job.id)}
                 />
               ))}
