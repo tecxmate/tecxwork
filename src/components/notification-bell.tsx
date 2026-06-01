@@ -384,8 +384,9 @@ export function NotificationBell({
         aria-hidden={!open}
         className={cn(
           "dropdown-panel z-50 overflow-hidden rounded-xl border bg-card shadow-lg",
-          // Mobile: span the screen with equal left/right margins, below the header.
-          "fixed inset-x-3 top-[calc(env(safe-area-inset-top)+4rem)]",
+          // Mobile: span the screen with equal left/right margins, top edge
+          // aligned with the hamburger dropdown (safe-area + 56px = 3.5rem).
+          "fixed inset-x-3 top-[calc(env(safe-area-inset-top)+3.5rem)]",
           // Desktop: anchored dropdown under the bell.
           "sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96"
         )}
