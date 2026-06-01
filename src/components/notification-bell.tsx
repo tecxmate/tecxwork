@@ -158,14 +158,19 @@ export function NotificationBell({
   const button = (
     <button
       onClick={() => setOpen(!open)}
-      className="relative flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-      aria-label={labels.notifications}
+      className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-premium hover:bg-muted hover:text-foreground"
+      aria-label={
+        unreadCount > 0
+          ? `${labels.notifications} (${unreadCount} unread)`
+          : labels.notifications
+      }
     >
       <Bell className="h-4 w-4" />
       {unreadCount > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-          {unreadCount > 9 ? "9+" : unreadCount}
-        </span>
+        <span
+          className="absolute right-1 top-1 h-2 w-2 rounded-full bg-purple-500 ring-2 ring-white dark:ring-card"
+          aria-hidden="true"
+        />
       )}
     </button>
   );
@@ -229,7 +234,7 @@ export function NotificationBell({
                   <p className={cn("text-sm", !n.read && "font-medium")}>
                     {n.title}
                   </p>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-xs text-muted-foreground break-words">
                     {n.message}
                   </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">
@@ -305,7 +310,7 @@ export function NotificationBell({
                   <p className={cn("text-sm", !n.read && "font-medium")}>
                     {n.title}
                   </p>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-xs text-muted-foreground break-words">
                     {n.message}
                   </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">
@@ -372,7 +377,7 @@ export function NotificationBell({
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-2 w-[280px] overflow-hidden rounded-xl border bg-card shadow-lg sm:w-80">
+          <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border bg-card shadow-lg">
             {panel}
           </div>
         </>

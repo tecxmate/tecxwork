@@ -949,3 +949,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 ## [2026-06-01] feature | Welcome push on enable (self-test confirmation)
 attributed_to: [niko]   belongs_to: [tecxwork]
 - /api/push-subscription now fires a one-off "🔔 Notifications enabled" push to the just-subscribed device after a successful subscribe. New helper sendPushToSubscription() in lib/web-push.ts targets a single endpoint (vs sendPushNotification fan-out). Fixes the silent-enable UX gap and gives every user a built-in self-test.
+
+## [2026-06-01] ui | Notification bell moved out of hamburger
+attributed_to: [niko]   belongs_to: [tecxwork, design-system]
+- Bell is now a standalone icon to the LEFT of the hamburger (was inside the overflow menu), styled to match the hamburger (h-9 w-9, rounded-lg, border). Still gated on logged-in (showNotifications, non-guest).
+- Unread indicator changed from a count badge to a purple dot (bg-purple-500). Notification messages no longer line-clamp-2 (full text, break-words); popover widened to w-80 with max-w-[calc(100vw-1rem)] so it can't be cut off on small screens.

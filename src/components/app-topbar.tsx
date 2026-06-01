@@ -63,12 +63,14 @@ export function AppTopBar({
               </div>
             ) : null}
             {rightStatus}
+            {showNotifications ? (
+              <NotificationBell labels={notificationLabels} />
+            ) : null}
             <AppTopBarActions
               mobileOverflow={mobileOverflow}
               desktopChildren={
                 <>
                   {!isGuest ? desktopActions : null}
-                  {showNotifications ? <NotificationBell labels={notificationLabels} /> : null}
                   <ThemeToggle />
                   {showStudentLanguageSwitcher ? <StudentLanguageSwitcher className="sm:w-48" /> : null}
                 </>
@@ -94,9 +96,6 @@ export function AppTopBar({
                   ) : null}
                   {!isGuest ? (
                     <AppTopBarAccountActions role={navRole} labels={accountLabels} />
-                  ) : null}
-                  {showNotifications ? (
-                    <NotificationBell variant="inline" labels={notificationLabels} />
                   ) : null}
                 </>
               }
