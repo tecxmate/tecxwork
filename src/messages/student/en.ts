@@ -409,6 +409,11 @@ export const studentEnMessages = {
     recruiterReview:
       "The recruiter will review your CV and confirm your interview. You'll receive an email when accepted.",
     shareCv: "Share your CV via Google Drive.",
+    enableNotificationsCta: "Turn on notifications",
+    enableNotificationsBody:
+      "Get instant interview updates here — no waiting on email.",
+    notificationsEnabledConfirm:
+      "Notifications on! You'll get interview updates right here.",
     viewOtherPositions: "View Other Positions",
     bookWith: "Book with {company}",
     positionApplyingFor: "Position applying for",

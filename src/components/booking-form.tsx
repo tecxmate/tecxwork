@@ -16,9 +16,11 @@ import {
   Mail,
   FileText,
   Briefcase,
+  BellRing,
 } from "lucide-react";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
+import { usePush } from "@/lib/use-push";
 
 type BookingState = "idle" | "submitting" | "success" | "error";
 
@@ -51,8 +53,18 @@ export function BookingForm({
   onDone?: () => void;
 }) {
   const { messages } = useStudentI18n();
+  const { pushEnabled, supported: pushSupported, enablePush } = usePush();
+  const [enablingPush, setEnablingPush] = useState(false);
+  const [justEnabledPush, setJustEnabledPush] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState("");
+
+  async function handleEnablePush() {
+    setEnablingPush(true);
+    const ok = await enablePush();
+    setEnablingPush(false);
+    if (ok) setJustEnabledPush(true);
+  }
   const [position, setPosition] = useState(positions[0] ?? "");
   const [cvLink, setCvLink] = useState("");
   const [pipaConsent, setPipaConsent] = useState(false);
@@ -138,6 +150,26 @@ export function BookingForm({
           <div className="space-y-1 text-sm text-muted-foreground">
             <p>{messages.bookingForm.recruiterReview}</p>
           </div>
+          {pushSupported && pushEnabled === false && !justEnabledPush ? (
+            <div className="flex flex-col items-center gap-2 rounded-lg bg-primary/5 px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                {messages.bookingForm.enableNotificationsBody}
+              </p>
+              <Button onClick={handleEnablePush} disabled={enablingPush} className="gap-2">
+                {enablingPush ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <BellRing className="h-4 w-4" />
+                )}
+                {messages.bookingForm.enableNotificationsCta}
+              </Button>
+            </div>
+          ) : null}
+          {justEnabledPush ? (
+            <p className="text-sm font-medium text-green-600 dark:text-green-400">
+              {messages.bookingForm.notificationsEnabledConfirm}
+            </p>
+          ) : null}
           <Button variant="outline" onClick={onDone ?? onBack} className="mt-2">
             {messages.bookingForm.viewOtherPositions}
           </Button>

@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bell, BellRing, Check, X, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
+import { usePush } from "@/lib/use-push";
 
 type Notification = {
   id: number;
@@ -51,7 +50,7 @@ export function NotificationBell({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
+  const { pushEnabled, supported: pushSupported, enablePush } = usePush();
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -70,43 +69,6 @@ export function NotificationBell({
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
-
-  useEffect(() => {
-    if (!VAPID_PUBLIC_KEY || !("serviceWorker" in navigator)) {
-      setPushEnabled(false);
-      return;
-    }
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.pushManager.getSubscription().then((sub) => {
-        setPushEnabled(!!sub);
-      });
-    });
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
-  }, []);
-
-  async function enablePush() {
-    if (!VAPID_PUBLIC_KEY) return;
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") return;
-
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: VAPID_PUBLIC_KEY,
-      });
-
-      await fetch("/api/push-subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sub.toJSON()),
-      });
-
-      setPushEnabled(true);
-    } catch {
-      // ignore
-    }
-  }
 
   async function markAllRead() {
     setLoading(true);
@@ -205,7 +167,7 @@ export function NotificationBell({
         </div>
       </div>
 
-      {pushEnabled === false && VAPID_PUBLIC_KEY && (
+      {pushEnabled === false && pushSupported && (
         <button
           onClick={enablePush}
           className="flex w-full items-center gap-2 border-b bg-primary/5 px-4 py-2 text-xs text-primary hover:bg-primary/10"
@@ -281,7 +243,7 @@ export function NotificationBell({
         )}
       </div>
 
-      {pushEnabled === false && VAPID_PUBLIC_KEY && (
+      {pushEnabled === false && pushSupported && (
         <button
           onClick={enablePush}
           className="mx-2 mb-2 flex items-center gap-2 rounded-md bg-primary/5 px-3 py-2 text-xs text-primary hover:bg-primary/10"

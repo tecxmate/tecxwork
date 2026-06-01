@@ -396,6 +396,11 @@ export const studentViMessages = {
     submittedBody: "Đơn ứng tuyển của bạn tới {company} cho vị trí {position} lúc {time} hiện đang {status}.",
     recruiterReview: "Nhà tuyển dụng sẽ xem CV và xác nhận lịch phỏng vấn. Bạn sẽ nhận email khi được chấp nhận.",
     shareCv: "Chia sẻ CV của bạn qua Google Drive.",
+    enableNotificationsCta: "Bật thông báo",
+    enableNotificationsBody:
+      "Nhận cập nhật phỏng vấn ngay tại đây — không cần chờ email.",
+    notificationsEnabledConfirm:
+      "Đã bật thông báo! Bạn sẽ nhận cập nhật phỏng vấn ngay tại đây.",
     viewOtherPositions: "Xem vị trí khác",
     bookWith: "Đặt lịch với {company}",
     positionApplyingFor: "Vị trí ứng tuyển",

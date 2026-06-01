@@ -974,3 +974,9 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 ## [2026-06-01] infra | Disable job-crawl cron (legal)
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Removed the /api/cron/crawl-jobs schedule from vercel.json — job crawling is not legal; not to be re-enabled. Route/crawler code left in place but unscheduled. OPEN QUESTION: crawled external_jobs (503 rows) are still displayed on /jobs via getCachedExternalJobs — decide whether to stop surfacing them.
+
+## [2026-06-01] feature | Notification-primary application_submitted + post-apply push prompt
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Audit: emails (280+ logged) > notifications (201); application_submitted = 134 (~48% of email). Made it notification-primary: student now gets an in-app "Application Submitted" notification (+push if enabled); the email sends only when the student has no push subscription. Recruiter notification unchanged.
+- Added a post-apply "Turn on notifications" prompt (booking-form success view) to grow push adoption before event day. Extracted shared usePush() hook (src/lib/use-push.ts); notification bell refactored to use it.
+- created decisions/2026-06-01-notification-primary-apply.md
