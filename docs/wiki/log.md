@@ -850,3 +850,8 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Student report: after recruiter edits, the applicant side could look like no application existed, or show only generic "Applied" for waitlisted/pending/confirmed cases.
 - Root cause: booking state was matched to jobs by editable title text (`bookings.position === job.title`). Added `bookings.job_opening_id`, stable id matching in UI/API, duplicate blocking for waitlisted/reschedule-proposed applications, and explicit Pending review / Waitlisted / Interview confirmed labels.
 - Ran the live backfill: 124/145 bookings linked, including all 7 SSB bookings to job opening 47. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] fix | Block impossible reschedule proposals
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Student screenshot showed Accept failing because SSB proposed 14:45, but recruiter 21 had no slot at 14:45; next available slots were 14:50.
+- The propose-time route now requires an available recruiter slot at the exact proposed time before notifying the student, logs `proposal_blocked_no_slot`, and recruiter UI only offers "Suggest anyway" for applicant-busy conflicts, not slot-unavailable conflicts. Updated topics/recruitment-workflows.md.

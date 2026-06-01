@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, recruiters, users } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { db, bookings, recruiters, slots, users } from "@/lib/db";
+import { and, eq } from "drizzle-orm";
 import { getRecruiterFromSession } from "@/lib/auth";
 import { parseJsonBody, proposeTimeSchema } from "@/lib/validation";
 import { getPublicBaseUrl, sendRescheduleProposalEmail } from "@/lib/email";
@@ -68,6 +68,42 @@ export async function POST(
         error: `Cannot propose a new time for a booking with status "${booking.status}"`,
       },
       { status: 400 }
+    );
+  }
+
+  const [availableSlot] = await db
+    .select({ id: slots.id })
+    .from(slots)
+    .where(
+      and(
+        eq(slots.recruiterId, booking.recruiterId),
+        eq(slots.startTime, proposedDate),
+        eq(slots.status, "available")
+      )
+    )
+    .limit(1);
+
+  if (!availableSlot) {
+    await logBookingReschedule({
+      bookingId,
+      recruiterId: booking.recruiterId,
+      applicantId: booking.applicantId,
+      actorRole: "recruiter",
+      actorEmail: auth.session.email,
+      action: "proposal_blocked_no_slot",
+      statusBefore: booking.status,
+      statusAfter: booking.status,
+      requestedTime: booking.requestedTime,
+      proposedTime: proposedDate,
+    });
+
+    return NextResponse.json(
+      {
+        error: "slot_unavailable",
+        message:
+          "No available interviewer slot exists at that exact time. Pick one of the available slot times.",
+      },
+      { status: 409 }
     );
   }
 

@@ -566,11 +566,18 @@ function BookingsTab({ bookings: initialBookings }: { bookings: Booking[] }) {
       router.refresh();
     } else if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
-      setProposeForce(true);
-      setProposeError(
-        data.message ??
-          "Student is already booked with another company at this time. Click again to suggest anyway."
-      );
+      if (data.error === "applicant_busy") {
+        setProposeForce(true);
+        setProposeError(
+          data.message ??
+            "Student is already booked with another company at this time. Click again to suggest anyway."
+        );
+      } else {
+        setProposeForce(false);
+        setProposeError(
+          data.message ?? data.error ?? "Failed to propose new time."
+        );
+      }
     } else {
       const data = await res.json().catch(() => ({}));
       setProposeError(data.error ?? "Failed to propose new time.");
