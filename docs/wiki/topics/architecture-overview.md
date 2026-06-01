@@ -26,8 +26,10 @@ related: [tecxwork, booking-engine]
 - **Edge Performance**: Heavy use of prefetching and edge-cached static assets via Vercel.
 
 ## Data Infrastructure
-- **Current runtime location audit (2026-06-01)**: Latest production Vercel deployment `app-erea8swq9-nikolasdoans-projects.vercel.app` shows Node functions built in `iad1` (Washington, D.C.). Local `DATABASE_URL` host resolves to Neon's `us-east-1.aws.neon.tech`, so the app/database round trip is currently colocated in US East.
-- **Target location**: For Taiwan/Vietnam users, Tokyo (`hnd1` on Vercel, AWS `ap-northeast-1` on Neon) is the likely latency-optimized target if the database is migrated/recreated there.
+- **Region — Singapore (since 2026-06-01)**: Vercel functions run in `sin1` (set via `vercel.json` `regions:["sin1"]`); the prod Neon DB is in `ap-southeast-1` (host `ep-delicate-lab-aos3iphg`, pooled, in Niko's own Neon account). Co-located in Singapore — chosen over the old US-East colocation to cut Taiwan-user latency (~200ms → ~50ms). Tokyo (`hnd1`/`ap-northeast-1`) was preferred but Neon offered no Tokyo region for this account. See [[2026-06-01-tokyo-region-migration]].
+- **Single Vercel project**: the live project is **`app`** (serves `work.tecxmate.com`). A redundant duplicate project (`tecxwork`) that auto-built the same branch was deleted 2026-06-01 — see [[2026-06-01-vercel-project-consolidation]].
+- **DB resilience**: prod Neon is **free-tier** (0.25 CU + a connection-attempt ceiling). Two mitigations after the 2026-06-01 outage: the Neon pool has an idle-client `error` handler so a dropped socket can't crash the instance ([[2026-06-01-neon-pool-crash-hardening]]), and the per-request `event_config` read is runtime-cached ([[2026-06-01-event-config-cache]]). Consider upgrading off free-tier before high-traffic event days.
+- **Caching**: hot reads go through the Vercel runtime cache (`@vercel/functions` `getCache`, `lib/cache.ts`) — recruiters, external jobs, and `event_config` (tag-invalidated on admin edits). Public pages are `ƒ (Dynamic)` (server-side session/locale cookies), so route-level ISR is not used.
 - **Timezone**: Strictly `Asia/Taipei (UTC+8)` for all date-time logic to avoid scheduling drift.
 
 ## Scalability Strategy

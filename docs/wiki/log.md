@@ -939,3 +939,9 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - getEventBranding now reads through the Vercel runtime cache (getCache, 1h TTL, tag "event-config"), invalidated from /api/admin/branding + /api/admin/timeframe. Cuts the per-request event_config query (runs on every page via root layout) -> DB-load resilience vs the free-tier connection ceiling.
 - ISR/static for public pages REJECTED: all classify as Dynamic (getSession/getStudentLocale read cookies server-side); revalidate would be a no-op. Region move already captured the latency upside.
 - created decisions/2026-06-01-event-config-cache.md
+
+## [2026-06-01] infra | Consolidate to one Vercel project; update architecture overview
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Deleted redundant `tecxwork` Vercel project (both it and `app` auto-built main -> double-build load that fed the outage). Migrated VAPID web-push keys to `app` (it was missing them; stripped a literal \n corruption), relinked local repo to `app`, redeployed.
+- Refreshed topics/architecture-overview.md Data Infrastructure section to current state: Singapore region, single `app` project, free-tier DB resilience (pool error handler + event_config cache), caching model, cookie-dynamic pages.
+- created decisions/2026-06-01-vercel-project-consolidation.md
