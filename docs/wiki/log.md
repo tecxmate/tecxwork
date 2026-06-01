@@ -928,6 +928,11 @@ attributed_to: [niko]   belongs_to: [architecture-overview]
 - Latest production Vercel deployment inspection shows Node functions in `iad1` (Washington, D.C.); repo has no explicit `regions` setting in `vercel.json`.
 - Local `DATABASE_URL` host points at Neon `us-east-1.aws.neon.tech`; Tokyo target would be Vercel `hnd1` plus a Neon Tokyo/AWS ap-northeast-1 project/branch. Updated topics/architecture-overview.md.
 
+## [2026-06-01] fix | Smooth list loading animations
+attributed_to: [niko]   belongs_to: [design-system]
+- Added `useSmoothLoading` to delay loader display briefly and keep it visible for a minimum duration, preventing company/list loaders from flickering with fast or interrupted data fetches.
+- Replaced default skeleton pulse with a slower shared breathe animation and used a consistent smooth spinner class for list loaders. Updated topics/design-system.md.
+
 ## [2026-06-01] decision | Move Vercel + Neon to Tokyo
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Users are in Taiwan (all 171 schools Taiwan cities; event at MCUT). Both Vercel (iad1) and Neon (us-east-1) are in US East -> trans-Pacific latency. Chose Tokyo (hnd1 + ap-northeast-1) over Singapore. DB is 11 MB.

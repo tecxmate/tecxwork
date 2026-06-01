@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSmoothLoading } from "@/lib/use-smooth-loading";
 import {
   ExternalJobModal,
   JOB_TYPE_LABELS,
@@ -137,6 +138,7 @@ export function JobDirectory() {
   const [languageFilter, setLanguageFilter] = useState<FilterLanguage>("all");
   const [jobs, setJobs] = useState<ExternalJobWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const showLoading = useSmoothLoading(loading);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<ExternalJobWithMeta | null>(null);
@@ -239,17 +241,17 @@ export function JobDirectory() {
   }, [currentPage, debouncedQuery, jobTypeFilter, jobs.length, languageFilter]);
 
   const resultLabel = useMemo(() => {
-    if (loading) {
+    if (showLoading) {
       return (
         <span className="flex items-center gap-1.5">
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <Loader2 className="h-3 w-3 loading-spinner-smooth" />
           Loading...
         </span>
       );
     }
 
     return `${total} ${total === 1 ? "job" : "jobs"} found${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}`;
-  }, [currentPage, loading, total, totalPages]);
+  }, [currentPage, showLoading, total, totalPages]);
 
   return (
     <section ref={sectionRef} className="space-y-4 sm:space-y-6 scroll-mt-20">
@@ -308,7 +310,7 @@ export function JobDirectory() {
         </p>
       </div>
 
-      {loading ? (
+      {showLoading ? (
         <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <JobCardSkeleton key={i} />

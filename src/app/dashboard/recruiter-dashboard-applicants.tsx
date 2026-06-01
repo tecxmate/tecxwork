@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useSmoothLoading } from "@/lib/use-smooth-loading";
 
 type Applicant = {
   id: number;
@@ -48,6 +49,7 @@ export function RecruiterApplicantsTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const showLoading = useSmoothLoading(loading);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -114,9 +116,9 @@ export function RecruiterApplicantsTab({
         />
       </div>
 
-      {loading ? (
+      {showLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <Loader2 className="h-5 w-5 loading-spinner-smooth text-muted-foreground" />
           <span className="ml-2 text-sm text-muted-foreground">
             {messages.dashboard.applicants.loading}
           </span>

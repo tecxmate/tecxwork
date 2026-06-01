@@ -3,7 +3,7 @@ title: Tecxmate Design System
 type: topic
 slug: design-system
 date: 2026-05-04
-updated: 2026-05-13
+updated: 2026-06-01
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -37,3 +37,6 @@ related: [tecxmate]
 
 ## Component Rules
 - **Client-hook components must declare `"use client"`.** Any component that calls `useStudentI18n`, `useRecruiterI18n`, or any other `useContext`-based hook needs `"use client"` at the top of the file — even if the component looks purely presentational. `next build` will not catch the omission; failure surfaces only at runtime as a streamed Server Component error (e.g. a `$RX("B:1", "<digest>")` boundary marker in the rendered HTML and "This page couldn't load" in the browser). See 2026-05-27 log entry for the `recruiter-card.tsx` regression.
+
+## History
+- 2026-06-01: Loading affordances are smoothed independently from raw network timing. `useSmoothLoading` adds delayed show and minimum visible duration for company/list loaders, shared skeletons use a slower `skeleton-smooth` breathe animation instead of Tailwind's default pulse, and inline loaders use `loading-spinner-smooth`.

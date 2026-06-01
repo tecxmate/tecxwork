@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RecruiterCard, type RecruiterCardData } from "./recruiter-card";
 import { useStudentI18n } from "@/components/student-locale-provider";
+import { useSmoothLoading } from "@/lib/use-smooth-loading";
 
 const COMPANIES_PER_PAGE = 12;
 
@@ -31,6 +32,7 @@ export function Directory() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const debouncedQuery = useDebouncedValue(query);
+  const showLoading = useSmoothLoading(loading);
   const cacheRef = useRef(
     new Map<
       string,
@@ -133,10 +135,10 @@ export function Directory() {
   }, [debouncedQuery, page, recruiters.length]);
 
   const resultLabel = useMemo(() => {
-    if (loading) {
+    if (showLoading) {
       return (
         <span className="flex items-center gap-1.5">
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <Loader2 className="h-3 w-3 loading-spinner-smooth" />
           {messages.common.loading}
         </span>
       );
@@ -151,7 +153,7 @@ export function Directory() {
         ? ` · ${messages.directory.page} ${page} ${messages.directory.of} ${totalPages}`
         : ""
     }`;
-  }, [loading, messages, total, totalPages, page]);
+  }, [showLoading, messages, total, totalPages, page]);
 
   return (
     <section ref={sectionRef} className="space-y-4 sm:space-y-6 scroll-mt-20">
@@ -171,9 +173,9 @@ export function Directory() {
         <p className="text-xs text-muted-foreground sm:text-sm">{resultLabel}</p>
       </div>
 
-      {loading ? (
+      {showLoading ? (
         <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <Loader2 className="h-5 w-5 loading-spinner-smooth text-muted-foreground" />
             <span className="ml-2 text-sm text-muted-foreground">
               {messages.directory.loadingCompanies}
             </span>
