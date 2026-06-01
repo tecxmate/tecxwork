@@ -360,6 +360,9 @@ export const eventConfig = pgTable("event_config", {
   homepageImages: text("homepage_images").array().notNull().default([]),
   browsePageImages: text("browse_page_images").array().notNull().default([]),
   jobsPageImages: text("jobs_page_images").array().notNull().default([]),
+  jobsPageHeroEnabled: boolean("jobs_page_hero_enabled")
+    .notNull()
+    .default(true),
   heroOverlayEnabled: boolean("hero_overlay_enabled").notNull().default(true),
   salaryCurrencyOptions: text("salary_currency_options")
     .array()

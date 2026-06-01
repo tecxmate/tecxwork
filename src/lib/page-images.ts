@@ -13,3 +13,14 @@ export async function getPageImages(placement: "browse" | "jobs") {
     placement === "browse" ? config?.browsePageImages : config?.jobsPageImages;
   return (images ?? []).filter(Boolean).slice(0, 2);
 }
+
+export async function getJobsPageHeroEnabled() {
+  const [config] = await db
+    .select({
+      jobsPageHeroEnabled: eventConfig.jobsPageHeroEnabled,
+    })
+    .from(eventConfig)
+    .limit(1);
+
+  return config?.jobsPageHeroEnabled ?? true;
+}

@@ -11,6 +11,7 @@ export async function GET() {
       onboardingMode: eventConfig.onboardingMode,
       jobModerationEnabled: eventConfig.jobModerationEnabled,
       studentCancellationEnabled: eventConfig.studentCancellationEnabled,
+      jobsPageHeroEnabled: eventConfig.jobsPageHeroEnabled,
       salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
       locked: eventConfig.modeLocked,
     })
@@ -22,6 +23,7 @@ export async function GET() {
     onboardingMode: config?.onboardingMode ?? "full",
     jobModerationEnabled: config?.jobModerationEnabled ?? true,
     studentCancellationEnabled: config?.studentCancellationEnabled ?? false,
+    jobsPageHeroEnabled: config?.jobsPageHeroEnabled ?? true,
     salaryCurrencyOptions: normalizeSalaryCurrencyOptions(
       config?.salaryCurrencyOptions
     ),
@@ -40,6 +42,7 @@ export async function PUT(req: NextRequest) {
     onboardingMode,
     jobModerationEnabled,
     studentCancellationEnabled,
+    jobsPageHeroEnabled,
     salaryCurrencyOptions,
     lock,
   } = body;
@@ -78,6 +81,15 @@ export async function PUT(req: NextRequest) {
       .where(eq(eventConfig.id, config.id));
 
     return NextResponse.json({ studentCancellationEnabled });
+  }
+
+  if (typeof jobsPageHeroEnabled === "boolean") {
+    await db
+      .update(eventConfig)
+      .set({ jobsPageHeroEnabled })
+      .where(eq(eventConfig.id, config.id));
+
+    return NextResponse.json({ jobsPageHeroEnabled });
   }
 
   if (Array.isArray(salaryCurrencyOptions)) {

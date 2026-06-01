@@ -263,6 +263,7 @@ export async function getAdminDashboardData() {
       onboardingMode: eventConfig.onboardingMode,
       jobModerationEnabled: eventConfig.jobModerationEnabled,
       studentCancellationEnabled: eventConfig.studentCancellationEnabled,
+      jobsPageHeroEnabled: eventConfig.jobsPageHeroEnabled,
       locked: eventConfig.modeLocked,
       startHour: eventConfig.startHour,
       startMinute: eventConfig.startMinute,
@@ -387,6 +388,7 @@ export async function getAdminDashboardData() {
     initialJobModerationEnabled: config?.jobModerationEnabled ?? true,
     initialStudentCancellationEnabled:
       config?.studentCancellationEnabled ?? false,
+    initialJobsPageHeroEnabled: config?.jobsPageHeroEnabled ?? true,
     initialSalaryCurrencyOptions: normalizeSalaryCurrencyOptions(
       config?.salaryCurrencyOptions
     ),

@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Card } from "@/components/ui/card";
 import { getSession } from "@/lib/auth";
 import { db, jobOpenings, recruiters } from "@/lib/db";
-import { getPageImages } from "@/lib/page-images";
+import { getJobsPageHeroEnabled, getPageImages } from "@/lib/page-images";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
 import {
@@ -67,9 +67,10 @@ export async function JobsListPage({
   const locale = await getStudentLocale();
   const messages = getStudentMessages(locale);
   const categoryName = category ? jobCategoryLabel(category, locale) : null;
-  const [jobs, pageImages] = await Promise.all([
+  const [jobs, pageImages, jobsPageHeroEnabled] = await Promise.all([
     getRecruiterPostedJobs(category),
     getPageImages("jobs"),
+    getJobsPageHeroEnabled(),
   ]);
   const dashboardUrl = session
     ? session.role === "admin"
@@ -123,7 +124,9 @@ export async function JobsListPage({
         }
       />
 
-      <PageHero images={pageImages} title={title} subtitle={subtitle} />
+      {jobsPageHeroEnabled ? (
+        <PageHero images={pageImages} title={title} subtitle={subtitle} />
+      ) : null}
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl space-y-4">

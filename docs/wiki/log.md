@@ -907,3 +907,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Fixed desktop `/jobs` split view card sizing so long locations truncate inside the left job card instead of overflowing into the detail pane.
 - Moved the selected job detail apply/login CTA from the lower-right footer to the top-right header area. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] feature | Jobs page banner toggle
+attributed_to: [niko]   belongs_to: [page-hero]
+- Added `event_config.jobs_page_hero_enabled` defaulting true, with an admin Platform → Tools & Media switch to show/hide the `/jobs` recruiter-posted jobs banner without deleting uploaded images.
+- Ran the additive live migration on 2026-06-01. Updated topics/page-hero.md.

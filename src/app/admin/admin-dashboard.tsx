@@ -338,6 +338,7 @@ export function AdminDashboard({
   initialOnboardingMode,
   initialJobModerationEnabled,
   initialStudentCancellationEnabled,
+  initialJobsPageHeroEnabled,
   initialSalaryCurrencyOptions,
   initialLocked,
   timeFrame: initialTimeFrame,
@@ -359,6 +360,7 @@ export function AdminDashboard({
   initialOnboardingMode: OnboardingMode;
   initialJobModerationEnabled: boolean;
   initialStudentCancellationEnabled: boolean;
+  initialJobsPageHeroEnabled: boolean;
   initialSalaryCurrencyOptions: string[];
   initialLocked: boolean;
   timeFrame: { startHour: number; startMinute: number; endHour: number; endMinute: number; slotDuration: number; bufferMinutes: number };
@@ -393,6 +395,9 @@ export function AdminDashboard({
   );
   const [studentCancellationEnabled, setStudentCancellationEnabled] = useState(
     initialStudentCancellationEnabled
+  );
+  const [jobsPageHeroEnabled, setJobsPageHeroEnabled] = useState(
+    initialJobsPageHeroEnabled
   );
   const [salaryCurrencyOptions, setSalaryCurrencyOptions] = useState(() =>
     normalizeSalaryCurrencyOptions(initialSalaryCurrencyOptions)
@@ -767,6 +772,34 @@ export function AdminDashboard({
     setSaving(false);
     setSettingsStatus("saved");
     setSettingsMessage("Student cancellation setting saved.");
+    setTimeout(() => setSettingsStatus("idle"), 2500);
+    router.refresh();
+  }
+
+  async function handleJobsPageHeroToggle(nextEnabled: boolean) {
+    const previous = jobsPageHeroEnabled;
+    setSaving(true);
+    setSettingsStatus("saving");
+    setSettingsMessage("Saving jobs page banner setting...");
+    setJobsPageHeroEnabled(nextEnabled);
+    const res = await fetch("/api/admin/mode", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobsPageHeroEnabled: nextEnabled }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setJobsPageHeroEnabled(previous);
+      setSettingsStatus("error");
+      setSettingsMessage(
+        data.error || "Jobs page banner setting could not be saved."
+      );
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
+    setSettingsStatus("saved");
+    setSettingsMessage("Jobs page banner setting saved.");
     setTimeout(() => setSettingsStatus("idle"), 2500);
     router.refresh();
   }
@@ -1789,8 +1822,17 @@ export function AdminDashboard({
                         </div>
                         <div className="space-y-2 rounded-lg border border-border/60 p-3">
                           <div>
-                            <p className="text-xs font-medium text-foreground">Jobs page</p>
-                            <p className="text-[11px] text-muted-foreground">Shown above `/jobs`.</p>
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-medium text-foreground">Jobs page</p>
+                                <p className="text-[11px] text-muted-foreground">Shown above `/jobs`.</p>
+                              </div>
+                              <Switch
+                                checked={jobsPageHeroEnabled}
+                                onCheckedChange={handleJobsPageHeroToggle}
+                                disabled={saving}
+                              />
+                            </div>
                           </div>
                           <div className="flex flex-wrap gap-3">
                             {[0, 1].map((slotIndex) => (
