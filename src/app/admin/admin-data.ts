@@ -309,7 +309,10 @@ export async function getAdminDashboardData() {
       applicantEmail: bookings.applicantEmail,
       cvLink: bookings.cvLink,
       status: bookings.status,
+      recruiterId: bookings.recruiterId,
+      slotId: bookings.slotId,
       requestedTime: bookings.requestedTime,
+      proposedTime: bookings.proposedTime,
       createdAt: bookings.createdAt,
       company: recruiters.company,
     })
@@ -354,7 +357,8 @@ export async function getAdminDashboardData() {
     (b) =>
       b.status === "pending" ||
       b.status === "accepted" ||
-      b.status === "waitlisted"
+      b.status === "waitlisted" ||
+      b.status === "reschedule_proposed"
   ).length;
   const onboardingMode: AdminOnboardingMode =
     config?.onboardingMode === "minimal" ? "minimal" : "full";

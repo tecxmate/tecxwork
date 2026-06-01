@@ -123,6 +123,12 @@ export const respondProposalSchema = z.object({
   action: z.enum(["accept", "decline"]),
 });
 
+export const adminBookingTimeOverrideSchema = z.object({
+  time: z.string().min(1, "Time is required"),
+  action: z.enum(["propose", "confirm", "request"]),
+  note: z.string().trim().max(2000).optional(),
+});
+
 /* ---------- helper ---------- */
 
 /**

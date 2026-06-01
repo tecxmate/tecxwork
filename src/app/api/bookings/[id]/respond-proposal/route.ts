@@ -189,6 +189,8 @@ export async function POST(
         slotId: claimedRow.id,
         status: "accepted",
         requestedTime: proposedTime,
+        proposedTime: null,
+        proposedByEmail: null,
       })
       .where(
         and(
@@ -287,5 +289,15 @@ export async function POST(
     }).catch(() => {});
   }
 
-  return NextResponse.json({ ok: true, status: "accepted" });
+  return NextResponse.json({
+    ok: true,
+    status: "accepted",
+    booking: {
+      id: bookingId,
+      status: "accepted",
+      requestedTime: proposedTime.toISOString(),
+      proposedTime: null,
+      slotId: slot.id,
+    },
+  });
 }

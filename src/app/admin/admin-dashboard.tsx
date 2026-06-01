@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef, type ComponentType } from "react";
+import { Fragment, useState, useEffect, useMemo, useCallback, useRef, type ComponentType } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -97,12 +97,15 @@ type Applicant = {
 type AdminBooking = {
   id: number;
   applicantId: number | null;
+  recruiterId: number;
+  slotId: number | null;
   position: string | null;
   applicantName: string;
   applicantEmail: string;
   cvLink: string;
   status: string;
   requestedTime: Date | string | null;
+  proposedTime: Date | string | null;
   createdAt: Date | string | null;
   company: string;
 };
@@ -304,6 +307,24 @@ function taipeiLocalToIso(local: string): string | null {
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString();
 }
+
+function valueToIso(value: Date | string | null): string | null {
+  if (!value) return null;
+  const d = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
+function isActiveBookingStatus(status: string): boolean {
+  return (
+    status === "pending" ||
+    status === "accepted" ||
+    status === "waitlisted" ||
+    status === "reschedule_proposed"
+  );
+}
+
+type AdminBookingTimeAction = "propose" | "confirm" | "request";
 
 export function AdminDashboard({
   recruiters: initialRecruiters,
@@ -860,6 +881,38 @@ export function AdminDashboard({
     );
     router.refresh();
     return cancelled.size;
+  }
+
+  async function handleBookingTimeOverride(
+    b: AdminBooking,
+    time: string,
+    action: AdminBookingTimeAction,
+    note?: string
+  ): Promise<{ ok: true } | { ok: false; error: string }> {
+    const res = await fetch(`/api/admin/bookings/${b.id}/time`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        time,
+        action,
+        note: note?.trim() || undefined,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: data.message || data.error || "Booking time could not be updated.",
+      };
+    }
+
+    if (data.booking) {
+      setAdminBookings((current) =>
+        current.map((x) => (x.id === b.id ? { ...x, ...data.booking } : x))
+      );
+    }
+    router.refresh();
+    return { ok: true };
   }
 
   async function handleDeleteApplicant(a: Applicant) {
@@ -1738,6 +1791,7 @@ export function AdminDashboard({
               onDeleteRecruiter={handleDeleteRecruiter}
               onDeleteApplicant={handleDeleteApplicant}
               onCancelBooking={handleCancelBooking}
+              onTimeOverride={handleBookingTimeOverride}
               onApplicantCreated={(a) =>
                 setApplicants((current) => [...current, a])
               }
@@ -1749,6 +1803,7 @@ export function AdminDashboard({
               bookings={adminBookings}
               onCancel={handleCancelBooking}
               onBulkCancel={handleBulkCancelBookings}
+              onTimeOverride={handleBookingTimeOverride}
             />
           ) : (
             <JobModerationSection jobs={jobs} onModerate={handleJobModeration} />
@@ -2017,6 +2072,7 @@ function PeopleSection({
   onDeleteRecruiter,
   onDeleteApplicant,
   onCancelBooking,
+  onTimeOverride,
   onApplicantCreated,
   initialTab,
   showTabs,
@@ -2027,6 +2083,12 @@ function PeopleSection({
   onDeleteRecruiter: (r: Recruiter) => void;
   onDeleteApplicant: (a: Applicant) => void;
   onCancelBooking: (b: AdminBooking) => void;
+  onTimeOverride: (
+    b: AdminBooking,
+    time: string,
+    action: AdminBookingTimeAction,
+    note?: string
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   onApplicantCreated?: (a: Applicant) => void;
   initialTab: "recruiters" | "applicants" | "bookings";
   showTabs: boolean;
@@ -2326,7 +2388,12 @@ function PeopleSection({
         </div>
         </div>
       ) : (
-        <BookingsTable bookings={bookings} query={query} onCancel={onCancelBooking} />
+        <BookingsTable
+          bookings={bookings}
+          query={query}
+          onCancel={onCancelBooking}
+          onTimeOverride={onTimeOverride}
+        />
       )}
     </div>
   );
@@ -2480,13 +2547,28 @@ function BookingsTable({
   bookings,
   query,
   onCancel,
+  onTimeOverride,
 }: {
   bookings: AdminBooking[];
   query: string;
   onCancel: (b: AdminBooking) => void;
+  onTimeOverride: (
+    b: AdminBooking,
+    time: string,
+    action: AdminBookingTimeAction,
+    note?: string
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
   const { messages, locale } = useStudentI18n();
   const admin = messages.admin;
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [timeDraft, setTimeDraft] = useState("");
+  const [actionDraft, setActionDraft] =
+    useState<AdminBookingTimeAction>("propose");
+  const [noteDraft, setNoteDraft] = useState("");
+  const [timeSaving, setTimeSaving] = useState(false);
+  const [timeError, setTimeError] = useState("");
+  const [timeSavedId, setTimeSavedId] = useState<number | null>(null);
   const localeTag =
     locale === "vi" ? "vi-VN" : locale === "zh-TW" ? "zh-TW" : "en-US";
   // Design system status colors
@@ -2494,6 +2576,7 @@ function BookingsTable({
     pending: "bg-[#FF9500]/15 text-[#FF9500]", // WARNING orange
     accepted: "bg-[#30D158]/15 text-[#30D158]", // SUCCESS green
     waitlisted: "bg-[#8C52FF]/15 text-[#8C52FF]", // INFO purple
+    reschedule_proposed: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
     rejected: "bg-[#D70015]/15 text-[#D70015]", // DESTRUCTIVE red
     cancelled: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
   };
@@ -2501,6 +2584,7 @@ function BookingsTable({
     pending: admin.bookings.status.pending,
     accepted: admin.bookings.status.accepted,
     waitlisted: admin.bookings.status.waitlisted,
+    reschedule_proposed: "Reschedule proposed",
     rejected: admin.bookings.status.rejected,
     cancelled: admin.bookings.status.cancelled,
   };
@@ -2516,6 +2600,41 @@ function BookingsTable({
       b.status.includes(q)
     );
   });
+
+  function openTimeEditor(b: AdminBooking) {
+    const currentIso = valueToIso(b.proposedTime) ?? valueToIso(b.requestedTime);
+    setEditingId((current) => (current === b.id ? null : b.id));
+    setTimeDraft(isoToTaipeiLocal(currentIso));
+    setActionDraft(
+      b.status === "accepted"
+        ? "confirm"
+        : b.status === "reschedule_proposed"
+          ? "propose"
+          : "request"
+    );
+    setNoteDraft("");
+    setTimeError("");
+    setTimeSavedId(null);
+  }
+
+  async function saveTimeOverride(b: AdminBooking) {
+    const iso = taipeiLocalToIso(timeDraft);
+    if (!iso) {
+      setTimeError("Enter a valid Taiwan time.");
+      return;
+    }
+    setTimeSaving(true);
+    setTimeError("");
+    const result = await onTimeOverride(b, iso, actionDraft, noteDraft);
+    setTimeSaving(false);
+    if (!result.ok) {
+      setTimeError(result.error);
+      return;
+    }
+    setTimeSavedId(b.id);
+    setEditingId(null);
+    setTimeout(() => setTimeSavedId(null), 2500);
+  }
 
   return (
     <div className="overflow-x-auto rounded-lg border">
@@ -2539,60 +2658,144 @@ function BookingsTable({
             </tr>
           ) : (
             filtered.map((b) => {
-              const isActive = b.status === "pending" || b.status === "accepted" || b.status === "waitlisted";
+              const isActive = isActiveBookingStatus(b.status);
+              const effectiveTime = valueToIso(b.proposedTime) ?? valueToIso(b.requestedTime);
+              const isEditing = editingId === b.id;
               return (
-                <tr key={b.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                  <td className="px-3 py-2.5">
-                    {b.applicantId ? (
-                      <Link
-                        href={`/applicant/${b.applicantId}`}
-                        className="font-medium transition-colors hover:text-primary hover:underline"
-                      >
-                        {b.applicantName}
-                      </Link>
-                    ) : (
-                      <p className="font-medium">{b.applicantName}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">{b.applicantEmail}</p>
-                  </td>
-                  <td className="px-3 py-2.5">{b.company}</td>
-                  <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">
-                    {b.position || admin.people.emptyValue}
-                  </td>
-                  <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell" suppressHydrationWarning>
-                    {b.requestedTime
-                      ? new Date(b.requestedTime).toLocaleString(localeTag, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                        timeZone: "Asia/Taipei",
-                      })
-                      : admin.people.emptyValue}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                        statusColor[b.status] ?? ""
+                <Fragment key={b.id}>
+                  <tr className="border-b last:border-b-0 hover:bg-muted/20">
+                    <td className="px-3 py-2.5">
+                      {b.applicantId ? (
+                        <Link
+                          href={`/applicant/${b.applicantId}`}
+                          className="font-medium transition-colors hover:text-primary hover:underline"
+                        >
+                          {b.applicantName}
+                        </Link>
+                      ) : (
+                        <p className="font-medium">{b.applicantName}</p>
                       )}
-                    >
-                      {statusLabel[b.status] ?? b.status}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    {isActive && (
-                      <button
-                        onClick={() => onCancel(b)}
-                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        aria-label={admin.people.cancelBookingAria}
+                      <p className="text-xs text-muted-foreground">{b.applicantEmail}</p>
+                    </td>
+                    <td className="px-3 py-2.5">{b.company}</td>
+                    <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">
+                      {b.position || admin.people.emptyValue}
+                    </td>
+                    <td className="hidden px-3 py-2.5 text-xs text-muted-foreground md:table-cell" suppressHydrationWarning>
+                      {effectiveTime
+                        ? new Date(effectiveTime).toLocaleString(localeTag, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                          timeZone: "Asia/Taipei",
+                        })
+                        : admin.people.emptyValue}
+                      {b.proposedTime ? (
+                        <span className="ml-1 text-amber-600 dark:text-amber-400">
+                          proposed
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span
+                        className={cn(
+                          "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                          statusColor[b.status] ?? ""
+                        )}
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                        {statusLabel[b.status] ?? b.status}
+                      </span>
+                      {timeSavedId === b.id ? (
+                        <p className="mt-1 text-[11px] text-[#1f8f3a]">Saved</p>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex justify-end gap-1">
+                        {isActive && (
+                          <button
+                            onClick={() => openTimeEditor(b)}
+                            className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                            aria-label="Edit booking time"
+                            title="Edit booking time"
+                          >
+                            <Clock className="h-4 w-4" />
+                          </button>
+                        )}
+                        {isActive && (
+                          <button
+                            onClick={() => onCancel(b)}
+                            className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            aria-label={admin.people.cancelBookingAria}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                  {isEditing ? (
+                    <tr className="border-b bg-muted/20">
+                      <td colSpan={6} className="px-3 py-3">
+                        <div className="grid gap-2 md:grid-cols-[minmax(210px,1fr)_180px_minmax(180px,1fr)_auto]">
+                          <Input
+                            type="datetime-local"
+                            value={timeDraft}
+                            onChange={(e) => setTimeDraft(e.target.value)}
+                          />
+                          <select
+                            value={actionDraft}
+                            onChange={(e) =>
+                              setActionDraft(e.target.value as AdminBookingTimeAction)
+                            }
+                            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                          >
+                            <option value="propose">Save proposal</option>
+                            <option value="confirm">Confirm slot</option>
+                            <option value="request">Edit request</option>
+                          </select>
+                          <Input
+                            type="text"
+                            placeholder="Internal note (optional)"
+                            value={noteDraft}
+                            onChange={(e) => setNoteDraft(e.target.value)}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => void saveTimeOverride(b)}
+                              disabled={timeSaving}
+                            >
+                              {timeSaving ? (
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                              )}
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingId(null)}
+                              disabled={timeSaving}
+                            >
+                              <X className="mr-1.5 h-3.5 w-3.5" />
+                              Close
+                            </Button>
+                          </div>
+                        </div>
+                        {timeError ? (
+                          <p className="mt-2 text-xs text-destructive">{timeError}</p>
+                        ) : (
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            Proposal and confirm actions require an available recruiter slot at the exact Taiwan time.
+                          </p>
+                        )}
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
               );
             })
           )}
@@ -3484,10 +3687,17 @@ function InterviewsSection({
   bookings,
   onCancel,
   onBulkCancel,
+  onTimeOverride,
 }: {
   bookings: AdminBooking[];
   onCancel: (b: AdminBooking, note?: string) => void;
   onBulkCancel: (ids: number[], note?: string) => Promise<number>;
+  onTimeOverride: (
+    b: AdminBooking,
+    time: string,
+    action: AdminBookingTimeAction,
+    note?: string
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
   const { messages } = useStudentI18n();
   const admin = messages.admin;
@@ -3498,18 +3708,15 @@ function InterviewsSection({
   const [bulkNote, setBulkNote] = useState("");
   const [bulkRunning, setBulkRunning] = useState(false);
 
-  const isActive = (s: string) =>
-    s === "pending" || s === "accepted" || s === "waitlisted";
-
   const filtered = bookings.filter((b) => {
-    if (filter === "active") return isActive(b.status);
+    if (filter === "active") return isActiveBookingStatus(b.status);
     if (filter === "cancelled")
       return b.status === "cancelled" || b.status === "rejected";
     return true;
   });
 
   const counts = {
-    active: bookings.filter((b) => isActive(b.status)).length,
+    active: bookings.filter((b) => isActiveBookingStatus(b.status)).length,
     cancelled: bookings.filter(
       (b) => b.status === "cancelled" || b.status === "rejected"
     ).length,
@@ -3521,7 +3728,8 @@ function InterviewsSection({
     if (!target) return;
     const matches = bookings.filter(
       (b) =>
-        isActive(b.status) && b.applicantEmail.toLowerCase().includes(target)
+        isActiveBookingStatus(b.status) &&
+        b.applicantEmail.toLowerCase().includes(target)
     );
     if (matches.length === 0) {
       alert(`No active bookings match "${target}".`);
@@ -3648,6 +3856,7 @@ function InterviewsSection({
         bookings={filtered}
         query={query}
         onCancel={(b) => onCancel(b)}
+        onTimeOverride={onTimeOverride}
       />
     </div>
   );

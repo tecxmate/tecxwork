@@ -417,10 +417,19 @@ export function RecruiterDetail({
         );
       }
 
-      const newStatus = action === "accept" ? "accepted" : "cancelled";
       setAppliedPositions((prev) =>
         prev
-          .map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+          .map((b) => {
+            if (b.id !== bookingId) return b;
+            if (action === "decline") return { ...b, status: "cancelled" };
+            return {
+              ...b,
+              status: data.booking?.status ?? "accepted",
+              requestedTime:
+                data.booking?.requestedTime ?? b.proposedTime ?? b.requestedTime,
+              proposedTime: data.booking?.proposedTime ?? null,
+            };
+          })
           .filter((b) => b.status !== "cancelled")
       );
       setRespondNotice({

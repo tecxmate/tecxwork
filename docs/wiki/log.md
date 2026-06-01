@@ -855,3 +855,18 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Student screenshot showed Accept failing because SSB proposed 14:45, but recruiter 21 had no slot at 14:45; next available slots were 14:50.
 - The propose-time route now requires an available recruiter slot at the exact proposed time before notifying the student, logs `proposal_blocked_no_slot`, and recruiter UI only offers "Suggest anyway" for applicant-busy conflicts, not slot-unavailable conflicts. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] fix | Manually corrected SSB proposal to 14:50
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Manually updated booking 58 (`PHAN MINH ANH`, SSB Industrial Co.) from impossible proposed time 14:45 to available slot time 14:50 Asia/Taipei.
+- Booking remains `reschedule_proposed`; student still needs to press Accept. Audit row inserted with `action = manual_corrected_proposed_time`, previous proposed time, and available slot ids 2409/2410. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] fix | Admin booking time override controls
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Added admin-side booking time control for the cases that previously required manual SQL: admins can save a corrected proposal, confirm and claim an available slot, or edit a pending requested time.
+- The override endpoint requires exact available recruiter slots for proposal/confirm actions and records admin proposal/confirm/request updates plus blocked/failed attempts in `booking_reschedule_logs`. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] fix | Student accepted proposal showed stale old time
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Student screenshot after accepting the corrected SSB proposal showed success but still rendered the old 14:30 time on the job card.
+- Root cause was local UI state: the accept API returned only status, so the student page changed `status` to accepted without replacing `requestedTime`. The API now returns the accepted time and the UI updates it immediately. Updated topics/recruitment-workflows.md.
