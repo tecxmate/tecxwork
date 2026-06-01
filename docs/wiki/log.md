@@ -902,3 +902,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Pushing the neon-pool fix with neonConfig.poolQueryViaFetch=true triggered TWO prod builds (repo main is wired to both Vercel projects `app` and `tecxwork`). Each build's ~83 prerender queries became HTTP connection bursts that overwhelmed the free-tier Neon DB -> "Too many database connection attempts" -> work.tecxmate.com down (~19:13).
 - Recovered by cancelling both in-flight builds (DB drained to ~15 conns, site back to 200s in ~1s). Reverted poolQueryViaFetch; kept only pool.on('error').
 - Surfaced: `app` is the live project (work.tecxmate.com, tecxwork.vercel.app, v-gen.vercel.app, 515k req); `tecxwork` is redundant (only tecxwork-six.vercel.app) but still auto-builds main -> doubles build-time DB load. Candidate for deletion/disconnect.
+
+## [2026-06-01] fix | Jobs split-view location overflow
+attributed_to: [niko]   belongs_to: [recruitment-workflows]
+- Fixed desktop `/jobs` split view card sizing so long locations truncate inside the left job card instead of overflowing into the detail pane.
+- Moved the selected job detail apply/login CTA from the lower-right footer to the top-right header area. Updated topics/recruitment-workflows.md.

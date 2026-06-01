@@ -203,13 +203,6 @@ export function JobDetailApply({
             <CheckCircle2 className="h-3.5 w-3.5" />
             {bookingStatusLabel(appliedBooking!.status)}
           </span>
-        ) : undefined
-      }
-      action={
-        alreadyApplied ? (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {messages.recruiterDetail.onePerPosition}
-          </span>
         ) : (
           <Button size="sm" onClick={handleApply} className="shrink-0">
             {isApplicant ? (
@@ -225,6 +218,13 @@ export function JobDetailApply({
             )}
           </Button>
         )
+      }
+      action={
+        alreadyApplied ? (
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {messages.recruiterDetail.onePerPosition}
+          </span>
+        ) : undefined
       }
     />
   );

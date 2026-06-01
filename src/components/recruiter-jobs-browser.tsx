@@ -151,9 +151,9 @@ function JobListRow({
             {job.company}
           </p>
           {job.location ? (
-            <p className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+            <p className="flex w-full min-w-0 max-w-full items-center gap-1 overflow-hidden text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 shrink-0" />
-              <span className="min-w-0 truncate">{job.location}</span>
+              <span className="block min-w-0 flex-1 truncate">{job.location}</span>
             </p>
           ) : null}
         </div>
@@ -412,9 +412,9 @@ export function RecruiterJobsBrowser({
       </div>
 
       {/* Two panes */}
-      <div className="lg:grid lg:grid-cols-[minmax(320px,380px)_1fr] lg:items-start lg:gap-4">
+      <div className="lg:grid lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start lg:gap-4">
         {/* Left: result count + job list */}
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-muted-foreground">
               {filteredJobs.length} {labels.resultsCount}
@@ -443,7 +443,7 @@ export function RecruiterJobsBrowser({
               </p>
             </Card>
           ) : (
-            <div className="space-y-2.5">
+            <div className="min-w-0 space-y-2.5">
               {paginatedJobs.map((job) => (
                 <JobListRow
                   key={job.id}
