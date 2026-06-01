@@ -896,3 +896,9 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Prod instances crashed on unhandled WebSocket 'error' events from the Neon pool, amid "Too many database connection attempts" / control-plane failures / 300s timeouts.
 - Added pool.on('error') handler (stops the uncaught-exception crash) and neonConfig.poolQueryViaFetch = true (non-transaction queries via HTTP, cutting WebSocket churn). Transactions still use the WS pool.
 - created decisions/2026-06-01-neon-pool-crash-hardening.md
+
+## [2026-06-01] incident | poolQueryViaFetch caused prod outage; reverted
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Pushing the neon-pool fix with neonConfig.poolQueryViaFetch=true triggered TWO prod builds (repo main is wired to both Vercel projects `app` and `tecxwork`). Each build's ~83 prerender queries became HTTP connection bursts that overwhelmed the free-tier Neon DB -> "Too many database connection attempts" -> work.tecxmate.com down (~19:13).
+- Recovered by cancelling both in-flight builds (DB drained to ~15 conns, site back to 200s in ~1s). Reverted poolQueryViaFetch; kept only pool.on('error').
+- Surfaced: `app` is the live project (work.tecxmate.com, tecxwork.vercel.app, v-gen.vercel.app, 515k req); `tecxwork` is redundant (only tecxwork-six.vercel.app) but still auto-builds main -> doubles build-time DB load. Candidate for deletion/disconnect.

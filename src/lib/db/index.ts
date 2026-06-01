@@ -10,13 +10,6 @@ if (typeof WebSocket === "undefined") {
   neonConfig.webSocketConstructor = ws;
 }
 
-// Route single (non-transaction) queries over HTTP fetch instead of opening a
-// WebSocket per request. Interactive transactions still use the pool's
-// WebSocket. This drastically cuts connection churn that was exhausting Neon's
-// connection permits ("Too many database connection attempts" / control-plane
-// failures) and timing requests out.
-neonConfig.poolQueryViaFetch = true;
-
 let _db: NeonDatabase<typeof schema> | null = null;
 let _pool: Pool | null = null;
 
