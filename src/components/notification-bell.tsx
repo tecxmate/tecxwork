@@ -158,7 +158,12 @@ export function NotificationBell({
   const button = (
     <button
       onClick={() => setOpen(!open)}
-      className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-premium hover:bg-muted hover:text-foreground"
+      className={cn(
+        "relative flex h-9 w-9 items-center justify-center rounded-lg border transition-premium",
+        open
+          ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/20"
+          : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+      )}
       aria-label={
         unreadCount > 0
           ? `${labels.notifications} (${unreadCount} unread)`
@@ -377,7 +382,13 @@ export function NotificationBell({
       <div
         data-open={open}
         aria-hidden={!open}
-        className="dropdown-panel absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border bg-card shadow-lg"
+        className={cn(
+          "dropdown-panel z-50 overflow-hidden rounded-xl border bg-card shadow-lg",
+          // Mobile: span the screen with equal left/right margins, below the header.
+          "fixed inset-x-3 top-[calc(env(safe-area-inset-top)+4rem)]",
+          // Desktop: anchored dropdown under the bell.
+          "sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96"
+        )}
       >
         {panel}
       </div>
