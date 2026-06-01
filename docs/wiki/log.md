@@ -922,3 +922,14 @@ attributed_to: [niko]   belongs_to: [page-hero]
 attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Deployment still showed long `/jobs` list-card addresses painting into the desktop detail pane despite the first truncation pass.
 - Forced the list-card text column to `w-0 flex-1` and added overflow clipping to the card/header/list ancestors so address text cannot escape the left pane. Updated topics/recruitment-workflows.md.
+
+## [2026-06-01] ops | Vercel and Neon region audit
+attributed_to: [niko]   belongs_to: [architecture-overview]
+- Latest production Vercel deployment inspection shows Node functions in `iad1` (Washington, D.C.); repo has no explicit `regions` setting in `vercel.json`.
+- Local `DATABASE_URL` host points at Neon `us-east-1.aws.neon.tech`; Tokyo target would be Vercel `hnd1` plus a Neon Tokyo/AWS ap-northeast-1 project/branch. Updated topics/architecture-overview.md.
+
+## [2026-06-01] decision | Move Vercel + Neon to Tokyo
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Users are in Taiwan (all 171 schools Taiwan cities; event at MCUT). Both Vercel (iad1) and Neon (us-east-1) are in US East -> trans-Pacific latency. Chose Tokyo (hnd1 + ap-northeast-1) over Singapore. DB is 11 MB.
+- Rule: migrate DB first, flip Vercel region only after (must stay co-located). Old DB kept for instant rollback.
+- created decisions/2026-06-01-tokyo-region-migration.md

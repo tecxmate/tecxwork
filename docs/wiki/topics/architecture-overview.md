@@ -3,7 +3,7 @@ title: Architecture Overview
 type: topic
 slug: architecture-overview
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-06-01
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -26,7 +26,8 @@ related: [tecxwork, booking-engine]
 - **Edge Performance**: Heavy use of prefetching and edge-cached static assets via Vercel.
 
 ## Data Infrastructure
-- **Location**: Database is hosted in `Tokyo, Japan` (AWS `ap-northeast-1`) via Neon to provide the best latency for Taiwan users while keeping data in a region with high protection standards.
+- **Current runtime location audit (2026-06-01)**: Latest production Vercel deployment `app-erea8swq9-nikolasdoans-projects.vercel.app` shows Node functions built in `iad1` (Washington, D.C.). Local `DATABASE_URL` host resolves to Neon's `us-east-1.aws.neon.tech`, so the app/database round trip is currently colocated in US East.
+- **Target location**: For Taiwan/Vietnam users, Tokyo (`hnd1` on Vercel, AWS `ap-northeast-1` on Neon) is the likely latency-optimized target if the database is migrated/recreated there.
 - **Timezone**: Strictly `Asia/Taipei (UTC+8)` for all date-time logic to avoid scheduling drift.
 
 ## Scalability Strategy
