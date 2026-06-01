@@ -168,7 +168,7 @@ export function NotificationBell({
       <Bell className="h-4 w-4" />
       {unreadCount > 0 && (
         <span
-          className="absolute right-1 top-1 h-2 w-2 rounded-full bg-purple-500 ring-2 ring-white dark:ring-card"
+          className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-white dark:ring-card"
           aria-hidden="true"
         />
       )}
