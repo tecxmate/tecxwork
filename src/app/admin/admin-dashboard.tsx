@@ -3880,16 +3880,6 @@ function InterviewsSection({
             <span className="ml-1.5 opacity-70">{counts[key]}</span>
           </button>
         ))}
-        <div className="ml-auto">
-          <Button
-            size="sm"
-            variant={bulkOpen ? "outline" : "default"}
-            onClick={() => setBulkOpen((v) => !v)}
-          >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-            Bulk cancel by email
-          </Button>
-        </div>
       </div>
 
       {bulkOpen && (
