@@ -510,7 +510,14 @@ export function AdminDashboard({
   const [feedbackLoaded, setFeedbackLoaded] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
   const [emailStats, setEmailStats] = useState<{
-    today: { sent: number; failed: number; limit: number; remaining: number; percentUsed: number };
+    today: {
+      sent: number;
+      failed: number;
+      hasDailyLimit?: boolean;
+      limit: number | null;
+      remaining: number | null;
+      percentUsed: number;
+    };
     month: { sent: number; limit: number; remaining: number; percentUsed: number };
   } | null>(null);
   const [sendingReminders, setSendingReminders] = useState(false);
@@ -1141,20 +1148,17 @@ export function AdminDashboard({
                         />
                         {emailStats && (
                           <StatBar
-                            label="Email quota (today)"
-                            value={emailStats.today.sent}
-                            max={emailStats.today.limit}
+                            label="Email quota (month)"
+                            value={emailStats.month.sent}
+                            max={emailStats.month.limit}
                             tone={
-                              emailStats.today.percentUsed >= 90
+                              emailStats.month.percentUsed >= 90
                                 ? "red"
-                                : emailStats.today.percentUsed >= 70
+                                : emailStats.month.percentUsed >= 70
                                   ? "amber"
                                   : "green"
                             }
-                            caption={`${Math.max(
-                              0,
-                              emailStats.today.limit - emailStats.today.sent
-                            )} remaining today`}
+                            caption={`${emailStats.month.remaining} remaining this month · ${emailStats.today.sent} sent today · no daily limit`}
                           />
                         )}
                         <StatBar

@@ -54,17 +54,18 @@ export async function GET() {
       )
     );
 
-  // Resend free tier limits
-  const DAILY_LIMIT = 100;
-  const MONTHLY_LIMIT = 3000;
+  // Resend Pro ($20/mo) transactional tier:
+  // 50,000 emails/month and no fixed daily sending quota.
+  const MONTHLY_LIMIT = 50_000;
 
   return NextResponse.json({
     today: {
       sent: todayStats.count,
       failed: failedToday.count,
-      limit: DAILY_LIMIT,
-      remaining: Math.max(0, DAILY_LIMIT - todayStats.count),
-      percentUsed: Math.round((todayStats.count / DAILY_LIMIT) * 100),
+      hasDailyLimit: false,
+      limit: null,
+      remaining: null,
+      percentUsed: 0,
     },
     month: {
       sent: monthStats.count,
