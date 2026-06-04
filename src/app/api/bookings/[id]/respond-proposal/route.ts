@@ -265,6 +265,7 @@ export async function POST(
       applicantEmail: booking.applicantEmail,
       recruiterName: rec.name,
       recruiterEmail: rec.contactEmail,
+      recruiterId: booking.recruiterId,
       company: rec.company,
       slotStart: slot.startTime,
       slotEnd: slot.endTime,

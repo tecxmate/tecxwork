@@ -32,6 +32,7 @@ To comply with Taiwan PIPA while avoiding the cost and complexity of a secure fi
 
 ## HR email exposure
 - 2026-05-19: [Hide HR email from student-facing pages](../decisions/2026-05-19-hide-hr-email-from-students.md) removed recruiter `contactEmail` from public directory, recruiter detail, job detail, and booking-form payloads to prevent students from bypassing the platform by applying directly over email.
+- 2026-06-04: Student-facing booking confirmation and interview reminder emails now link to the internal company page instead of showing recruiter contact emails.
 
 ## Cross-Border Data Transfer
 - **Collection**: Taiwan.

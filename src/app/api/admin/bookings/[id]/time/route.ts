@@ -423,6 +423,7 @@ export async function PUT(
       applicantEmail: booking.applicantEmail,
       recruiterName: rec.name,
       recruiterEmail: rec.contactEmail,
+      recruiterId: booking.recruiterId,
       company: rec.company,
       slotStart: confirmation.slot.startTime,
       slotEnd: confirmation.slot.endTime,

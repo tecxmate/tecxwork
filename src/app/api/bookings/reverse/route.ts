@@ -241,6 +241,7 @@ export async function POST(req: NextRequest) {
       applicantEmail: applicant.email,
       recruiterName: rec.name,
       recruiterEmail: rec.contactEmail,
+      recruiterId: recruiter.id,
       company: rec.company,
       slotStart: recruiterSlot.startTime,
       slotEnd: recruiterSlot.endTime,

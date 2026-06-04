@@ -985,3 +985,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Email is no longer the event-day bottleneck, so `/api/bookings` now sends the recruiter `application_submitted` email for every student application instead of gating that email behind the student's push-subscription state.
 - Kept the student in-app/push confirmation and post-apply push prompt. Updated decisions/2026-06-01-notification-primary-apply.md.
+
+## [2026-06-04] fix | Hide recruiter email from student emails
+attributed_to: [niko]   belongs_to: [data-privacy]
+- Student-facing booking confirmation emails now link to `/recruiter/{id}` for the company page instead of showing the recruiter's contact email.
+- Student reminder emails now show a platform company-page link per interview instead of a `mailto:` recruiter contact. Recruiter-facing emails still include applicant emails for review workflow.

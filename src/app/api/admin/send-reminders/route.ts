@@ -105,7 +105,7 @@ export async function POST() {
     string,
     {
       name: string;
-      interviews: Array<{ company: string; time: Date; recruiterEmail: string }>;
+      interviews: Array<{ company: string; time: Date; recruiterId: number }>;
     }
   >();
 
@@ -140,7 +140,7 @@ export async function POST() {
     studentData.interviews.push({
       company: rec.company,
       time,
-      recruiterEmail: rec.contactEmail,
+      recruiterId: booking.recruiterId,
     });
     studentBookings.set(booking.applicantEmail, studentData);
 

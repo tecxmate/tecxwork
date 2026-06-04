@@ -74,6 +74,7 @@ type BookingEmailData = {
   applicantEmail: string;
   recruiterName: string;
   recruiterEmail: string;
+  recruiterId: number;
   company: string;
   slotStart: Date | string;
   slotEnd: Date | string;
@@ -202,10 +203,10 @@ export async function sendBookingEmails(data: BookingEmailData) {
 
   const safeApplicantName = escapeHtml(data.applicantName);
   const safeCompany = escapeHtml(data.company);
-  const safeRecruiterEmail = escapeHtml(data.recruiterEmail);
   const safeApplicantEmail = escapeHtml(data.applicantEmail);
   const safeBookedBy = escapeHtml(bookedBy);
   const safeCvHref = safeUrl(data.cvLink);
+  const safeCompanyHref = safeUrl(`${getPublicBaseUrl()}/recruiter/${data.recruiterId}`);
 
   // Email to applicant
   const applicantSubject = `Interview Confirmed — ${data.company} on ${timeStr}`;
@@ -234,7 +235,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
               Remember to set your Google Drive CV link sharing to <strong>"Anyone with the link can view"</strong> so the recruiter can open it.
             </p>
             <p style="margin: 8px 0 0; color: #555;">
-              Recruiter's email: <a href="mailto:${safeRecruiterEmail}" style="color: #8C52FF;">${safeRecruiterEmail}</a>
+              Use the platform company page for recruiter updates: <a href="${safeCompanyHref}" target="_blank" style="color: #8C52FF;">${safeCompany}</a>
             </p>
           </div>
 
@@ -595,7 +596,7 @@ type StudentReminderData = {
   interviews: Array<{
     company: string;
     time: Date;
-    recruiterEmail: string;
+    recruiterId: number;
   }>;
 };
 
@@ -619,10 +620,12 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
         hour12: false,
         timeZone: EVENT_CONFIG.timezone,
       });
+      const safeCompany = escapeHtml(i.company);
+      const safeCompanyHref = safeUrl(`${getPublicBaseUrl()}/recruiter/${i.recruiterId}`);
       return `<tr>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${escapeHtml(i.company)}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 600;">${safeCompany}</td>
         <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${timeStr}</td>
-        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="mailto:${escapeHtml(i.recruiterEmail)}" style="color: #8C52FF;">${escapeHtml(i.recruiterEmail)}</a></td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #eee;"><a href="${safeCompanyHref}" target="_blank" style="color: #8C52FF;">Company page</a></td>
       </tr>`;
     })
     .join("");
@@ -644,7 +647,7 @@ export async function sendStudentReminderEmail(data: StudentReminderData) {
               <tr style="background: #f8f6f4;">
                 <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Company</th>
                 <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Time</th>
-                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Contact</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Platform link</th>
               </tr>
             </thead>
             <tbody>

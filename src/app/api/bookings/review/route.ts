@@ -282,6 +282,7 @@ export async function PUT(req: NextRequest) {
       applicantEmail: booking.applicantEmail,
       recruiterName: rec.name,
       recruiterEmail: rec.contactEmail,
+      recruiterId: recruiter.id,
       company: rec.company,
       slotStart: randomSlot.startTime,
       slotEnd: randomSlot.endTime,
