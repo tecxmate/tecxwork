@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { createBookingSchema, parseJsonBody } from "@/lib/validation";
 import { getPublicBaseUrl, sendApplicationSubmittedEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
+import { logBookingAction } from "@/lib/booking-action-log";
 
 /**
  * POST — Student applies for an interview (Mode A).
@@ -161,6 +162,25 @@ export async function POST(req: NextRequest) {
       status: "pending",
     })
     .returning();
+
+  await logBookingAction({
+    bookingId: application.id,
+    recruiterId: application.recruiterId,
+    applicantId: application.applicantId,
+    actorRole: "applicant",
+    actorUserId: session.userId,
+    actorEmail: session.email,
+    action: "student_applied",
+    statusBefore: null,
+    statusAfter: "pending",
+    requestedTime: application.requestedTime,
+    proposedTime: application.proposedTime,
+    metadata: {
+      direction: application.direction,
+      jobOpeningId: application.jobOpeningId,
+      position: application.position,
+    },
+  });
 
   const [recruiter] = await db
     .select({

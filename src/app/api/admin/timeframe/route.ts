@@ -4,6 +4,7 @@ import { getAdminSession } from "@/lib/auth";
 import { eq, count, inArray } from "drizzle-orm";
 import { getEventBranding, invalidateEventConfigCache } from "@/lib/event-branding";
 import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
+import { logBookingAction } from "@/lib/booking-action-log";
 
 /**
  * PUT /api/admin/timeframe
@@ -11,12 +12,13 @@ import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
  * Updates event_config and regenerates unbooked slots for all recruiters.
  */
 export async function PUT(req: NextRequest) {
-  if (!(await getAdminSession())) {
+  const admin = await getAdminSession();
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    return await handlePut(req);
+    return await handlePut(req, admin);
   } catch (err) {
     console.error("PUT /api/admin/timeframe failed:", err);
     return NextResponse.json(
@@ -30,7 +32,10 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-async function handlePut(req: NextRequest) {
+async function handlePut(
+  req: NextRequest,
+  admin: { userId: number; email: string }
+) {
   const body = await req.json();
   const { forceOverride } = body;
   const { startHour, startMinute = 0, endHour, endMinute, slotDuration, bufferMinutes = 0 } = body;
@@ -87,10 +92,13 @@ async function handlePut(req: NextRequest) {
     const activeBookingsList = await db
       .select({
         id: bookings.id,
+        recruiterId: bookings.recruiterId,
         applicantId: bookings.applicantId,
         slotId: bookings.slotId,
         applicantSlotId: bookings.applicantSlotId,
         status: bookings.status,
+        requestedTime: bookings.requestedTime,
+        proposedTime: bookings.proposedTime,
       })
       .from(bookings)
       .where(inArray(bookings.status, ["pending", "accepted", "waitlisted"]));
@@ -137,6 +145,37 @@ async function handlePut(req: NextRequest) {
         .set({ status: "available" })
         .where(inArray(applicantSlots.id, applicantSlotIds));
     }
+
+    await Promise.all(
+      activeBookingsList.map((booking) =>
+        logBookingAction({
+          bookingId: booking.id,
+          recruiterId: booking.recruiterId,
+          applicantId: booking.applicantId,
+          actorRole: "admin",
+          actorUserId: admin.userId,
+          actorEmail: admin.email,
+          action: "admin_timeframe_force_cancelled",
+          statusBefore: booking.status,
+          statusAfter: "cancelled",
+          requestedTime: booking.requestedTime,
+          proposedTime: booking.proposedTime,
+          metadata: {
+            reason: "timeframe_force_override",
+            releasedSlotId: booking.slotId,
+            releasedApplicantSlotId: booking.applicantSlotId,
+            nextTimeframe: {
+              startHour,
+              startMinute,
+              endHour,
+              endMinute,
+              slotDuration,
+              bufferMinutes,
+            },
+          },
+        })
+      )
+    );
 
     // Send rescheduling emails to affected students
     const resend = getResend();

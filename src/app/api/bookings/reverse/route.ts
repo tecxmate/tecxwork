@@ -12,6 +12,7 @@ import { eq, and, sql, or } from "drizzle-orm";
 import { getRecruiterFromSession } from "@/lib/auth";
 import { sendBookingEmails } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
+import { logBookingAction } from "@/lib/booking-action-log";
 
 /**
  * POST — Recruiter books an applicant's slot (Mode B).
@@ -200,6 +201,28 @@ export async function POST(req: NextRequest) {
   }
 
   const { booking, applicant, recruiterSlot } = bookingResult;
+
+  await logBookingAction({
+    bookingId: booking.id,
+    recruiterId: booking.recruiterId,
+    applicantId: booking.applicantId,
+    actorRole: "recruiter",
+    actorUserId: auth.session.userId,
+    actorEmail: auth.session.email,
+    action: "recruiter_booked_applicant",
+    statusBefore: null,
+    statusAfter: "accepted",
+    requestedTime: booking.requestedTime,
+    proposedTime: booking.proposedTime,
+    metadata: {
+      direction: booking.direction,
+      slotId: booking.slotId,
+      applicantSlotId: booking.applicantSlotId,
+      applicantSlotStartTime:
+        bookingResult.applicantSlot.startTime?.toISOString() ?? null,
+      recruiterSlotId: recruiterSlot.id,
+    },
+  });
 
   // Fetch recruiter details for email
   const [rec] = await db

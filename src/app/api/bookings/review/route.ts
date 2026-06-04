@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, slots, recruiters, applicantSlots } from "@/lib/db";
+import { db, bookings, recruiters, applicantSlots } from "@/lib/db";
 import { eq, and, sql, or, ne, inArray } from "drizzle-orm";
 import { getRecruiterFromSession } from "@/lib/auth";
 import { sendBookingEmails, sendRejectionEmail, sendWaitlistEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { users } from "@/lib/db";
 import { parseJsonBody, reviewBookingSchema } from "@/lib/validation";
+import { logBookingAction } from "@/lib/booking-action-log";
 
 /**
  * PUT /api/bookings/review
@@ -51,6 +52,23 @@ export async function PUT(req: NextRequest) {
       .update(bookings)
       .set({ status: action === "reject" ? "rejected" : "waitlisted" })
       .where(eq(bookings.id, bookingId));
+
+    await logBookingAction({
+      bookingId,
+      recruiterId: booking.recruiterId,
+      applicantId: booking.applicantId,
+      actorRole: "recruiter",
+      actorUserId: auth.session.userId,
+      actorEmail: auth.session.email,
+      action: action === "reject" ? "recruiter_rejected" : "recruiter_waitlisted",
+      statusBefore: booking.status,
+      statusAfter: action === "reject" ? "rejected" : "waitlisted",
+      requestedTime: booking.requestedTime,
+      proposedTime: booking.proposedTime,
+      metadata: {
+        hadNote: Boolean(note?.trim()),
+      },
+    });
 
     // Send rejection email with optional note
     if (action === "reject") {
@@ -229,6 +247,23 @@ export async function PUT(req: NextRequest) {
   }
 
   const randomSlot = acceptanceResult.slot;
+
+  await logBookingAction({
+    bookingId,
+    recruiterId: booking.recruiterId,
+    applicantId: booking.applicantId,
+    actorRole: "recruiter",
+    actorUserId: auth.session.userId,
+    actorEmail: auth.session.email,
+    action: "recruiter_accepted",
+    statusBefore: booking.status,
+    statusAfter: "accepted",
+    requestedTime: booking.requestedTime,
+    proposedTime: booking.proposedTime,
+    metadata: {
+      slotId: randomSlot.id,
+    },
+  });
 
   // Send confirmation emails
   const [rec] = await db

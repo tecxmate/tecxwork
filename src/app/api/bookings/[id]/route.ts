@@ -114,6 +114,7 @@ export async function DELETE(
     recruiterId: booking.recruiterId,
     applicantId: booking.applicantId,
     actorRole: session.role,
+    actorUserId: session.userId,
     actorEmail,
     action:
       session.role === "applicant"

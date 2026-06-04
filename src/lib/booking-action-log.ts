@@ -1,5 +1,4 @@
-import { bookingRescheduleLogs, db } from "@/lib/db";
-import { logBookingAction } from "@/lib/booking-action-log";
+import { bookingActionLogs, db } from "@/lib/db";
 
 type BookingStatus =
   | "pending"
@@ -11,7 +10,7 @@ type BookingStatus =
 
 type UserRole = "admin" | "recruiter" | "applicant";
 
-type BookingRescheduleLogParams = {
+type BookingActionLogParams = {
   bookingId: number;
   recruiterId?: number | null;
   applicantId?: number | null;
@@ -26,23 +25,14 @@ type BookingRescheduleLogParams = {
   metadata?: Record<string, unknown>;
 };
 
-export async function logBookingReschedule(
-  params: BookingRescheduleLogParams
-) {
-  await logBookingAction({
-    ...params,
-    metadata: {
-      ...(params.metadata ?? {}),
-      legacyLogTable: "booking_reschedule_logs",
-    },
-  });
-
+export async function logBookingAction(params: BookingActionLogParams) {
   try {
-    await db.insert(bookingRescheduleLogs).values({
+    await db.insert(bookingActionLogs).values({
       bookingId: params.bookingId,
       recruiterId: params.recruiterId ?? null,
       applicantId: params.applicantId ?? null,
       actorRole: params.actorRole,
+      actorUserId: params.actorUserId ?? null,
       actorEmail: params.actorEmail ?? null,
       action: params.action,
       statusBefore: params.statusBefore ?? null,
@@ -52,6 +42,6 @@ export async function logBookingReschedule(
       metadata: params.metadata ?? {},
     });
   } catch (error) {
-    console.error("Failed to log booking reschedule event:", error);
+    console.error("Failed to log booking action event:", error);
   }
 }

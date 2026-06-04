@@ -7,6 +7,7 @@ import {
   boolean,
   jsonb,
   pgEnum,
+  index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
@@ -430,6 +431,44 @@ export const bookingRescheduleLogs = pgTable("booking_reschedule_logs", {
     .notNull()
     .defaultNow(),
 });
+
+// ---- Booking action audit trail ----
+
+export const bookingActionLogs = pgTable(
+  "booking_action_logs",
+  {
+    id: serial("id").primaryKey(),
+    bookingId: integer("booking_id")
+      .notNull()
+      .references(() => bookings.id),
+    recruiterId: integer("recruiter_id").references(() => recruiters.id),
+    applicantId: integer("applicant_id").references(() => applicantProfiles.id),
+    actorRole: userRoleEnum("actor_role").notNull(),
+    actorUserId: integer("actor_user_id").references(() => users.id),
+    actorEmail: text("actor_email"),
+    action: text("action").notNull(),
+    statusBefore: bookingStatusEnum("status_before"),
+    statusAfter: bookingStatusEnum("status_after"),
+    requestedTime: timestamp("requested_time", { withTimezone: true }),
+    proposedTime: timestamp("proposed_time", { withTimezone: true }),
+    metadata: jsonb("metadata").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("booking_action_logs_booking_created_idx").on(
+      table.bookingId,
+      table.createdAt
+    ),
+    index("booking_action_logs_created_idx").on(table.createdAt),
+    index("booking_action_logs_action_idx").on(table.action),
+    index("booking_action_logs_actor_idx").on(
+      table.actorRole,
+      table.actorEmail
+    ),
+  ]
+);
 
 // ---- Email tracking ----
 
