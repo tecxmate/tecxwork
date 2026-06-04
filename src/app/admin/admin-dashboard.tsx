@@ -569,12 +569,23 @@ export function AdminDashboard({
   const bookingTotals = adminBookings.reduce(
     (totals, booking) => {
       totals.total += 1;
-      if (booking.status === "pending") totals.pending += 1;
-      if (booking.status === "accepted") totals.accepted += 1;
+      totals.byStatus[booking.status] = (totals.byStatus[booking.status] ?? 0) + 1;
       return totals;
     },
-    { total: 0, pending: 0, accepted: 0 }
+    { total: 0, byStatus: {} as Record<string, number> }
   );
+  const bookingStatusTotals = [
+    { label: "Pending", status: "pending", className: "text-[#FF9500]" },
+    { label: "Accepted", status: "accepted", className: "text-[#1f8f3a]" },
+    {
+      label: "Proposed",
+      status: "reschedule_proposed",
+      className: "text-amber-600 dark:text-amber-400",
+    },
+    { label: "Waitlisted", status: "waitlisted", className: "text-[#8C52FF]" },
+    { label: "Rejected", status: "rejected", className: "text-[#D70015]" },
+    { label: "Cancelled", status: "cancelled", className: "text-gray-500" },
+  ];
   const allSalaryCurrencyOptions = getAllSalaryCurrencyOptions();
   const addableSalaryCurrencyOptions = allSalaryCurrencyOptions.filter(
     (option) => !salaryCurrencyOptions.includes(option.value)
@@ -1161,23 +1172,25 @@ export function AdminDashboard({
                               {bookingTotals.total}
                             </span>
                           </div>
-                          <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="rounded-md bg-muted/50 px-2 py-2">
-                              <p className="text-[11px] font-medium text-muted-foreground">
-                                Pending
-                              </p>
-                              <p className="mt-1 text-lg font-semibold tabular-nums text-[#FF9500]">
-                                {bookingTotals.pending}
-                              </p>
-                            </div>
-                            <div className="rounded-md bg-muted/50 px-2 py-2">
-                              <p className="text-[11px] font-medium text-muted-foreground">
-                                Accepted
-                              </p>
-                              <p className="mt-1 text-lg font-semibold tabular-nums text-[#1f8f3a]">
-                                {bookingTotals.accepted}
-                              </p>
-                            </div>
+                          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {bookingStatusTotals.map((item) => (
+                              <div
+                                key={item.status}
+                                className="rounded-md bg-muted/50 px-2 py-2"
+                              >
+                                <p className="text-[11px] font-medium text-muted-foreground">
+                                  {item.label}
+                                </p>
+                                <p
+                                  className={cn(
+                                    "mt-1 text-lg font-semibold tabular-nums",
+                                    item.className
+                                  )}
+                                >
+                                  {bookingTotals.byStatus[item.status] ?? 0}
+                                </p>
+                              </div>
+                            ))}
                           </div>
                         </div>
                         <div className="rounded-lg border bg-card p-3">
