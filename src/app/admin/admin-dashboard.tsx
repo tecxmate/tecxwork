@@ -566,6 +566,15 @@ export function AdminDashboard({
   ];
 
   const bookedSlots = stats.totalSlots - stats.availableSlots;
+  const bookingTotals = adminBookings.reduce(
+    (totals, booking) => {
+      totals.total += 1;
+      if (booking.status === "pending") totals.pending += 1;
+      if (booking.status === "accepted") totals.accepted += 1;
+      return totals;
+    },
+    { total: 0, pending: 0, accepted: 0 }
+  );
   const allSalaryCurrencyOptions = getAllSalaryCurrencyOptions();
   const addableSalaryCurrencyOptions = allSalaryCurrencyOptions.filter(
     (option) => !salaryCurrencyOptions.includes(option.value)
@@ -1143,6 +1152,34 @@ export function AdminDashboard({
                           max={stats.totalBookings}
                           caption={`${stats.activeBookings} active of ${stats.totalBookings} requests`}
                         />
+                        <div className="rounded-lg border bg-card p-3">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              Interview bookings
+                            </span>
+                            <span className="text-xl font-semibold tabular-nums">
+                              {bookingTotals.total}
+                            </span>
+                          </div>
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="rounded-md bg-muted/50 px-2 py-2">
+                              <p className="text-[11px] font-medium text-muted-foreground">
+                                Pending
+                              </p>
+                              <p className="mt-1 text-lg font-semibold tabular-nums text-[#FF9500]">
+                                {bookingTotals.pending}
+                              </p>
+                            </div>
+                            <div className="rounded-md bg-muted/50 px-2 py-2">
+                              <p className="text-[11px] font-medium text-muted-foreground">
+                                Accepted
+                              </p>
+                              <p className="mt-1 text-lg font-semibold tabular-nums text-[#1f8f3a]">
+                                {bookingTotals.accepted}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                         <div className="rounded-lg border bg-card p-3">
                           <div className="flex items-baseline justify-between gap-2">
                             <span className="text-xs font-medium text-muted-foreground">
