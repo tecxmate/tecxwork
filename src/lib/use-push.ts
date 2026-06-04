@@ -11,18 +11,16 @@ const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
  * - `enablePush()`: requests permission, subscribes, persists; resolves true on success.
  */
 export function usePush() {
-  const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
-
   const supported =
     Boolean(VAPID_PUBLIC_KEY) &&
     typeof navigator !== "undefined" &&
     "serviceWorker" in navigator;
+  const [pushEnabled, setPushEnabled] = useState<boolean | null>(() =>
+    supported ? null : false
+  );
 
   useEffect(() => {
-    if (!supported) {
-      setPushEnabled(false);
-      return;
-    }
+    if (!supported) return;
     navigator.serviceWorker.ready.then((reg) => {
       reg.pushManager.getSubscription().then((sub) => setPushEnabled(!!sub));
     });

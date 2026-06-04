@@ -980,3 +980,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Audit: emails (280+ logged) > notifications (201); application_submitted = 134 (~48% of email). Made it notification-primary: student now gets an in-app "Application Submitted" notification (+push if enabled); the email sends only when the student has no push subscription. Recruiter notification unchanged.
 - Added a post-apply "Turn on notifications" prompt (booking-form success view) to grow push adoption before event day. Extracted shared usePush() hook (src/lib/use-push.ts); notification bell refactored to use it.
 - created decisions/2026-06-01-notification-primary-apply.md
+
+## [2026-06-04] change | Always email recruiters on new applications
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Email is no longer the event-day bottleneck, so `/api/bookings` now sends the recruiter `application_submitted` email for every student application instead of gating that email behind the student's push-subscription state.
+- Kept the student in-app/push confirmation and post-apply push prompt. Updated decisions/2026-06-01-notification-primary-apply.md.

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, applicantProfiles, recruiters, jobOpenings, pushSubscriptions } from "@/lib/db";
+import { db, bookings, applicantProfiles, recruiters, jobOpenings } from "@/lib/db";
 import { eq, and, inArray, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { createBookingSchema, parseJsonBody } from "@/lib/validation";
@@ -203,25 +203,18 @@ export async function POST(req: NextRequest) {
       interviewTime: requestedTime,
     }).catch(() => {});
 
-    // Email the student only as a fallback when they don't have push enabled —
-    // notification-primary to save Resend volume (the welcome/in-app covers the rest).
-    const [studentPush] = await db
-      .select({ id: pushSubscriptions.id })
-      .from(pushSubscriptions)
-      .where(eq(pushSubscriptions.userEmail, profile.email))
-      .limit(1);
-    if (!studentPush) {
-      sendApplicationSubmittedEmail({
-        applicantName: profile.name,
-        applicantEmail: profile.email,
-        recruiterEmail: recruiter.contactEmail,
-        company: recruiter.company,
-        position: body.position,
-        requestedTime,
-        cvLink: application.cvLink,
-        applicantProfileUrl: `${getPublicBaseUrl()}/applicant/${profile.id}`,
-      }).catch(() => {});
-    }
+    // Email recruiters for every new application now that email quota is no
+    // longer the event-day bottleneck.
+    sendApplicationSubmittedEmail({
+      applicantName: profile.name,
+      applicantEmail: profile.email,
+      recruiterEmail: recruiter.contactEmail,
+      company: recruiter.company,
+      position: body.position,
+      requestedTime,
+      cvLink: application.cvLink,
+      applicantProfileUrl: `${getPublicBaseUrl()}/applicant/${profile.id}`,
+    }).catch(() => {});
 
     // Notify the recruiter (in-app + push), as before.
     createBookingNotification({

@@ -29,6 +29,10 @@ Make `application_submitted` **notification-primary**:
 - Send the student email **only as a fallback** when they have **no** push
   subscription. Recruiter notification unchanged.
 
+2026-06-04 update: email is no longer treated as the event-day bottleneck.
+Recruiter `application_submitted` emails now send on every application again;
+student in-app/push confirmation and the post-apply push prompt remain.
+
 Grow push adoption so the fallback rarely fires: add a **post-apply prompt** in
 the booking-form success view ("Turn on notifications") that subscribes via web
 push. Extracted the subscribe logic into a shared `usePush()` hook
