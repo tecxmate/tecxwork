@@ -971,6 +971,11 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Found CRON_SECRET was unset on the app project -> cron routes 503; crawl-jobs had no success log since 2026-04-29. Set CRON_SECRET (all targets); should revive crawl-jobs too.
 - created decisions/2026-06-01-notification-retention.md
 
+## [2026-06-02] infra | Linear MCP setup for local coding agents
+attributed_to: [niko]   belongs_to: [architecture-overview]
+- Captured the current agent-tooling recommendation: use Linear's hosted Streamable HTTP MCP endpoint (`https://mcp.linear.app/mcp`) for Codex and Claude Code instead of a local Linear MCP process.
+- Updated topics/architecture-overview.md with the Codex and Claude Code setup commands.
+
 ## [2026-06-01] infra | Disable job-crawl cron (legal)
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Removed the /api/cron/crawl-jobs schedule from vercel.json — job crawling is not legal; not to be re-enabled. Route/crawler code left in place but unscheduled. OPEN QUESTION: crawled external_jobs (503 rows) are still displayed on /jobs via getCachedExternalJobs — decide whether to stop surfacing them.
@@ -990,3 +995,13 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [data-privacy]
 - Student-facing booking confirmation emails now link to `/recruiter/{id}` for the company page instead of showing the recruiter's contact email.
 - Student reminder emails now show a platform company-page link per interview instead of a `mailto:` recruiter contact. Recruiter-facing emails still include applicant emails for review workflow.
+
+## [2026-06-06] chat | Vite migration and business-logic exposure assessment
+attributed_to: [niko]   belongs_to: [architecture-overview]
+- Assessed converting this Next.js App Router codebase to Vite + React. Vite would require a separate backend for current server duties; it does not inherently protect business logic.
+- Updated topics/architecture-overview.md with the migration/security assessment.
+
+## [2026-06-06] chat | Next.js suitability from project start
+attributed_to: [niko]   belongs_to: [architecture-overview]
+- Clarified that Next.js was suitable from the start for tecxwork because the product needed server routes, auth redirects, dashboards, cron, metadata, and Vercel/Neon integration, not just a client-side UI.
+- Updated topics/architecture-overview.md with the suitability assessment.
