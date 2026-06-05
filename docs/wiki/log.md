@@ -1011,3 +1011,13 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Ran event-day pre-check: lint warnings only, production build passed, live public routes responded, critical Vercel env names present, and production DB consistency checks found no duplicate accepted slots or double-booked accepted applicants.
 - Created missing production booking_action_logs table using the existing additive migration; logger was fail-open but audit logging is now available.
 - Noted 7 pending/waitlisted applications whose requested recruiter/time has no available interviewer slot; those need waitlist/reject/reschedule handling. Updated topics/v-gen-trident-2026.md.
+
+## [2026-06-06] ingest | Participant event-pulse visualizer artifact
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- Created docs/design/Event Pulse Visualizer.html as a simple participant-facing animated platform visualizer using the Tecxmate design system.
+- Artifact can mirror public recruiter/company data where reachable and simulates private booking/notification pulses until a safe aggregate event-pulse endpoint exists. Updated topics/v-gen-trident-2026.md.
+
+## [2026-06-06] ingest | Live aggregate pulse endpoint and stakeholder visualizer expansion
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- Added public GET /api/event-pulse as a CORS-enabled aggregate-only endpoint for counts, booking/slot status buckets, company summaries, feature summaries, and integrity counters without exposing emails, CV links, or individual bookings.
+- Expanded docs/design/Event Pulse Visualizer.html with live aggregate endpoint support plus atomic-booking and stakeholder proof sections. Updated topics/v-gen-trident-2026.md.

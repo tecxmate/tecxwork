@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TECXWORK — Event Pulse Visualizer</title>
+  <!--
+    Style references:
+    - docs/des/Tecxmate Design System.html
+    - docs/wiki/topics/design-system.md
+
+    Purpose:
+    A lightweight participant-facing visualizer for V-GEN TRIDENT event day.
+    It mirrors aggregate platform data from /api/event-pulse when reachable.
+    It never displays participant emails, CV links, or individual bookings.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --fg: #1D1D1F;
+      --muted: #6E6E73;
+      --faint: #86868B;
+      --card: #FFFFFF;
+      --line: #E5E5E7;
+      --soft: #F5F5F7;
+      --primary: #8C52FF;
+      --primary-2: #A978FF;
+      --primary-soft: #F3EEFF;
+      --green: #30D158;
+      --orange: #FF9500;
+      --red: #FF3B30;
+      --ink: #09090B;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); }
+    body {
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang TC", "Noto Sans TC", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background:
+        radial-gradient(900px 520px at 84% 12%, rgba(140, 82, 255, 0.14), transparent 62%),
+        radial-gradient(640px 420px at 10% 88%, rgba(169, 120, 255, 0.11), transparent 62%),
+        linear-gradient(180deg, #fff 0%, var(--bg) 42%, #fff 100%);
+    }
+
+    .topbar {
+      height: 76px;
+      padding: 0 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(18px) saturate(140%);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .wordmark {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 38px;
+      font-style: italic;
+      letter-spacing: 0;
+      color: var(--primary);
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .event-name {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 13px;
+      border: 1px solid rgba(48, 209, 88, 0.34);
+      background: rgba(48, 209, 88, 0.08);
+      color: #127A32;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.5);
+      animation: breathe 1.8s var(--ease) infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.44); }
+      50% { transform: scale(1.18); box-shadow: 0 0 0 9px rgba(48, 209, 88, 0); }
+    }
+
+    main {
+      width: min(1480px, calc(100vw - 48px));
+      margin: 0 auto;
+      padding: 28px 0 38px;
+      display: grid;
+      grid-template-columns: 1.05fr 1.7fr 0.95fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(16px) saturate(130%);
+      min-height: 0;
+    }
+
+    .hero-panel {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -80px auto;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(140,82,255,0.18), transparent 65%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--primary);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(38px, 4.4vw, 72px);
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+      max-width: 8.5ch;
+      font-weight: 700;
+    }
+
+    .lead {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: 36ch;
+    }
+
+    .time-block {
+      margin-top: 44px;
+      display: grid;
+      gap: 9px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .clock {
+      font-size: clamp(36px, 4vw, 62px);
+      letter-spacing: -0.04em;
+      font-weight: 700;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .date-line {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .mode-row {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 11px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .chip.hot {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .stage {
+      min-height: 720px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(229,229,231,0.55) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(229,229,231,0.55) 1px, transparent 1px),
+        rgba(255,255,255,0.74);
+      background-size: 54px 54px;
+    }
+
+    .stage-head {
+      position: absolute;
+      top: 22px;
+      left: 24px;
+      right: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 4;
+    }
+
+    .stage-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .source {
+      text-align: right;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .source strong { color: var(--fg); }
+
+    .mesh {
+      position: absolute;
+      inset: 74px 22px 24px;
+      border: 1px solid rgba(140,82,255,0.18);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(140,82,255,0.10), transparent 45%),
+        radial-gradient(circle at 20% 20%, rgba(48,209,88,0.06), transparent 32%);
+      overflow: hidden;
+    }
+
+    .mesh::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(from 120deg at 50% 50%, transparent, rgba(140,82,255,0.18), transparent 34%);
+      animation: sweep 9s linear infinite;
+      opacity: 0.85;
+    }
+
+    @keyframes sweep {
+      to { transform: rotate(360deg); }
+    }
+
+    .connection {
+      position: absolute;
+      height: 2px;
+      transform-origin: left center;
+      background: linear-gradient(90deg, transparent, rgba(140,82,255,0.52), transparent);
+      opacity: 0.52;
+      overflow: hidden;
+    }
+
+    .connection::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -70px;
+      width: 70px;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, #fff, transparent);
+      animation: packet 2.8s linear infinite;
+    }
+
+    .c1 { left: 16%; top: 26%; width: 30%; transform: rotate(16deg); }
+    .c2 { left: 44%; top: 34%; width: 31%; transform: rotate(-24deg); }
+    .c3 { left: 24%; top: 66%; width: 34%; transform: rotate(-18deg); }
+    .c4 { left: 52%; top: 64%; width: 28%; transform: rotate(22deg); }
+    .c5 { left: 33%; top: 48%; width: 30%; transform: rotate(0deg); }
+
+    @keyframes packet {
+      to { left: calc(100% + 70px); }
+    }
+
+    .node {
+      position: absolute;
+      width: 164px;
+      min-height: 112px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--line);
+      box-shadow: 0 22px 60px -42px rgba(29,29,31,0.65);
+      padding: 17px;
+      display: grid;
+      gap: 10px;
+      z-index: 2;
+      transform: translate(-50%, -50%);
+    }
+
+    .node::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border: 1px solid rgba(140,82,255,0);
+      animation: nodePulse 3.2s var(--ease) infinite;
+      pointer-events: none;
+    }
+
+    @keyframes nodePulse {
+      0%, 100% { border-color: rgba(140,82,255,0); box-shadow: 0 0 0 0 rgba(140,82,255,0); }
+      50% { border-color: rgba(140,82,255,0.42); box-shadow: 0 0 0 8px rgba(140,82,255,0); }
+    }
+
+    .node.students { left: 18%; top: 28%; }
+    .node.recruiters { left: 78%; top: 24%; animation-delay: 0.4s; }
+    .node.engine { left: 50%; top: 49%; width: 188px; min-height: 132px; border-color: rgba(140,82,255,0.38); }
+    .node.admin { left: 22%; top: 76%; animation-delay: 0.8s; }
+    .node.notify { left: 76%; top: 76%; animation-delay: 1.2s; }
+
+    .node-kicker {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .node-value {
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .node-label {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .engine-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 1px solid rgba(140,82,255,0.2);
+      display: grid;
+      place-items: center;
+      margin-bottom: 3px;
+      background:
+        conic-gradient(var(--primary) var(--ring, 72%), rgba(140,82,255,0.12) 0);
+      box-shadow: inset 0 0 0 10px #fff;
+    }
+
+    .ring-core {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 22px rgba(140,82,255,0.62);
+    }
+
+    .pulse-stack {
+      position: absolute;
+      left: 50%;
+      top: 49%;
+      transform: translate(-50%, -50%);
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .pulse-stack span {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(140,82,255,0.28);
+      animation: ripple 3.4s var(--ease) infinite;
+    }
+
+    .pulse-stack span:nth-child(2) { animation-delay: 1.1s; }
+    .pulse-stack span:nth-child(3) { animation-delay: 2.2s; }
+
+    @keyframes ripple {
+      0% { transform: scale(0.3); opacity: 0.8; }
+      100% { transform: scale(4.5); opacity: 0; }
+    }
+
+    .ticker {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      height: 56px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.84);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 18px;
+      white-space: nowrap;
+      animation: marquee 34s linear infinite;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .ticker b { color: var(--fg); }
+
+    @keyframes marquee {
+      to { transform: translateX(-50%); }
+    }
+
+    .side {
+      display: grid;
+      gap: 18px;
+      grid-template-rows: auto 1fr;
+      min-height: 720px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 16px;
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      font-weight: 800;
+    }
+
+    .metric .value {
+      font-size: 34px;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric .sub {
+      font-size: 12px;
+      color: var(--faint);
+    }
+
+    .flow-panel {
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title h2 {
+      margin: 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .mini-status {
+      font-size: 12px;
+      color: var(--faint);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      transition: border-color 360ms var(--ease), background 360ms var(--ease), transform 360ms var(--ease);
+    }
+
+    .step.active {
+      border-color: rgba(140,82,255,0.48);
+      background: var(--primary-soft);
+      transform: translateX(3px);
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .step.active .step-num {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .step strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .step span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .step-signal {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--line);
+    }
+
+    .step.active .step-signal {
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(48,209,88,0.12);
+    }
+
+    .company-panel {
+      padding: 20px;
+      min-height: 0;
+    }
+
+    .company-list {
+      display: grid;
+      gap: 10px;
+      max-height: 512px;
+      overflow: hidden;
+    }
+
+    .company-row {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .company-logo {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      display: grid;
+      place-items: center;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .company-meta {
+      min-width: 0;
+    }
+
+    .company-name {
+      font-size: 13px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .company-industry {
+      font-size: 12px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .capacity {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note {
+      margin-top: 14px;
+      padding: 13px 14px;
+      border: 1px solid rgba(140,82,255,0.22);
+      background: rgba(243,238,255,0.62);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .note strong { color: var(--fg); }
+
+    .proof-panel {
+      grid-column: 1 / -1;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      min-height: 430px;
+    }
+
+    .atomic-stage {
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(420px 260px at 50% 44%, rgba(140,82,255,0.12), transparent 70%),
+        #fff;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .atomic-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .atomic-title h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      max-width: 11ch;
+    }
+
+    .atomic-title p {
+      margin: 0;
+      max-width: 44ch;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .race-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      align-items: stretch;
+      margin-top: 12px;
+    }
+
+    .race-card {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.86);
+      min-height: 170px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .race-card::after {
+      content: "";
+      position: absolute;
+      left: -40%;
+      top: 0;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(140,82,255,0.14), transparent);
+      animation: scanCard 4.8s linear infinite;
+    }
+
+    @keyframes scanCard {
+      to { left: 120%; }
+    }
+
+    .race-kicker {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--primary);
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .race-main {
+      font-size: 18px;
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .race-copy {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .slot-lane {
+      margin-top: 22px;
+      height: 96px;
+      border: 1px solid rgba(140,82,255,0.18);
+      background: var(--primary-soft);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slot {
+      background: #fff;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .slot.booked {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .claim-packet {
+      position: absolute;
+      left: 3%;
+      top: 50%;
+      width: 32px;
+      height: 32px;
+      margin-top: -16px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 8px rgba(48,209,88,0.16), 0 0 28px rgba(48,209,88,0.48);
+      animation: claimMove 4.8s var(--ease) infinite;
+      z-index: 2;
+    }
+
+    @keyframes claimMove {
+      0% { transform: translateX(0) scale(0.75); opacity: 0; }
+      12% { opacity: 1; }
+      55% { transform: translateX(238px) scale(1); opacity: 1; }
+      70% { transform: translateX(238px) scale(1.25); opacity: 0.85; }
+      100% { transform: translateX(520px) scale(0.75); opacity: 0; }
+    }
+
+    .proof-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .proof-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 17px;
+      min-height: 152px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .proof-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--primary);
+      opacity: 0.85;
+    }
+
+    .proof-label {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+
+    .proof-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+
+    .proof-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.48;
+    }
+
+    .proof-stat {
+      margin-top: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #127A32;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .proof-stat::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    @media (max-width: 1180px) {
+      main { grid-template-columns: 1fr; }
+      .stage, .side { min-height: 620px; }
+      .hero-panel { min-height: 520px; }
+      .proof-panel { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .topbar { padding: 0 18px; }
+      .event-name, .status-cluster .hide-small { display: none; }
+      main { width: calc(100vw - 24px); padding-top: 12px; }
+      .metric-grid { grid-template-columns: 1fr 1fr; }
+      .node { width: 136px; min-height: 104px; padding: 13px; }
+      .node-value { font-size: 26px; }
+      .stage-head { flex-direction: column; gap: 8px; }
+      .source { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="wordmark">tecxwork</div>
+        <div class="event-name">V-GEN TRIDENT 2026 platform pulse</div>
+      </div>
+      <div class="status-cluster">
+        <span class="live-pill"><span class="live-dot"></span><span id="liveLabel">Live public mirror</span></span>
+        <span class="hide-small" id="refreshLabel">syncing</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel hero-panel">
+        <div>
+          <div class="eyebrow">Participant view</div>
+          <h1>The job fair system, visible.</h1>
+          <p class="lead">
+            A simple live wall for students, recruiters, and staff: who is in the network,
+            how the booking engine moves, and where the platform is protecting the event flow.
+          </p>
+          <div class="mode-row">
+            <span class="chip hot">Student books recruiter</span>
+            <span class="chip">MCUT</span>
+            <span class="chip">15 min slots</span>
+            <span class="chip">Audit on</span>
+          </div>
+        </div>
+        <div class="time-block">
+          <div class="clock" id="clock">--:--:--</div>
+          <div class="date-line" id="dateLine">June 6, 2026 · Taipei</div>
+        </div>
+      </section>
+
+      <section class="panel stage">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title">Platform signal map</div>
+          </div>
+          <div class="source">
+            <strong id="sourceMode">Public API + event snapshot</strong><br>
+            Private booking pulse is simulated until an aggregate endpoint is added.
+          </div>
+        </div>
+
+        <div class="mesh">
+          <div class="connection c1"></div>
+          <div class="connection c2"></div>
+          <div class="connection c3"></div>
+          <div class="connection c4"></div>
+          <div class="connection c5"></div>
+          <div class="pulse-stack"><span></span><span></span><span></span></div>
+
+          <article class="node students">
+            <div class="node-kicker">Students</div>
+            <div class="node-value" id="studentsValue">164</div>
+            <div class="node-label">profiles and application intent</div>
+          </article>
+
+          <article class="node recruiters">
+            <div class="node-kicker">Recruiters</div>
+            <div class="node-value" id="recruitersValue">38</div>
+            <div class="node-label">companies in the live directory</div>
+          </article>
+
+          <article class="node engine">
+            <div class="engine-ring" id="engineRing"><span class="ring-core"></span></div>
+            <div class="node-kicker">Booking engine</div>
+            <div class="node-value" id="engineValue">89</div>
+            <div class="node-label">confirmed interviews protected by slot checks</div>
+          </article>
+
+          <article class="node admin">
+            <div class="node-kicker">Admin control</div>
+            <div class="node-value" id="adminValue">ON</div>
+            <div class="node-label">mode locked, cancellation off</div>
+          </article>
+
+          <article class="node notify">
+            <div class="node-kicker">Notifications</div>
+            <div class="node-value" id="notificationsValue">668</div>
+            <div class="node-label">in-app, push, and email signals</div>
+          </article>
+        </div>
+
+        <div class="ticker">
+          <div class="ticker-track" id="tickerTrack">
+            <span><b>Student applies</b> · application enters pending review</span>
+            <span><b>Recruiter accepts</b> · slot is claimed atomically</span>
+            <span><b>Student notified</b> · interview appears in profile</span>
+            <span><b>Admin observes</b> · capacity and booking status stay visible</span>
+            <span><b>Student applies</b> · application enters pending review</span>
+            <span><b>Recruiter accepts</b> · slot is claimed atomically</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="panel metric-grid">
+          <div class="metric">
+            <div class="label">Approved jobs</div>
+            <div class="value" id="jobsValue">141</div>
+            <div class="sub">Public job surfaces</div>
+          </div>
+          <div class="metric">
+            <div class="label">Available slots</div>
+            <div class="value" id="slotsValue">388</div>
+            <div class="sub">Recruiter capacity</div>
+          </div>
+          <div class="metric">
+            <div class="label">Pending</div>
+            <div class="value" id="pendingValue">104</div>
+            <div class="sub">Awaiting review</div>
+          </div>
+          <div class="metric">
+            <div class="label">Integrity</div>
+            <div class="value">0</div>
+            <div class="sub">Accepted conflicts found</div>
+          </div>
+        </section>
+
+        <section class="panel flow-panel">
+          <div class="panel-title">
+            <h2>How it works</h2>
+            <div class="mini-status" id="stepTimer">00.0s</div>
+          </div>
+          <div class="steps" id="steps">
+            <div class="step active">
+              <div class="step-num">1</div>
+              <div><strong>Browse companies</strong><span>Students scan recruiters and approved jobs.</span></div>
+              <div class="step-signal"></div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div><strong>Apply for an interview</strong><span>Application stores CV, role, and requested time.</span></div>
+              <div class="step-signal"></div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div><strong>Recruiter reviews</strong><span>Accept, waitlist, reject, or propose a new time.</span></div>
+              <div class="step-signal"></div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div><strong>Slot lock</strong><span>Postgres claims one interviewer slot without double-booking.</span></div>
+              <div class="step-signal"></div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div><strong>Notify both sides</strong><span>Profile, bell, push, and email carry the update.</span></div>
+              <div class="step-signal"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel company-panel">
+          <div class="panel-title">
+            <h2>Live company surface</h2>
+            <div class="mini-status" id="companyCount">snapshot</div>
+          </div>
+          <div class="company-list" id="companyList"></div>
+          <div class="note">
+            <strong>Privacy-safe live mode:</strong> this view reads aggregate counts only:
+            no emails, names, CV links, or individual booking records.
+          </div>
+        </section>
+      </aside>
+
+      <section class="panel proof-panel">
+        <div class="atomic-stage">
+          <div class="atomic-title">
+            <h2>Atomic bookings under pressure.</h2>
+            <p>
+              The core booking path is built for event-day bursts. When two recruiters or admins act at the same time,
+              Postgres locks the candidate row and claims exactly one available interviewer slot.
+            </p>
+          </div>
+
+          <div class="race-grid">
+            <div class="race-card">
+              <div class="race-kicker">01 request</div>
+              <div class="race-main">Student applies for a specific company and time.</div>
+              <div class="race-copy">The application starts pending, so the system captures demand before spending capacity.</div>
+            </div>
+            <div class="race-card">
+              <div class="race-kicker">02 lock</div>
+              <div class="race-main">Recruiter accepts; DB takes an advisory lock.</div>
+              <div class="race-copy">Concurrent accepts for the same student/time are serialized to prevent conflicting confirmations.</div>
+            </div>
+            <div class="race-card">
+              <div class="race-kicker">03 claim</div>
+              <div class="race-main">`SKIP LOCKED` claims one free interviewer.</div>
+              <div class="race-copy">Other concurrent transactions skip locked rows and choose another free slot instead of colliding.</div>
+            </div>
+          </div>
+
+          <div class="slot-lane" aria-label="Atomic slot claim animation">
+            <div class="slot">free</div>
+            <div class="slot booked">claimed</div>
+            <div class="slot">free</div>
+            <div class="slot">free</div>
+            <div class="slot">free</div>
+            <div class="claim-packet"></div>
+          </div>
+        </div>
+
+        <div class="proof-grid" id="featureGrid">
+          <article class="proof-card">
+            <div class="proof-label">Reliability</div>
+            <h3>Race-condition hardening</h3>
+            <p>Slot claims use transactions, advisory locks, and `FOR UPDATE SKIP LOCKED` for high-concurrency accept flows.</p>
+            <div class="proof-stat" id="integrityStat">0 accepted conflicts</div>
+          </article>
+          <article class="proof-card">
+            <div class="proof-label">Operations</div>
+            <h3>Admin event controls</h3>
+            <p>Mode locking, cancellation toggles, moderation, time correction, reminders, and export tools are built into the admin surface.</p>
+            <div class="proof-stat" id="adminStat">mode locked</div>
+          </article>
+          <article class="proof-card">
+            <div class="proof-label">Engagement</div>
+            <h3>Notification-first workflow</h3>
+            <p>Participants see status changes in the app and bell; push and email keep the workflow moving when attention shifts.</p>
+            <div class="proof-stat" id="notifyStat">668 notifications</div>
+          </article>
+          <article class="proof-card">
+            <div class="proof-label">Privacy</div>
+            <h3>Stakeholder-safe analytics</h3>
+            <p>The display exposes only aggregates. Individual emails, CVs, notes, and private booking records stay server-side.</p>
+            <div class="proof-stat">aggregate-only pulse</div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const snapshot = {
+      applicants: 164,
+      recruiters: 38,
+      approvedJobs: 141,
+      slots: 388,
+      pending: 104,
+      accepted: 89,
+      notifications: 668,
+      pushSubscriptions: 0,
+      emailsToday: 0,
+      integrityConflicts: 0,
+      companies: [
+        { company: "SSB Industrial Co.", industry: "Manufacturing" },
+        { company: "Gtalent", industry: "Recruitment / HR" },
+        { company: "CHINLI PLASTIC INDUSTRIAL", industry: "Manufacturing" },
+        { company: "TECO", industry: "Technology" },
+        { company: "Cathay United Bank", industry: "Finance" },
+        { company: "Evergreen Marine", industry: "Logistics" }
+      ]
+    };
+
+    const pulseEndpoints = window.location.protocol.startsWith("http")
+      ? ["/api/event-pulse", "https://work.tecxmate.com/api/event-pulse"]
+      : ["https://work.tecxmate.com/api/event-pulse"];
+    const state = {
+      applicants: snapshot.applicants,
+      recruiters: snapshot.recruiters,
+      approvedJobs: snapshot.approvedJobs,
+      slots: snapshot.slots,
+      pending: snapshot.pending,
+      accepted: snapshot.accepted,
+      notifications: snapshot.notifications,
+      pushSubscriptions: snapshot.pushSubscriptions,
+      emailsToday: snapshot.emailsToday,
+      integrityConflicts: snapshot.integrityConflicts,
+      modeLocked: true,
+      studentCancellationEnabled: false,
+      companies: snapshot.companies,
+      aggregateLive: false,
+      startedAt: Date.now()
+    };
+
+    const el = (id) => document.getElementById(id);
+
+    function formatNumber(value) {
+      if (typeof value === "string") return value;
+      return new Intl.NumberFormat("en-US").format(Math.max(0, Math.round(value)));
+    }
+
+    function setText(id, value) {
+      const node = el(id);
+      if (node) node.textContent = value;
+    }
+
+    function initialLetters(name) {
+      return String(name || "T")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+    }
+
+    function statusCount(rows, status) {
+      const row = Array.isArray(rows) ? rows.find((item) => item.status === status) : null;
+      return Number(row?.count || 0);
+    }
+
+    function normalizeCompanies(rows) {
+      return (Array.isArray(rows) ? rows : [])
+        .map((item) => ({
+          company: item.company || "Recruiter",
+          industry: item.industry || "Career partner",
+          interviewerCount: Number(item.interviewerCount || item.interviewer_count || 1)
+        }))
+        .filter((item) => item.company)
+        .slice(0, 8);
+    }
+
+    function integrityTotal(integrity) {
+      if (!integrity || typeof integrity !== "object") return 0;
+      return Object.values(integrity).reduce((sum, value) => sum + Number(value || 0), 0);
+    }
+
+    function renderCompanies() {
+      const list = el("companyList");
+      if (!list) return;
+      list.innerHTML = "";
+      state.companies.slice(0, 8).forEach((company, index) => {
+        const row = document.createElement("div");
+        row.className = "company-row";
+        row.innerHTML = `
+          <div class="company-logo">${initialLetters(company.company)}</div>
+          <div class="company-meta">
+            <div class="company-name">${company.company}</div>
+            <div class="company-industry">${company.industry || "Career partner"}</div>
+          </div>
+          <div class="capacity">${index < 3 ? "live" : "ready"}</div>
+        `;
+        list.appendChild(row);
+      });
+      setText("companyCount", `${state.companies.length} shown`);
+    }
+
+    function renderMetrics() {
+      setText("studentsValue", formatNumber(state.applicants));
+      setText("recruitersValue", formatNumber(state.recruiters));
+      setText("engineValue", formatNumber(state.accepted));
+      setText("notificationsValue", formatNumber(state.notifications));
+      setText("jobsValue", formatNumber(state.approvedJobs));
+      setText("slotsValue", formatNumber(state.slots));
+      setText("pendingValue", formatNumber(state.pending));
+      setText("adminValue", state.modeLocked ? "ON" : "OPEN");
+      setText("integrityStat", `${formatNumber(state.integrityConflicts)} accepted conflicts`);
+      setText("adminStat", state.modeLocked ? "mode locked" : "mode editable");
+      setText("notifyStat", `${formatNumber(state.notifications)} notifications`);
+      const totalSlots = state.slots + state.accepted;
+      const share = totalSlots ? Math.round((state.accepted / totalSlots) * 100) : 72;
+      const ring = el("engineRing");
+      if (ring) ring.style.setProperty("--ring", `${Math.max(12, share)}%`);
+      setText("sourceMode", state.aggregateLive ? "Live aggregate event pulse" : "Event snapshot + simulated pulse");
+      setText("liveLabel", state.aggregateLive ? "Live aggregate pulse" : "Event pulse demo");
+      setText("refreshLabel", state.aggregateLive ? "privacy-safe endpoint synced" : "aggregate endpoint unavailable");
+    }
+
+    function tickClock() {
+      const now = new Date();
+      const clock = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Taipei",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(now);
+      const date = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Taipei",
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }).format(now);
+      setText("clock", clock);
+      setText("dateLine", `${date} · Taipei time`);
+    }
+
+    function rotateSteps() {
+      const steps = Array.from(document.querySelectorAll(".step"));
+      if (!steps.length) return;
+      const elapsed = (Date.now() - state.startedAt) / 1000;
+      const index = Math.floor(elapsed / 2.4) % steps.length;
+      steps.forEach((step, i) => step.classList.toggle("active", i === index));
+      setText("stepTimer", `${elapsed.toFixed(1)}s`);
+    }
+
+    function simulatePrivatePulse() {
+      if (state.aggregateLive) return;
+      const phase = Date.now() / 1000;
+      state.pending = snapshot.pending + Math.round(Math.sin(phase / 4) * 3);
+      state.notifications = snapshot.notifications + Math.round((phase % 60) / 4);
+      state.slots = snapshot.slots - Math.max(0, Math.round(Math.sin(phase / 7) * 2));
+      renderMetrics();
+    }
+
+    function applyPulse(payload) {
+      const counts = payload?.counts || {};
+      state.applicants = Number(counts.applicants || state.applicants);
+      state.recruiters = Number(counts.recruiters || state.recruiters);
+      state.approvedJobs = Number(counts.approvedJobs || state.approvedJobs);
+      state.slots = Number(counts.availableSlots || state.slots);
+      state.accepted = statusCount(payload.bookingStatus, "accepted") || Number(counts.bookedSlots || state.accepted);
+      state.pending = statusCount(payload.bookingStatus, "pending") || state.pending;
+      state.notifications = Number(counts.notifications || state.notifications);
+      state.pushSubscriptions = Number(counts.pushSubscriptions || state.pushSubscriptions);
+      state.emailsToday = Number(counts.emailsToday || state.emailsToday);
+      state.integrityConflicts = integrityTotal(payload.integrity);
+      state.modeLocked = Boolean(payload?.event?.modeLocked);
+      state.studentCancellationEnabled = Boolean(payload?.event?.studentCancellationEnabled);
+      const companies = normalizeCompanies(payload?.companies);
+      if (companies.length) state.companies = companies;
+      state.aggregateLive = true;
+      renderCompanies();
+      renderMetrics();
+    }
+
+    async function loadEventPulse() {
+      for (const endpoint of pulseEndpoints) {
+        try {
+          const response = await fetch(endpoint, { cache: "no-store", mode: "cors" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          applyPulse(await response.json());
+          return;
+        } catch (error) {
+          state.aggregateLive = false;
+        }
+      }
+      renderMetrics();
+    }
+
+    function boot() {
+      renderCompanies();
+      renderMetrics();
+      tickClock();
+      loadEventPulse();
+      setInterval(tickClock, 1000);
+      setInterval(rotateSteps, 120);
+      setInterval(simulatePrivatePulse, 1200);
+      setInterval(loadEventPulse, 5000);
+    }
+
+    boot();
+  </script>
+</body>
+</html>
