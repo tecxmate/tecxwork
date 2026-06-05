@@ -1014,10 +1014,15 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 
 ## [2026-06-06] ingest | Participant event-pulse visualizer artifact
 attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
-- Created docs/design/Event Pulse Visualizer.html as a simple participant-facing animated platform visualizer using the Tecxmate design system.
+- Created public/event-pulse.html as a simple participant-facing animated platform visualizer using the Tecxmate design system.
 - Artifact can mirror public recruiter/company data where reachable and simulates private booking/notification pulses until a safe aggregate event-pulse endpoint exists. Updated topics/v-gen-trident-2026.md.
 
 ## [2026-06-06] ingest | Live aggregate pulse endpoint and stakeholder visualizer expansion
 attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Added public GET /api/event-pulse as a CORS-enabled aggregate-only endpoint for counts, booking/slot status buckets, company summaries, feature summaries, and integrity counters without exposing emails, CV links, or individual bookings.
-- Expanded docs/design/Event Pulse Visualizer.html with live aggregate endpoint support plus atomic-booking and stakeholder proof sections. Updated topics/v-gen-trident-2026.md.
+- Expanded public/event-pulse.html with live aggregate endpoint support plus atomic-booking and stakeholder proof sections. Updated topics/v-gen-trident-2026.md.
+
+## [2026-06-06] ingest | Public Live footer link for event visualizer
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- Moved the participant visualizer to public/event-pulse.html so Vercel serves it at /event-pulse.html.
+- Added a footer link labeled Live immediately after Feedback. Updated topics/v-gen-trident-2026.md.

@@ -37,6 +37,10 @@ export function SiteFooter() {
             <Link href="/feedback" className="underline hover:text-primary">
               Feedback
             </Link>
+            <span className="opacity-40">&middot;</span>
+            <a href="/event-pulse.html" className="underline hover:text-primary">
+              Live
+            </a>
           </div>
         </div>
       </div>
