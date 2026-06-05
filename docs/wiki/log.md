@@ -1005,3 +1005,9 @@ attributed_to: [niko]   belongs_to: [architecture-overview]
 attributed_to: [niko]   belongs_to: [architecture-overview]
 - Clarified that Next.js was suitable from the start for tecxwork because the product needed server routes, auth redirects, dashboards, cron, metadata, and Vercel/Neon integration, not just a client-side UI.
 - Updated topics/architecture-overview.md with the suitability assessment.
+
+## [2026-06-06] ingest | Main event-day production pre-check
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- Ran event-day pre-check: lint warnings only, production build passed, live public routes responded, critical Vercel env names present, and production DB consistency checks found no duplicate accepted slots or double-booked accepted applicants.
+- Created missing production booking_action_logs table using the existing additive migration; logger was fail-open but audit logging is now available.
+- Noted 7 pending/waitlisted applications whose requested recruiter/time has no available interviewer slot; those need waitlist/reject/reschedule handling. Updated topics/v-gen-trident-2026.md.
