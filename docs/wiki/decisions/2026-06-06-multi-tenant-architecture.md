@@ -34,7 +34,16 @@ prod. Remaining phases pending. See "Implementation status" below.
 - **NOT NULL enforcement deferred to end of Phase 2** (was "after backfill"). Correction: the live
   app doesn't write `event_id` on inserts yet, so enforcing NOT NULL now would break new
   signups/bookings. Enforce only once every insert path sets `event_id`.
-- **Phases 1–5 — pending.**
+- **Phase 1 — DONE (code):** `src/lib/tenant.ts` (new, server-only): `getTenantContext()` resolves
+  the active event from the `x-event-slug` header (injected by `proxy.ts` for `/e/[slug]`), falling
+  back to the single active event on flat routes — so behavior is unchanged until Phase 3 routing.
+  Helpers: `getActiveEventBySlug`, `getDefaultEvent`, `resolveEventSlug`, and membership-based
+  authz (`requireMembership`, `requireOrgAdmin`, `getSessionMembership`, `getUserMemberships`).
+  `proxy.ts` extracts the `/e/[slug]` slug into the `x-event-slug` request header (DB lookup stays
+  server-side — middleware has none) and adds `/e/:path*` to its matcher. JWT shape is unchanged
+  (existing sessions stay valid); membership is resolved from the DB per request. Typechecks + lints;
+  not yet imported by any route (that wiring is Phase 2).
+- **Phases 2–5 — pending.**
 
 ## Decisions (niko, 2026-06-06)
 

@@ -56,6 +56,17 @@ export function proxy(req: NextRequest) {
 
   // /recruiter/[id] pages are public for viewing - booking requires auth handled in-page
 
+  // Multi-tenant: expose the active event slug from /e/[slug] to server
+  // components and route handlers as the `x-event-slug` request header (must
+  // match EVENT_SLUG_HEADER in lib/tenant.ts). The event lookup itself happens
+  // server-side in getTenantContext() — middleware has no DB access.
+  const eventMatch = pathname.match(/^\/e\/([^/]+)/);
+  if (eventMatch) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-event-slug", eventMatch[1]);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   return NextResponse.next();
 }
 
@@ -66,6 +77,7 @@ export const config = {
     "/recruiter/:path*",
     "/applicant/:path*",
     "/profile/:path*",
+    "/e/:path*",
     "/login",
     "/register",
   ],
