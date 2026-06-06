@@ -63,6 +63,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Legal Compliance](topics/taiwan-compliance.md) — PIPA/PDPA, MOL licenses, work permits
 - [Taiwan Legal and Operational Framework](topics/taiwan-legal-operational-framework.md) — Legal requirements, resources, and stakeholders for operations in Taiwan
 - [Architecture Overview](topics/architecture-overview.md) — tech stack, concurrency, data isolation, Neon/Vercel
+- [Neon account topology & MCP wiring](topics/neon-account-topology.md) — Neon MCP is authed to org "Tecxmate" (dental-ai/alphatecx), NOT the live app DBs (delicate-lab/bitter-hill, a different login); how to re-auth
 - [Drizzle + Postgres gotchas](topics/drizzle-sql-gotchas.md) — query pitfalls (reused sql in select+groupBy, all-parameter CASE, ::date slicing) + fixes
 - [Tecxmate Design System](topics/design-system.md) — visual language, typography, components, brand colors
 - [Recruitment Workflows & Booking Engine](topics/recruitment-workflows.md) — admin, recruiter, and student flows; booking modes

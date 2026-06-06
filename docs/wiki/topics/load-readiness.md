@@ -32,3 +32,4 @@ Load-readiness audit for the V-GEN TRIDENT event (target: 1000 students, 38 recr
 
 ## History
 - 2026-06-06: Initial audit (3 parallel code agents + live DB probe). Corrected the 0.25 CU / connection-exhaustion assumption; identified the per-IP venue-NAT rate-limit lockout as the top real risk.
+- 2026-06-06: Post-visualizer health check — all prod endpoints 200, integrity counters all 0, DB at 17 sessions / 1 active. Added a 15s server-side `getCache` dedup to the now-public `GET /api/event-pulse` (~15-subquery aggregate, `CORS: *`, uncached) so an auto-refreshing visualizer or scraper can't run it on every hit.

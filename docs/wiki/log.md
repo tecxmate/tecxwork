@@ -1053,3 +1053,12 @@ attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
 attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
 - New `public` bucket (1200/min/IP) for cached public reads (recruiters/external-jobs/event-pulse); `api` outer ring 60→300/min; per-email `auth` 5/min unchanged.
 - Prevents the venue's shared NAT from being collectively 429'd off /browse and /jobs. Verified live (x-ratelimit-remaining:1199). Merged preview/event-pulse-visualizer→main (also shipped the public event-pulse visualizer), commit 8e75d07, prod deploy Ready.
+
+## [2026-06-06] observation | Neon MCP is authed to the wrong account
+attributed_to: [claude-code]   belongs_to: [neon-account-topology, tecxwork]
+- Neon MCP (mcp.neon.tech, OAuth) is logged into org "Tecxmate" (dental-ai, alphatecx, us-east-1) — NOT the live app DBs. Production DATABASE_URL is `delicate-lab` (ap-southeast-1); POSTGRES_URL* is `bitter-hill`/`lucky-thunder` (Vercel-Neon integration). Both live under a different Neon login, not shared into Tecxmate.
+- Fix: `/mcp` → Neon → Clear authentication → re-auth, logging out of Tecxmate in the browser first so SSO doesn't reuse it. Created topics/neon-account-topology.md.
+
+## [2026-06-06] fix | Cache public event-pulse aggregate (15s)
+attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
+- Wrapped GET /api/event-pulse's ~15-subquery aggregate in a 15s server-side getCache (namespace "app", key event-pulse:aggregate:v1) so the public/CORS-* visualizer or a scraper can't run it on every hit. TSC clean.

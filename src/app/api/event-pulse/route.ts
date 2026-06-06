@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { sql } from "drizzle-orm";
 
+import { getCache } from "@vercel/functions";
+
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
@@ -16,6 +18,64 @@ export function OPTIONS() {
     status: 204,
     headers: CORS_HEADERS,
   });
+}
+
+type PulseRow = {
+  generated_at: Date;
+  event_name: string;
+  display_date: string;
+  location: string;
+  mode: string;
+  mode_locked: boolean;
+  emergency_fallback: boolean;
+  job_moderation_enabled: boolean;
+  student_cancellation_enabled: boolean;
+  applicants: number;
+  recruiters: number;
+  approved_jobs: number;
+  recruiter_slots: number;
+  available_slots: number;
+  booked_slots: number;
+  applicant_slots: number;
+  bookings: number;
+  notifications: number;
+  push_subscriptions: number;
+  emails_today: number;
+  booking_status: Array<{ status: string; count: number }>;
+  slot_status: Array<{ status: string; count: number }>;
+  companies: Array<{ company: string; industry: string; interviewerCount: number }>;
+  integrity: {
+    duplicateAcceptedSlotIds: number;
+    duplicateAcceptedApplicantSlotIds: number;
+    acceptedDoubleBookedApplicants: number;
+    orphanBookedSlots: number;
+    acceptedWithoutBookedSlot: number;
+  };
+};
+
+// Short-lived runtime cache so a public / auto-refreshing visualizer (or a
+// scraper) can't run the ~15-subquery aggregate on every hit. Region-shared,
+// best-effort — a few seconds of lag on the live counters is fine for this view.
+const pulseCache = getCache({ namespace: "app" });
+const PULSE_KEY = "event-pulse:aggregate:v1";
+const PULSE_TTL = 15; // seconds
+
+async function readCachedPulse(): Promise<PulseRow | undefined> {
+  try {
+    const cached = await pulseCache.get(PULSE_KEY);
+    if (cached) return cached as PulseRow;
+  } catch {
+    // cache unavailable — fall through to a live query
+  }
+  return undefined;
+}
+
+async function writeCachedPulse(row: PulseRow): Promise<void> {
+  try {
+    await pulseCache.set(PULSE_KEY, row, { ttl: PULSE_TTL });
+  } catch {
+    // ignore cache write failures
+  }
 }
 
 export async function GET() {
@@ -40,43 +100,10 @@ export async function GET() {
     );
   }
 
-  const [pulse] = (
-    await db.execute<{
-      generated_at: Date;
-      event_name: string;
-      display_date: string;
-      location: string;
-      mode: string;
-      mode_locked: boolean;
-      emergency_fallback: boolean;
-      job_moderation_enabled: boolean;
-      student_cancellation_enabled: boolean;
-      applicants: number;
-      recruiters: number;
-      approved_jobs: number;
-      recruiter_slots: number;
-      available_slots: number;
-      booked_slots: number;
-      applicant_slots: number;
-      bookings: number;
-      notifications: number;
-      push_subscriptions: number;
-      emails_today: number;
-      booking_status: Array<{ status: string; count: number }>;
-      slot_status: Array<{ status: string; count: number }>;
-      companies: Array<{
-        company: string;
-        industry: string;
-        interviewerCount: number;
-      }>;
-      integrity: {
-        duplicateAcceptedSlotIds: number;
-        duplicateAcceptedApplicantSlotIds: number;
-        acceptedDoubleBookedApplicants: number;
-        orphanBookedSlots: number;
-        acceptedWithoutBookedSlot: number;
-      };
-    }>(sql`
+  let pulse = await readCachedPulse();
+  if (!pulse) {
+    pulse = (
+      await db.execute<PulseRow>(sql`
       SELECT
         now() AS generated_at,
         ec.event_name,
@@ -228,7 +255,9 @@ export async function GET() {
       FROM event_config ec
       LIMIT 1
     `)
-  ).rows;
+    ).rows[0];
+    if (pulse) await writeCachedPulse(pulse);
+  }
 
   if (!pulse) {
     return NextResponse.json(
