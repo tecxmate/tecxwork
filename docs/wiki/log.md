@@ -1067,3 +1067,7 @@ attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
 attributed_to: [niko]   belongs_to: [backup-dr, tecxwork]
 - niko-pc (Ubuntu) runs the backup via systemd user timer `tecxwork-backup.timer` (was enabled+active, hourly). Last run success (exit 0), 48 dumps kept.
 - Changed installed unit `OnUnitActiveSec=1h` -> `15min`, daemon-reload + restart; verified next run scheduled +15min. Flagged retention shrinks to ~12h at default DB_RETENTION=48.
+
+## [2026-06-06] ops | DB_RETENTION=192 on niko-pc
+attributed_to: [niko]   belongs_to: [backup-dr]
+- Set service Environment=DB_RETENTION=192 (~48h history at 15-min cadence), daemon-reloaded. Restores the retention window the hourly default gave.
