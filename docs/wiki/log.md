@@ -1048,3 +1048,8 @@ attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
 - Live facts: prod DB max_connections=901 (~2 CU, not 0.25), pooled endpoint, 17 conns in use → connection exhaustion is NOT a risk; the "cap pool max:5" advice was rejected. Slot integrity protected (advisory lock + SKIP LOCKED + unique constraint + race test).
 - Top real risk: 60/min per-IP rate limit (region-shared Vercel cache) on client-fetched /api/recruiters, /api/external-jobs, and auth endpoints would lock out the venue's shared NAT. Recommended raising the api per-IP ceiling; keep per-email auth 5/min.
 - Created topics/load-readiness.md.
+
+## [2026-06-06] fix | Raise per-IP rate limits for venue NAT
+attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
+- New `public` bucket (1200/min/IP) for cached public reads (recruiters/external-jobs/event-pulse); `api` outer ring 60→300/min; per-email `auth` 5/min unchanged.
+- Prevents the venue's shared NAT from being collectively 429'd off /browse and /jobs. Verified live (x-ratelimit-remaining:1199). Merged preview/event-pulse-visualizer→main (also shipped the public event-pulse visualizer), commit 8e75d07, prod deploy Ready.
