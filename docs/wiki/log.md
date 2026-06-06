@@ -1062,3 +1062,8 @@ attributed_to: [claude-code]   belongs_to: [neon-account-topology, tecxwork]
 ## [2026-06-06] fix | Cache public event-pulse aggregate (15s)
 attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
 - Wrapped GET /api/event-pulse's ~15-subquery aggregate in a 15s server-side getCache (namespace "app", key event-pulse:aggregate:v1) so the public/CORS-* visualizer or a scraper can't run it on every hit. TSC clean.
+
+## [2026-06-06] ops | Backup cadence on niko-pc -> 15 min
+attributed_to: [niko]   belongs_to: [backup-dr, tecxwork]
+- niko-pc (Ubuntu) runs the backup via systemd user timer `tecxwork-backup.timer` (was enabled+active, hourly). Last run success (exit 0), 48 dumps kept.
+- Changed installed unit `OnUnitActiveSec=1h` -> `15min`, daemon-reload + restart; verified next run scheduled +15min. Flagged retention shrinks to ~12h at default DB_RETENTION=48.
