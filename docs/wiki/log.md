@@ -1026,3 +1026,25 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Moved the participant visualizer to public/event-pulse.html so Vercel serves it at /event-pulse.html.
 - Added a footer link labeled Live immediately after Feedback. Updated topics/v-gen-trident-2026.md.
+
+## [2026-06-06] ingest | Live platform stuck report triage
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Checked live production after a report that concurrent usage made the platform stuck: public pages and DB-backed public APIs responded normally, production logs had no recent 429/500/504 rows, and a direct Neon probe showed low active connection pressure.
+- Observed DB counters: 167 applicants, 38 recruiters, 295 bookings, 89 accepted, 105 pending, 388 available slots, 89 booked slots; no duplicate accepted slots or orphan booked slots. Updated topics/tecxwork.md.
+
+## [2026-06-06] ingest | Vercel Pro upgrade recommendation
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Vercel dashboard screenshot showed Hobby free resources exceeded: Fluid Active CPU 5h23m / 4h, Blob transfer 8.54 GB / 10 GB, Edge Requests 645K / 1M, Function Invocations 620K / 1M.
+- Recommended upgrading the live event project to Pro for capacity continuity, with a hard spend limit after upgrade. Updated topics/tecxwork.md.
+
+## [2026-06-06] decision | Upgraded live project to Vercel Pro
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Niko confirmed the upgrade. Hobby free resources had been exceeded (Fluid Active CPU 5h23m/4h) on event day; Pro lifts the limits and meters overage instead of throttling/pausing.
+- Created decisions/2026-06-06-vercel-pro-upgrade.md. Follow-up: set a hard spend cap on the Pro plan.
+
+## [2026-06-06] ingest | Event-day load-readiness audit
+attributed_to: [niko]   belongs_to: [load-readiness, tecxwork]
+- Audited readiness for 1000 students / 38 recruiters via 3 parallel code agents + live prod DB probe.
+- Live facts: prod DB max_connections=901 (~2 CU, not 0.25), pooled endpoint, 17 conns in use → connection exhaustion is NOT a risk; the "cap pool max:5" advice was rejected. Slot integrity protected (advisory lock + SKIP LOCKED + unique constraint + race test).
+- Top real risk: 60/min per-IP rate limit (region-shared Vercel cache) on client-fetched /api/recruiters, /api/external-jobs, and auth endpoints would lock out the venue's shared NAT. Recommended raising the api per-IP ceiling; keep per-email auth 5/min.
+- Created topics/load-readiness.md.

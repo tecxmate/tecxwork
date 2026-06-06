@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-06-06 — Upgrade live project to Vercel Pro](decisions/2026-06-06-vercel-pro-upgrade.md) — Hobby free resources exceeded on event day; Pro lifts limits and meters overage instead of throttling
 - [2026-06-01 — Notification-primary apply + push prompt](decisions/2026-06-01-notification-primary-apply.md) — student apply confirmation stays notification-first; recruiter application_submitted email now sends for every application; shared usePush hook
 - [2026-06-01 — Notification retention (90-day prune)](decisions/2026-06-01-notification-retention.md) — daily cron deletes notifications older than 90 days; also set the missing CRON_SECRET
 - [2026-06-01 — Cache event_config; ISR rejected](decisions/2026-06-01-event-config-cache.md) — runtime-cache the per-request branding query for DB-load resilience; pages are cookie-dynamic so ISR is a no-op
@@ -47,6 +48,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 *Areas, products, events, and synthesised concepts. Topics don't make decisions; stakeholders do.*
 
 - [tecxwork web app](topics/tecxwork.md) — the product itself (area: full stack)
+- [Event-Day Load Readiness](topics/load-readiness.md) — verified prod capacity (max_conn 901, pooled), slot-concurrency protections, and the per-IP venue-NAT rate-limit risk
 - [V-GEN TRIDENT 2026](topics/v-gen-trident-2026.md) — flagship career fair event
 - [Admin panel](topics/admin-panel.md) — area: event-config + uploads
 - [Capacity analytics](topics/capacity-analytics.md) — Overview chart: per-company slot supply vs booking-request demand, status buckets, query

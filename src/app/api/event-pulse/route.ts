@@ -23,7 +23,7 @@ export async function GET() {
   const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
   const { success, remaining, reset } = await rateLimit(
     ip,
-    "api",
+    "public",
     "event-pulse"
   );
 

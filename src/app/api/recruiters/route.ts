@@ -6,7 +6,7 @@ import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 export async function GET(request: Request) {
   const headersList = await headers();
   const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { success, remaining, reset } = await rateLimit(ip, "api", "recruiters");
+  const { success, remaining, reset } = await rateLimit(ip, "public", "recruiters");
 
   if (!success) {
     return NextResponse.json(

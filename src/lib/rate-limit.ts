@@ -6,8 +6,16 @@ interface RateLimitConfig {
 }
 
 const DEFAULTS: Record<string, RateLimitConfig> = {
-  api: { limit: 60, window: 60 }, // 60 req/min for general API
+  // Per-IP outer ring. Raised from 60 so a venue's shared NAT (hundreds of
+  // students on one public IP) isn't collectively locked out during the event.
+  // The real brute-force defense is the per-email `auth` bucket below, which is
+  // unaffected by shared NAT.
+  api: { limit: 300, window: 60 }, // 300 req/min per IP — general/auth outer ring
   auth: { limit: 5, window: 60 }, // 5 req/min — per-account auth bucket
+  // Public, cache-served reads (recruiters / jobs / event-pulse). Cheap and
+  // public, so the per-IP cap exists only to deter scraping — generous enough
+  // that an entire venue behind one NAT can browse freely.
+  public: { limit: 1200, window: 60 }, // 1200 req/min per IP — cached public reads
 };
 
 /**
@@ -26,7 +34,7 @@ const DEFAULTS: Record<string, RateLimitConfig> = {
  */
 export async function rateLimit(
   ip: string,
-  type: "api" | "auth" = "api",
+  type: "api" | "auth" | "public" = "api",
   scope = "global"
 ): Promise<{ success: boolean; remaining: number; reset: number }> {
   const config = DEFAULTS[type];
