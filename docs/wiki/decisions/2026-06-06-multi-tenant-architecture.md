@@ -43,7 +43,18 @@ prod. Remaining phases pending. See "Implementation status" below.
   server-side — middleware has none) and adds `/e/:path*` to its matcher. JWT shape is unchanged
   (existing sessions stay valid); membership is resolved from the DB per request. Typechecks + lints;
   not yet imported by any route (that wiring is Phase 2).
-- **Phases 2–5 — pending.**
+- **Phase 2a — DONE (code):** `event_config` singleton reads/writes are now event-scoped. Every
+  `.from(eventConfig).limit(1)` gained `.where(eq(eventConfig.eventId, <ctx>))` across 16 files
+  (central `event-branding.ts` cached reader, `page-images.ts`, `admin-data.ts`, `recruiter-data.ts`,
+  `page.tsx`, and the bookings/applicants/me-jobs/admin-mode/branding/timeframe/page-images/homepage-images
+  routes). `getTenantContext()` is now React-`cache()`-memoized; added `currentEventId()`. The
+  runtime cache key/tag for the config row is per-event (`event-config:row:v2:{eventId}` /
+  `event-config:{eventId}`); `invalidateEventConfigCache(eventId)` takes an arg. Added a cross-request
+  runtime cache for event *resolution* itself (`getDefaultEvent`/`getActiveEventBySlug`, tag `events`,
+  300s) so the hot path doesn't add a per-request DB hit — preserving the free-tier connection-storm
+  protection. Behavior identical (all resolves to the single event). Typechecks, lints, `next build` OK.
+  Not yet deployed.
+- **Phase 2b (reads), 2c (inserts + NOT NULL), Phases 3–5 — pending.**
 
 ## Decisions (niko, 2026-06-06)
 

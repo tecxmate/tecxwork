@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { headers } from "next/headers";
+import { getCache } from "@vercel/functions";
 import { and, asc, eq } from "drizzle-orm";
 import { db, events, memberships } from "@/lib/db";
 import { getSession, requireSession, type SessionPayload } from "@/lib/auth";
@@ -44,14 +46,51 @@ function selectEvent() {
     .from(events);
 }
 
+// Event resolution runs on (nearly) every request via getEventBranding. Cache
+// it across requests so the hot path doesn't hit the (free-tier) DB each time —
+// the same protection the event_config runtime cache provides. Tag `events` so
+// it can be invalidated when events change (admin edits land in a later phase).
+const runtimeCache = getCache({ namespace: "app" });
+const EVENT_TTL = 300; // 5 min
+const eventBySlugKey = (slug: string) => `event:slug:v1:${slug}`;
+const DEFAULT_EVENT_KEY = "event:default:v1";
+
+async function cachedEvent(
+  key: string,
+  loader: () => Promise<EventRecord | null>
+): Promise<EventRecord | null> {
+  try {
+    const cached = await runtimeCache.get(key);
+    if (cached) return cached as EventRecord;
+  } catch {
+    // cache unavailable (e.g. build) — fall through to a direct query
+  }
+  const event = await loader();
+  if (event) {
+    try {
+      await runtimeCache.set(key, event, { ttl: EVENT_TTL, tags: ["events"] });
+    } catch {
+      // ignore cache write failures
+    }
+  }
+  return event;
+}
+
+/** Purge cached event lookups. Call after admin writes that change events. */
+export async function invalidateEventsCache() {
+  await runtimeCache.expireTag("events");
+}
+
 /** Look up an active event by its public slug. Returns null if missing/archived. */
 export async function getActiveEventBySlug(
   slug: string
 ): Promise<EventRecord | null> {
-  const [event] = await selectEvent()
-    .where(and(eq(events.slug, slug), eq(events.status, "active")))
-    .limit(1);
-  return event ?? null;
+  return cachedEvent(eventBySlugKey(slug), async () => {
+    const [event] = await selectEvent()
+      .where(and(eq(events.slug, slug), eq(events.status, "active")))
+      .limit(1);
+    return event ?? null;
+  });
 }
 
 /**
@@ -59,11 +98,13 @@ export async function getActiveEventBySlug(
  * If multiple events are ever active, the lowest id wins deterministically.
  */
 export async function getDefaultEvent(): Promise<EventRecord | null> {
-  const [event] = await selectEvent()
-    .where(eq(events.status, "active"))
-    .orderBy(asc(events.id))
-    .limit(1);
-  return event ?? null;
+  return cachedEvent(DEFAULT_EVENT_KEY, async () => {
+    const [event] = await selectEvent()
+      .where(eq(events.status, "active"))
+      .orderBy(asc(events.id))
+      .limit(1);
+    return event ?? null;
+  });
 }
 
 /** Read the active event slug injected by proxy.ts, or null on flat routes. */
@@ -77,7 +118,7 @@ export async function resolveEventSlug(): Promise<string | null> {
  * unknown event, or if no active event exists at all. Use in server components
  * and route handlers to scope queries by `ctx.eventId`.
  */
-export async function getTenantContext(): Promise<TenantContext> {
+export const getTenantContext = cache(async (): Promise<TenantContext> => {
   const slug = await resolveEventSlug();
   const event = slug
     ? await getActiveEventBySlug(slug)
@@ -88,6 +129,11 @@ export async function getTenantContext(): Promise<TenantContext> {
     );
   }
   return { eventId: event.id, orgId: event.orgId, event };
+});
+
+/** The current tenant's event id. Memoized per request via getTenantContext. */
+export async function currentEventId(): Promise<number> {
+  return (await getTenantContext()).eventId;
 }
 
 /** Non-throwing variant — returns null instead of throwing. */

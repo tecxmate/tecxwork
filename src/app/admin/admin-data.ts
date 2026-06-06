@@ -15,6 +15,7 @@ import {
   jobOpenings,
 } from "@/lib/db";
 import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
+import { currentEventId } from "@/lib/tenant";
 
 export type AdminOnboardingMode = "minimal" | "full";
 
@@ -290,6 +291,7 @@ export async function getAdminDashboardData() {
       salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
     })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
 
   const domains = await db

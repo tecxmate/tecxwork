@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { db, recruiters, bookings, eventConfig, slots, applicantSlots } from "@/lib/db";
 import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 import { getRecruiterLocale } from "@/lib/recruiter-locale.server";
+import { currentEventId } from "@/lib/tenant";
 
 export type RecruiterDashboardSection =
   | "interviews"
@@ -71,6 +72,7 @@ export async function getRecruiterDashboardData() {
       salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
     })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
 
   const eventMode = config?.mode ?? "both";

@@ -3,6 +3,7 @@ import { db, eventConfig } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
+import { currentEventId } from "@/lib/tenant";
 
 export async function GET() {
   const [config] = await db
@@ -16,6 +17,7 @@ export async function GET() {
       locked: eventConfig.modeLocked,
     })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
 
   return NextResponse.json({
@@ -50,6 +52,7 @@ export async function PUT(req: NextRequest) {
   const [config] = await db
     .select({ id: eventConfig.id, locked: eventConfig.modeLocked })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
 
   if (!config) {

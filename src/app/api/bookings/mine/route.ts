@@ -9,6 +9,7 @@ import {
 } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { getApplicantFromSession } from "@/lib/auth";
+import { currentEventId } from "@/lib/tenant";
 
 /** GET /api/bookings/mine?recruiterId=X — student's bookings, optionally scoped to one recruiter */
 export async function GET(req: NextRequest) {
@@ -59,6 +60,7 @@ export async function GET(req: NextRequest) {
       studentCancellationEnabled: eventConfig.studentCancellationEnabled,
     })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
 
   return NextResponse.json({

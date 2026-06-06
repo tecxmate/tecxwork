@@ -3,6 +3,7 @@ import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applic
 import { getAdminSession } from "@/lib/auth";
 import { eq, count, inArray } from "drizzle-orm";
 import { getEventBranding, invalidateEventConfigCache } from "@/lib/event-branding";
+import { currentEventId } from "@/lib/tenant";
 import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
 import { logBookingAction } from "@/lib/booking-action-log";
 
@@ -226,7 +227,12 @@ async function handlePut(
   }
 
   // Update config
-  const [config] = await db.select({ id: eventConfig.id }).from(eventConfig).limit(1);
+  const eventId = await currentEventId();
+  const [config] = await db
+    .select({ id: eventConfig.id })
+    .from(eventConfig)
+    .where(eq(eventConfig.eventId, eventId))
+    .limit(1);
   if (!config) {
     return NextResponse.json({ error: "Event config not found" }, { status: 404 });
   }
@@ -242,7 +248,7 @@ async function handlePut(
       bufferMinutes,
     })
     .where(eq(eventConfig.id, config.id));
-  await invalidateEventConfigCache();
+  await invalidateEventConfigCache(eventId);
 
   // Regenerate unbooked slots for all recruiters.
   // Cancelled/rejected bookings can still hold FK references to

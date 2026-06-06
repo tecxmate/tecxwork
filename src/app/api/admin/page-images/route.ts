@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, eventConfig } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { currentEventId } from "@/lib/tenant";
 
 type Placement = "browse" | "jobs";
 
@@ -50,7 +51,11 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  const [config] = await db.select({ id: eventConfig.id }).from(eventConfig).limit(1);
+  const [config] = await db
+    .select({ id: eventConfig.id })
+    .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
+    .limit(1);
   if (!config) {
     return NextResponse.json({ error: "Event config not found" }, { status: 404 });
   }

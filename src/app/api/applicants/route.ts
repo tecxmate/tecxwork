@@ -4,6 +4,7 @@ import { COOKIE_NAME, createToken, getSession, hashPassword } from "@/lib/auth";
 import { sanitizeWorkExperiences } from "@/lib/student-profile";
 import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
 import { applicantSignupSchema, parseJsonBody } from "@/lib/validation";
+import { currentEventId } from "@/lib/tenant";
 
 // GET — applicant profile listing for recruiter/admin review.
 export async function GET(req: NextRequest) {
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
   const [config] = await db
     .select({ onboardingMode: eventConfig.onboardingMode })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
   const onboardingMode = config?.onboardingMode === "minimal" ? "minimal" : "full";
 

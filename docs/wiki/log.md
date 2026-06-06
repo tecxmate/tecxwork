@@ -1095,3 +1095,7 @@ attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
 ## [2026-06-06] build | Multi-tenant Phase 1 (auth & tenant context)
 attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
 - New `src/lib/tenant.ts` (server-only): getTenantContext() resolves active event from x-event-slug header (proxy-injected for /e/[slug]) with fallback to the single active event; membership authz helpers (requireMembership/requireOrgAdmin/getSessionMembership). proxy.ts injects x-event-slug for /e/[slug] and matches /e/:path*. JWT unchanged → existing sessions valid. Non-breaking, typechecks + lints, not yet wired into routes (Phase 2). Verified Next 16.2.2 proxy header API (NextResponse.next({request:{headers}})) against node_modules docs.
+
+## [2026-06-06] build | Multi-tenant Phase 2a (event_config de-singletonized)
+attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
+- Scoped every event_config read/write by event_id across 16 files; resolves via getTenantContext()/currentEventId() (React cache()-memoized). Per-event runtime cache key/tag for the config row; invalidateEventConfigCache(eventId) now takes the id. Added cross-request cache for event resolution (getDefaultEvent/getActiveEventBySlug, tag `events`, 300s) so the hot path keeps its free-tier DB protection. Behavior identical (single event). tsc + eslint + next build pass. Not deployed.

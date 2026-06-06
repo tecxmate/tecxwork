@@ -24,6 +24,7 @@ import { getCachedRecruiters } from "@/lib/cache";
 import { db, recruiters, jobOpenings, eventConfig } from "@/lib/db";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
+import { currentEventId } from "@/lib/tenant";
 import { eq } from "drizzle-orm";
 
 async function getPublicRecruiters() {
@@ -71,6 +72,7 @@ async function getHomepageImages() {
   const [config] = await db
     .select({ homepageImages: eventConfig.homepageImages })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
   return config?.homepageImages ?? [];
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
 import { invalidateEventConfigCache } from "@/lib/event-branding";
+import { currentEventId } from "@/lib/tenant";
 import { eq } from "drizzle-orm";
 
 const FIELDS = [
@@ -54,6 +55,7 @@ export async function GET() {
       heroOverlayEnabled: eventConfig.heroOverlayEnabled,
     })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
 
   return NextResponse.json(row ?? null);
@@ -124,9 +126,11 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "No fields provided" }, { status: 400 });
   }
 
+  const eventId = await currentEventId();
   const [config] = await db
     .select({ id: eventConfig.id })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, eventId))
     .limit(1);
   if (!config) {
     return NextResponse.json(
@@ -136,7 +140,7 @@ export async function PUT(req: NextRequest) {
   }
 
   await db.update(eventConfig).set(update).where(eq(eventConfig.id, config.id));
-  await invalidateEventConfigCache();
+  await invalidateEventConfigCache(eventId);
 
   return NextResponse.json({ ok: true, updated: Object.keys(update) });
 }

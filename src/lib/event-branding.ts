@@ -1,20 +1,23 @@
 import "server-only";
 import { cache } from "react";
 import { getCache } from "@vercel/functions";
+import { eq } from "drizzle-orm";
 import { db, eventConfig } from "@/lib/db";
 import { EVENT_CONFIG } from "@/lib/data";
+import { getTenantContext } from "@/lib/tenant";
 
 const runtimeCache = getCache({ namespace: "app" });
-const EVENT_CONFIG_KEY = "event-config:row:v1";
-const EVENT_CONFIG_TAG = "event-config";
+// Cache key + tag are scoped per event so tenants don't share a cached row.
+const eventConfigKey = (eventId: number) => `event-config:row:v2:${eventId}`;
+const eventConfigTag = (eventId: number) => `event-config:${eventId}`;
 const EVENT_CONFIG_TTL = 3600; // 1h; invalidated on admin edits via the tag
 
 /**
- * Purge the cached event_config row. Call after any admin write that changes
- * branding/timing fields so the next read is fresh.
+ * Purge the cached event_config row for one event. Call after any admin write
+ * that changes branding/timing fields so the next read is fresh.
  */
-export async function invalidateEventConfigCache() {
-  await runtimeCache.expireTag(EVENT_CONFIG_TAG);
+export async function invalidateEventConfigCache(eventId: number) {
+  await runtimeCache.expireTag(eventConfigTag(eventId));
 }
 
 export type EventBranding = {
@@ -52,7 +55,7 @@ export type EventBranding = {
  */
 type EventConfigRow = Awaited<ReturnType<typeof queryEventConfigRow>>;
 
-async function queryEventConfigRow() {
+async function queryEventConfigRow(eventId: number) {
   const [row] = await db
     .select({
       eventName: eventConfig.eventName,
@@ -76,23 +79,24 @@ async function queryEventConfigRow() {
       bufferMinutes: eventConfig.bufferMinutes,
     })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, eventId))
     .limit(1);
   return row ?? null;
 }
 
-async function fetchEventConfigRow(): Promise<EventConfigRow> {
+async function fetchEventConfigRow(eventId: number): Promise<EventConfigRow> {
   try {
-    const cached = await runtimeCache.get(EVENT_CONFIG_KEY);
+    const cached = await runtimeCache.get(eventConfigKey(eventId));
     if (cached) return cached as EventConfigRow;
   } catch {
     // cache unavailable (e.g. build) — fall through to a direct query
   }
-  const row = await queryEventConfigRow();
+  const row = await queryEventConfigRow(eventId);
   if (row) {
     try {
-      await runtimeCache.set(EVENT_CONFIG_KEY, row, {
+      await runtimeCache.set(eventConfigKey(eventId), row, {
         ttl: EVENT_CONFIG_TTL,
-        tags: [EVENT_CONFIG_TAG],
+        tags: [eventConfigTag(eventId)],
       });
     } catch {
       // ignore cache write failures
@@ -119,7 +123,8 @@ const staticFallback = (): EventBranding => ({
  */
 export const getEventBranding = cache(async (): Promise<EventBranding> => {
   try {
-    const row = await fetchEventConfigRow();
+    const { eventId } = await getTenantContext();
+    const row = await fetchEventConfigRow(eventId);
     if (!row) {
       return staticFallback();
     }

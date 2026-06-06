@@ -13,6 +13,7 @@ import {
   getRecruiterFromSession,
   getSession,
 } from "@/lib/auth";
+import { currentEventId } from "@/lib/tenant";
 import { sendApplicantCancellationEmail, sendRejectionEmail } from "@/lib/email";
 import { createBookingNotification } from "@/lib/notifications";
 import { cancelBookingSchema } from "@/lib/validation";
@@ -73,6 +74,7 @@ export async function DELETE(
         studentCancellationEnabled: eventConfig.studentCancellationEnabled,
       })
       .from(eventConfig)
+      .where(eq(eventConfig.eventId, await currentEventId()))
       .limit(1);
     if (config?.studentCancellationEnabled !== true) {
       return NextResponse.json(

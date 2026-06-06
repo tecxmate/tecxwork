@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig, jobOpenings } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { currentEventId } from "@/lib/tenant";
 import { findFlaggedJobLanguage } from "@/lib/job-moderation";
 import {
   EMPLOYMENT_TYPE_VALUES,
@@ -62,6 +63,7 @@ export async function PUT(
       salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
     })
     .from(eventConfig)
+    .where(eq(eventConfig.eventId, await currentEventId()))
     .limit(1);
   const moderationEnabled = config?.jobModerationEnabled ?? true;
   const enabledSalaryCurrencies = normalizeSalaryCurrencyOptions(
