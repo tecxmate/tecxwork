@@ -1071,3 +1071,8 @@ attributed_to: [niko]   belongs_to: [backup-dr, tecxwork]
 ## [2026-06-06] ops | DB_RETENTION=192 on niko-pc
 attributed_to: [niko]   belongs_to: [backup-dr]
 - Set service Environment=DB_RETENTION=192 (~48h history at 15-min cadence), daemon-reloaded. Restores the retention window the hourly default gave.
+
+## [2026-06-06] fix | Event-pulse visualizer fits 16:9 desktop
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- The public visualizer (public/event-pulse.html) overflowed ~2x a 1080p screen (scrolling wall). Added a desktop fit-to-viewport mode (`@media min-width:1181px and min-height:820px`): shell locks to 100dvh, main is a 2-row grid (trio + proof) with min-height:0 so rows are bounded by the viewport, not content.
+- Compressed hero/proof rhythm; side rail now shows live metrics + company surface (the redundant "How it works" steps are hidden on desktop, kept on mobile). Verified via headless screenshots at 1920x1080 / 1680x1050 / 1440x900 (all fit, no clip); 1366x768 and tablet/mobile keep the scrolling layout.

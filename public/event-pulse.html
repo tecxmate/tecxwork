@@ -894,6 +894,73 @@
       background: var(--green);
     }
 
+    /* Desktop fit-to-viewport: the visualizer is shown fullscreen on an event
+       display, so on a wide screen with enough height the whole wall fills
+       exactly one 16:9 screen with no scroll. Short or small screens keep the
+       stacked/scrolling layout below, so nothing is ever clipped. */
+    @media (min-width: 1181px) and (min-height: 820px) {
+      html, body { height: 100%; overflow: hidden; }
+      .shell {
+        height: 100dvh;
+        overflow: hidden;
+        grid-template-rows: 60px 1fr;
+      }
+      .topbar { height: 60px; padding: 0 28px; }
+      .wordmark { font-size: 32px; }
+      main {
+        height: 100%;
+        min-height: 0; /* let the viewport bound the rows instead of content */
+        width: min(1720px, calc(100vw - 36px));
+        padding: 14px 0 16px;
+        grid-template-columns: 1fr 1.62fr 1.04fr;
+        grid-template-rows: minmax(0, 1.42fr) minmax(0, 1fr);
+        gap: 14px;
+      }
+      .hero-panel, .stage, .side, .proof-panel { min-height: 0; }
+
+      /* hero — compress vertical rhythm */
+      .hero-panel { padding: 22px 24px; }
+      .eyebrow { margin-bottom: 10px; }
+      h1 { font-size: clamp(32px, 2.5vw, 46px); max-width: 11ch; }
+      .lead { margin-top: 12px; font-size: 14px; line-height: 1.5; }
+      .time-block { margin-top: 16px; }
+      .clock { font-size: clamp(30px, 2.4vw, 44px); }
+      .mode-row { margin-top: 14px; }
+
+      /* stage fills its track; mesh + nodes scale by % */
+      .stage { background-size: 46px 46px; }
+
+      /* side rail — live metrics + live company surface fill the column. The
+         "How it works" steps are hidden here (the bottom atomic-booking row
+         tells the same flow) and stay in the stacked mobile/tablet view. */
+      .side { gap: 12px; grid-template-rows: auto minmax(0, 1fr); }
+      .flow-panel { display: none; }
+      .metric-grid { padding: 12px; gap: 9px; }
+      .metric { min-height: 0; padding: 14px; gap: 6px; }
+      .metric .value { font-size: 28px; }
+      .company-panel { padding: 16px; overflow: hidden; display: flex; flex-direction: column; }
+      .company-list { gap: 8px; max-height: none; overflow: hidden; flex: 1; min-height: 0; }
+      .company-row { padding: 10px 11px; }
+      .note { margin-top: 10px; padding: 11px 13px; font-size: 11px; }
+
+      /* proof row — compress into the shorter bottom track */
+      .proof-panel { padding: 16px; gap: 14px; min-height: 0; }
+      .atomic-stage { padding: 16px 18px; }
+      .atomic-title { margin-bottom: 12px; gap: 14px; }
+      .atomic-title h2 { font-size: 22px; }
+      .atomic-title p { font-size: 12px; line-height: 1.45; }
+      .race-card { min-height: 0; padding: 12px 13px; }
+      .race-main { font-size: 15px; margin-bottom: 7px; }
+      .race-copy { font-size: 11px; line-height: 1.4; }
+      .slot-lane { margin-top: 12px; height: 52px; }
+      .proof-grid { gap: 10px; }
+      .proof-card { min-height: 0; padding: 14px; }
+      .proof-label { margin-bottom: 10px; }
+      .proof-card h3 { font-size: 15px; }
+      .proof-card p { font-size: 11px; line-height: 1.4; }
+      .proof-stat { margin-top: 10px; }
+    }
+
     @media (max-width: 1180px) {
       main { grid-template-columns: 1fr; }
       .stage, .side { min-height: 620px; }
