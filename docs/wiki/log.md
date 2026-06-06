@@ -1076,3 +1076,8 @@ attributed_to: [niko]   belongs_to: [backup-dr]
 attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - The public visualizer (public/event-pulse.html) overflowed ~2x a 1080p screen (scrolling wall). Added a desktop fit-to-viewport mode (`@media min-width:1181px and min-height:820px`): shell locks to 100dvh, main is a 2-row grid (trio + proof) with min-height:0 so rows are bounded by the viewport, not content.
 - Compressed hero/proof rhythm; side rail now shows live metrics + company surface (the redundant "How it works" steps are hidden on desktop, kept on mobile). Verified via headless screenshots at 1920x1080 / 1680x1050 / 1440x900 (all fit, no clip); 1366x768 and tablet/mobile keep the scrolling layout.
+
+## [2026-06-06] ops | Disable public event-pulse visualizer
+attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
+- Disabled the public visualizer for the event: removed the footer "Live" link (site-footer.tsx) and added a temporary (307) redirect /event-pulse.html -> / in vercel.json. Reversible — the public/event-pulse.html file and its desktop-fit work are kept in the repo; remove the redirect + restore the footer link to re-enable.
+- GET /api/event-pulse (aggregate-only, cached, CORS *) is left live and harmless; can be disabled separately if desired.

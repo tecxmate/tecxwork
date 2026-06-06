@@ -1,5 +1,12 @@
 {
   "regions": ["sin1"],
+  "redirects": [
+    {
+      "source": "/event-pulse.html",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/prune-notifications",
