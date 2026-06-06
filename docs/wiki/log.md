@@ -1081,3 +1081,13 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Disabled the public visualizer for the event: removed the footer "Live" link (site-footer.tsx) and added a temporary (307) redirect /event-pulse.html -> / in vercel.json. Reversible — the public/event-pulse.html file and its desktop-fit work are kept in the repo; remove the redirect + restore the footer link to re-enable.
 - GET /api/event-pulse (aggregate-only, cached, CORS *) is left live and harmless; can be disabled separately if desired.
+
+## [2026-06-06] plan | Multi-tenant architecture assessment & runbook
+attributed_to: [niko]   belongs_to: [saas-strategy, tecxwork]
+- Assessed effort to convert single-event app → multi-tenant SaaS. Branch `multi-tenant-exploration` created; recon only, no code changes. Decisions: tenant model Org→Events; routing path-based /e/[slug]; shared-schema discriminator (event_id/org_id) on one Neon DB; applicants stay global (Talent Passport).
+- Effort: ~2wk structural MVP, ~4–6wk production-grade. Bulk/risk is Phase 2 query retrofit across 55 routes + killing the event_config singleton. Execution deferred until after the live event. Created decisions/2026-06-06-multi-tenant-architecture.md.
+
+## [2026-06-06] build | Multi-tenant Phase 0 (schema foundation) implemented
+attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
+- Branch `multi-tenant-exploration`. Additive schema only — typechecks, app behavior unchanged (code doesn't read new columns yet). schema.ts: new tables organizations/events/memberships/event_participants + nullable event_id FK on event_config, recruiters, job_openings, slots, applicant_slots, bookings, allowed_domains, recruiter_email_approvals. Enums event_status, membership_role.
+- Shipped as idempotent raw-SQL tsx scripts (NOT drizzle-kit generate — the drizzle/ snapshots have drifted from 18 raw add-* scripts, so the generator demands interactive rename resolution). New: `db:update:multi-tenant` (DDL) + `db:backfill:multi-tenant` (default VSATW org + v-gen-trident event, stamp event_id, seed memberships/participants). NOT yet applied to prod DB — awaiting go-ahead. Next: flip event_id to NOT NULL after backfill verified, then Phase 1 (auth/tenant context).

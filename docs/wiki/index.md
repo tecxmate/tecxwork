@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-06-06 — Multi-tenant architecture (plan & runbook)](decisions/2026-06-06-multi-tenant-architecture.md) — Org→Events, path-based /e/[slug], shared-schema discriminator; applicants stay global (Talent Passport); ~2wk MVP / 4–6wk prod; execution deferred past event
 - [2026-06-06 — Upgrade live project to Vercel Pro](decisions/2026-06-06-vercel-pro-upgrade.md) — Hobby free resources exceeded on event day; Pro lifts limits and meters overage instead of throttling
 - [2026-06-01 — Notification-primary apply + push prompt](decisions/2026-06-01-notification-primary-apply.md) — student apply confirmation stays notification-first; recruiter application_submitted email now sends for every application; shared usePush hook
 - [2026-06-01 — Notification retention (90-day prune)](decisions/2026-06-01-notification-retention.md) — daily cron deletes notifications older than 90 days; also set the missing CRON_SECRET

@@ -68,6 +68,8 @@ export const users = pgTable("users", {
 
 export const recruiters = pgTable("recruiters", {
   id: serial("id").primaryKey(),
+  // Multi-tenant FK. Phase 0: nullable; backfilled then set NOT NULL. See events table below.
+  eventId: integer("event_id").references(() => events.id),
   userId: integer("user_id")
     .notNull()
     .references(() => users.id)
@@ -94,6 +96,7 @@ export const recruiters = pgTable("recruiters", {
 
 export const jobOpenings = pgTable("job_openings", {
   id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id),
   recruiterId: integer("recruiter_id")
     .notNull()
     .references(() => recruiters.id),
@@ -183,6 +186,7 @@ export const slots = pgTable(
   "slots",
   {
     id: serial("id").primaryKey(),
+    eventId: integer("event_id").references(() => events.id),
     recruiterId: integer("recruiter_id")
       .notNull()
       .references(() => recruiters.id),
@@ -206,6 +210,7 @@ export const applicantSlots = pgTable(
   "applicant_slots",
   {
     id: serial("id").primaryKey(),
+    eventId: integer("event_id").references(() => events.id),
     applicantId: integer("applicant_id")
       .notNull()
       .references(() => applicantProfiles.id),
@@ -225,6 +230,7 @@ export const applicantSlots = pgTable(
 
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id),
   direction: bookingDirectionEnum("direction")
     .notNull()
     .default("applicant_books_recruiter"),
@@ -261,6 +267,7 @@ export const bookings = pgTable("bookings", {
 
 export const allowedDomains = pgTable("allowed_domains", {
   id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id),
   domain: text("domain").notNull().unique(),
   company: text("company").notNull(),
   industry: text("industry").notNull(),
@@ -273,6 +280,7 @@ export const allowedDomains = pgTable("allowed_domains", {
 
 export const recruiterEmailApprovals = pgTable("recruiter_email_approvals", {
   id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id),
   email: text("email").notNull().unique(),
   company: text("company").notNull(),
   industry: text("industry").notNull(),
@@ -317,6 +325,8 @@ export const emailVerificationCodes = pgTable("email_verification_codes", {
 
 export const eventConfig = pgTable("event_config", {
   id: serial("id").primaryKey(),
+  // Phase 0: one config row per event (was a global singleton). Nullable until backfilled.
+  eventId: integer("event_id").references(() => events.id),
   eventName: text("event_name").notNull().default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
   emailEventName: text("email_event_name")
     .notNull()
@@ -512,6 +522,89 @@ export const notifications = pgTable("notifications", {
 export const feedbackKindEnum = pgEnum("feedback_kind", ["bug", "feedback", "feature"]);
 export const feedbackSeverityEnum = pgEnum("feedback_severity", ["low", "med", "high"]);
 export const feedbackStatusEnum = pgEnum("feedback_status", ["open", "triaged", "resolved"]);
+
+// ---- Multi-tenancy: organizations, events, memberships, participants ----
+// Phase 0 (additive). Tenant model: Organization → Events. Event-scoped data carries
+// a nullable `event_id` (backfilled, then NOT NULL). Applicants stay global (Talent
+// Passport) and join an event via `event_participants`. See
+// docs/wiki/decisions/2026-06-06-multi-tenant-architecture.md.
+
+export const eventStatusEnum = pgEnum("event_status", [
+  "draft",
+  "active",
+  "archived",
+]);
+
+export const membershipRoleEnum = pgEnum("membership_role", [
+  "org_admin",
+  "recruiter",
+]);
+
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id")
+    .notNull()
+    .references(() => organizations.id),
+  // Globally unique — addresses the event at /e/[slug].
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  status: eventStatusEnum("status").notNull().default("draft"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const memberships = pgTable(
+  "memberships",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    role: membershipRoleEnum("role").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_membership_user_org").on(table.userId, table.orgId),
+  ]
+);
+
+export const eventParticipants = pgTable(
+  "event_participants",
+  {
+    id: serial("id").primaryKey(),
+    applicantId: integer("applicant_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    eventId: integer("event_id")
+      .notNull()
+      .references(() => events.id),
+    status: text("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_event_participant").on(
+      table.applicantId,
+      table.eventId
+    ),
+  ]
+);
 
 export const feedbackReports = pgTable("feedback_reports", {
   id: serial("id").primaryKey(),

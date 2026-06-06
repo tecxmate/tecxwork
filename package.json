@@ -32,6 +32,8 @@
     "db:update:booking-action-logs": "npx tsx src/lib/db/add-booking-action-logs-table.ts",
     "db:update:booking-job-opening-id": "npx tsx src/lib/db/add-booking-job-opening-id-column.ts",
     "db:update:student-cancellation-toggle": "npx tsx src/lib/db/add-student-cancellation-toggle-column.ts",
+    "db:update:multi-tenant": "npx tsx src/lib/db/add-multi-tenant-tables.ts",
+    "db:backfill:multi-tenant": "npx tsx src/lib/db/backfill-multi-tenant.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",
     "db:seed:schools": "npx tsx src/lib/db/import-schools.ts",
     "test": "vitest run",
