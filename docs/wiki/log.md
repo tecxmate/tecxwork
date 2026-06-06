@@ -1099,3 +1099,7 @@ attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
 ## [2026-06-06] build | Multi-tenant Phase 2a (event_config de-singletonized)
 attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
 - Scoped every event_config read/write by event_id across 16 files; resolves via getTenantContext()/currentEventId() (React cache()-memoized). Per-event runtime cache key/tag for the config row; invalidateEventConfigCache(eventId) now takes the id. Added cross-request cache for event resolution (getDefaultEvent/getActiveEventBySlug, tag `events`, 300s) so the hot path keeps its free-tier DB protection. Behavior identical (single event). tsc + eslint + next build pass. Not deployed.
+
+## [2026-06-06] build | Multi-tenant Phase 2b (read retrofit)
+attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
+- Scoped 22 cross-tenant list/aggregate reads by event_id across 9 files (admin-data ×8, cache.ts directory+jobs, page.tsx featured, sitemap, jobs-list-page, api/admin/{domains,bookings,timeframe,send-reminders}). Entity-id/ownership-filtered reads left as-is (implicitly single-event). Cron routes stay global. getEventBranding + sitemap now use header-free getDefaultEvent() so static pages stay static (calling headers() in the root-layout path would force everything dynamic). Static/dynamic split identical to baseline; tsc+eslint+build pass. Not deployed.

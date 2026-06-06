@@ -25,7 +25,7 @@ import { db, recruiters, jobOpenings, eventConfig } from "@/lib/db";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
 import { currentEventId } from "@/lib/tenant";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 async function getPublicRecruiters() {
   // Reuse the canonical directory order (pinned first, then approved-job
@@ -62,7 +62,12 @@ async function getPublicJobs() {
     })
     .from(jobOpenings)
     .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
-    .where(eq(jobOpenings.moderationStatus, "approved"))
+    .where(
+      and(
+        eq(jobOpenings.moderationStatus, "approved"),
+        eq(jobOpenings.eventId, await currentEventId())
+      )
+    )
     .limit(8);
 
   return result;

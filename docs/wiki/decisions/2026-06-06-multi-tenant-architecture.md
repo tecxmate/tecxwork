@@ -54,7 +54,19 @@ prod. Remaining phases pending. See "Implementation status" below.
   300s) so the hot path doesn't add a per-request DB hit — preserving the free-tier connection-storm
   protection. Behavior identical (all resolves to the single event). Typechecks, lints, `next build` OK.
   Not yet deployed.
-- **Phase 2b (reads), 2c (inserts + NOT NULL), Phases 3–5 — pending.**
+- **Phase 2b — DONE (code):** scoped every cross-tenant **list/aggregate read** by `eventId` —
+  22 queries across 9 files: `admin-data.ts` (8), `cache.ts` (recruiter directory + approved jobs),
+  `page.tsx` (featured jobs), `sitemap.ts`, `jobs-list-page.tsx` (the public /jobs list),
+  `api/admin/{domains,bookings,timeframe,send-reminders}`. Entity-id/ownership-filtered reads
+  (`WHERE recruiterId=…`, `.id=…`, `applicantEmail=…`) were left alone — they're implicitly
+  single-event and already authz-checked. Cron routes (`crawl-jobs`, `prune-notifications`) operate
+  on global tables and stay unscoped. An Explore agent classified the 89 read sites; it missed
+  `jobs-list-page.tsx` and `send-reminders` (both real cross-tenant lists) — caught via an inverse
+  grep sweep. **Static-rendering fix:** `getEventBranding` (root-layout, every route) now resolves
+  via header-free `getDefaultEvent()` instead of `getTenantContext()` — calling `headers()` there
+  would force all static pages dynamic. `sitemap.ts` likewise uses `getDefaultEvent` (it's `○ Static`).
+  Static/dynamic route split is byte-identical to baseline; tsc + eslint + `next build` pass. Not deployed.
+- **Phase 2c (inserts + NOT NULL), Phases 3–5 — pending.**
 
 ## Decisions (niko, 2026-06-06)
 

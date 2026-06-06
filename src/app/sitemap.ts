@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, jobOpenings } from "@/lib/db";
+import { getDefaultEvent } from "@/lib/tenant";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -40,10 +41,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let jobRoutes: MetadataRoute.Sitemap = [];
   try {
+    // Static route — resolve the event without request headers.
+    const event = await getDefaultEvent();
     const jobs = await db
       .select({ id: jobOpenings.id, createdAt: jobOpenings.createdAt })
       .from(jobOpenings)
-      .where(eq(jobOpenings.moderationStatus, "approved"));
+      .where(
+        event
+          ? and(
+              eq(jobOpenings.moderationStatus, "approved"),
+              eq(jobOpenings.eventId, event.id)
+            )
+          : eq(jobOpenings.moderationStatus, "approved")
+      );
     jobRoutes = jobs.map((j) => ({
       ...withAlternates(`/jobs/${j.id}`),
       lastModified: j.createdAt ?? now,

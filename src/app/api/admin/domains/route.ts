@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, allowedDomains } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { currentEventId } from "@/lib/tenant";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
@@ -11,6 +12,7 @@ export async function GET() {
   const result = await db
     .select()
     .from(allowedDomains)
+    .where(eq(allowedDomains.eventId, await currentEventId()))
     .orderBy(allowedDomains.company);
 
   return NextResponse.json({ domains: result });

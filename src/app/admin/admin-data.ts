@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { count, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 
 import { getSession } from "@/lib/auth";
 import {
@@ -222,6 +222,8 @@ export async function getAdminDashboardData() {
   const session = await getSession();
   if (!session || session.role !== "admin") redirect("/login");
 
+  const eventId = await currentEventId();
+
   const recruiterList = await db
     .select({
       id: recruiters.id,
@@ -239,6 +241,7 @@ export async function getAdminDashboardData() {
     })
     .from(recruiters)
     .innerJoin(users, eq(recruiters.userId, users.id))
+    .where(eq(recruiters.eventId, eventId))
     .orderBy(recruiters.company);
 
   const applicantList = await db
@@ -252,12 +255,18 @@ export async function getAdminDashboardData() {
     .from(applicantProfiles)
     .orderBy(applicantProfiles.name);
 
-  const [bookingCount] = await db.select({ count: count() }).from(bookings);
-  const [slotCount] = await db.select({ count: count() }).from(slots);
+  const [bookingCount] = await db
+    .select({ count: count() })
+    .from(bookings)
+    .where(eq(bookings.eventId, eventId));
+  const [slotCount] = await db
+    .select({ count: count() })
+    .from(slots)
+    .where(eq(slots.eventId, eventId));
   const [availableCount] = await db
     .select({ count: count() })
     .from(slots)
-    .where(eq(slots.status, "available"));
+    .where(and(eq(slots.status, "available"), eq(slots.eventId, eventId)));
   const [config] = await db
     .select({
       mode: eventConfig.mode,
@@ -291,17 +300,19 @@ export async function getAdminDashboardData() {
       salaryCurrencyOptions: eventConfig.salaryCurrencyOptions,
     })
     .from(eventConfig)
-    .where(eq(eventConfig.eventId, await currentEventId()))
+    .where(eq(eventConfig.eventId, eventId))
     .limit(1);
 
   const domains = await db
     .select()
     .from(allowedDomains)
+    .where(eq(allowedDomains.eventId, eventId))
     .orderBy(allowedDomains.company);
 
   const recruiterApprovals = await db
     .select()
     .from(recruiterEmailApprovals)
+    .where(eq(recruiterEmailApprovals.eventId, eventId))
     .orderBy(recruiterEmailApprovals.company);
 
   const bookingList = await db
@@ -322,6 +333,7 @@ export async function getAdminDashboardData() {
     })
     .from(bookings)
     .innerJoin(recruiters, eq(bookings.recruiterId, recruiters.id))
+    .where(eq(bookings.eventId, eventId))
     .orderBy(bookings.createdAt);
 
   const jobList = await db
@@ -355,6 +367,7 @@ export async function getAdminDashboardData() {
     })
     .from(jobOpenings)
     .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .where(eq(jobOpenings.eventId, eventId))
     .orderBy(jobOpenings.createdAt);
 
   const activeBookingCount = bookingList.filter(

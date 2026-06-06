@@ -1,7 +1,8 @@
 import { getCache } from "@vercel/functions";
 import { getExternalJobs, type GetExternalJobsOptions } from "./crawler";
 import { db, recruiters, users, jobOpenings } from "./db";
-import { eq } from "drizzle-orm";
+import { currentEventId } from "./tenant";
+import { and, eq } from "drizzle-orm";
 
 const cache = getCache({ namespace: "app" });
 const CACHE_TTL = 300; // 5 minutes
@@ -31,19 +32,20 @@ export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
  * Cached recruiters list - 5 minute TTL
  */
 export async function getCachedRecruiters() {
-  const key = "recruiters:list:v6";
+  const eventId = await currentEventId();
+  const key = `recruiters:list:v7:${eventId}`;
   const cached = await cache.get(key);
 
   if (cached) {
     return cached as Awaited<ReturnType<typeof fetchRecruiters>>;
   }
 
-  const result = await fetchRecruiters();
+  const result = await fetchRecruiters(eventId);
   await cache.set(key, result, { ttl: CACHE_TTL, tags: ["recruiters"] });
   return result;
 }
 
-async function fetchRecruiters() {
+async function fetchRecruiters(eventId: number) {
   const recruiterList = await db
     .select({
       id: recruiters.id,
@@ -54,7 +56,8 @@ async function fetchRecruiters() {
       pinnedRank: recruiters.pinnedRank,
     })
     .from(recruiters)
-    .innerJoin(users, eq(recruiters.userId, users.id));
+    .innerJoin(users, eq(recruiters.userId, users.id))
+    .where(eq(recruiters.eventId, eventId));
 
   const approvedJobs = await db
     .select({
@@ -63,7 +66,12 @@ async function fetchRecruiters() {
       jdLink: jobOpenings.jdLink,
     })
     .from(jobOpenings)
-    .where(eq(jobOpenings.moderationStatus, "approved"));
+    .where(
+      and(
+        eq(jobOpenings.moderationStatus, "approved"),
+        eq(jobOpenings.eventId, eventId)
+      )
+    );
 
   const jobsByRecruiter = new Map<
     number,

@@ -13,12 +13,14 @@ import { db, jobOpenings, recruiters } from "@/lib/db";
 import { getJobsPageHeroEnabled, getPageImages } from "@/lib/page-images";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
+import { currentEventId } from "@/lib/tenant";
 import {
   jobCategoryLabel,
   type JobCategoryValue,
 } from "@/lib/job-posting";
 
 async function getRecruiterPostedJobs(category?: JobCategoryValue) {
+  const eventId = await currentEventId();
   return db
     .select({
       id: jobOpenings.id,
@@ -50,10 +52,14 @@ async function getRecruiterPostedJobs(category?: JobCategoryValue) {
     .where(
       category
         ? and(
+            eq(jobOpenings.eventId, eventId),
             eq(jobOpenings.moderationStatus, "approved"),
             eq(jobOpenings.jobCategory, category)
           )
-        : eq(jobOpenings.moderationStatus, "approved")
+        : and(
+            eq(jobOpenings.eventId, eventId),
+            eq(jobOpenings.moderationStatus, "approved")
+          )
     )
     .orderBy(desc(jobOpenings.createdAt));
 }

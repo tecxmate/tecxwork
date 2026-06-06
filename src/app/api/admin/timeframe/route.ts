@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig, slots, recruiters, bookings, applicantProfiles, applicantSlots } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
-import { eq, count, inArray } from "drizzle-orm";
+import { and, eq, count, inArray } from "drizzle-orm";
 import { getEventBranding, invalidateEventConfigCache } from "@/lib/event-branding";
 import { currentEventId } from "@/lib/tenant";
 import { getResend, EMAIL_FROM, getPublicBaseUrl } from "@/lib/email";
@@ -58,21 +58,25 @@ async function handlePut(
     return NextResponse.json({ error: "Invalid time parameters" }, { status: 400 });
   }
 
+  const eventId = await currentEventId();
+
   // Check if any bookings exist (pending, accepted, or waitlisted)
   const [activeBookingsCount] = await db
     .select({ count: count() })
     .from(bookings)
-    .where(eq(bookings.status, "pending"));
+    .where(and(eq(bookings.status, "pending"), eq(bookings.eventId, eventId)));
 
   const [acceptedBookingsCount] = await db
     .select({ count: count() })
     .from(bookings)
-    .where(eq(bookings.status, "accepted"));
+    .where(and(eq(bookings.status, "accepted"), eq(bookings.eventId, eventId)));
 
   const [waitlistedBookingsCount] = await db
     .select({ count: count() })
     .from(bookings)
-    .where(eq(bookings.status, "waitlisted"));
+    .where(
+      and(eq(bookings.status, "waitlisted"), eq(bookings.eventId, eventId))
+    );
 
   const totalActive =
     activeBookingsCount.count + acceptedBookingsCount.count + waitlistedBookingsCount.count;
@@ -102,7 +106,12 @@ async function handlePut(
         proposedTime: bookings.proposedTime,
       })
       .from(bookings)
-      .where(inArray(bookings.status, ["pending", "accepted", "waitlisted"]));
+      .where(
+        and(
+          inArray(bookings.status, ["pending", "accepted", "waitlisted"]),
+          eq(bookings.eventId, eventId)
+        )
+      );
 
     const applicantIds = [...new Set(
       activeBookingsList
@@ -227,7 +236,6 @@ async function handlePut(
   }
 
   // Update config
-  const eventId = await currentEventId();
   const [config] = await db
     .select({ id: eventConfig.id })
     .from(eventConfig)
@@ -256,7 +264,7 @@ async function handlePut(
   const availableSlotRows = await db
     .select({ id: slots.id })
     .from(slots)
-    .where(eq(slots.status, "available"));
+    .where(and(eq(slots.status, "available"), eq(slots.eventId, eventId)));
   const availableSlotIds = availableSlotRows.map((r) => r.id);
   if (availableSlotIds.length > 0) {
     await db
@@ -269,7 +277,8 @@ async function handlePut(
   // Get all recruiters
   const allRecruiters = await db
     .select({ id: recruiters.id, interviewerCount: recruiters.interviewerCount })
-    .from(recruiters);
+    .from(recruiters)
+    .where(eq(recruiters.eventId, eventId));
 
   // Format the event day in Asia/Taipei explicitly. Vercel runs in UTC,
   // so dateObj.getDate() can return the previous day for early-morning

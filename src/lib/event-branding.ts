@@ -4,7 +4,7 @@ import { getCache } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { db, eventConfig } from "@/lib/db";
 import { EVENT_CONFIG } from "@/lib/data";
-import { getTenantContext } from "@/lib/tenant";
+import { getDefaultEvent } from "@/lib/tenant";
 
 const runtimeCache = getCache({ namespace: "app" });
 // Cache key + tag are scoped per event so tenants don't share a cached row.
@@ -123,8 +123,12 @@ const staticFallback = (): EventBranding => ({
  */
 export const getEventBranding = cache(async (): Promise<EventBranding> => {
   try {
-    const { eventId } = await getTenantContext();
-    const row = await fetchEventConfigRow(eventId);
+    // Resolve via getDefaultEvent (no request headers) so this stays usable in
+    // statically-prerendered pages — calling headers() here would force every
+    // route in the shared root layout into dynamic rendering. Phase 3 will make
+    // /e/[slug] branding slug-aware via that route tree, not the global path.
+    const event = await getDefaultEvent();
+    const row = event ? await fetchEventConfigRow(event.id) : null;
     if (!row) {
       return staticFallback();
     }

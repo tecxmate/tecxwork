@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db, bookings, recruiters, users, slots, applicantSlots } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
-import { eq, inArray } from "drizzle-orm";
+import { currentEventId } from "@/lib/tenant";
+import { and, eq, inArray } from "drizzle-orm";
 import {
   sendStudentReminderEmail,
   sendRecruiterReminderEmail,
@@ -29,7 +30,12 @@ export async function POST() {
       requestedTime: bookings.requestedTime,
     })
     .from(bookings)
-    .where(eq(bookings.status, "accepted"));
+    .where(
+      and(
+        eq(bookings.status, "accepted"),
+        eq(bookings.eventId, await currentEventId())
+      )
+    );
 
   if (acceptedBookings.length === 0) {
     return NextResponse.json({

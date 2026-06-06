@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { currentEventId } from "@/lib/tenant";
+import { and, eq } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   if (!(await getAdminSession())) {
@@ -36,9 +37,11 @@ export async function GET(req: NextRequest) {
     .orderBy(bookings.createdAt)
     .$dynamic();
 
+  const conditions = [eq(bookings.eventId, await currentEventId())];
   if (recruiterId) {
-    query = query.where(eq(bookings.recruiterId, parseInt(recruiterId)));
+    conditions.push(eq(bookings.recruiterId, parseInt(recruiterId)));
   }
+  query = query.where(and(...conditions));
 
   const result = await query;
   return NextResponse.json({
