@@ -1113,3 +1113,7 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - GitHub traffic showed elevated clone counts after the repo was public for a while. Treat code as copied, but local triage found `.env*` files ignored/untracked, no `.env*` Git history, no secret-looking file paths in Git object history, and no high-signal token/private-key/credential URL format matches across current tracked content or Git history.
 - Dedicated scanners (`gitleaks`, `trufflehog`) were not installed locally, so this was a quick exposure triage rather than a full secret audit. Updated topics/tecxwork.md.
+
+## [2026-06-10] ops | Proprietary repo exposure risk framing
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Niko clarified tecxwork is proprietary software intended for sale. Treat the temporary public visibility as a business-risk/IP event, not only a secret-leak event; assume source may have been copied, keep it private, document ownership, and strengthen non-code defensibility. Updated topics/tecxwork.md.
