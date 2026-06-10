@@ -1103,3 +1103,13 @@ attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
 ## [2026-06-06] build | Multi-tenant Phase 2b (read retrofit)
 attributed_to: [claude-code]   belongs_to: [multi-tenant-architecture, tecxwork]
 - Scoped 22 cross-tenant list/aggregate reads by event_id across 9 files (admin-data ×8, cache.ts directory+jobs, page.tsx featured, sitemap, jobs-list-page, api/admin/{domains,bookings,timeframe,send-reminders}). Entity-id/ownership-filtered reads left as-is (implicitly single-event). Cron routes stay global. getEventBranding + sitemap now use header-free getDefaultEvent() so static pages stay static (calling headers() in the root-layout path would force everything dynamic). Static/dynamic split identical to baseline; tsc+eslint+build pass. Not deployed.
+
+## [2026-06-10] ops | Pull Resend production env locally
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Vercel `app` has `RESEND_API_KEY` and `EMAIL_FROM` set for Production; local `.env.local` lacked them.
+- Pulled Production env to a temporary file and merged only those two email variables into `.env.local`; no secret values recorded in the wiki. Updated topics/tecxwork.md.
+
+## [2026-06-10] ops | Temporary public repo exposure triage
+attributed_to: [niko]   belongs_to: [tecxwork]
+- GitHub traffic showed elevated clone counts after the repo was public for a while. Treat code as copied, but local triage found `.env*` files ignored/untracked, no `.env*` Git history, no secret-looking file paths in Git object history, and no high-signal token/private-key/credential URL format matches across current tracked content or Git history.
+- Dedicated scanners (`gitleaks`, `trufflehog`) were not installed locally, so this was a quick exposure triage rather than a full secret audit. Updated topics/tecxwork.md.
