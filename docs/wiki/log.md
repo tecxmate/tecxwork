@@ -1117,3 +1117,18 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 ## [2026-06-10] ops | Proprietary repo exposure risk framing
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Niko clarified tecxwork is proprietary software intended for sale. Treat the temporary public visibility as a business-risk/IP event, not only a secret-leak event; assume source may have been copied, keep it private, document ownership, and strengthen non-code defensibility. Updated topics/tecxwork.md.
+
+## [2026-06-11] ops | Production outage diagnosis: Neon quota, not DNS
+attributed_to: [niko]   belongs_to: [tecxwork]
+- After a DNS provider/nameserver move, checked `work.tecxmate.com`: DNS resolves through Cloudflare and public resolvers, no stale parent DS record was present, and HTTPS reaches Vercel.
+- The page still streamed a Next/React error digest (`1131362588`); Vercel logs identify Neon query failures: `Your account or project has exceeded the compute time quota. Upgrade your plan to increase limits.` Updated topics/tecxwork.md.
+
+## [2026-06-11] ops | Cloudflare database fit check
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Checked whether Cloudflare can replace Neon for tecxwork. Cloudflare Hyperdrive connects to existing Postgres/MySQL databases; D1 is managed SQLite-semantics SQL, not Postgres.
+- Recommendation for this Drizzle/Postgres app: upgrade Neon for immediate recovery, or migrate to another Postgres-compatible provider with `pg_dump`/`pg_restore` and `DATABASE_URL` rotation. Updated topics/tecxwork.md.
+
+## [2026-06-11] ops | Neon console quota confirmation
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Screenshot of Neon project `tecxwork-db-sg` confirmed `Limit reached` on Free plan: compute `110.55 / 100 CU-hrs`; storage `0.04 / 0.5 GB`; network transfer `0.89 / 5 GB`.
+- Blocking resource is compute quota, not storage or network transfer. Updated topics/tecxwork.md.
