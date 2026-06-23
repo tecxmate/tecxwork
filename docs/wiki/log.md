@@ -1132,3 +1132,7 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Screenshot of Neon project `tecxwork-db-sg` confirmed `Limit reached` on Free plan: compute `110.55 / 100 CU-hrs`; storage `0.04 / 0.5 GB`; network transfer `0.89 / 5 GB`.
 - Blocking resource is compute quota, not storage or network transfer. Updated topics/tecxwork.md.
+
+## [2026-06-18] chat | TECXWORK pitch-deck case-study positioning
+attributed_to: [niko]   belongs_to: [saas-strategy, tecxwork]
+- Niko is framing TECXWORK as a case study for Tecxmate as a software integration and development firm serving Taiwanese/European SME clients: proof of turning an offline recruitment/event workflow into production software with multilingual UX, role portals, booking integrity, cloud infra, email, file/data workflows, and event-day operations. Updated topics/saas-strategy.md.

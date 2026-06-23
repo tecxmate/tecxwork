@@ -3,7 +3,7 @@ title: SaaS Strategy & Product Pivot
 type: topic
 slug: saas-strategy
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-06-18
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -19,6 +19,7 @@ The project is pivoting from a custom single-event scheduling tool for V-GEN int
 - **Target**: Event organizers (universities, associations, agencies) and recruiters.
 - **Narrative**: "Career fair operations software" or "Event talent-matching infrastructure."
 - **Avoid**: Positioning as a "public job marketplace" to reduce legal/operational risk.
+- **Agency case-study angle**: For Tecxmate's software integration/development pitch deck, position TECXWORK as proof that Tecxmate can turn a complex offline business process into production software: multilingual UX, role-based portals, booking integrity, cloud deployment, transactional email, file/data workflows, and event-day operational support for Taiwanese/European SME-style clients.
 
 ## Key Product Concepts
 ### 1. The "Talent Passport"
