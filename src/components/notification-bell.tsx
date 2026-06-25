@@ -170,9 +170,9 @@ export function NotificationBell({
       {pushEnabled === false && pushSupported && (
         <button
           onClick={enablePush}
-          className="flex w-full items-center gap-2 border-b bg-primary/5 px-4 py-2 text-xs text-primary hover:bg-primary/10"
+          className="flex w-full items-center gap-2 whitespace-normal border-b bg-primary/5 px-4 py-2 text-left text-xs text-primary hover:bg-primary/10"
         >
-          <BellRing className="h-4 w-4" />
+          <BellRing className="h-4 w-4 shrink-0" />
           {labels.enablePush}
         </button>
       )}
@@ -192,16 +192,16 @@ export function NotificationBell({
                 onClick={() => openNotification(n)}
                 onKeyDown={(event) => handleNotificationKeyDown(event, n)}
                 className={cn(
-                  "flex gap-3 px-4 py-3 transition-colors",
+                  "flex min-w-0 max-w-full gap-3 px-4 py-3 transition-colors",
                   n.metadata?.url && "cursor-pointer hover:bg-muted",
                   !n.read && "bg-primary/5"
                 )}
               >
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-sm", !n.read && "font-medium")}>
+                <div className="w-0 min-w-0 max-w-full flex-1 overflow-hidden whitespace-normal">
+                  <p className={cn("break-words text-sm [overflow-wrap:anywhere]", !n.read && "font-medium")}>
                     {n.title}
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground break-words">
+                  <p className="mt-0.5 whitespace-normal break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
                     {n.message}
                   </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">
@@ -246,9 +246,9 @@ export function NotificationBell({
       {pushEnabled === false && pushSupported && (
         <button
           onClick={enablePush}
-          className="mx-2 mb-2 flex items-center gap-2 rounded-md bg-primary/5 px-3 py-2 text-xs text-primary hover:bg-primary/10"
+          className="mx-2 mb-2 flex items-center gap-2 whitespace-normal rounded-md bg-primary/5 px-3 py-2 text-left text-xs text-primary hover:bg-primary/10"
         >
-          <BellRing className="h-3.5 w-3.5" />
+          <BellRing className="h-3.5 w-3.5 shrink-0" />
           {labels.enablePush}
         </button>
       )}
@@ -268,16 +268,16 @@ export function NotificationBell({
                 onClick={() => openNotification(n)}
                 onKeyDown={(event) => handleNotificationKeyDown(event, n)}
                 className={cn(
-                  "flex gap-3 rounded-md px-3 py-2 transition-colors",
+                  "flex min-w-0 max-w-full gap-3 rounded-md px-3 py-2 transition-colors",
                   n.metadata?.url && "cursor-pointer",
                   n.read ? "bg-transparent hover:bg-muted" : "bg-primary/5"
                 )}
               >
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-sm", !n.read && "font-medium")}>
+                <div className="w-0 min-w-0 max-w-full flex-1 overflow-hidden whitespace-normal">
+                  <p className={cn("break-words text-sm [overflow-wrap:anywhere]", !n.read && "font-medium")}>
                     {n.title}
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground break-words">
+                  <p className="mt-0.5 whitespace-normal break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
                     {n.message}
                   </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">
@@ -345,7 +345,7 @@ export function NotificationBell({
         data-open={open}
         aria-hidden={!open}
         className={cn(
-          "dropdown-panel z-50 overflow-hidden rounded-xl border bg-card shadow-lg",
+          "dropdown-panel z-50 overflow-hidden rounded-xl border bg-card whitespace-normal shadow-lg",
           // Mobile: span the screen with equal left/right margins, top edge
           // aligned with the hamburger dropdown (safe-area + 56px = 3.5rem).
           "fixed inset-x-3 top-[calc(env(safe-area-inset-top)+3.5rem)]",
