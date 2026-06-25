@@ -3,7 +3,7 @@ title: Recruitment Workflows & Booking Engine
 type: topic
 slug: recruitment-workflows
 date: 2026-05-04
-updated: 2026-06-01
+updated: 2026-06-25
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
@@ -44,6 +44,7 @@ related: [tecxwork, v-gen-trident-2026, 2026-05-12-linkedin-style-job-apply-flow
 - **Mode 2: Instant Publish**: Recruiters can publish jobs directly without admin intervention.
 
 ## History
+- 2026-06-25: Fixed notification bell message clipping in the topbar popover. The app topbar intentionally uses inherited `whitespace-nowrap` for compact nav actions, but that inheritance reached the dropdown panel and forced long notification bodies such as application confirmations onto one clipped line. The notification panel now resets to normal whitespace and constrains notification text columns with explicit flex min/max widths and overflow wrapping.
 - 2026-06-01: Tightened deployed `/jobs` list-card address clipping by forcing the job-card header text column to `w-0 flex-1` and adding overflow clipping to the card, header row, list pane, and list stack. This prevents long addresses from painting into the desktop detail pane even when nested flex truncation is insufficient.
 - 2026-06-01: Fixed the desktop `/jobs` split view so long job locations in the left list truncate within the card instead of spilling into the detail pane. The job detail apply/login CTA now renders in the top-right header area of the selected job detail card, while the footer keeps the JD link/no-JD text.
 - 2026-06-01: Put student cancellation behind a default-off admin setting. Added `event_config.student_cancellation_enabled` (default `false`) plus a migration helper, admin Settings toggle, `/api/bookings/mine` exposure for the profile UI, and DELETE-route enforcement so students cannot cancel by direct API call unless the toggle is enabled. Ran the live migration on 2026-06-01.
