@@ -23,7 +23,13 @@ This is **not an MVP list** — it's the V2→V3 build-out that turns TECXWORK f
 | **L** | 5–10 | $7.5K–15K | 1–2 devs, ~1 sprint |
 | **XL** | 12–20 | $18K–30K | Small squad, multi-sprint, cross-cutting |
 
-> **Blended rate assumption: ~US$1,500 / person-week** (≈ $37/hr fully-loaded), anchored to your own reference point (tecxmate delivered a 2-month MVP for ~NT$1M ≈ US$31K). Range to model: **$1,200–1,800/pw**. Swap to a Taiwan dev-shop rate (~3–4× higher) if you want the "build it locally" comparison. **All dollar figures below scale linearly with this rate — change one assumption, change the whole model.**
+> **Currency: all figures are US dollars (USD).** NTD shown where useful at **~32 NTD/USD** (e.g. $100K ≈ NT$3.2M).
+>
+> **Two rate bases — read both:**
+> - **(P) Traditional hire basis: ~US$1,500 / person-week** (≈ $37/hr fully-loaded). Useful as the "if we staffed this conventionally" number and to size *effort*. Range $1,200–1,800/pw. A Taiwan dev-shop is ~3–4× this.
+> - **(R) AI-augmented reality basis — USE THIS FOR THE BUDGET.** Empirical anchor: **this V1 MVP (web PWA) was built by ONE person + Claude + Codex for ~US$300 cash** (founder labor uncosted; the $300 is essentially AI-tool/API spend). That is the real internal cost basis, and it is **~100× cheaper than the ~$31K (NT$1M) price tecxmate would *charge a client* for an equivalent MVP** — i.e. $300 is cost, $31K is price; the gap is margin.
+>
+> **What this means for V2/V3 (the important part):** AI-augmented delivery collapses the cost of *codeable* work, but it does **not** compress the AI-resistant costs — external pen-tests/audits, legal & ESA licensing, compliance/DPO, support & trust-&-safety headcount, and infra. So as coding gets cheaper, **those non-code items become the dominant, binding budget.** Budget the floor, not the code. See §7 for both bases side by side.
 
 ### Platform decision (locked)
 
@@ -300,6 +306,8 @@ Status key: `BUILT` · `PARTIAL` · `NEW`  |  Priority: **V2** / **V3**
 **Calendar time** (10-person team ≈ 6–7 productive engineers): V2 ≈ **9–12 months**, V3 ≈ **6–9 months** → ~**15–21 months** end-to-end. Range to model with rate band $1,200–1,800/pw: **~$455K (low) → ~$920K (high)** for V2+V3 engineering.
 
 > ⚠️ These are *planning-grade* numbers for the business model. The dev team should re-estimate per function against the real codebase before any commitment.
+>
+> 💡 The dollar figures in this table use the **traditional-hire lens** to size effort. For the **AI-augmented (Claude/Codex) cost basis you'll actually spend — ~$90K–270K for V2+V3 — see §7.** The effort (person-weeks) is the same; AI changes the price of it.
 
 ---
 
@@ -355,13 +363,34 @@ Status key: `BUILT` · `PARTIAL` · `NEW`  |  Priority: **V2** / **V3**
 
 ---
 
-## 7. Engineering cost summary (for the business model)
+## 7. Cost summary (for the business model)
 
-| | Low | High |
+All USD. The two left columns are the *same work* priced two ways; the AI-augmented column is your real basis.
+
+| One-time engineering | (P) Traditional hire @$1.5K/pw | **(R) AI-augmented (founder + Claude/Codex)** | Taiwan dev-shop (~3.5×) |
+|---|---|---|---|
+| **V2 build** | $345K–450K | **~$55K–160K** | $1.2M–1.6M |
+| **V3 build** | $225K–315K | **~$35K–110K** | $0.8M–1.1M |
+| **V2 + V3 total** | **$570K–765K** | **~$90K–270K** | **$2.0M–2.7M** |
+| in NTD (~32) | NT$18M–24M | **NT$3M–8.6M** | NT$64M–86M |
+
+> **(R) basis:** AI-augmented, founder-led delivery realistically lands codeable engineering at **~15–35% of the traditional cash figure** — extrapolated from the **$300** V1 MVP (1 person + Claude + Codex). Optimistic (founder-heavy, ~1–2 lean hires) trends to the low end; conservative (more hires, more novel/uncodeable work) to the high end. **Security, compliance, and legal work compress the least** — keep them costed at human/expert rates even in this column.
+
+### The binding constraint is the non-code floor (annual, AI-resistant)
+
+AI makes the code cheap; these don't move. For the business model, **this is the real budget**:
+
+| Floor item (Tier 1, year 1) | USD / yr | NTD / yr |
 |---|---|---|
-| **V2 build** (one-time, eng) | $345K | $450K |
-| **V3 build** (one-time, eng) | $225K | $315K |
-| **Annual run-rate** (Tier 1 → Tier 2 as you grow) | $145K | $880K |
+| Infrastructure (§5) | $11K–48K | NT$350K–1.5M |
+| Security & compliance (pen-test, audit, DPO time) | $20K–50K | NT$640K–1.6M |
+| Support / trust & safety staff | $25K–60K | NT$800K–1.9M |
+| Ongoing eng upkeep (AI-augmented) | $20K–50K | NT$640K–1.6M |
+| **Annual floor** | **~$76K–208K** | **~NT$2.4M–6.7M** |
+| **+ one-time** Taiwan entity + ESA legal | $30K–60K | NT$1M–1.9M |
+| **+ ESA paid-in capital** (recoverable, not expense) | ~$15.6K | NT$500K |
+
+> **Takeaway for the business team:** with AI-augmented build, **V2+V3 code is ~$90K–270K one-time**, but you'll spend a *similar or larger amount every year* on the AI-resistant floor (infra + security + compliance + support + legal). Model the company around the **annual floor (~$76K–208K/yr at Tier 1)**, not the build. The build is no longer the expensive part — running a regulated cross-border marketplace is.
 
 ---
 
@@ -423,7 +452,7 @@ These belong in the financial model as **legal/compliance OPEX + a Taiwan entity
 
 **Q6 — Data-residency hard line.** **SG/JP storage is fine for now.** PIPA permits cross-border transfer with **explicit consent + adequate protection** — so the real requirements are versioned consent (SE-01) and a documented transfer basis (CB-06), *not* in-country storage. Keep **TW-region optionality** (PL-09) so residency becomes a config change if (a) an enterprise/government client contractually demands TW residency or (b) PIPA changes. Don't pay for in-country storage until a client requires it.
 
-**Q7 — Blended rate.** Present **two columns** in the business model: your real basis **in-house/VN blended $1,500/pw**, and a **Taiwan dev-shop reference at ~$4,500–6,000/pw (3–4×)**. Plan against $1,500/pw; cite the Taiwan multiple as the **cost-advantage narrative** (it's literally your `cost-efficiency` pitch — same build, ~70% less). At 3.5×, the V2+V3 engineering range (~$570K–765K in-house) would be **~$2.0M–2.7M** at a local shop — a useful headline for the business/investor audience.
+**Q7 — Blended rate.** All figures are **USD**. Plan the budget on the **AI-augmented basis (R): V2+V3 code ≈ $90K–270K (~NT$3M–8.6M)**, anchored to the **$300** one-person-+-Claude-+-Codex MVP — not the traditional-hire number. Keep the other two columns as *context*: the **$1,500/pw traditional-hire** figure ($570K–765K) shows the conventional cost, and the **Taiwan dev-shop ~$2.0M–2.7M** figure is your cost-advantage headline (same build, AI-augmented delivery is >85% cheaper than a local shop). **But the decisive number isn't the build — it's the AI-resistant annual floor (~$76K–208K/yr at Tier 1; §7):** infra, security, compliance, support, legal. Model the company around the floor; the code is no longer the expensive part.
 
 ### One-line takeaways
 1. Monetize software/ads first, placements after the license. 2. Don't pre-buy the ESA license — start it ~2 quarters before placement revenue. 3. Tier-2-ready, Tier-1-priced. 4. Wrap LLMs + pgvector; don't build ML. 5. VN supply, TW demand. 6. SG/JP storage + consent is compliant; keep TW-region optionality. 7. Plan at $1,500/pw; sell the 3–4× savings story.
