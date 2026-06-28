@@ -1165,3 +1165,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Added business-team one-pager: AI-augmented build cost + 3-year P&L skeleton (cost modeled, revenue placeholders).
 - 3yr total cost ≈ $1.22M; annual floor Y1 ~$255K → Y3 ~$585K. Spec: docs/specs/tecxwork-cost-summary-onepager.md
+
+## [2026-06-29] ingest | Handoff doc → Claude Cowork
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Wrote self-contained handoff for Cowork to continue the business/financial workstream.
+- Spec: docs/specs/tecxwork-cowork-handoff.md (also on Desktop next to the financial model).
