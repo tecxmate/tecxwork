@@ -62,6 +62,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Event time configuration](topics/event-time-config.md) — admin time form, slot regeneration, Asia/Taipei roundtrip
 - [SaaS Strategy & Product Pivot](topics/saas-strategy.md) — multi-tenant transition, Talent Passport, AI matching
 - [TECXWORK Sales Deck (customer-facing)](topics/tecxwork-sales-deck.md) — 13-slide organizer sales pitch; script at docs/decks/tecxwork-sales-deck.md
+- [V2/V3 Function List & Cost Model](topics/v2-v3-function-list.md) — full capability spec + dev/infra/maintenance cost for dev + business teams; spec at docs/specs/tecxwork-v2-v3-function-list.md
 - [Taiwan Legal Compliance](topics/taiwan-compliance.md) — PIPA/PDPA, MOL licenses, work permits
 - [Taiwan Legal and Operational Framework](topics/taiwan-legal-operational-framework.md) — Legal requirements, resources, and stakeholders for operations in Taiwan
 - [Architecture Overview](topics/architecture-overview.md) — tech stack, concurrency, data isolation, Neon/Vercel

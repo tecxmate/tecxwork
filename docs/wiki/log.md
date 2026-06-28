@@ -1154,3 +1154,9 @@ attributed_to: [niko]   belongs_to: [admin-panel]
 - New route GET /api/admin/export/stats → 6-sheet .xlsx (Summary/By Event/Companies/Applicants/Applications/Job openings) via exceljs.
 - Added button next to Export CSV; i18n key qr.exportExcel (en/vi/zh-TW); added exceljs dep.
 - Updated docs/wiki/topics/admin-panel.md (function list + History).
+
+## [2026-06-29] synthesis | V2/V3 function list & cost model
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Authored full V2/V3 capability spec + ballpark cost (dev/infra/maintenance, 3 scale tiers) for dev + business teams.
+- Vision: marketplace + events; web/PWA + kiosk first, native mobile deferred; blended ~$1.5K/pw.
+- Spec: docs/specs/tecxwork-v2-v3-function-list.md · page: docs/wiki/topics/v2-v3-function-list.md
