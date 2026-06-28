@@ -23,6 +23,7 @@ import {
   Lock,
   LockOpen,
   Download,
+  FileSpreadsheet,
   Loader2,
   ArrowUpDown,
   ArrowUp,
@@ -1779,6 +1780,13 @@ export function AdminDashboard({
                         >
                           <Download className="h-3.5 w-3.5" />
                           {admin.qr.exportCsv}
+                        </a>
+                        <a
+                          href="/api/admin/export/stats"
+                          className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
+                        >
+                          <FileSpreadsheet className="h-3.5 w-3.5" />
+                          {admin.qr.exportExcel}
                         </a>
                       </div>
                       {reminderResult && (
