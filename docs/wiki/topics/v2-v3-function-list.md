@@ -30,5 +30,9 @@ Full V2/V3 capability spec + ballpark cost model for handing to the dev team (ef
 ## Open questions (for the teams) — answered §11
 Product recommendations now in spec §11: (1) monetize software/ads first, placements only post-ESA-license; (2) don't pre-buy the ESA license — start ~2 quarters before placement revenue; (3) Tier-2-ready, Tier-1-priced; (4) wrap LLMs + pgvector, don't build ML; (5) VN supply, TW demand; (6) SG/JP storage + consent is PIPA-compliant, keep TW-region optionality; (7) plan at $1,500/pw, sell the 3–4× Taiwan-shop savings story (~$2.0M–2.7M equiv). Still need the teams to ratify.
 
+## Companion docs
+- `docs/specs/tecxwork-cost-summary-onepager.md` — business-team one-pager: AI-augmented build cost + 3-year P&L skeleton (cost modeled, revenue placeholders). 3yr total cost ≈ $1.22M; annual floor Y1 ~$255K → Y3 ~$585K.
+
 ## History
 - 2026-06-29 — Created the V2/V3 function list + cost model; grounded in [[taiwan-compliance]], [[taiwan-legal-operational-framework]], [[architecture-overview]], [[load-readiness]], [[data-privacy]], [[saas-strategy]].
+- 2026-06-29 — Reframed cost on AI-augmented basis (anchored to ~$300 MVP); added the cost-summary one-pager + 3-year P&L skeleton.

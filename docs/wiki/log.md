@@ -1160,3 +1160,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Authored full V2/V3 capability spec + ballpark cost (dev/infra/maintenance, 3 scale tiers) for dev + business teams.
 - Vision: marketplace + events; web/PWA + kiosk first, native mobile deferred; blended ~$1.5K/pw.
 - Spec: docs/specs/tecxwork-v2-v3-function-list.md · page: docs/wiki/topics/v2-v3-function-list.md
+
+## [2026-06-29] synthesis | Cost summary one-pager + 3yr P&L
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Added business-team one-pager: AI-augmented build cost + 3-year P&L skeleton (cost modeled, revenue placeholders).
+- 3yr total cost ≈ $1.22M; annual floor Y1 ~$255K → Y3 ~$585K. Spec: docs/specs/tecxwork-cost-summary-onepager.md
