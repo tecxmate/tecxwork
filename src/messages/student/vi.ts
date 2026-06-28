@@ -430,6 +430,7 @@ export const studentViMessages = {
       title: "Mã QR Quản trị viên",
       subtitle: "Quét để mở nhanh cổng thông tin sự kiện này.",
       exportCsv: "Xuất CSV",
+      exportExcel: "Xuất Excel",
       sendReminders: "Gửi nhắc nhở",
     },
     stats: {
