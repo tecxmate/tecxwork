@@ -1142,3 +1142,15 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 ## [2026-06-18] chat | TECXWORK pitch-deck case-study positioning
 attributed_to: [niko]   belongs_to: [saas-strategy, tecxwork]
 - Niko is framing TECXWORK as a case study for Tecxmate as a software integration and development firm serving Taiwanese/European SME clients: proof of turning an offline recruitment/event workflow into production software with multilingual UX, role portals, booking integrity, cloud infra, email, file/data workflows, and event-day operations. Updated topics/saas-strategy.md.
+
+## [2026-06-27] chat | TECXWORK customer-facing sales deck
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Brainstormed + drafted a 13-slide sales deck targeting event organizers (not investors, not Tecxmate case study).
+- Editable content script: docs/decks/tecxwork-sales-deck.md; TBD numbers (pricing, CTA, setup time) flagged as placeholders.
+- New page: docs/wiki/topics/tecxwork-sales-deck.md
+
+## [2026-06-28] ingest | Admin "Export Excel" stats workbook
+attributed_to: [niko]   belongs_to: [admin-panel]
+- New route GET /api/admin/export/stats → 6-sheet .xlsx (Summary/By Event/Companies/Applicants/Applications/Job openings) via exceljs.
+- Added button next to Export CSV; i18n key qr.exportExcel (en/vi/zh-TW); added exceljs dep.
+- Updated docs/wiki/topics/admin-panel.md (function list + History).
