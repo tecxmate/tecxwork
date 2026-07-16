@@ -1087,3 +1087,10 @@ attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 attributed_to: [niko]   belongs_to: [v-gen-trident-2026]
 - Disabled the public visualizer for the event: removed the footer "Live" link (site-footer.tsx) and added a temporary (307) redirect /event-pulse.html -> / in vercel.json. Reversible — the public/event-pulse.html file and its desktop-fit work are kept in the repo; remove the redirect + restore the footer link to re-enable.
 - GET /api/event-pulse (aggregate-only, cached, CORS *) is left live and harmless; can be disabled separately if desired.
+
+## [2026-07-16] ingest | Vercel Blob → Cloudflare R2 migration + logo recovery
+attributed_to: [niko]   belongs_to: [photo-uploads]
+- Free-tier Vercel Blob hit 100% of Advanced Requests; store access paused 30 days and existing image URLs now return HTTP 403 (44 URLs / 33 company logos broken on work.tecxmate.com). Chose R2 over paying Vercel.
+- Upload backend swapped to Cloudflare R2 (S3-compatible): new src/lib/r2.ts, src/lib/image-host.ts (allow-list accepts R2 host + legacy Blob host), @aws-sdk/client-s3. Legacy Blob URLs still allow-listed.
+- Re-sourced 30/33 company logos from the open web (official sites, Wikimedia, FB); SVG/ICO rasterized to PNG; stored in public/company-logos/ with recruiters.logo_url rewritten to /company-logos/<id>.<ext>. Originals backed up. Left for niko: BellWether, Futsu, 富利餐飲, KD 9 Spa. Gallery images unrecoverable.
+- Decision: docs/wiki/decisions/2026-07-16-r2-image-storage-migration.md. Shipped via branch fix/logo-recovery-r2-migration off main (multi-tenant work deliberately excluded).

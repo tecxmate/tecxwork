@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
 import { getSession } from "@/lib/auth";
+import { isR2Configured, uploadToR2 } from "@/lib/r2";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -19,7 +19,7 @@ function jsonError(error: string, status: number) {
 
 /**
  * POST /api/upload
- * Uploads an image to Vercel Blob storage.
+ * Uploads an image to Cloudflare R2 storage.
  * Requires authentication.
  * Body: FormData with "file" and "type".
  */
@@ -30,9 +30,9 @@ export async function POST(req: NextRequest) {
       return jsonError("Unauthorized", 401);
     }
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    if (!isR2Configured()) {
       return jsonError(
-        "Image uploads are not configured. Missing BLOB_READ_WRITE_TOKEN.",
+        "Image uploads are not configured. Missing R2 storage credentials.",
         503
       );
     }
@@ -72,11 +72,9 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split(".").pop() || "jpg";
     const filename = `${folder}/${session.userId}-${Date.now()}.${ext}`;
 
-    const blob = await put(filename, file, {
-      access: "public",
-    });
+    const { url } = await uploadToR2(filename, file, file.type);
 
-    return NextResponse.json({ url: blob.url });
+    return NextResponse.json({ url });
   } catch (error) {
     console.error("Image upload failed", error);
     return jsonError("Image upload failed. Please try again.", 500);
