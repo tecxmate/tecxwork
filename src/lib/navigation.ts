@@ -4,6 +4,7 @@ import {
   Building2,
   CalendarClock,
   Home,
+  KanbanSquare,
   SlidersHorizontal,
   User,
   Users,
@@ -61,6 +62,12 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Applicants",
       icon: Users,
       matches: ["/dashboard/applicants"],
+    },
+    {
+      href: "/dashboard/pipeline",
+      label: "Pipeline",
+      icon: KanbanSquare,
+      matches: ["/dashboard/pipeline"],
     },
     {
       href: "/dashboard/jobs",

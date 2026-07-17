@@ -25,6 +25,7 @@ import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switc
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
+import type { PipelineBoard } from "@/lib/pipeline-types";
 
 // ... existing Booking/Recruiter types ...
 
@@ -62,7 +63,7 @@ type Recruiter = {
   galleryUrls: string[];
 };
 
-type Section = "interviews" | "applicants" | "jobs" | "company";
+type Section = "interviews" | "applicants" | "pipeline" | "jobs" | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
   "recruiter_applicants_compliance_notice_dismissed_v1";
 
@@ -74,12 +75,19 @@ const RecruiterCompanyTab = dynamic(
   { loading: () => <DashboardTabLoader /> }
 );
 
+// dnd-kit-heavy — load only when the Pipeline tab is opened.
+const DashboardPipeline = dynamic(
+  () => import("../pipeline/pipeline-board").then((m) => m.DashboardPipeline),
+  { loading: () => <DashboardTabLoader /> }
+);
+
 export function RecruiterDashboard({
   recruiter,
   bookings,
   section,
   jobModerationEnabled,
   salaryCurrencyOptions,
+  pipelineBoard = null,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
@@ -87,6 +95,7 @@ export function RecruiterDashboard({
   showApplicants: boolean;
   jobModerationEnabled: boolean;
   salaryCurrencyOptions: string[];
+  pipelineBoard?: PipelineBoard | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -109,9 +118,11 @@ export function RecruiterDashboard({
       ? "/dashboard/interviews"
       : section === "applicants"
         ? "/dashboard/applicants"
-        : section === "jobs"
-          ? "/dashboard/jobs"
-          : "/dashboard/company";
+        : section === "pipeline"
+          ? "/dashboard/pipeline"
+          : section === "jobs"
+            ? "/dashboard/jobs"
+            : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -122,6 +133,7 @@ export function RecruiterDashboard({
     const recruiterRoutes = [
       "/dashboard/interviews",
       "/dashboard/applicants",
+      "/dashboard/pipeline",
       "/dashboard/jobs",
       "/dashboard/company",
     ];
@@ -168,11 +180,24 @@ export function RecruiterDashboard({
       />
 
       <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
-        <div className="mx-auto max-w-6xl">
+        <div
+          className={cn(
+            "mx-auto",
+            section === "pipeline" ? "max-w-[1400px]" : "max-w-6xl"
+          )}
+        >
           {section === "interviews" ? (
             <InterviewScheduleTab bookings={bookings} />
           ) : section === "applicants" ? (
             <BookingsTab bookings={bookings} />
+          ) : section === "pipeline" ? (
+            pipelineBoard && pipelineBoard.jobs.length > 0 ? (
+              <DashboardPipeline board={pipelineBoard} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                No candidates in the pipeline yet.
+              </p>
+            )
           ) : section === "jobs" ? (
             <RecruiterCompanyTab
               recruiter={recruiter}

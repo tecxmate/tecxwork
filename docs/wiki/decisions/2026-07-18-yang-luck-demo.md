@@ -35,6 +35,18 @@ NOT merged to main). Star surface is **`/pipeline`** — a 5-stage ATS kanban.
 - Vercel preview via **branch-scoped `DATABASE_URL`** (+ demo `JWT_SECRET`) so the
   preview uses the demo DB, not prod.
 
+## Update (2026-07-18) — integrated as a native tecxwork tab
+Per Niko: the ATS must be **seamless within tecxwork**, not a standalone page.
+- Added a **Pipeline** tab to the recruiter dashboard nav (`src/lib/navigation.ts`,
+  `KanbanSquare` icon) → route `/dashboard/pipeline`, rendered through the same
+  `RecruiterDashboard` shell (top bar, footer, tokens).
+- Refactored `pipeline-board.tsx` to tecxwork **design tokens** (bg-card, border,
+  primary, muted) and split into `PipelineBoardBody` + two wrappers:
+  `DashboardPipeline` (follows recruiter i18n en/繁中, no own toggle) and
+  `PipelineBoard` (standalone `/pipeline`, keeps its own 繁中/EN/VI toggle).
+- Recruiter dashboard is **bilingual (en/zh-TW)** — no VI — so the in-app tab is
+  bilingual; the standalone demo page stays trilingual.
+
 ## Consequences
 - New files: `src/app/pipeline/*`, `src/app/api/applications/[id]/route.ts`,
   `src/lib/pipeline-{data,types}.ts`, `src/lib/db/seed-yang-luck.ts`, `DEMO.md`,
