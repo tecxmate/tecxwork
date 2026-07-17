@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, eventConfig } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { isAllowedImageUrl } from "@/lib/image-host";
 
 type Placement = "browse" | "jobs";
 
@@ -12,16 +13,8 @@ function sanitizeImages(rawImages: unknown) {
   for (const raw of rawImages.slice(0, 2)) {
     if (typeof raw !== "string" || raw.trim() === "") continue;
     const trimmed = raw.trim();
-    try {
-      const url = new URL(trimmed);
-      if (
-        url.protocol === "https:" &&
-        url.hostname.endsWith(".public.blob.vercel-storage.com")
-      ) {
-        sanitized.push(trimmed);
-      }
-    } catch {
-      // Ignore invalid URLs.
+    if (isAllowedImageUrl(trimmed)) {
+      sanitized.push(trimmed);
     }
   }
   return sanitized;

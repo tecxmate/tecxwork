@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, eventConfig } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { isAllowedImageUrl } from "@/lib/image-host";
 import { eq } from "drizzle-orm";
 
 export async function PUT(req: NextRequest) {
@@ -19,8 +20,8 @@ export async function PUT(req: NextRequest) {
   }
 
   // Slots are positional (index 0 = en, 1 = vi, 2 = zh-TW). Preserve empty
-  // strings so the locale mapping stays intact. Only accept https URLs from
-  // our blob host — blocks javascript:/data: URLs from being stored.
+  // strings so the locale mapping stays intact. Only accept https URLs from an
+  // allowed image host — blocks javascript:/data: URLs from being stored.
   const sanitized: string[] = [];
   for (const raw of homepageImages.slice(0, 3)) {
     if (typeof raw !== "string" || raw.trim() === "") {
@@ -28,17 +29,9 @@ export async function PUT(req: NextRequest) {
       continue;
     }
     const trimmed = raw.trim();
-    try {
-      const u = new URL(trimmed);
-      if (
-        u.protocol === "https:" &&
-        u.hostname.endsWith(".public.blob.vercel-storage.com")
-      ) {
-        sanitized.push(trimmed);
-        continue;
-      }
-    } catch {
-      // not a valid URL — fall through
+    if (isAllowedImageUrl(trimmed)) {
+      sanitized.push(trimmed);
+      continue;
     }
     sanitized.push("");
   }
