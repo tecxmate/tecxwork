@@ -257,6 +257,55 @@ export const bookings = pgTable("bookings", {
     .defaultNow(),
 });
 
+// ---- Applications / ATS pipeline (Yang Luck demo) ----
+// One row per candidate applying to a job; drives the recruiter kanban board.
+// Distinct from `bookings` (interview-slot machinery) on purpose.
+
+export const pipelineStageEnum = pgEnum("pipeline_stage", [
+  "applied",
+  "screening",
+  "interview",
+  "offer",
+  "hired",
+]);
+
+export const applications = pgTable(
+  "applications",
+  {
+    id: serial("id").primaryKey(),
+    jobOpeningId: integer("job_opening_id")
+      .notNull()
+      .references(() => jobOpenings.id),
+    applicantId: integer("applicant_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    // Denormalized for fast board queries (a job always belongs to one recruiter).
+    recruiterId: integer("recruiter_id")
+      .notNull()
+      .references(() => recruiters.id),
+    stage: pipelineStageEnum("stage").notNull().default("applied"),
+    stageUpdatedAt: timestamp("stage_updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    notes: text("notes").notNull().default(""),
+    // Mocked "AI CV screening" score (0-100) for the demo badge — not real inference.
+    aiScore: integer("ai_score"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_application_job_applicant").on(
+      table.jobOpeningId,
+      table.applicantId
+    ),
+    index("applications_recruiter_stage_idx").on(
+      table.recruiterId,
+      table.stage
+    ),
+  ]
+);
+
 // ---- Allowed recruiter email domains (admin whitelist) ----
 
 export const allowedDomains = pgTable("allowed_domains", {
