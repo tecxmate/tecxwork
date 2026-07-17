@@ -1094,3 +1094,10 @@ attributed_to: [niko]   belongs_to: [photo-uploads]
 - Upload backend swapped to Cloudflare R2 (S3-compatible): new src/lib/r2.ts, src/lib/image-host.ts (allow-list accepts R2 host + legacy Blob host), @aws-sdk/client-s3. Legacy Blob URLs still allow-listed.
 - Re-sourced 30/33 company logos from the open web (official sites, Wikimedia, FB); SVG/ICO rasterized to PNG; stored in public/company-logos/ with recruiters.logo_url rewritten to /company-logos/<id>.<ext>. Originals backed up. Left for niko: BellWether, Futsu, 富利餐飲, KD 9 Spa. Gallery images unrecoverable.
 - Decision: docs/wiki/decisions/2026-07-16-r2-image-storage-migration.md. Shipped via branch fix/logo-recovery-r2-migration off main (multi-tenant work deliberately excluded).
+
+## [2026-07-18] build | Yang Luck ATS-kanban pitch demo
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Built clickable Yang Luck demo on branch demo/yang-luck (off main, not merged). Star = /pipeline 5-stage ATS kanban with dnd-kit drag-drop that persists.
+- Isolated demo Neon project tecxwork-yl-demo (MCP can't branch prod delicate-lab). New applications table. Seeded 1 recruiter + 7 jobs + 30 candidates across 5 stages.
+- Vercel preview (branch-scoped demo DB): https://app-git-demo-yang-luck-nikolasdoans-projects.vercel.app/pipeline
+- Decision: docs/wiki/decisions/2026-07-18-yang-luck-demo.md

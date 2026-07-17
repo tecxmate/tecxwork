@@ -17,6 +17,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
 
 ## Decisions
+- [2026-07-18 — Yang Luck ATS-kanban pitch demo](decisions/2026-07-18-yang-luck-demo.md) — clickable pipeline demo on branch demo/yang-luck; isolated demo Neon DB; not merged to main
 - [2026-07-16 — Migrate image uploads from Vercel Blob to Cloudflare R2](decisions/2026-07-16-r2-image-storage-migration.md) — free-tier Blob ops cap paused store access (existing images 403); swap upload backend to R2 + re-source 30 company logos to public/company-logos/
 - [2026-06-06 — Upgrade live project to Vercel Pro](decisions/2026-06-06-vercel-pro-upgrade.md) — Hobby free resources exceeded on event day; Pro lifts limits and meters overage instead of throttling
 - [2026-06-01 — Notification-primary apply + push prompt](decisions/2026-06-01-notification-primary-apply.md) — student apply confirmation stays notification-first; recruiter application_submitted email now sends for every application; shared usePush hook

@@ -1,6 +1,8 @@
 # 揚運 Yang Luck — 招募平台 Demo
 
-> **Live preview:** _(deploying — URL added after the Vercel preview builds)_
+> **Live preview:** **https://app-git-demo-yang-luck-nikolasdoans-projects.vercel.app/pipeline** (stable branch URL)
+> Immutable build: https://app-eahx3u0ik-nikolasdoans-projects.vercel.app/pipeline
+> Backed by an isolated demo Neon DB — never touches production.
 > Branded, clickable demo of the recruitment platform proposed to **揚運國際集團 (Yang Luck)**. The headline is the **ATS 招募看板 (kanban pipeline)**. Built on the existing TECXWORK codebase. **Demo quality, fictional data only — no real PII.**
 
 ---
