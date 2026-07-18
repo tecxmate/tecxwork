@@ -184,36 +184,47 @@ async function seed() {
   await db.delete(schema.eventConfig);
   await db.delete(schema.users);
 
-  const recruiterPw = await bcrypt.hash("demo1234", 12);
-  const adminPw = await bcrypt.hash("demo1234", 12);
-  await db.insert(schema.users).values({ email: "admin@yangluck.demo", name: "Demo Admin", passwordHash: adminPw, role: "admin" });
-  const [recUser] = await db.insert(schema.users)
-    .values({ email: "hr@yangluck.demo", name: "揚運 HR 陳小姐", passwordHash: recruiterPw, role: "recruiter" })
-    .returning();
+  const pw = await bcrypt.hash("demo1234", 12);
+  await db.insert(schema.users).values({ email: "admin@yangluck.demo", name: "Demo Admin", passwordHash: pw, role: "admin" });
 
-  const [rec] = await db.insert(schema.recruiters).values({
-    userId: recUser.id,
+  // Agency login (揚運) — the platform operator; sees the whole pipeline.
+  const [agencyUser] = await db.insert(schema.users)
+    .values({ email: "hr@yangluck.demo", name: "揚運 HR 陳小姐", passwordHash: pw, role: "recruiter" })
+    .returning();
+  await db.insert(schema.recruiters).values({
+    userId: agencyUser.id,
     company: "揚運國際集團 Yang Luck",
     industry: "人力仲介 Manpower Agency",
+    clientKind: "agency",
     description: "揚運國際集團 — 台中總部的國際人力仲介與派遣集團，為營造、製造、旅宿業客戶媒合學生與白領人才。",
     contactEmail: "hr@yangluck.demo",
     interviewerCount: 3,
-  }).returning();
+  });
 
-  // Jobs: one jobOpening per company position, tagged with the client company.
-  // posKey → jobId so candidates can target company + position index.
+  // Each client company is its own recruiter (appears in /browse) with positions.
+  const recruiterIdByCompany: Record<string, number> = {};
   const jobIdByPos: Record<string, number> = {};
   for (const co of COMPANIES) {
+    const [u] = await db.insert(schema.users)
+      .values({ email: `co-${co.key}@yangluck.demo`, name: `${co.zh} HR`, passwordHash: pw, role: "recruiter" })
+      .returning();
+    const [r] = await db.insert(schema.recruiters).values({
+      userId: u.id,
+      company: `${co.zh} ${co.en}`,
+      industry: co.industry,
+      clientKind: co.kind,
+      description: `${co.zh}（${co.en}）— 揚運${co.kind === "subsidiary" ? "集團關係企業" : "合作客戶"}，${co.industry}。`,
+      contactEmail: `hr@${co.key}.demo`,
+    }).returning();
+    recruiterIdByCompany[co.key] = r.id;
+
     const [min, max] = salary(co.industry);
     for (let i = 0; i < co.positions.length; i++) {
       const p = co.positions[i];
       const [row] = await db.insert(schema.jobOpenings).values({
-        recruiterId: rec.id,
+        recruiterId: r.id,
         title: `${p.zh} ${p.en}`,
         jobCategory: co.industry,
-        clientCompany: `${co.zh} ${co.en}`,
-        clientIndustry: co.industry,
-        clientKind: co.kind,
         location: "台中 Taichung",
         employmentType: "full_time",
         workplaceType: "onsite",
@@ -224,7 +235,7 @@ async function seed() {
         seniority: "entry_level",
         languageRequirement: p.lang,
         visaSupport: "case_by_case",
-        description: `${co.zh}｜揚運為客戶企業媒合之${p.zh}職缺。`,
+        description: `${co.zh}｜由揚運媒合之${p.zh}職缺。`,
         requirements: "相關科系在學或應屆畢業；具備基本溝通能力。",
         moderationStatus: "approved",
         reviewedAt: new Date(),
@@ -233,11 +244,12 @@ async function seed() {
     }
   }
 
-  // Candidates + applications.
+  // Candidates + applications — application belongs to the client company.
   let n = 0;
   for (const c of CANDIDATES) {
     const jobId = jobIdByPos[`${c.company}:${c.posIndex}`] ?? jobIdByPos[`${c.company}:0`];
-    if (!jobId) continue;
+    const recId = recruiterIdByCompany[c.company];
+    if (!jobId || !recId) continue;
     const [appl] = await db.insert(schema.applicantProfiles).values({
       name: `${c.name}（${c.nameZh}）`,
       email: `cand${n + 1}@yangluck.demo`,
@@ -254,7 +266,7 @@ async function seed() {
     await db.insert(schema.applications).values({
       jobOpeningId: jobId,
       applicantId: appl.id,
-      recruiterId: rec.id,
+      recruiterId: recId,
       stage: c.stage,
       aiScore: c.ai,
     });

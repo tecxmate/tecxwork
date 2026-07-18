@@ -1,7 +1,7 @@
 import { getCache } from "@vercel/functions";
 import { getExternalJobs, type GetExternalJobsOptions } from "./crawler";
 import { db, recruiters, users, jobOpenings } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 
 const cache = getCache({ namespace: "app" });
 const CACHE_TTL = 300; // 5 minutes
@@ -54,7 +54,9 @@ async function fetchRecruiters() {
       pinnedRank: recruiters.pinnedRank,
     })
     .from(recruiters)
-    .innerJoin(users, eq(recruiters.userId, users.id));
+    .innerJoin(users, eq(recruiters.userId, users.id))
+    // Hide the agency itself from the public company directory (demo).
+    .where(ne(recruiters.clientKind, "agency"));
 
   const approvedJobs = await db
     .select({

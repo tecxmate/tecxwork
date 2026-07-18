@@ -1112,3 +1112,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 - Kanban/pipeline now reuse the app design system: Card/Button/Badge components, font-heading, tokens. Standalone /pipeline dropped its custom header/toggle → redirects to /dashboard/pipeline (the native tab), reusing AppTopBar + RecruiterLanguageSwitcher (bilingual 繁中/English).
 - Rebranded app chrome tecxwork → "yangluck 揚運" (brand-link, brand/pwa splash, site-footer, browse loading, layout metadata, student login/signup messages).
+
+## [2026-07-18] fix | Demo: 25 client companies now real recruiters (visible in /browse)
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Previously the 25 clients were only tags on Yang Luck's jobs (ATS-only). Now each client/subsidiary is its own recruiter with positions → shows in /browse "Participating Companies" (25, agency hidden via recruiters.client_kind='agency').
+- getPipelineBoard now aggregates the whole placement pipeline across all client recruiters (agency super-view), grouped by company. cache.ts fetchRecruiters excludes clientKind='agency'.

@@ -74,6 +74,8 @@ export const recruiters = pgTable("recruiters", {
     .unique(),
   company: text("company").notNull(),
   industry: text("industry").notNull(),
+  // Demo agency model: "subsidiary" / "client" companies vs the "agency" itself.
+  clientKind: text("client_kind").notNull().default("client"),
   description: text("description").notNull().default(""),
   positions: text("positions").array().notNull().default([]),
   contactEmail: text("contact_email").notNull(),

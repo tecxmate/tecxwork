@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   applications,
@@ -6,39 +6,23 @@ import {
   jobOpenings,
   recruiters,
 } from "@/lib/db/schema";
-import { getRecruiterFromSession } from "@/lib/auth";
-import type { PipelineBoard, PipelineCard, PipelineStage } from "@/lib/pipeline-types";
 
-export type { PipelineBoard, PipelineCard, PipelineJob, PipelineStage } from "@/lib/pipeline-types";
+export type {
+  PipelineBoard,
+  PipelineCard,
+  PipelineJob,
+  PipelineStage,
+} from "@/lib/pipeline-types";
 export { PIPELINE_STAGES } from "@/lib/pipeline-types";
 
+import type { PipelineBoard, PipelineCard } from "@/lib/pipeline-types";
+
 /**
- * Resolve the recruiter whose board to show: the logged-in recruiter if there
- * is a session, otherwise the demo recruiter (the single seeded Yang Luck row).
- * Demo-mode fallback keeps the pitch URL clickable with no login.
+ * Yang Luck agency view: the whole placement pipeline across every client
+ * company (each client company is its own recruiter). The board groups by the
+ * client company; the agency recruiter itself (clientKind "agency") is excluded.
  */
-async function resolveRecruiter() {
-  const db = getDb();
-  const fromSession = await getRecruiterFromSession();
-  if (fromSession) {
-    const [r] = await db
-      .select({ id: recruiters.id, company: recruiters.company })
-      .from(recruiters)
-      .where(eq(recruiters.id, fromSession.recruiterId))
-      .limit(1);
-    if (r) return r;
-  }
-  const [demo] = await db
-    .select({ id: recruiters.id, company: recruiters.company })
-    .from(recruiters)
-    .limit(1);
-  return demo ?? null;
-}
-
 export async function getPipelineBoard(): Promise<PipelineBoard | null> {
-  const recruiter = await resolveRecruiter();
-  if (!recruiter) return null;
-
   const db = getDb();
   const [jobs, rows] = await Promise.all([
     db
@@ -47,12 +31,13 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
         title: jobOpenings.title,
         jobCategory: jobOpenings.jobCategory,
         location: jobOpenings.location,
-        clientCompany: jobOpenings.clientCompany,
-        clientIndustry: jobOpenings.clientIndustry,
-        clientKind: jobOpenings.clientKind,
+        clientCompany: recruiters.company,
+        clientIndustry: recruiters.industry,
+        clientKind: recruiters.clientKind,
       })
       .from(jobOpenings)
-      .where(eq(jobOpenings.recruiterId, recruiter.id)),
+      .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+      .where(ne(recruiters.clientKind, "agency")),
     db
       .select({
         id: applications.id,
@@ -74,14 +59,15 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
       .innerJoin(
         applicantProfiles,
         eq(applications.applicantId, applicantProfiles.id)
-      )
-      .where(eq(applications.recruiterId, recruiter.id)),
+      ),
   ]);
+
+  if (jobs.length === 0) return null;
 
   const cards: PipelineCard[] = rows.map((r) => ({
     id: r.id,
     jobOpeningId: r.jobOpeningId,
-    stage: r.stage as PipelineStage,
+    stage: r.stage as PipelineCard["stage"],
     aiScore: r.aiScore,
     notes: r.notes,
     applicant: {
@@ -97,5 +83,5 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
     },
   }));
 
-  return { recruiter, jobs, cards };
+  return { recruiter: { id: 0, company: "揚運 Yang Luck" }, jobs, cards };
 }
