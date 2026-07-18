@@ -5,8 +5,7 @@
 > Backed by an isolated demo Neon DB — never touches production.
 > Clickable demo of the recruitment platform proposed to **揚運國際集團 (Yang Luck)**. The headline is the **ATS 招募看板 (kanban pipeline)**, integrated as a native **Pipeline tab** in the TECXWORK recruiter dashboard (log in → Pipeline). **Demo quality, fictional data only — no real PII.**
 >
-> - **In-app (real integration):** log in `hr@yangluck.demo` / `demo1234` → **Pipeline** tab.
-> - **No-login quick view:** `/pipeline` standalone page (trilingual).
+> Log in `hr@yangluck.demo` / `demo1234` → **Pipeline** tab. (`/pipeline` redirects here.)
 
 ---
 
@@ -18,9 +17,7 @@
 4. **點一張卡片** → 右側滑出**候選人資料**：學校、科系、國籍、技能、履歷，以及 **AI 評分**（demo 模擬）。切換上方職缺標籤即切換該職缺的流程。
 5. **切換語言** → 右上角語言切換（繁中 / English），整個後台跟著切換 —— 招募看板是 TECXWORK 系統內的原生分頁。
 
-> 一句話：**揚運的招募人員登入 TECXWORK，在「Pipeline」分頁把越南／印尼學生候選人從收到履歷一路推進到到職。**
->
-> 想免登入快速看板本身：打開 `/pipeline`（獨立展示頁，含繁中 / EN / VI 切換）。
+> 一句話：**揚運的招募人員登入平台，在「Pipeline」分頁把越南／印尼學生候選人從收到履歷一路推進到到職。**
 
 ---
 
@@ -41,16 +38,17 @@ npm run dev                                             # http://localhost:3000/
 - Recruiter: `hr@yangluck.demo` / `demo1234`
 - Admin: `admin@yangluck.demo` / `demo1234`
 
-> The `/pipeline` board also works **without logging in** (demo mode resolves the single Yang Luck recruiter), so a presenter can just open the URL.
+> `/pipeline` redirects to the in-app **Pipeline** tab (`/dashboard/pipeline`).
 
 ---
 
 ## What's built (scope)
 
 **P0 (the pitch core) — done**
-- **ATS 招募看板 as a native recruiter tab** — `/dashboard/pipeline` (nav: Interviews · Applicants · **Pipeline** · Jobs · My Company). Uses the tecxwork top bar, footer, design tokens, and language switcher — seamless, not a bolted-on page. Also a standalone `/pipeline` for a no-login quick view.
-- 5 stages, **drag-and-drop that persists** (`PATCH /api/applications/:id`), click a card → **candidate profile drawer**, job-selector tabs.
-- Follows the recruiter dashboard's **en / 繁中** language; the standalone page adds **VI**.
+- **ATS 招募看板 as a native recruiter tab** — `/dashboard/pipeline` (nav: Interviews · Applicants · **Pipeline** · Jobs · My Company). Reuses the app's **top bar, language switcher, footer, and `Card`/`Button`/`Badge` design-system components** — seamless, not a bolted-on page. `/pipeline` redirects here.
+- 5 stages, **drag-and-drop that persists** (`PATCH /api/applications/:id`), click a card → **candidate profile drawer**, client-company selector.
+- Follows the recruiter dashboard's **繁中 / English** via the shared language switcher.
+- App chrome rebranded **yangluck 揚運** (top bar, footer, splash, login).
 - **Real client companies (agency model)**: Yang Luck is the platform recruiter; its jobs are tagged with the **client company** it places for. Seeded **25 companies** — 6 confirmed Yang Luck group subsidiaries (from yangluck.com.tw「集團夥伴」: 揚宏營造, 揚運機電, 長隆人力資源, 慶圓開發, 揚運大湖農莊, 澳門欣榮人力) + 19 real central-Taiwan client firms (麗明營造, 巨大機械/Giant, 上銀/HIWIN, 大立光電/Largan, 正新/Maxxis, Windsor Hotel …). Agencies don't publish client lists, so the 19 are real, verifiable **representative** clients in the sectors Yang Luck serves (營造/製造/旅宿/機電).
 - **35 white-collar positions** across them (Site Engineer, Process/QC Engineer, Front Desk, Management Trainee — the student/white-collar roles the platform places, **not** the blue-collar migrant roles). **36 fictional VN/ID/PH candidates** across 11 companies + all 5 stages; showcase 麗明營造 has 12. The ATS **CLIENT selector** lists all 25 companies (subsidiaries badged 集團/Group); the candidate drawer shows the placement company + role.
 - **AI CV-screening placeholder**: mocked「AI 評分」badge on each card.

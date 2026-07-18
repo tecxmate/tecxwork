@@ -14,6 +14,10 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   PIPELINE_STAGES,
   type PipelineBoard as Board,
@@ -21,23 +25,23 @@ import {
   type PipelineStage,
 } from "@/lib/pipeline-types";
 
-type Locale = "zh" | "en" | "vi";
+// Recruiter dashboard is bilingual (繁中 / English) — the board follows it.
+type Locale = "zh" | "en";
 
 const T: Record<Locale, Record<string, string>> = {
-  zh: { title: "招募看板", subtitle: "ATS 人才招募流程", job: "職缺", client: "客戶企業", group: "集團", position: "應徵職位", cv: "查看履歷", skills: "技能", cand: "位候選人", drag: "拖曳卡片以變更階段", close: "關閉", profile: "候選人資料", company: "媒合企業", school: "學校", major: "科系", nat: "國籍", ai: "AI 評分" },
-  en: { title: "Talent Pipeline", subtitle: "ATS hiring board", job: "Job", client: "Client", group: "Group", position: "Applied for", cv: "View CV", skills: "Skills", cand: "candidates", drag: "Drag a card to change stage", close: "Close", profile: "Candidate profile", company: "Placement", school: "School", major: "Major", nat: "Nationality", ai: "AI score" },
-  vi: { title: "Quy trình tuyển dụng", subtitle: "Bảng tuyển dụng ATS", job: "Vị trí", client: "Khách hàng", group: "Tập đoàn", position: "Ứng tuyển", cv: "Xem hồ sơ", skills: "Kỹ năng", cand: "ứng viên", drag: "Kéo thẻ để đổi giai đoạn", close: "Đóng", profile: "Hồ sơ ứng viên", company: "Doanh nghiệp", school: "Trường", major: "Ngành", nat: "Quốc tịch", ai: "Điểm AI" },
+  zh: { title: "招募看板", subtitle: "ATS 人才招募流程", client: "客戶企業", group: "集團", position: "應徵職位", cv: "查看履歷", skills: "技能", cand: "位候選人", drag: "拖曳卡片以變更階段", close: "關閉", profile: "候選人資料", company: "媒合企業", school: "學校", major: "科系", nat: "國籍", ai: "AI 評分" },
+  en: { title: "Talent Pipeline", subtitle: "ATS hiring board", client: "Client", group: "Group", position: "Applied for", cv: "View CV", skills: "Skills", cand: "candidates", drag: "Drag a card to change stage", close: "Close", profile: "Candidate profile", company: "Placement", school: "School", major: "Major", nat: "Nationality", ai: "AI score" },
 };
 
 const STAGE_LABEL: Record<PipelineStage, Record<Locale, string>> = {
-  applied: { zh: "收到履歷", en: "Applied", vi: "Đã nộp" },
-  screening: { zh: "初步篩選", en: "Screening", vi: "Sàng lọc" },
-  interview: { zh: "安排面試", en: "Interview", vi: "Phỏng vấn" },
-  offer: { zh: "發送錄取", en: "Offer", vi: "Mời nhận việc" },
-  hired: { zh: "到職", en: "Hired", vi: "Đã nhận việc" },
+  applied: { zh: "收到履歷", en: "Applied" },
+  screening: { zh: "初步篩選", en: "Screening" },
+  interview: { zh: "安排面試", en: "Interview" },
+  offer: { zh: "發送錄取", en: "Offer" },
+  hired: { zh: "到職", en: "Hired" },
 };
 
-// Semantic stage colours (kept distinct from the app accent on purpose).
+// Semantic stage colours (separate from the app accent by design).
 const STAGE_ACCENT: Record<PipelineStage, string> = {
   applied: "#64748b",
   screening: "#2563eb",
@@ -78,14 +82,16 @@ function CandidateCard({
   const a = card.applicant;
   const dragProps = enabled ? { ...listeners, ...attributes } : {};
   return (
-    <div
+    <Card
+      size="sm"
       ref={setNodeRef}
       style={style}
       {...dragProps}
       onClick={() => onOpen(card)}
-      className={`group cursor-grab touch-none rounded-xl border border-border bg-card p-3 shadow-sm transition active:cursor-grabbing hover:border-primary/50 hover:shadow-md ${
-        isDragging || dragging ? "opacity-40" : ""
-      }`}
+      className={cn(
+        "cursor-grab touch-none gap-2 p-3 shadow-sm hover:border-primary/50 active:cursor-grabbing",
+        (isDragging || dragging) && "opacity-40"
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -98,29 +104,29 @@ function CandidateCard({
           ) : null}
         </div>
         {card.aiScore != null ? (
-          <span
-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white"
+          <Badge
+            className="shrink-0 text-white"
             style={{ background: aiColor(card.aiScore) }}
             title="AI CV screening (demo)"
           >
             AI {card.aiScore}
-          </span>
+          </Badge>
         ) : null}
       </div>
-      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span>{flag(a.nationality)}</span>
         <span className="truncate">{a.studyLevel}</span>
       </div>
       {a.skills.length ? (
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1">
           {a.skills.slice(0, 3).map((s) => (
-            <span key={s} className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            <Badge key={s} variant="secondary" className="h-4 px-1.5 text-[10px]">
               {s}
-            </span>
+            </Badge>
           ))}
         </div>
       ) : null}
-    </div>
+    </Card>
   );
 }
 
@@ -152,15 +158,16 @@ function Column({
         <span className="text-sm font-bold" style={{ color: accent }}>
           {STAGE_LABEL[stage][locale]}
         </span>
-        <span className="rounded-full bg-card px-2 py-0.5 text-xs font-semibold text-muted-foreground shadow-sm">
+        <Badge variant="secondary" className="bg-card shadow-sm">
           {cards.length}
-        </span>
+        </Badge>
       </div>
       <div
         ref={setNodeRef}
-        className={`flex min-h-[120px] flex-1 flex-col gap-2 rounded-b-2xl p-2 transition-colors ${
-          isOver ? "bg-primary/10 ring-2 ring-inset ring-primary/40" : ""
-        }`}
+        className={cn(
+          "flex min-h-[120px] flex-1 flex-col gap-2 rounded-b-2xl p-2 transition-colors",
+          isOver && "bg-primary/10 ring-2 ring-inset ring-primary/40"
+        )}
       >
         {cards.map((c) => (
           <CandidateCard
@@ -177,18 +184,7 @@ function Column({
   );
 }
 
-/**
- * Core board: job selector + 5 kanban columns + drag-drop + candidate drawer.
- * Presentational — takes the resolved `locale`; wrappers supply it (dashboard
- * follows the recruiter language, standalone uses its own toggle).
- */
-function PipelineBoardBody({
-  board,
-  locale,
-}: {
-  board: Board;
-  locale: Locale;
-}) {
+function PipelineBoardBody({ board, locale }: { board: Board; locale: Locale }) {
   const [cards, setCards] = useState<PipelineCard[]>(board.cards);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [selected, setSelected] = useState<PipelineCard | null>(null);
@@ -202,7 +198,6 @@ function PipelineBoardBody({
     [board.jobs]
   );
 
-  // Group jobs by the client company Yang Luck places for; live candidate count.
   const companies = useMemo(() => {
     const m = new Map<string, { name: string; kind: string; jobIds: number[] }>();
     for (const j of board.jobs) {
@@ -215,7 +210,6 @@ function PipelineBoardBody({
       .sort((a, b) => b.count - a.count);
   }, [board.jobs, cards]);
 
-  // Default to the company with the most candidates (stable across drags).
   const [companyName, setCompanyName] = useState<string>(() => {
     const counts = new Map<string, number>();
     for (const c of board.cards) {
@@ -278,26 +272,27 @@ function PipelineBoardBody({
           const active = c.name === selectedCompany?.name;
           const zh = c.name.split(" ")[0];
           return (
-            <button
+            <Button
               key={c.name}
               type="button"
+              size="sm"
+              variant={active ? "default" : "outline"}
               onClick={() => setCompanyName(c.name)}
-              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                active
-                  ? "border-transparent bg-primary text-primary-foreground shadow"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/50"
-              }`}
+              className="rounded-full"
             >
               {c.kind === "subsidiary" ? (
-                <span className={`rounded px-1 text-[9px] font-bold ${active ? "bg-white/25" : "bg-primary/15 text-primary"}`}>
+                <Badge
+                  variant={active ? "secondary" : "outline"}
+                  className={cn("h-4 px-1 text-[9px]", active ? "" : "text-primary")}
+                >
                   {t.group}
-                </span>
+                </Badge>
               ) : null}
               {zh}
               <span className={active ? "text-primary-foreground/70" : "text-muted-foreground/60"}>
                 {c.count}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -340,8 +335,9 @@ function PipelineBoardBody({
 }
 
 /**
- * In-app tab: seamless with the recruiter dashboard. Follows the recruiter's
- * language (en / 繁中) via the app i18n — no separate header or toggle.
+ * The pipeline surface, shared by the recruiter dashboard tab and the /pipeline
+ * page. Follows the recruiter dashboard's language (繁中 / English) via the app
+ * i18n — the language switcher and top bar come from the surrounding shell.
  */
 export function DashboardPipeline({ board }: { board: Board }) {
   const { locale } = useRecruiterI18n();
@@ -350,51 +346,13 @@ export function DashboardPipeline({ board }: { board: Board }) {
   return (
     <section aria-label={t.title}>
       <div className="mb-4">
-        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{t.title}</h1>
+        <h1 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          {t.title}
+        </h1>
         <p className="text-sm text-muted-foreground">{t.subtitle}</p>
       </div>
       <PipelineBoardBody board={board} locale={boardLocale} />
     </section>
-  );
-}
-
-/**
- * Standalone demo surface (`/pipeline`) — has its own trilingual toggle so the
- * pitch link is clickable without logging in.
- */
-export function PipelineBoard({ board }: { board: Board }) {
-  const [locale, setLocale] = useState<Locale>("zh");
-  const t = T[locale];
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border bg-card px-4 py-3 sm:px-6">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-bold text-foreground sm:text-xl">{t.title}</h1>
-            <p className="text-xs text-muted-foreground">
-              {board.recruiter.company} · {t.subtitle}
-            </p>
-          </div>
-          <div className="flex overflow-hidden rounded-lg border border-border">
-            {(["zh", "en", "vi"] as Locale[]).map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setLocale(l)}
-                className={`px-2.5 py-1 text-xs font-semibold transition ${
-                  locale === l ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {l === "zh" ? "繁中" : l === "en" ? "EN" : "VI"}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-[1400px] px-4 py-4 sm:px-6">
-        <PipelineBoardBody board={board} locale={locale} />
-      </div>
-    </div>
   );
 }
 
@@ -427,18 +385,20 @@ function CandidateDrawer({
         <div className="flex items-start justify-between bg-primary px-5 py-4 text-primary-foreground">
           <div>
             <p className="text-[11px] uppercase tracking-wide opacity-70">{t.profile}</p>
-            <h2 className="text-lg font-bold">{a.name}</h2>
+            <h2 className="font-heading text-lg font-bold">{a.name}</h2>
             <p className="text-sm opacity-90">
               {flag(a.nationality)} {a.nationality} · {STAGE_LABEL[card.stage][locale]}
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant="secondary"
             onClick={onClose}
-            className="rounded-lg bg-white/15 px-2.5 py-1 text-sm hover:bg-white/25"
+            className="bg-white/15 text-primary-foreground hover:bg-white/25"
           >
             {t.close}
-          </button>
+          </Button>
         </div>
         <div className="flex-1 space-y-4 px-5 py-5">
           {companyLabel ? (
@@ -448,18 +408,17 @@ function CandidateDrawer({
               </p>
               <p className="text-sm font-semibold text-foreground">{companyLabel}</p>
               {positionLabel ? (
-                <p className="text-xs text-muted-foreground">{t.position}: {positionLabel}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t.position}: {positionLabel}
+                </p>
               ) : null}
             </div>
           ) : null}
           {card.aiScore != null ? (
             <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
-              <span
-                className="rounded-lg px-2 py-1 text-sm font-bold text-white"
-                style={{ background: aiColor(card.aiScore) }}
-              >
+              <Badge className="text-white" style={{ background: aiColor(card.aiScore) }}>
                 AI {card.aiScore}
-              </span>
+              </Badge>
               <span className="text-xs text-muted-foreground">{t.ai} (demo)</span>
             </div>
           ) : null}
@@ -474,21 +433,16 @@ function CandidateDrawer({
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {a.skills.map((s) => (
-                  <span key={s} className="rounded-md bg-muted px-2 py-1 text-xs text-foreground">
+                  <Badge key={s} variant="secondary">
                     {s}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
           ) : null}
-          <a
-            href={a.cvLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          >
+          <Button render={<a href={a.cvLink} target="_blank" rel="noopener noreferrer" />}>
             {t.cv} →
-          </a>
+          </Button>
         </div>
       </aside>
     </div>

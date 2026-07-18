@@ -1107,3 +1107,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Scraped 6 confirmed Yang Luck group subsidiaries (yangluck.com.tw 集團夥伴) + 19 real representative central-Taiwan client firms in served sectors (agencies don't publish client lists).
 - Added job_openings.client_company/client_industry/client_kind. Reseeded: 25 companies, 35 white-collar positions, 36 candidates across 11 companies + 5 stages (showcase 麗明營造 = 12).
 - ATS board now groups by CLIENT company (25 tabs, subsidiaries badged 集團); candidate cards show applied position; drawer shows placement company+role.
+
+## [2026-07-18] build | Demo: design-system alignment + yangluck rebrand
+attributed_to: [niko]   belongs_to: [tecxwork, design-system]
+- Kanban/pipeline now reuse the app design system: Card/Button/Badge components, font-heading, tokens. Standalone /pipeline dropped its custom header/toggle → redirects to /dashboard/pipeline (the native tab), reusing AppTopBar + RecruiterLanguageSwitcher (bilingual 繁中/English).
+- Rebranded app chrome tecxwork → "yangluck 揚運" (brand-link, brand/pwa splash, site-footer, browse loading, layout metadata, student login/signup messages).

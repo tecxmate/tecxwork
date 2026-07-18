@@ -133,7 +133,7 @@ export const studentEnMessages = {
     viewBook: "View & Book",
   },
   getStarted: {
-    title: "Sign Up for TECXWORK",
+    title: "Sign Up for yangluck 揚運",
     subtitle: "Choose your role to get started",
     studentTitle: "I'm a Student",
     studentDescription:
@@ -148,7 +148,7 @@ export const studentEnMessages = {
   },
   login: {
     welcomeBack: "Welcome back",
-    subtitle: "Log in to TECXWORK",
+    subtitle: "Log in to yangluck 揚運",
     email: "Email",
     password: "Password",
     forgotPassword: "Forgot password?",
@@ -161,7 +161,7 @@ export const studentEnMessages = {
     signUpAsStudent: "Sign up as Student",
     signUpAsRecruiter: "Sign up as Recruiter",
     signingIn: "Signing in...",
-    newToTecxwork: "New to TECXWORK?",
+    newToTecxwork: "New to yangluck 揚運?",
   },
   forgotPassword: {
     backToLogin: "Back to Login",
@@ -332,7 +332,7 @@ export const studentEnMessages = {
     certIssueDate: "Issue Date",
     noCertifications: "No certifications added yet.",
     cvExportTitle: "Export CV",
-    cvExportSubtitle: "Generate a polished CV from your TECXWORK profile data.",
+    cvExportSubtitle: "Generate a polished CV from your yangluck 揚運 profile data.",
     cvExportButton: "Export PDF",
     cvExportHint: "Your browser will open the print dialog. Choose Save as PDF to export.",
     cvExportSummary: "Summary",

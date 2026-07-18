@@ -152,7 +152,7 @@ export function BrandSplash() {
         />
       </svg>
       {isCompact ? null : (
-        <span className="font-wordmark text-3xl text-primary italic">tecxwork</span>
+        <span className="font-wordmark text-3xl text-primary italic">yangluck 揚運</span>
       )}
     </div>
   );

@@ -140,7 +140,7 @@ export const studentZhTwMessages = {
   },
   getStarted: {
     ...studentEnMessages.getStarted,
-    title: "註冊 TECXWORK",
+    title: "註冊 yangluck 揚運",
     subtitle: "請先選擇角色",
     studentTitle: "我是學生",
     studentDescription: "瀏覽參展公司並預約面試時段。註冊後，招募方也能主動發掘你。",
@@ -153,7 +153,7 @@ export const studentZhTwMessages = {
   login: {
     ...studentEnMessages.login,
     welcomeBack: "歡迎回來",
-    subtitle: "登入 TECXWORK",
+    subtitle: "登入 yangluck 揚運",
     email: "電子郵件",
     password: "密碼",
     forgotPassword: "忘記密碼？",
@@ -166,7 +166,7 @@ export const studentZhTwMessages = {
     signUpAsStudent: "註冊為學生",
     signUpAsRecruiter: "註冊為招募方",
     signingIn: "登入中...",
-    newToTecxwork: "第一次使用 TECXWORK？",
+    newToTecxwork: "第一次使用 yangluck 揚運？",
   },
   forgotPassword: {
     ...studentEnMessages.forgotPassword,
@@ -321,7 +321,7 @@ export const studentZhTwMessages = {
     certIssueDate: "取得日期",
     noCertifications: "尚未新增任何證照。",
     cvExportTitle: "匯出履歷",
-    cvExportSubtitle: "使用你的 TECXWORK 個人資料產生精美履歷。",
+    cvExportSubtitle: "使用你的 yangluck 揚運 個人資料產生精美履歷。",
     cvExportButton: "匯出 PDF",
     cvExportHint: "瀏覽器會開啟列印視窗。選擇「儲存為 PDF」即可匯出。",
     cvExportSummary: "自我介紹",

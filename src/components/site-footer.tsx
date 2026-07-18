@@ -6,7 +6,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-xl md:max-w-none">
         <div className="space-y-0.5 md:flex md:flex-wrap md:items-center md:justify-center md:gap-x-2 md:gap-y-1 md:space-y-0">
           <p className="text-sm leading-tight">
-            &copy; 2026 TECXWORK by{" "}
+            &copy; 2026 yangluck 揚運 by{" "}
             <a
               href="https://tecxmate.com"
               target="_blank"
