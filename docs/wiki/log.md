@@ -1123,3 +1123,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 - Added `public/yang-luck-logo.png` — the actual Yang Luck red/navy swoosh-wave mark (white knocked out to transparent, tight-cropped from the 394×368 brand PNG).
 - Swapped the purple placeholder `/icon.svg` briefcase glyph for the real mark in all 5 visible logo renders: brand-link header, browse loading skeleton, register card, brand-splash, pwa-first-run-splash. Presented on an always-white rounded chip (`bg-white object-contain ring-1`) so it reads in both light and dark themes.
 - Dropped the now-unused eye-blink keyframes/CSS from both splash components (the animation was tied to the placeholder glyph); kept the pop-in animation. Favicons (`icon.svg`, `icon-192/512`, manifest) left unchanged — this pass only touched the in-app wordmark lockup.
+
+## [2026-07-18] feat | Demo: company logos + photos + Yang Luck hero carousel
+attributed_to: [niko]   belongs_to: [tecxwork, photo-uploads]
+- Scraped real logos for 20/25 client companies (public/yl/logos/) + company photos for 18 companies' detail-page galleries (public/yl/photos/, recruiters.gallery_urls).
+- Homepage hero now cycles Yang Luck's own 5 branded key-visuals (public/yl/hero/; homepageImages + hero_overlay_enabled=false; page.tsx passes all images to HeroCarousel). Real documentary Yang Luck photos don't exist publicly — used their official branded banners.
+- Preview domain yangluck.tecxmate.com added in Vercel (bound to demo/yang-luck branch); needs a Cloudflare CNAME -> cname.vercel-dns.com (DNS-only).
