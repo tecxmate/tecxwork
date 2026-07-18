@@ -1101,3 +1101,9 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Isolated demo Neon project tecxwork-yl-demo (MCP can't branch prod delicate-lab). New applications table. Seeded 1 recruiter + 7 jobs + 30 candidates across 5 stages.
 - Vercel preview (branch-scoped demo DB): https://app-git-demo-yang-luck-nikolasdoans-projects.vercel.app/pipeline
 - Decision: docs/wiki/decisions/2026-07-18-yang-luck-demo.md
+
+## [2026-07-18] build | Yang Luck demo — 25 real client companies + subsidiaries
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Scraped 6 confirmed Yang Luck group subsidiaries (yangluck.com.tw 集團夥伴) + 19 real representative central-Taiwan client firms in served sectors (agencies don't publish client lists).
+- Added job_openings.client_company/client_industry/client_kind. Reseeded: 25 companies, 35 white-collar positions, 36 candidates across 11 companies + 5 stages (showcase 麗明營造 = 12).
+- ATS board now groups by CLIENT company (25 tabs, subsidiaries badged 集團); candidate cards show applied position; drawer shows placement company+role.

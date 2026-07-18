@@ -47,6 +47,9 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
         title: jobOpenings.title,
         jobCategory: jobOpenings.jobCategory,
         location: jobOpenings.location,
+        clientCompany: jobOpenings.clientCompany,
+        clientIndustry: jobOpenings.clientIndustry,
+        clientKind: jobOpenings.clientKind,
       })
       .from(jobOpenings)
       .where(eq(jobOpenings.recruiterId, recruiter.id)),

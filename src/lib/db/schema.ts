@@ -99,6 +99,11 @@ export const jobOpenings = pgTable("job_openings", {
     .references(() => recruiters.id),
   title: text("title").notNull(),
   jobCategory: text("job_category").notNull().default(""),
+  // Agency model: the client company Yang Luck is placing this role for, and
+  // whether it's a group subsidiary vs an external client ("" for normal jobs).
+  clientCompany: text("client_company").notNull().default(""),
+  clientIndustry: text("client_industry").notNull().default(""),
+  clientKind: text("client_kind").notNull().default(""),
   jdLink: text("jd_link"),
   location: text("location").notNull().default(""),
   employmentType: text("employment_type").notNull().default(""),

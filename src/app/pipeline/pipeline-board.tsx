@@ -24,9 +24,9 @@ import {
 type Locale = "zh" | "en" | "vi";
 
 const T: Record<Locale, Record<string, string>> = {
-  zh: { title: "招募看板", subtitle: "ATS 人才招募流程", job: "職缺", cv: "查看履歷", skills: "技能", cand: "位候選人", drag: "拖曳卡片以變更階段", close: "關閉", profile: "候選人資料", school: "學校", major: "科系", nat: "國籍", ai: "AI 評分" },
-  en: { title: "Talent Pipeline", subtitle: "ATS hiring board", job: "Job", cv: "View CV", skills: "Skills", cand: "candidates", drag: "Drag a card to change stage", close: "Close", profile: "Candidate profile", school: "School", major: "Major", nat: "Nationality", ai: "AI score" },
-  vi: { title: "Quy trình tuyển dụng", subtitle: "Bảng tuyển dụng ATS", job: "Vị trí", cv: "Xem hồ sơ", skills: "Kỹ năng", cand: "ứng viên", drag: "Kéo thẻ để đổi giai đoạn", close: "Đóng", profile: "Hồ sơ ứng viên", school: "Trường", major: "Ngành", nat: "Quốc tịch", ai: "Điểm AI" },
+  zh: { title: "招募看板", subtitle: "ATS 人才招募流程", job: "職缺", client: "客戶企業", group: "集團", position: "應徵職位", cv: "查看履歷", skills: "技能", cand: "位候選人", drag: "拖曳卡片以變更階段", close: "關閉", profile: "候選人資料", company: "媒合企業", school: "學校", major: "科系", nat: "國籍", ai: "AI 評分" },
+  en: { title: "Talent Pipeline", subtitle: "ATS hiring board", job: "Job", client: "Client", group: "Group", position: "Applied for", cv: "View CV", skills: "Skills", cand: "candidates", drag: "Drag a card to change stage", close: "Close", profile: "Candidate profile", company: "Placement", school: "School", major: "Major", nat: "Nationality", ai: "AI score" },
+  vi: { title: "Quy trình tuyển dụng", subtitle: "Bảng tuyển dụng ATS", job: "Vị trí", client: "Khách hàng", group: "Tập đoàn", position: "Ứng tuyển", cv: "Xem hồ sơ", skills: "Kỹ năng", cand: "ứng viên", drag: "Kéo thẻ để đổi giai đoạn", close: "Đóng", profile: "Hồ sơ ứng viên", company: "Doanh nghiệp", school: "Trường", major: "Ngành", nat: "Quốc tịch", ai: "Điểm AI" },
 };
 
 const STAGE_LABEL: Record<PipelineStage, Record<Locale, string>> = {
@@ -64,11 +64,13 @@ function CandidateCard({
   onOpen,
   dragging,
   enabled = true,
+  position,
 }: {
   card: PipelineCard;
   onOpen: (c: PipelineCard) => void;
   dragging?: boolean;
   enabled?: boolean;
+  position?: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: card.id });
@@ -91,6 +93,9 @@ function CandidateCard({
           <p className="truncate text-xs text-muted-foreground">
             {a.schoolName} · {a.major}
           </p>
+          {position ? (
+            <p className="mt-0.5 truncate text-[11px] text-primary/80">→ {position}</p>
+          ) : null}
         </div>
         {card.aiScore != null ? (
           <span
@@ -126,6 +131,7 @@ function Column({
   onOpen,
   activeId,
   enabled,
+  positionById,
 }: {
   stage: PipelineStage;
   locale: Locale;
@@ -133,6 +139,7 @@ function Column({
   onOpen: (c: PipelineCard) => void;
   activeId: number | null;
   enabled: boolean;
+  positionById: Map<number, string>;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
   const accent = STAGE_ACCENT[stage];
@@ -156,7 +163,14 @@ function Column({
         }`}
       >
         {cards.map((c) => (
-          <CandidateCard key={c.id} card={c} onOpen={onOpen} dragging={activeId === c.id} enabled={enabled} />
+          <CandidateCard
+            key={c.id}
+            card={c}
+            onOpen={onOpen}
+            dragging={activeId === c.id}
+            enabled={enabled}
+            position={positionById.get(c.jobOpeningId)}
+          />
         ))}
       </div>
     </div>
@@ -176,15 +190,52 @@ function PipelineBoardBody({
   locale: Locale;
 }) {
   const [cards, setCards] = useState<PipelineCard[]>(board.cards);
-  const [jobId, setJobId] = useState<number>(board.jobs[0]?.id ?? 0);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [selected, setSelected] = useState<PipelineCard | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const t = T[locale];
 
+  const jobById = useMemo(() => new Map(board.jobs.map((j) => [j.id, j])), [board.jobs]);
+  const positionById = useMemo(
+    () => new Map(board.jobs.map((j) => [j.id, j.title])),
+    [board.jobs]
+  );
+
+  // Group jobs by the client company Yang Luck places for; live candidate count.
+  const companies = useMemo(() => {
+    const m = new Map<string, { name: string; kind: string; jobIds: number[] }>();
+    for (const j of board.jobs) {
+      const key = j.clientCompany || j.title;
+      if (!m.has(key)) m.set(key, { name: key, kind: j.clientKind, jobIds: [] });
+      m.get(key)!.jobIds.push(j.id);
+    }
+    return [...m.values()]
+      .map((c) => ({ ...c, count: cards.filter((x) => c.jobIds.includes(x.jobOpeningId)).length }))
+      .sort((a, b) => b.count - a.count);
+  }, [board.jobs, cards]);
+
+  // Default to the company with the most candidates (stable across drags).
+  const [companyName, setCompanyName] = useState<string>(() => {
+    const counts = new Map<string, number>();
+    for (const c of board.cards) {
+      const j = board.jobs.find((x) => x.id === c.jobOpeningId);
+      const k = j?.clientCompany || j?.title || "—";
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    let best = board.jobs[0]?.clientCompany || board.jobs[0]?.title || "—";
+    let bestN = -1;
+    for (const [k, v] of counts) if (v > bestN) { best = k; bestN = v; }
+    return best;
+  });
+
+  const selectedCompany = companies.find((c) => c.name === companyName) ?? companies[0];
+  const jobCards = useMemo(
+    () => (selectedCompany ? cards.filter((c) => selectedCompany.jobIds.includes(c.jobOpeningId)) : []),
+    [cards, selectedCompany]
+  );
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const jobCards = useMemo(() => cards.filter((c) => c.jobOpeningId === jobId), [cards, jobId]);
   const activeCard = activeId ? cards.find((c) => c.id === activeId) ?? null : null;
 
   function onDragStart(e: DragStartEvent) {
@@ -215,38 +266,44 @@ function PipelineBoardBody({
 
   return (
     <div>
-      {/* Job selector */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      {/* Client-company selector */}
+      <div className="mb-2 flex items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {t.job}
+          {t.client}
         </span>
-        <div className="flex flex-wrap gap-1.5">
-          {board.jobs.map((j) => {
-            const count = cards.filter((c) => c.jobOpeningId === j.id).length;
-            const active = j.id === jobId;
-            return (
-              <button
-                key={j.id}
-                type="button"
-                onClick={() => setJobId(j.id)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                  active
-                    ? "border-transparent bg-primary text-primary-foreground shadow"
-                    : "border-border bg-card text-muted-foreground hover:border-primary/50"
-                }`}
-              >
-                {j.title.split("（")[0].trim()}
-                <span className={`ml-1.5 ${active ? "text-primary-foreground/70" : "text-muted-foreground/70"}`}>
-                  {count}
+        <span className="text-xs text-muted-foreground/60">{companies.length}</span>
+      </div>
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        {companies.map((c) => {
+          const active = c.name === selectedCompany?.name;
+          const zh = c.name.split(" ")[0];
+          return (
+            <button
+              key={c.name}
+              type="button"
+              onClick={() => setCompanyName(c.name)}
+              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                active
+                  ? "border-transparent bg-primary text-primary-foreground shadow"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50"
+              }`}
+            >
+              {c.kind === "subsidiary" ? (
+                <span className={`rounded px-1 text-[9px] font-bold ${active ? "bg-white/25" : "bg-primary/15 text-primary"}`}>
+                  {t.group}
                 </span>
-              </button>
-            );
-          })}
-        </div>
+              ) : null}
+              {zh}
+              <span className={active ? "text-primary-foreground/70" : "text-muted-foreground/60"}>
+                {c.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <p className="mb-3 text-xs text-muted-foreground">
-        {jobCards.length} {t.cand} · {t.drag}
+        {selectedCompany?.name} · {jobCards.length} {t.cand} · {t.drag}
       </p>
 
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
@@ -260,6 +317,7 @@ function PipelineBoardBody({
               onOpen={setSelected}
               activeId={activeId}
               enabled={mounted}
+              positionById={positionById}
             />
           ))}
         </div>
@@ -269,7 +327,13 @@ function PipelineBoardBody({
       </DndContext>
 
       {selected ? (
-        <CandidateDrawer card={selected} locale={locale} onClose={() => setSelected(null)} />
+        <CandidateDrawer
+          card={selected}
+          locale={locale}
+          companyLabel={jobById.get(selected.jobOpeningId)?.clientCompany ?? ""}
+          positionLabel={positionById.get(selected.jobOpeningId) ?? ""}
+          onClose={() => setSelected(null)}
+        />
       ) : null}
     </div>
   );
@@ -337,10 +401,14 @@ export function PipelineBoard({ board }: { board: Board }) {
 function CandidateDrawer({
   card,
   locale,
+  companyLabel,
+  positionLabel,
   onClose,
 }: {
   card: PipelineCard;
   locale: Locale;
+  companyLabel: string;
+  positionLabel: string;
   onClose: () => void;
 }) {
   const t = T[locale];
@@ -373,6 +441,17 @@ function CandidateDrawer({
           </button>
         </div>
         <div className="flex-1 space-y-4 px-5 py-5">
+          {companyLabel ? (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">
+                {t.company}
+              </p>
+              <p className="text-sm font-semibold text-foreground">{companyLabel}</p>
+              {positionLabel ? (
+                <p className="text-xs text-muted-foreground">{t.position}: {positionLabel}</p>
+              ) : null}
+            </div>
+          ) : null}
           {card.aiScore != null ? (
             <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
               <span

@@ -35,6 +35,9 @@ export interface PipelineJob {
   title: string;
   jobCategory: string;
   location: string;
+  clientCompany: string;
+  clientIndustry: string;
+  clientKind: string;
 }
 
 export interface PipelineBoard {
