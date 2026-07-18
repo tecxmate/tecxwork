@@ -51,7 +51,7 @@ function getMetadataBase(): URL {
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await getEventBranding();
   const base = getMetadataBase();
-  const title = `yangluck 揚運 — ${branding.name} | Vietnamese Jobs in Taiwan · 越南人才台灣工作 · Việc làm tại Đài Loan`;
+  const title = `Yang Luck 揚運 — ${branding.name} | Vietnamese Jobs in Taiwan · 越南人才台灣工作 · Việc làm tại Đài Loan`;
   const description = `tecxwork: ${branding.organizerShort} ${branding.displayYear} — ${branding.tagline}. Vietnamese engineers, workers & students hiring in Taiwan. 越南招募・越南工程師・越南工人・台灣工作. Việc làm Đài Loan cho người Việt. ${branding.displayDate} @ ${branding.hostedAt}.`;
   return {
     metadataBase: base,
@@ -87,7 +87,7 @@ export async function generateMetadata(): Promise<Metadata> {
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",
-      title: "yangluck 揚運",
+      title: "Yang Luck 揚運",
     },
     title: {
       default: title,

@@ -109,7 +109,10 @@ export function PwaFirstRunSplash() {
           strokeLinecap="round"
         />
       </svg>
-      <span className="font-wordmark text-3xl text-primary italic">yangluck 揚運</span>
+      <span className="flex items-baseline gap-2 text-primary">
+        <span className="font-wordmark text-3xl italic">Yang Luck</span>
+        <span className="font-heading text-3xl font-semibold">揚運</span>
+      </span>
     </div>
   );
 }

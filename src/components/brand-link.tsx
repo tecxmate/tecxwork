@@ -19,9 +19,9 @@ export function BrandLink({ href = "/" }: { href?: string }) {
   return (
     <a href={href} onClick={handleClick} className="flex items-center gap-2">
       <img src="/icon.svg" alt="Yang Luck 揚運國際" className="h-8 w-8 rounded-md" />
-      <span className="flex items-baseline gap-1.5">
-        <span className="font-wordmark text-xl text-primary italic">yangluck</span>
-        <span className="text-sm font-medium text-muted-foreground">揚運</span>
+      <span className="flex items-baseline gap-1.5 text-primary">
+        <span className="font-wordmark text-xl italic">Yang Luck</span>
+        <span className="font-heading text-xl font-semibold">揚運</span>
       </span>
     </a>
   );

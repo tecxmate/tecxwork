@@ -139,7 +139,7 @@ export const studentViMessages = {
   },
   getStarted: {
     ...studentEnMessages.getStarted,
-    title: "Đăng ký yangluck 揚運",
+    title: "Đăng ký Yang Luck 揚運",
     subtitle: "Chọn vai trò để bắt đầu",
     studentTitle: "Tôi là sinh viên",
     studentDescription: "Xem các công ty tham gia và đặt lịch phỏng vấn. Đăng ký để nhà tuyển dụng có thể tìm thấy bạn.",
@@ -152,7 +152,7 @@ export const studentViMessages = {
   login: {
     ...studentEnMessages.login,
     welcomeBack: "Chào mừng",
-    subtitle: "Đăng nhập vào yangluck 揚運",
+    subtitle: "Đăng nhập vào Yang Luck 揚運",
     email: "Email",
     password: "Mật khẩu",
     forgotPassword: "Quên mật khẩu?",
@@ -165,7 +165,7 @@ export const studentViMessages = {
     signUpAsStudent: "Đăng ký sinh viên",
     signUpAsRecruiter: "Đăng ký nhà tuyển dụng",
     signingIn: "Đang đăng nhập...",
-    newToTecxwork: "Mới đến yangluck 揚運?",
+    newToTecxwork: "Mới đến Yang Luck 揚運?",
   },
   forgotPassword: {
     ...studentEnMessages.forgotPassword,
@@ -319,7 +319,7 @@ export const studentViMessages = {
     certIssueDate: "Ngày cấp",
     noCertifications: "Chưa có chứng chỉ nào.",
     cvExportTitle: "Xuất CV",
-    cvExportSubtitle: "Tạo CV đẹp từ dữ liệu hồ sơ yangluck 揚運 của bạn.",
+    cvExportSubtitle: "Tạo CV đẹp từ dữ liệu hồ sơ Yang Luck 揚運 của bạn.",
     cvExportButton: "Xuất PDF",
     cvExportHint: "Trình duyệt sẽ mở hộp thoại in. Chọn Save as PDF để xuất.",
     cvExportSummary: "Tóm tắt",

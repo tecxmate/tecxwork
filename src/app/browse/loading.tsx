@@ -9,7 +9,10 @@ export default function Loading() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <img src="/icon.svg" alt="TECXWORK" className="h-8 w-8 rounded-md" />
-              <span className="font-wordmark text-xl text-primary italic">yangluck 揚運</span>
+              <span className="flex items-baseline gap-1.5 text-primary">
+                <span className="font-wordmark text-xl italic">Yang Luck</span>
+                <span className="font-heading text-xl font-semibold">揚運</span>
+              </span>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <Skeleton className="h-8 w-8 rounded-md" />
