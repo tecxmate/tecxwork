@@ -8,7 +8,11 @@ export default function Loading() {
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <img src="/icon.svg" alt="TECXWORK" className="h-8 w-8 rounded-md" />
+              <img
+                src="/yang-luck-logo.png"
+                alt="Yang Luck 揚運國際"
+                className="h-8 w-8 rounded-md bg-white object-contain p-1 ring-1 ring-black/5"
+              />
               <span className="flex items-baseline gap-1.5 text-primary">
                 <span className="font-wordmark text-xl italic">Yang Luck</span>
                 <span className="font-heading text-xl font-semibold">揚運</span>

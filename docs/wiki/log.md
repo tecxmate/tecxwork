@@ -1117,3 +1117,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - Previously the 25 clients were only tags on Yang Luck's jobs (ATS-only). Now each client/subsidiary is its own recruiter with positions → shows in /browse "Participating Companies" (25, agency hidden via recruiters.client_kind='agency').
 - getPipelineBoard now aggregates the whole placement pipeline across all client recruiters (agency super-view), grouped by company. cache.ts fetchRecruiters excludes clientKind='agency'.
+
+## [2026-07-18] build | Demo: real Yang Luck logo mark replaces placeholder glyph
+attributed_to: [niko]   belongs_to: [tecxwork, design-system]
+- Added `public/yang-luck-logo.png` — the actual Yang Luck red/navy swoosh-wave mark (white knocked out to transparent, tight-cropped from the 394×368 brand PNG).
+- Swapped the purple placeholder `/icon.svg` briefcase glyph for the real mark in all 5 visible logo renders: brand-link header, browse loading skeleton, register card, brand-splash, pwa-first-run-splash. Presented on an always-white rounded chip (`bg-white object-contain ring-1`) so it reads in both light and dark themes.
+- Dropped the now-unused eye-blink keyframes/CSS from both splash components (the animation was tied to the placeholder glyph); kept the pop-in animation. Favicons (`icon.svg`, `icon-192/512`, manifest) left unchanged — this pass only touched the in-app wordmark lockup.
