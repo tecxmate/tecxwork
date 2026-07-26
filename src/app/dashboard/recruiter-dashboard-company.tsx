@@ -686,6 +686,7 @@ export function RecruiterCompanyTab({
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.positionTitle}
+            <span aria-hidden="true" className="ml-0.5 text-destructive">*</span>
           </label>
           <Input
             value={draft.title}
@@ -708,6 +709,7 @@ export function RecruiterCompanyTab({
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.employmentType}
+            <span aria-hidden="true" className="ml-0.5 text-destructive">*</span>
           </label>
           <select
             value={draft.employmentType}

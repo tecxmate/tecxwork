@@ -1234,3 +1234,8 @@ attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
 attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
 - On /dashboard/jobs (and My Company) the shared save/status action rendered as a fixed (mobile) / md:sticky top-right floating pill with heavy shadow + backdrop-blur — read as a detached, distracting FAB overlapping the header.
 - Fix (recruiter-dashboard-company.tsx): removed the fixed/sticky wrapper, pill shape, glow shadow, backdrop-blur and pb-28 spacer; renderStatusStrip() now returns an in-flow button co-located in each form header (next to the Add / Edit title and the existing Submit/Delete cluster). Hardcoded Apple hex (#FF9500/#30D158) on the button swapped for the system orange/emerald scale. Only instance of the pattern; both jobs + company surfaces fixed.
+
+## [2026-07-27] ingest | Required-field asterisks on the job form
+attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
+- Add/Edit job form gave no signal for which fields gate the Add button. Add is disabled until Position title + Employment type are set (only two inputs with `required`).
+- Marked exactly those two labels with a red asterisk (text-destructive, aria-hidden since inputs already carry `required`). All other fields are genuinely optional and stay unmarked — not marking unenforced fields keeps the signal truthful. Shared renderJobForm, so applies to both Add and Edit.
