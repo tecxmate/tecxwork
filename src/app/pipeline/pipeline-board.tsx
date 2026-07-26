@@ -30,8 +30,8 @@ import {
 type Locale = "zh" | "en";
 
 const T: Record<Locale, Record<string, string>> = {
-  zh: { title: "招募看板", subtitle: "ATS 人才招募流程", client: "客戶企業", group: "集團", position: "應徵職位", cv: "查看履歷", skills: "技能", cand: "位候選人", drag: "拖曳卡片以變更階段", close: "關閉", profile: "候選人資料", company: "媒合企業", school: "學校", major: "科系", nat: "國籍", ai: "AI 評分" },
-  en: { title: "Talent Pipeline", subtitle: "ATS hiring board", client: "Client", group: "Group", position: "Applied for", cv: "View CV", skills: "Skills", cand: "candidates", drag: "Drag a card to change stage", close: "Close", profile: "Candidate profile", company: "Placement", school: "School", major: "Major", nat: "Nationality", ai: "AI score" },
+  zh: { title: "招募看板", subtitle: "ATS 人才招募流程", client: "客戶企業", group: "集團", position: "應徵職位", cv: "查看履歷", skills: "技能", cand: "位候選人", drag: "拖曳卡片以變更階段", close: "關閉", profile: "候選人資料", company: "媒合企業", school: "學校", major: "科系", nat: "國籍", ai: "AI 評分", about: "簡介" },
+  en: { title: "Talent Pipeline", subtitle: "ATS hiring board", client: "Client", group: "Group", position: "Applied for", cv: "View CV", skills: "Skills", cand: "candidates", drag: "Drag a card to change stage", close: "Close", profile: "Candidate profile", company: "Placement", school: "School", major: "Major", nat: "Nationality", ai: "AI score", about: "About" },
 };
 
 // Bilingual labels + colours keyed by the stable stage_kind, so configurable
@@ -409,7 +409,7 @@ function CandidateDrawer({
   return (
     <div className="fixed inset-0 z-40 flex justify-end" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <aside className="relative z-50 flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-border bg-card shadow-2xl">
+      <aside className="relative z-50 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-border bg-card shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -426,35 +426,43 @@ function CandidateDrawer({
             {t.close}
           </Button>
         </div>
-        <div className="flex-1 space-y-4 px-5 py-5">
-          {companyLabel ? (
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">
-                {t.company}
-              </p>
-              <p className="text-sm font-semibold text-foreground">{companyLabel}</p>
-              {positionLabel ? (
-                <p className="text-xs text-muted-foreground">
-                  {t.position}: {positionLabel}
-                </p>
+        <div className="flex-1 space-y-5 px-5 py-5">
+          {/* Context: where they're placed + AI score, side by side */}
+          {companyLabel || card.aiScore != null ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {companyLabel ? (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">
+                    {t.company}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">{companyLabel}</p>
+                  {positionLabel ? (
+                    <p className="mt-0.5 text-xs text-muted-foreground">{positionLabel}</p>
+                  ) : null}
+                </div>
+              ) : null}
+              {card.aiScore != null ? (
+                <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
+                  <Badge
+                    variant="secondary"
+                    className={cn("border-0", aiStyle(card.aiScore))}
+                  >
+                    AI {card.aiScore}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">{t.ai} (demo)</span>
+                </div>
               ) : null}
             </div>
           ) : null}
-          {card.aiScore != null ? (
-            <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
-              <Badge
-                variant="secondary"
-                className={cn("border-0", aiStyle(card.aiScore))}
-              >
-                AI {card.aiScore}
-              </Badge>
-              <span className="text-xs text-muted-foreground">{t.ai} (demo)</span>
-            </div>
-          ) : null}
-          <Row label={t.school} value={`${a.schoolName}${a.schoolNameEn ? ` (${a.schoolNameEn})` : ""}`} />
-          <Row label={t.major} value={`${a.major} · ${a.studyLevel}`} />
-          <Row label={t.nat} value={a.nationality} />
-          {a.description ? <Row label="" value={a.description} /> : null}
+
+          {/* Structured facts — two columns so the panel stays short. Nationality
+              lives in the header, so it is intentionally not repeated here. */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <Row label={t.school} value={`${a.schoolName}${a.schoolNameEn ? ` (${a.schoolNameEn})` : ""}`} />
+            <Row label={t.major} value={`${a.major} · ${a.studyLevel}`} />
+          </div>
+          {a.description ? <Row label={t.about} value={a.description} /> : null}
+
           {a.skills.length ? (
             <div>
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -469,9 +477,14 @@ function CandidateDrawer({
               </div>
             </div>
           ) : null}
-          <Button render={<a href={a.cvLink} target="_blank" rel="noopener noreferrer" />}>
+
+          <Button
+            className="w-full"
+            render={<a href={a.cvLink} target="_blank" rel="noopener noreferrer" />}
+          >
             {t.cv} →
           </Button>
+
           <div className="border-t border-border/60 pt-4">
             <CandidateTimeline applicationId={card.id} locale={locale} />
           </div>

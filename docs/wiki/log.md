@@ -1261,3 +1261,8 @@ attributed_to: [niko]   belongs_to: [tecxwork, recruitment-workflows]
 - Root cause: RESEND_API_KEY and EMAIL_FROM were saved in Vercel with a trailing LITERAL backslash-n. The corrupted key fails Resend auth ("API key is invalid") → every transactional email (verification codes, booking notes) silently throws. Verified: the key authenticates once the "\n" is stripped; EMAIL_FROM="V-GEN <noreply@tecxmate.com>\n" also makes an invalid From header.
 - Fix: src/lib/email/index.ts sanitizes both env values (.replace(/\\[rn]/g,"").trim()) in getResend() and EMAIL_FROM, so a mispasted env var can't break all email. PERMANENT fix is to correct the two env vars in the Vercel project serving yangluck (remove the trailing \n) — recommended but not yet done (needs the owner).
 - Also: yangluck.tecxmate.com is a SEPARATE Vercel project from "app" (which serves work.tecxmate.com); its DB is the Neon lingering-sun endpoint (not tecxwork-yl-demo). Student login niko.tecx@gmail.com seeded there directly.
+
+## [2026-07-27] ingest | Candidate profile drawer: wider + de-duplicated, 2-col facts
+attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
+- niko: the pipeline candidate drawer felt "way too much to the right" and "not very logical". Chose the wider-drawer + 2-col option.
+- pipeline-board.tsx CandidateDrawer: widened max-w-md → max-w-xl; Placement + AI score now sit side by side (2-col); structured facts (School, Major) in a 2-col grid; dropped the duplicate Nationality row (already in the header); relabeled the blank-label description line as "About/簡介" (was reading as a mysterious duplicate of Major); View CV made full-width. Added `about` to the drawer i18n dict (zh/en). tsc clean.
