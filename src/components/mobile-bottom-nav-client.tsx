@@ -9,6 +9,12 @@ const MobileBottomNavNoSsr = dynamic(
   { ssr: false }
 );
 
-export function MobileBottomNavClient({ role }: { role: NavRole }) {
-  return <MobileBottomNavNoSsr role={role} />;
+export function MobileBottomNavClient({
+  role,
+  isAgency = false,
+}: {
+  role: NavRole;
+  isAgency?: boolean;
+}) {
+  return <MobileBottomNavNoSsr role={role} isAgency={isAgency} />;
 }

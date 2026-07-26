@@ -56,6 +56,7 @@ type Recruiter = {
   id: number;
   company: string;
   industry: string;
+  clientKind: string;
   description: string;
   contactEmail: string;
   interviewerCount: number;
@@ -186,6 +187,7 @@ export function RecruiterDashboard({
         href="/"
         navRole="recruiter"
         currentPath={currentPath}
+        isAgency={recruiter.clientKind === "agency"}
         mobileActions={<RecruiterLanguageSwitcher />}
         showActionsOnMobile
         accountLabels={{

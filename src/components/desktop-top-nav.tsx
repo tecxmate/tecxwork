@@ -7,20 +7,22 @@ import { useStudentI18n } from "@/components/student-locale-provider";
 
 import {
   isNavItemActive,
-  navItemsByRole,
+  visibleNavItems,
   type NavRole,
 } from "@/lib/navigation";
 
 export function DesktopTopNav({
   role,
   currentPath,
+  isAgency = false,
 }: {
   role: NavRole;
   currentPath?: string;
+  isAgency?: boolean;
 }) {
   const router = useRouter();
   const { messages } = useStudentI18n();
-  const items = navItemsByRole[role];
+  const items = visibleNavItems(role, isAgency);
 
   function getLabel(href: string, fallback: string) {
     if (role === "guest" || role === "applicant") {

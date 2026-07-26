@@ -10,7 +10,9 @@ import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { StudentLocaleProvider } from "@/components/student-locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { db, recruiters } from "@/lib/db";
 import { getEventBranding } from "@/lib/event-branding";
 import { getStudentLocale } from "@/lib/student-locale.server";
 
@@ -228,5 +230,21 @@ async function MobileBottomNavServer({
   sessionPromise: ReturnType<typeof getSession>;
 }) {
   const session = await sessionPromise;
-  return <MobileBottomNavClient role={session?.role ?? "guest"} />;
+  // Agency-only tabs (Clients / Compliance) are hidden for normal recruiters.
+  let isAgency = false;
+  if (session?.role === "recruiter") {
+    try {
+      const [r] = await db
+        .select({ clientKind: recruiters.clientKind })
+        .from(recruiters)
+        .where(eq(recruiters.userId, session.userId))
+        .limit(1);
+      isAgency = r?.clientKind === "agency";
+    } catch {
+      isAgency = false;
+    }
+  }
+  return (
+    <MobileBottomNavClient role={session?.role ?? "guest"} isAgency={isAgency} />
+  );
 }

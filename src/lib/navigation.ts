@@ -22,7 +22,17 @@ export type NavItem = {
   icon: ComponentType<{ className?: string }>;
   matches?: string[];
   exactMatch?: boolean;
+  // Only shown to agency-kind recruiters (Yang Luck HQ), hidden for a normal
+  // client-company recruiter.
+  agencyOnly?: boolean;
 };
+
+// Nav items visible to a given role, dropping agency-only tabs for non-agency
+// recruiters.
+export function visibleNavItems(role: NavRole, isAgency: boolean): NavItem[] {
+  const items = navItemsByRole[role] ?? [];
+  return isAgency ? items : items.filter((item) => !item.agencyOnly);
+}
 
 export const navItemsByRole: Record<NavRole, NavItem[]> = {
   guest: [
@@ -76,12 +86,14 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Clients",
       icon: Handshake,
       matches: ["/dashboard/clients"],
+      agencyOnly: true,
     },
     {
       href: "/dashboard/compliance",
       label: "Compliance",
       icon: ShieldCheck,
       matches: ["/dashboard/compliance"],
+      agencyOnly: true,
     },
     {
       href: "/dashboard/jobs",

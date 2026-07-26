@@ -24,6 +24,7 @@ export async function getRecruiterDashboardData() {
       id: recruiters.id,
       company: recruiters.company,
       industry: recruiters.industry,
+      clientKind: recruiters.clientKind,
       description: recruiters.description,
       contactEmail: recruiters.contactEmail,
       interviewerCount: recruiters.interviewerCount,
