@@ -32,6 +32,7 @@
     "db:update:booking-action-logs": "npx tsx src/lib/db/add-booking-action-logs-table.ts",
     "db:update:booking-job-opening-id": "npx tsx src/lib/db/add-booking-job-opening-id-column.ts",
     "db:update:student-cancellation-toggle": "npx tsx src/lib/db/add-student-cancellation-toggle-column.ts",
+    "db:update:yang-luck-ats": "npx tsx src/lib/db/add-yang-luck-ats-schema.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",
     "db:seed:schools": "npx tsx src/lib/db/import-schools.ts",
     "test": "vitest run",
