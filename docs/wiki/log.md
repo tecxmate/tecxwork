@@ -1191,3 +1191,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - NavItem.agencyOnly + visibleNavItems(role,isAgency); isAgency threads dashboard→AppTopBar→DesktopTopNav and layout→MobileBottomNav (one indexed clientKind query for recruiter sessions). Commit 18b31d2.
 - Verified live: agency sees Clients + Compliance tabs; co-leeming (client recruiter) sees neither; shared tabs (Pipeline) unaffected. Removes the phantom-tab quirk from Phase 2/3.
+
+## [2026-07-27] feat | ATS Phase 4 — pipeline reporting (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Agency-only Reports tab (/dashboard/reports, commit bd6c087) from the append-only transition log: getPipelineReport() → metrics (candidates/placements/rate/avg days), funnel per stage with avg days-in-stage, aging list. PipelineReportView = metric cards + funnel bars + aging table.
+- seed-report-demo backdates demo apps/transitions ~8 weeks for realistic spread (oldest ~37d).
+- Verified live: funnel/metrics/aging render on agency Reports tab; tab hidden from client recruiters.
+- Phase 4 remaining: scorecards/evaluations, notes + @mentions.
