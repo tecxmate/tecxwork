@@ -187,12 +187,18 @@ export async function POST(req: NextRequest) {
   // applications row requires a job); idempotent on the (job, applicant) unique
   // index so re-applying never duplicates a pipeline card.
   if (jobOpeningId) {
+    const [jobRecruiter] = await db
+      .select({ orgId: recruiters.orgId })
+      .from(recruiters)
+      .where(eq(recruiters.id, body.recruiterId))
+      .limit(1);
     await db
       .insert(applications)
       .values({
         jobOpeningId,
         applicantId: profile.id,
         recruiterId: body.recruiterId,
+        orgId: jobRecruiter?.orgId ?? null,
         stage: "applied",
       })
       .onConflictDoNothing();

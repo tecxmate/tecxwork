@@ -1,4 +1,4 @@
-import { eq, ne } from "drizzle-orm";
+import { eq, ne, and } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
 import {
@@ -40,6 +40,7 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
       id: recruiters.id,
       company: recruiters.company,
       clientKind: recruiters.clientKind,
+      orgId: recruiters.orgId,
     })
     .from(recruiters)
     .where(eq(recruiters.id, auth.recruiterId))
@@ -62,7 +63,9 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
     .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
     .where(
       isAgency
-        ? ne(recruiters.clientKind, "agency")
+        ? me.orgId != null
+          ? and(ne(recruiters.clientKind, "agency"), eq(recruiters.orgId, me.orgId))
+          : ne(recruiters.clientKind, "agency")
         : eq(jobOpenings.recruiterId, me.id)
     );
 
@@ -91,7 +94,11 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
 
   const [jobs, rows] = await Promise.all([
     jobsQuery,
-    isAgency ? cardsBase : cardsBase.where(eq(applications.recruiterId, me.id)),
+    isAgency
+      ? me.orgId != null
+        ? cardsBase.where(eq(applications.orgId, me.orgId))
+        : cardsBase
+      : cardsBase.where(eq(applications.recruiterId, me.id)),
   ]);
 
   if (jobs.length === 0) return null;

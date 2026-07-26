@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { getRecruiterFromSession } from "@/lib/auth";
-import { applications, recruiters } from "@/lib/db/schema";
+import { getMember, canMoveStage, isOrgManager } from "@/lib/ats-auth";
+import { logAudit } from "@/lib/audit";
+import { applications } from "@/lib/db/schema";
 import { PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-types";
 
 function isStage(v: unknown): v is PipelineStage {
@@ -13,16 +14,19 @@ function isStage(v: unknown): v is PipelineStage {
  * PATCH /api/applications/:id  { stage }
  * Moves a candidate to a new ATS pipeline stage.
  *
- * Authorization: must be a recruiter. A normal recruiter may only move
- * applications to their OWN job openings; an "agency" recruiter may move any
- * (they manage the whole cross-client placement pipeline).
+ * Authorization (org + RBAC):
+ *  - must be an org member with a stage-move role;
+ *  - tenant isolation: the application must belong to the member's org;
+ *  - row ownership: non-managers may only move their own recruiter's applications
+ *    (org managers — admin / account_manager, e.g. the agency — may move any).
+ * Every move writes an append-only audit_log entry.
  */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await getRecruiterFromSession();
-  if (!auth) {
+  const member = await getMember();
+  if (!member) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -47,10 +51,19 @@ export async function PATCH(
     );
   }
 
+  if (!canMoveStage(member.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const db = getDb();
 
   const [application] = await db
-    .select({ id: applications.id, recruiterId: applications.recruiterId })
+    .select({
+      id: applications.id,
+      recruiterId: applications.recruiterId,
+      orgId: applications.orgId,
+      stage: applications.stage,
+    })
     .from(applications)
     .where(eq(applications.id, applicationId))
     .limit(1);
@@ -58,14 +71,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 
-  const [me] = await db
-    .select({ clientKind: recruiters.clientKind })
-    .from(recruiters)
-    .where(eq(recruiters.id, auth.recruiterId))
-    .limit(1);
-  const isAgency = me?.clientKind === "agency";
-
-  if (!isAgency && application.recruiterId !== auth.recruiterId) {
+  // Tenant isolation — never touch another org's data.
+  if (application.orgId !== null && application.orgId !== member.orgId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  // Row ownership — non-managers only move their own recruiter's applications.
+  if (!isOrgManager(member.role) && application.recruiterId !== member.recruiterId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -74,10 +85,21 @@ export async function PATCH(
     .set({ stage, stageUpdatedAt: new Date() })
     .where(eq(applications.id, applicationId))
     .returning({ id: applications.id, stage: applications.stage });
-
   if (!updated) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
+
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  await logAudit({
+    orgId: member.orgId,
+    actorUserId: member.userId,
+    action: "move_stage",
+    entityType: "application",
+    entityId: application.id,
+    fieldNames: ["stage"],
+    metadata: { from: application.stage, to: stage },
+    ip,
+  });
 
   return NextResponse.json({ ok: true, id: updated.id, stage: updated.stage });
 }
