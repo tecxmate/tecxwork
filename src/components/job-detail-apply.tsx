@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2, LogIn } from "lucide-react";
 
 import { BookingForm } from "@/components/booking-form";
-import {
-  RecruiterJobPostingCard,
-  type RecruiterJobPosting,
-} from "@/components/recruiter-job-posting-card";
+import { JobDetailContent } from "@/components/job-detail-content";
+import type { RecruiterJobPosting } from "@/components/recruiter-job-posting-card";
 import { SlotPicker } from "@/components/slot-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,11 +32,14 @@ export function JobDetailApply({
   locale,
   messages,
   isApplicant,
+  footer,
 }: {
   job: JobDetailApplyJob;
   locale: JobPostingLocale;
   messages: StudentMessages;
   isApplicant: boolean;
+  /** Rendered under the posting, but hidden while booking an interview. */
+  footer?: React.ReactNode;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("details");
@@ -181,51 +182,38 @@ export function JobDetailApply({
   }
 
   return (
-    <RecruiterJobPostingCard
-      job={job}
-      locale={locale}
-      className="border-0 bg-transparent p-0 shadow-none hover:border-transparent hover:bg-transparent hover:shadow-none"
-      labels={{
-        seniority: messages.jobsPage.card.seniority,
-        languageRequirement: messages.jobsPage.card.languageRequirement,
-        visaSupport: messages.jobsPage.card.visaSupport,
-        applicationDeadline: messages.jobsPage.card.applicationDeadline,
-        description: messages.jobsPage.card.description,
-        responsibilities: messages.jobsPage.card.responsibilities,
-        requirements: messages.jobsPage.card.requirements,
-        benefits: messages.jobsPage.card.benefits,
-        viewJd: messages.jobsPage.card.viewJd,
-        noJd: messages.jobsPage.card.noJd,
-      }}
-      status={
-        alreadyApplied ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            {bookingStatusLabel(appliedBooking!.status)}
-          </span>
-        ) : (
-          <Button size="sm" onClick={handleApply} className="shrink-0">
-            {isApplicant ? (
-              <>
-                {messages.recruiterDetail.apply}
-                <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              </>
-            ) : (
-              <>
-                <LogIn className="mr-1 h-3.5 w-3.5" />
-                {messages.recruiterDetail.loginToApply}
-              </>
-            )}
-          </Button>
-        )
-      }
-      action={
-        alreadyApplied ? (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {messages.recruiterDetail.onePerPosition}
-          </span>
-        ) : undefined
-      }
-    />
+    <>
+      <JobDetailContent
+        job={job}
+        locale={locale}
+        messages={messages}
+        apply={
+          alreadyApplied ? (
+            <span className="inline-flex items-center justify-center gap-1 rounded-full bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {bookingStatusLabel(appliedBooking!.status)}
+            </span>
+          ) : (
+            <Button onClick={handleApply}>
+              {isApplicant ? (
+                <>
+                  {messages.recruiterDetail.apply}
+                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-1 h-3.5 w-3.5" />
+                  {messages.recruiterDetail.loginToApply}
+                </>
+              )}
+            </Button>
+          )
+        }
+        note={
+          alreadyApplied ? messages.recruiterDetail.onePerPosition : undefined
+        }
+      />
+      {footer}
+    </>
   );
 }

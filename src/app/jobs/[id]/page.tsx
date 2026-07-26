@@ -3,8 +3,11 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { JobDetailApply } from "@/components/job-detail-apply";
 import { SiteFooter } from "@/components/site-footer";
+import { RelatedJobs } from "@/components/related-jobs";
 import { db, jobOpenings, recruiters } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { JOB_CATEGORY_SLUGS } from "@/lib/job-category-routes";
+import type { JobCategoryValue } from "@/lib/job-posting";
+import { and, desc, eq, ne, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
@@ -190,6 +193,64 @@ async function getJob(id: number) {
   return job ?? null;
 }
 
+const RELATED_JOBS_LIMIT = 6;
+
+/**
+ * Jobs to suggest at the bottom of a posting: same category or same recruiter
+ * first, then the newest approved openings as filler so the block is never
+ * empty on a sparse board.
+ */
+async function getRelatedJobs(job: NonNullable<Awaited<ReturnType<typeof getJob>>>) {
+  const selection = {
+    id: jobOpenings.id,
+    title: jobOpenings.title,
+    location: jobOpenings.location,
+    employmentType: jobOpenings.employmentType,
+    salaryMin: jobOpenings.salaryMin,
+    salaryMax: jobOpenings.salaryMax,
+    salaryCurrency: jobOpenings.salaryCurrency,
+    salaryPeriod: jobOpenings.salaryPeriod,
+    company: recruiters.company,
+  };
+
+  const base = and(
+    eq(jobOpenings.moderationStatus, "approved"),
+    ne(jobOpenings.id, job.id)
+  );
+
+  const matching = await db
+    .select(selection)
+    .from(jobOpenings)
+    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .where(
+      and(
+        base,
+        or(
+          eq(jobOpenings.recruiterId, job.recruiterId),
+          job.jobCategory ? eq(jobOpenings.jobCategory, job.jobCategory) : undefined
+        )
+      )
+    )
+    .orderBy(desc(jobOpenings.createdAt))
+    .limit(RELATED_JOBS_LIMIT);
+
+  if (matching.length >= RELATED_JOBS_LIMIT) return matching;
+
+  const seen = new Set(matching.map((item) => item.id));
+  const latest = await db
+    .select(selection)
+    .from(jobOpenings)
+    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .where(base)
+    .orderBy(desc(jobOpenings.createdAt))
+    .limit(RELATED_JOBS_LIMIT);
+
+  return [...matching, ...latest.filter((item) => !seen.has(item.id))].slice(
+    0,
+    RELATED_JOBS_LIMIT
+  );
+}
+
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const jobId = parseInt(id);
@@ -210,6 +271,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   ).replace(/\/$/, "");
   const jobPostingJsonLd = buildJobPostingJsonLd(job, siteUrl);
 
+  const relatedJobs = await getRelatedJobs(job);
+  const categorySlug = JOB_CATEGORY_SLUGS[job.jobCategory as JobCategoryValue];
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <script
@@ -219,7 +283,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       />
       <header className="sticky top-0 z-10 border-b bg-white dark:bg-card">
         <div className="h-[env(safe-area-inset-top)] bg-primary md:hidden" />
-        <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
             href="/jobs"
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -231,12 +295,22 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       </header>
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-10">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           <JobDetailApply
             job={job}
             locale={locale}
             messages={messages}
             isApplicant={session?.role === "applicant"}
+            footer={
+              <RelatedJobs
+                jobs={relatedJobs}
+                locale={locale}
+                messages={messages}
+                categoryHref={categorySlug ? `/jobs/cat/${categorySlug}` : null}
+                companyHref={`/recruiter/${job.recruiterId}`}
+                companyName={job.company}
+              />
+            }
           />
         </div>
       </main>

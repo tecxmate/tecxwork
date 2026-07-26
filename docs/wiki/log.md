@@ -1094,3 +1094,10 @@ attributed_to: [niko]   belongs_to: [photo-uploads]
 - Upload backend swapped to Cloudflare R2 (S3-compatible): new src/lib/r2.ts, src/lib/image-host.ts (allow-list accepts R2 host + legacy Blob host), @aws-sdk/client-s3. Legacy Blob URLs still allow-listed.
 - Re-sourced 30/33 company logos from the open web (official sites, Wikimedia, FB); SVG/ICO rasterized to PNG; stored in public/company-logos/ with recruiters.logo_url rewritten to /company-logos/<id>.<ext>. Originals backed up. Left for niko: BellWether, Futsu, 富利餐飲, KD 9 Spa. Gallery images unrecoverable.
 - Decision: docs/wiki/decisions/2026-07-16-r2-image-storage-migration.md. Shipped via branch fix/logo-recovery-r2-migration off main (multi-tenant work deliberately excluded).
+
+## [2026-07-27] ingest | Job detail page: two-column reading flow + related-jobs internal linking
+attributed_to: [niko]   belongs_to: [job-detail-page]
+- niko: job content belongs on the LEFT, supporting content on the right — "that's how the natural reading flow is". References: a job-board detail screenshot and tuyendungviettrien.com/viec-lam/ke-toan-truong-1782868345700.
+- /jobs/[id] reflowed from a single max-w-4xl column into max-w-6xl `minmax(0,1fr) 20rem`: left = title + Summary/Responsibilities/Requirements/Benefits + JD link; right (sticky) = salary + apply CTA + deadline, About-the-company card, General-information fact list. New src/components/job-detail-content.tsx; TextBlock exported from recruiter-job-posting-card.tsx for reuse.
+- niko: add related-jobs suggestions at the end with backlinks — "keeps the person going inside the platform". New src/components/related-jobs.tsx + getRelatedJobs(): approved openings, same recruiter OR same category, newest first, max 6, topped up with newest approved so the block is never empty. Backlinks to /jobs/<id>, /jobs/cat/<slug>, /recruiter/<id>. Rendered via a `footer` prop so it hides during the booking flow.
+- New `jobDetail` i18n block in en/vi/zh-TW. Verified: tsc clean, next build clean, page renders 200 in all three locales with 6 related backlinks.

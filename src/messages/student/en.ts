@@ -73,6 +73,20 @@ export const studentEnMessages = {
     guestHint:
       "Guests can browse participating companies. Log in when you are ready to apply and book an interview.",
   },
+  jobDetail: {
+    overview: "General information",
+    aboutCompany: "About the company",
+    location: "Location",
+    employmentType: "Employment type",
+    workplaceType: "Workplace",
+    category: "Category",
+    salary: "Salary",
+    relatedTitle: "Similar jobs",
+    relatedSubtitle: "Other openings you may be a good fit for",
+    moreFromCompany: "More jobs at {company}",
+    viewAllJobs: "Browse all jobs",
+    viewCompanyJobs: "View company profile",
+  },
   jobsPage: {
     badge: "Job Board",
     title: "Recruiter-Posted Jobs",
