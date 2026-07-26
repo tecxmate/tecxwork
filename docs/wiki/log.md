@@ -1135,3 +1135,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - ntut.cbtalent.tw is NOT copying tecxwork — it's NTUT's instance of CBtalent (white-label campus-recruiting SaaS). Treated as competitive intel.
 - Shipped on demo/yang-luck: #2 hide 0-job companies in /browse, #5 dedupe titles + company rows, #6 verified-employer badge (new recruiters.verified col, default false) + seeded job closing dates. #4 (counts/pagination) was already done.
 - Root-caused "only 1 company": demo Neon DB (lingering-sun) was never migrated (no applications table). Fixed via drizzle-kit push + FK-safe reseed (25 verified companies). See decisions/2026-07-26-competitive-audit-cbtalent.md.
+
+## [2026-07-26] fix | Resolve Neon env hazard — realign stale prod vars to delicate-lab
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Root of the demo 500: 3 Neon DBs; only DATABASE_URL is authoritative. Prod runtime=delicate-lab; lingering-sun is OLD prod (post Tokyo-migration) now repurposed as the yang-luck demo DB.
+- Demo branch DATABASE_URL had drifted → realigned to lingering-sun (integration DB); demo recovered (200, 25 verified companies).
+- PROD env footgun fixed: 7 stale vars (POSTGRES_URL/_NON_POOLING/_NO_SSL/_PRISMA_URL, POSTGRES_HOST, PGHOST, PGHOST_UNPOOLED) pointed at lingering-sun (= demo DB); realigned all to delicate-lab. Live prod unaffected (still 38 companies; code reads only DATABASE_URL).
+- Note: lingering-sun was truncated+reseeded as the demo DB — it was decommissioned old-prod, no live data loss. Pending: add `verified` column to delicate-lab before any demo→main merge.
