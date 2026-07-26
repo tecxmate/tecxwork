@@ -1147,3 +1147,9 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 attributed_to: [niko]   belongs_to: [tecxwork]
 - src/lib/db/add-yang-luck-ats-schema.ts (npm run db:update:yang-luck-ats): idempotent, additive migration = exact `git diff main...HEAD` schema delta. Adds recruiters.client_kind/verified, job_openings.client_company/industry/kind, pipeline_stage enum, applications table (+indexes). Run with DATABASE_URL=prod (delicate-lab) at merge; safe to re-run.
 - Side note: realigning prod Neon vars (POSTGRES_URL/PGHOST/etc.) via rm+add left them Production-scoped only (dropped from Preview/Dev). Harmless — code reads only DATABASE_URL; demo uses its branch DATABASE_URL override. Both prod (38 cos) + demo (25 cos) verified 200.
+
+## [2026-07-26] feat | ATS Phase 0 hardening — de-demo the pipeline (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Started the ATS production-hardening effort (full roadmap: decisions/2026-07-26-ats-production-hardening.md; detailed plan in ~/.claude/plans/glowing-wiggling-eich.md). Decisions: multi-tenant-ready, unified agency+corporate, design-for-PII (staged tooling).
+- Phase 0 (commit 3b8a167, code-only, no migration): getPipelineBoard() recruiter-scoped (agency keeps cross-client super-view); PATCH /api/applications/:id now auth-gated + ownership-checked (was fully open); applying to a job creates a real 'applied' pipeline card (idempotent on the unique index).
+- Verified live on yangluck.tecxmate.com: unauth stage-move → 401; agency login sees all candidates, 麗明營造 client login is scoped (no cross-company leak). Apply→card path (needs an applicant login) verified by review only.
