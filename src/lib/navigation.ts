@@ -6,6 +6,7 @@ import {
   Handshake,
   Home,
   KanbanSquare,
+  ShieldCheck,
   SlidersHorizontal,
   User,
   Users,
@@ -75,6 +76,12 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Clients",
       icon: Handshake,
       matches: ["/dashboard/clients"],
+    },
+    {
+      href: "/dashboard/compliance",
+      label: "Compliance",
+      icon: ShieldCheck,
+      matches: ["/dashboard/compliance"],
     },
     {
       href: "/dashboard/jobs",

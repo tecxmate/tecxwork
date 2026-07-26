@@ -69,6 +69,7 @@ type Section =
   | "applicants"
   | "pipeline"
   | "clients"
+  | "compliance"
   | "jobs"
   | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
@@ -91,6 +92,12 @@ const DashboardPipeline = dynamic(
 // Agency-only CRM view (clients → job orders → submissions → placements).
 const ClientsCrmView = dynamic(
   () => import("@/components/clients-crm-view").then((m) => m.ClientsCrmView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
+// Agency-only migrant-labor document compliance view (ARC / work-permit expiry).
+const ComplianceView = dynamic(
+  () => import("@/components/compliance-view").then((m) => m.ComplianceView),
   { loading: () => <DashboardTabLoader /> }
 );
 
@@ -137,9 +144,11 @@ export function RecruiterDashboard({
           ? "/dashboard/pipeline"
           : section === "clients"
             ? "/dashboard/clients"
-            : section === "jobs"
-              ? "/dashboard/jobs"
-              : "/dashboard/company";
+            : section === "compliance"
+              ? "/dashboard/compliance"
+              : section === "jobs"
+                ? "/dashboard/jobs"
+                : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -152,6 +161,7 @@ export function RecruiterDashboard({
       "/dashboard/applicants",
       "/dashboard/pipeline",
       "/dashboard/clients",
+      "/dashboard/compliance",
       "/dashboard/jobs",
       "/dashboard/company",
     ];
@@ -222,6 +232,14 @@ export function RecruiterDashboard({
             ) : (
               <p className="py-16 text-center text-sm text-muted-foreground">
                 Clients are available for agency accounts.
+              </p>
+            )
+          ) : section === "compliance" ? (
+            agencyCrm ? (
+              <ComplianceView compliance={agencyCrm.compliance} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Compliance is available for agency accounts.
               </p>
             )
           ) : section === "jobs" ? (
