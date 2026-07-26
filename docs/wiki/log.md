@@ -1229,3 +1229,8 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
 - Pipeline kanban read as "brand new" / not part of the app. Realigned to native idioms: candidate cards use the signature Glow Card hover; hex stage/AI colors → palette tokens + status-pill tints; column headers now use the booking tab's colored count-circle (bg-{c}/15 text-{c}) instead of a gray count badge + dot; borders softened to /60.
 - Faithful port of the booking tab's application-stage grouping (kanban = board form of same pipeline). See docs/wiki/topics/design-system.md History.
+
+## [2026-07-27] ingest | De-floated the recruiter save/status "Add" action
+attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
+- On /dashboard/jobs (and My Company) the shared save/status action rendered as a fixed (mobile) / md:sticky top-right floating pill with heavy shadow + backdrop-blur — read as a detached, distracting FAB overlapping the header.
+- Fix (recruiter-dashboard-company.tsx): removed the fixed/sticky wrapper, pill shape, glow shadow, backdrop-blur and pb-28 spacer; renderStatusStrip() now returns an in-flow button co-located in each form header (next to the Add / Edit title and the existing Submit/Delete cluster). Hardcoded Apple hex (#FF9500/#30D158) on the button swapped for the system orange/emerald scale. Only instance of the pattern; both jobs + company surfaces fixed.
