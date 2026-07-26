@@ -74,6 +74,8 @@ export const recruiters = pgTable("recruiters", {
     .unique(),
   company: text("company").notNull(),
   industry: text("industry").notNull(),
+  // Multi-tenancy: the org (tenant) this recruiter belongs to (Phase 1).
+  orgId: integer("org_id").references(() => orgs.id),
   // Demo agency model: "subsidiary" / "client" companies vs the "agency" itself.
   clientKind: text("client_kind").notNull().default("client"),
   // Trust signal: employer vetted (agency-verified in the demo; admin-settable
@@ -102,6 +104,7 @@ export const jobOpenings = pgTable("job_openings", {
   recruiterId: integer("recruiter_id")
     .notNull()
     .references(() => recruiters.id),
+  orgId: integer("org_id").references(() => orgs.id),
   title: text("title").notNull(),
   jobCategory: text("job_category").notNull().default(""),
   // Agency model: the client company Yang Luck is placing this role for, and
@@ -293,6 +296,7 @@ export const applications = pgTable(
     recruiterId: integer("recruiter_id")
       .notNull()
       .references(() => recruiters.id),
+    orgId: integer("org_id").references(() => orgs.id),
     stage: pipelineStageEnum("stage").notNull().default("applied"),
     stageUpdatedAt: timestamp("stage_updated_at", { withTimezone: true })
       .notNull()
@@ -312,6 +316,86 @@ export const applications = pgTable(
     index("applications_recruiter_stage_idx").on(
       table.recruiterId,
       table.stage
+    ),
+  ]
+);
+
+// ---- ATS multi-tenancy + RBAC + audit (Phase 1) ----
+
+export const memberRoleEnum = pgEnum("member_role", [
+  "admin",
+  "account_manager",
+  "recruiter",
+  "hiring_manager",
+  "interviewer",
+  "coordinator",
+  "viewer",
+]);
+
+// A tenant. An agency (Yang Luck) or a corporate employer. Everything ATS is
+// scoped to one org; the agency's client companies live as data WITHIN its org.
+export const orgs = pgTable("orgs", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  kind: text("kind").notNull().default("agency"), // agency | employer
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// A user's role within an org. Replaces the single recruiters.userId link as the
+// authorization source of truth (a user can belong to one org here; multi-org
+// per user is a later extension).
+export const memberships = pgTable(
+  "memberships",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    role: memberRoleEnum("role").notNull().default("recruiter"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_org_member").on(table.orgId, table.userId)]
+);
+
+// Append-only PII/access audit trail. Stores field NAMES + non-PII metadata,
+// never raw PII values, so candidate erasure never has to touch this table.
+// Grant the app DB role INSERT+SELECT only (no UPDATE/DELETE) once RLS lands.
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id").references(() => orgs.id),
+    actorUserId: integer("actor_user_id").references(() => users.id),
+    actorType: text("actor_type").notNull().default("user"), // user | system | job
+    action: text("action").notNull(), // view | create | update | move_stage | export | ...
+    entityType: text("entity_type").notNull(), // application | candidate | job | ...
+    entityId: integer("entity_id"),
+    fieldNames: text("field_names").array(),
+    metadata: jsonb("metadata"),
+    ip: text("ip"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("audit_log_org_entity_idx").on(
+      table.orgId,
+      table.entityType,
+      table.entityId,
+      table.createdAt
+    ),
+    index("audit_log_org_actor_idx").on(
+      table.orgId,
+      table.actorUserId,
+      table.createdAt
     ),
   ]
 );
