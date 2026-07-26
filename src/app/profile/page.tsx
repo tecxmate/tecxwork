@@ -22,13 +22,13 @@ import {
   QrCode,
   Eye,
   ChevronRight,
+  Award,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { AppTopBar } from "@/components/app-topbar";
 import { LogoutButton } from "@/components/logout-button";
 import { QRCard } from "@/components/qr-code";
@@ -708,7 +708,8 @@ type ProfileTab =
   | "basic"
   | "education"
   | "preferences"
-  | "experience"
+  | "work"
+  | "certifications"
   | "skills"
   | "cvqr"
   | "applications"
@@ -719,14 +720,16 @@ const PROFILE_FORM_TABS: ProfileTab[] = [
   "basic",
   "education",
   "preferences",
-  "experience",
+  "work",
+  "certifications",
   "skills",
 ];
 const PROFILE_TAB_ORDER: ProfileTab[] = [
   "basic",
   "education",
   "preferences",
-  "experience",
+  "work",
+  "certifications",
   "skills",
   "cvqr",
   "applications",
@@ -1208,7 +1211,8 @@ export default function ProfilePage() {
     { id: "basic", label: messages.profile.tabsBasic ?? "Basic", icon: User },
     { id: "education", label: messages.register.educationSection, icon: GraduationCap },
     { id: "preferences", label: messages.register.preferencesSection, icon: Building2 },
-    { id: "experience", label: messages.register.workExperienceSection, icon: BriefcaseBusiness },
+    { id: "work", label: messages.register.workExperienceSection, icon: BriefcaseBusiness },
+    { id: "certifications", label: messages.profile.certifications ?? "Certifications", icon: Award },
     { id: "skills", label: messages.register.skills, icon: Sparkles },
     { id: "cvqr", label: messages.profile.tabsCvQr ?? "CV / QR", icon: QrCode },
     { id: "applications", label: messages.profile.applicationsTitle ?? "Applications", icon: CalendarClock },
@@ -1940,8 +1944,7 @@ export default function ProfilePage() {
                 </section>
                 )}
 
-                {activeTab === "experience" && (
-                <>
+                {activeTab === "work" && (
                 <section className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -2003,10 +2006,10 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </section>
-
-                <Separator />
+                )}
 
                 {/* Certifications */}
+                {activeTab === "certifications" && (
                 <section className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="font-heading text-lg font-semibold">
@@ -2055,7 +2058,6 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </section>
-                </>
                 )}
 
                 {activeTab === "skills" && (
