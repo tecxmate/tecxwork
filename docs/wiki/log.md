@@ -1205,3 +1205,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - APIs: GET/POST /api/applications/:id/timeline (fetch/add note), POST /api/applications/:id/scorecard. Stage moves write a stage_change activity event.
 - CandidateTimeline in the pipeline candidate drawer: fetch-on-open, scorecards (rec + star ratings + comment) + notes timeline, add-note input + submit-scorecard form.
 - Verified live: unauth→401; GET returns seeded data; add note (author name resolved) + add scorecard persist. Remaining: @mentions.
+
+## [2026-07-27] feat | ATS Phase 5 — PII governance (consent/retention/erasure, verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-pii (commit ac3f1a4): applicant_profiles + consent_at/consent_purpose/retention_until/anonymized_at; backfilled consent + 18-month retention for 37 candidates.
+- Timeline API returns candidate governance (consent date, retention + review-due flag, canErase by role). POST /api/applications/:id/erase-candidate = org-manager-only right-to-erasure (anonymize PII in place, audited). CandidateTimeline "Data & consent" panel + Erase-PII action (managers only).
+- Verified live: consent/retention shown (retention 2028-01-26); unauth erase→401, non-manager(co-leeming)→403, canErase true only for agency; 0 accidental erasures.
+- Remaining: automated retention enforcement, cross-border transfer register, client portal; plus talent pools + signed-URL docs (Phase 3 leftovers).
