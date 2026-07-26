@@ -1186,3 +1186,8 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - Feedback: ARC/compliance shouldn't live under "Clients". Moved the compliance panel out of ClientsCrmView into a dedicated ComplianceView + agency-only "Compliance" nav tab (/dashboard/compliance) — commit 5b4d163.
 - Verified live: Compliance tab shows ARC/work-permit + expiry status; Clients tab is clean (client list only). Both agency-gated.
+
+## [2026-07-27] feat | Hide agency-only nav tabs from non-agency recruiters
+attributed_to: [niko]   belongs_to: [tecxwork]
+- NavItem.agencyOnly + visibleNavItems(role,isAgency); isAgency threads dashboard→AppTopBar→DesktopTopNav and layout→MobileBottomNav (one indexed clientKind query for recruiter sessions). Commit 18b31d2.
+- Verified live: agency sees Clients + Compliance tabs; co-leeming (client recruiter) sees neither; shared tabs (Pipeline) unaffected. Removes the phantom-tab quirk from Phase 2/3.
