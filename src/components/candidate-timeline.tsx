@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, MessageSquarePlus, Star, Trash2 } from "lucide-react";
+import { Loader2, MessageSquarePlus, Star, Trash2, Users2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -23,12 +23,15 @@ type ScorecardItem = {
   comment: string;
   createdAt: string;
 };
+type Pool = { id: number; name: string };
 type Candidate = {
   consentAt: string | null;
   retentionUntil: string | null;
   anonymizedAt: string | null;
   retentionDue: boolean;
   canErase: boolean;
+  canManagePools: boolean;
+  pools: Pool[];
 };
 
 const T: Record<Locale, Record<string, string>> = {
@@ -52,6 +55,10 @@ const T: Record<Locale, Record<string, string>> = {
     erased: "個資已刪除",
     erase: "刪除個資",
     eraseConfirm: "確定刪除此候選人的個人資料？此動作無法復原。",
+    pools: "人才庫",
+    noPools: "尚未加入人才庫",
+    addToPool: "加入人才庫…",
+    newPool: "新建人才庫…",
   },
   en: {
     scorecards: "Scorecards",
@@ -73,6 +80,10 @@ const T: Record<Locale, Record<string, string>> = {
     erased: "PII erased",
     erase: "Erase PII",
     eraseConfirm: "Erase this candidate's personal data? This cannot be undone.",
+    pools: "Talent pools",
+    noPools: "Not in any pool",
+    addToPool: "Add to pool…",
+    newPool: "New pool…",
   },
 };
 
@@ -110,6 +121,8 @@ export function CandidateTimeline({
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [cards, setCards] = useState<ScorecardItem[]>([]);
   const [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [allPools, setAllPools] = useState<Pool[]>([]);
+  const [newPool, setNewPool] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -131,6 +144,12 @@ export function CandidateTimeline({
         setActivity(d.activity ?? []);
         setCards(d.scorecards ?? []);
         setCandidate(d.candidate ?? null);
+        if (d.candidate?.canManagePools) {
+          fetch("/api/talent-pools")
+            .then((r) => (r.ok ? r.json() : { pools: [] }))
+            .then((pd) => alive && setAllPools(pd.pools ?? []))
+            .catch(() => {});
+        }
       })
       .catch(() => {})
       .finally(() => alive && setLoading(false));
@@ -199,6 +218,75 @@ export function CandidateTimeline({
     }
   }
 
+  async function addToPool(poolId: number) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/applications/${applicationId}/pools`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ poolId }),
+      });
+      if (r.ok) {
+        const { pool } = await r.json();
+        setCandidate((c) =>
+          c && !c.pools.some((p) => p.id === pool.id)
+            ? { ...c, pools: [...c.pools, pool] }
+            : c
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeFromPool(poolId: number) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/applications/${applicationId}/pools?poolId=${poolId}`, {
+        method: "DELETE",
+      });
+      if (r.ok) {
+        setCandidate((c) => (c ? { ...c, pools: c.pools.filter((p) => p.id !== poolId) } : c));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createAndAdd() {
+    const name = newPool.trim();
+    if (!name || busy) return;
+    setBusy(true);
+    try {
+      const cr = await fetch("/api/talent-pools", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (!cr.ok) return;
+      const { pool } = await cr.json();
+      setAllPools((a) => [...a, pool]);
+      setNewPool("");
+      const ar = await fetch(`/api/applications/${applicationId}/pools`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ poolId: pool.id }),
+      });
+      if (ar.ok) {
+        const { pool: added } = await ar.json();
+        setCandidate((c) =>
+          c && !c.pools.some((p) => p.id === added.id)
+            ? { ...c, pools: [...c.pools, added] }
+            : c
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-6 text-muted-foreground">
@@ -248,6 +336,62 @@ export function CandidateTimeline({
               ) : null}
             </div>
           )}
+        </div>
+      ) : null}
+
+      {/* Talent pools */}
+      {candidate?.canManagePools ? (
+        <div className="rounded-xl border border-border/60 p-3">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <Users2 className="h-3.5 w-3.5" /> {t.pools}
+          </p>
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {candidate.pools.length ? (
+              candidate.pools.map((p) => (
+                <Badge key={p.id} variant="secondary" className="gap-1">
+                  {p.name}
+                  <button
+                    type="button"
+                    onClick={() => removeFromPool(p.id)}
+                    disabled={busy}
+                    className="ml-0.5 text-muted-foreground hover:text-destructive"
+                    aria-label="remove"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))
+            ) : (
+              <span className="text-xs text-muted-foreground">{t.noPools}</span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value=""
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (v) addToPool(v);
+              }}
+              disabled={busy}
+              className="h-8 rounded-lg border border-input bg-background px-2 text-xs"
+            >
+              <option value="">{t.addToPool}</option>
+              {allPools
+                .filter((p) => !candidate.pools.some((x) => x.id === p.id))
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+            </select>
+            <input
+              value={newPool}
+              onChange={(e) => setNewPool(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && createAndAdd()}
+              placeholder={t.newPool}
+              className="h-8 min-w-[110px] flex-1 rounded-lg border border-input bg-background px-2 text-xs"
+            />
+          </div>
         </div>
       ) : null}
 

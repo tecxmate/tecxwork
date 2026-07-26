@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, asc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { authorizeApplication, isOrgManager } from "@/lib/ats-auth";
-import { activity, scorecards, users, applicantProfiles } from "@/lib/db/schema";
+import {
+  activity,
+  scorecards,
+  users,
+  applicantProfiles,
+  talentPools,
+  talentPoolMembers,
+} from "@/lib/db/schema";
 
 export async function GET(
   _req: NextRequest,
@@ -60,6 +67,20 @@ export async function GET(
     ? new Date(`${cand.retentionUntil}T00:00:00Z`).getTime() <= Date.now() + 30 * 86_400_000
     : false;
 
+  const isManager = isOrgManager(auth.member.role);
+  const pools = isManager
+    ? await db
+        .select({ id: talentPools.id, name: talentPools.name })
+        .from(talentPoolMembers)
+        .innerJoin(talentPools, eq(talentPoolMembers.poolId, talentPools.id))
+        .where(
+          and(
+            eq(talentPoolMembers.candidateId, auth.app.applicantId),
+            eq(talentPools.orgId, auth.member.orgId)
+          )
+        )
+    : [];
+
   return NextResponse.json({
     activity: acts,
     scorecards: cards,
@@ -69,7 +90,9 @@ export async function GET(
       retentionUntil: cand?.retentionUntil ?? null,
       anonymizedAt: cand?.anonymizedAt ?? null,
       retentionDue,
-      canErase: isOrgManager(auth.member.role),
+      canErase: isManager,
+      canManagePools: isManager,
+      pools,
     },
   });
 }

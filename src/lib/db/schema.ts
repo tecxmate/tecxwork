@@ -720,6 +720,37 @@ export const scorecards = pgTable(
   (table) => [index("scorecards_application_idx").on(table.applicationId, table.createdAt)]
 );
 
+// ---- Talent pools / hotlists (Phase 3 leftover — agency's reusable lists) ----
+
+export const talentPools = pgTable("talent_pools", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id")
+    .notNull()
+    .references(() => orgs.id),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  createdByUserId: integer("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const talentPoolMembers = pgTable(
+  "talent_pool_members",
+  {
+    id: serial("id").primaryKey(),
+    poolId: integer("pool_id")
+      .notNull()
+      .references(() => talentPools.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    addedByUserId: integer("added_by_user_id").references(() => users.id),
+    addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_pool_member").on(table.poolId, table.candidateId)]
+);
+
 // ---- Allowed recruiter email domains (admin whitelist) ----
 
 export const allowedDomains = pgTable("allowed_domains", {
