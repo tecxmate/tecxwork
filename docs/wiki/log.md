@@ -1212,3 +1212,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - Timeline API returns candidate governance (consent date, retention + review-due flag, canErase by role). POST /api/applications/:id/erase-candidate = org-manager-only right-to-erasure (anonymize PII in place, audited). CandidateTimeline "Data & consent" panel + Erase-PII action (managers only).
 - Verified live: consent/retention shown (retention 2028-01-26); unauth erase→401, non-manager(co-leeming)→403, canErase true only for agency; 0 accidental erasures.
 - Remaining: automated retention enforcement, cross-border transfer register, client portal; plus talent pools + signed-URL docs (Phase 3 leftovers).
+
+## [2026-07-27] feat | ATS talent pools / hotlists (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-pools (commit c507076): talent_pools + talent_pool_members; seeded 4 pools (VN Engineers, ID Manufacturing, Hospitality CN/EN, Redeployment) + 15 members. Manager-only APIs; candidate-drawer Talent-pools panel (add/remove/create).
+- Verified live: 4 pools with counts, candidate 阮氏梅 in VN Engineers, add/remove works, client recruiter→403.
+- Remaining (secondary): automated retention enforcement, cross-border transfer register, client portal, signed-URL docs, @mentions.
