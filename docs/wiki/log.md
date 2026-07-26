@@ -1166,3 +1166,11 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - Board renders columns from the org template (board.stages), grouped by stageId, bilingual by stage_kind; drag PATCHes {stageId}. PATCH validates target stage ∈ org, updates stage_id + writes an append-only transition (txn) + audit. Legacy stage enum kept as fallback.
 - Verified live: agency {stageId} move → 200 + transition row (app 1: 1→3, moved_by 2), card restored; client moving another company's card → 403; board renders + scoping intact.
 - CAVEAT: seed-yang-luck.ts is not yet tenancy-aware — after any reseed, re-run db:update:ats-tenancy && db:update:ats-pipeline (idempotent) or scoped boards return null.
+
+## [2026-07-26] feat | ATS Phase 2 — agency CRM layer + Clients view (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Decision: LAYER the agency spine over the existing recruiter/job/application model (don't replace) — student-facing app untouched.
+- 2a (db:update:ats-agency, commit c391a80): clients/contacts/job_orders/submissions/placements tables + backfill (25 clients, 25 contacts, 35 job_orders, 37 submissions, 2 placements).
+- 2b (commit db121ab): getAgencyCrm() + ClientsCrmView on a new agency-only /dashboard/clients tab (totals, submission funnel, per-client table). Non-agency recruiters redirected.
+- Also seeded a demo applicant (student@yangluck.demo/demo1234) + slots for 麗明營造 so the full apply→card flow is testable; verified apply→application row live.
+- Verified: agency Clients tab renders CRM (client 上銀科技 present); client recruiter gets no agency client list (no leak). Polish TODO: hide Clients nav item for non-agency.
