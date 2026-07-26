@@ -1142,3 +1142,8 @@ attributed_to: [niko]   belongs_to: [tecxwork]
 - Demo branch DATABASE_URL had drifted → realigned to lingering-sun (integration DB); demo recovered (200, 25 verified companies).
 - PROD env footgun fixed: 7 stale vars (POSTGRES_URL/_NON_POOLING/_NO_SSL/_PRISMA_URL, POSTGRES_HOST, PGHOST, PGHOST_UNPOOLED) pointed at lingering-sun (= demo DB); realigned all to delicate-lab. Live prod unaffected (still 38 companies; code reads only DATABASE_URL).
 - Note: lingering-sun was truncated+reseeded as the demo DB — it was decommissioned old-prod, no live data loss. Pending: add `verified` column to delicate-lab before any demo→main merge.
+
+## [2026-07-26] chore | Prepared Yang Luck ATS merge migration
+attributed_to: [niko]   belongs_to: [tecxwork]
+- src/lib/db/add-yang-luck-ats-schema.ts (npm run db:update:yang-luck-ats): idempotent, additive migration = exact `git diff main...HEAD` schema delta. Adds recruiters.client_kind/verified, job_openings.client_company/industry/kind, pipeline_stage enum, applications table (+indexes). Run with DATABASE_URL=prod (delicate-lab) at merge; safe to re-run.
+- Side note: realigning prod Neon vars (POSTGRES_URL/PGHOST/etc.) via rm+add left them Production-scoped only (dropped from Preview/Dev). Harmless — code reads only DATABASE_URL; demo uses its branch DATABASE_URL override. Both prod (38 cos) + demo (25 cos) verified 200.
