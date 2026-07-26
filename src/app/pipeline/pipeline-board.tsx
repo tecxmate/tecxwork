@@ -17,6 +17,7 @@ import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { CandidateTimeline } from "@/components/candidate-timeline";
 import { cn } from "@/lib/utils";
 import {
   type PipelineBoard as Board,
@@ -464,6 +465,9 @@ function CandidateDrawer({
           <Button render={<a href={a.cvLink} target="_blank" rel="noopener noreferrer" />}>
             {t.cv} →
           </Button>
+          <div className="border-t border-border/60 pt-4">
+            <CandidateTimeline applicationId={card.id} locale={locale} />
+          </div>
         </div>
       </aside>
     </div>

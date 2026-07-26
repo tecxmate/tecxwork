@@ -37,6 +37,7 @@
     "db:update:ats-pipeline": "npx tsx src/lib/db/add-ats-pipeline.ts",
     "db:update:ats-agency": "npx tsx src/lib/db/add-ats-agency.ts",
     "db:update:ats-compliance": "npx tsx src/lib/db/add-ats-compliance.ts",
+    "db:update:ats-collab": "npx tsx src/lib/db/add-ats-collab.ts",
     "db:seed:demo-applicant": "npx tsx src/lib/db/seed-demo-applicant.ts",
     "db:seed:report-demo": "npx tsx src/lib/db/seed-report-demo.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",

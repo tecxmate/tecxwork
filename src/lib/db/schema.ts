@@ -661,6 +661,60 @@ export const complianceDocuments = pgTable(
   ]
 );
 
+// ---- Collaboration: activity feed + scorecards (Phase 4b) ----
+
+// Per-application timeline: recruiter notes + stage-change events.
+export const activity = pgTable(
+  "activity",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    type: text("type").notNull().default("note"), // note | stage_change
+    body: text("body").notNull().default(""),
+    authorUserId: integer("author_user_id").references(() => users.id),
+    authorName: text("author_name"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("activity_application_idx").on(table.applicationId, table.createdAt)]
+);
+
+export const scorecardRecommendationEnum = pgEnum("scorecard_recommendation", [
+  "strong_no",
+  "no",
+  "yes",
+  "strong_yes",
+]);
+
+// Structured interview evaluation of one candidate.
+export const scorecards = pgTable(
+  "scorecards",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    interviewerUserId: integer("interviewer_user_id").references(() => users.id),
+    interviewerName: text("interviewer_name"),
+    recommendation: scorecardRecommendationEnum("recommendation").notNull(),
+    ratings: jsonb("ratings"), // [{ attribute, rating (1-4) }]
+    comment: text("comment").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("scorecards_application_idx").on(table.applicationId, table.createdAt)]
+);
+
 // ---- Allowed recruiter email domains (admin whitelist) ----
 
 export const allowedDomains = pgTable("allowed_domains", {

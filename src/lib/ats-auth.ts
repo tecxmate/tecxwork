@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { memberships, recruiters } from "@/lib/db/schema";
+import { memberships, recruiters, applications } from "@/lib/db/schema";
 
 export type MemberRole =
   | "admin"
@@ -71,4 +71,39 @@ const STAGE_MOVE_ROLES: readonly MemberRole[] = [
 
 export function canMoveStage(role: MemberRole): boolean {
   return STAGE_MOVE_ROLES.includes(role);
+}
+
+export type AppAuthz =
+  | { error: string; status: 401 | 403 | 404 }
+  | {
+      member: Member;
+      app: { id: number; recruiterId: number; orgId: number | null };
+    };
+
+/**
+ * Authorize access to one application: must be an org member; the application
+ * must be in their org (tenant isolation); non-managers only their own
+ * recruiter's applications. Shared by the stage-move / timeline / scorecard
+ * routes.
+ */
+export async function authorizeApplication(applicationId: number): Promise<AppAuthz> {
+  const member = await getMember();
+  if (!member) return { error: "Unauthorized", status: 401 };
+
+  const db = getDb();
+  const [app] = await db
+    .select({
+      id: applications.id,
+      recruiterId: applications.recruiterId,
+      orgId: applications.orgId,
+    })
+    .from(applications)
+    .where(eq(applications.id, applicationId))
+    .limit(1);
+  if (!app) return { error: "Application not found", status: 404 };
+  if (app.orgId !== null && app.orgId !== member.orgId)
+    return { error: "Forbidden", status: 403 };
+  if (!isOrgManager(member.role) && app.recruiterId !== member.recruiterId)
+    return { error: "Forbidden", status: 403 };
+  return { member, app };
 }

@@ -8,6 +8,7 @@ import {
   pipelineStages,
   pipelineTemplates,
   applicationStageTransitions,
+  activity,
 } from "@/lib/db/schema";
 
 /**
@@ -57,7 +58,11 @@ export async function PATCH(
 
   // Target stage must be a real stage in THIS org's pipeline.
   const [targetStage] = await db
-    .select({ id: pipelineStages.id, orgId: pipelineTemplates.orgId })
+    .select({
+      id: pipelineStages.id,
+      name: pipelineStages.name,
+      orgId: pipelineTemplates.orgId,
+    })
     .from(pipelineStages)
     .innerJoin(
       pipelineTemplates,
@@ -122,6 +127,20 @@ export async function PATCH(
     metadata: { from: application.stageId, to: stageId },
     ip,
   });
+
+  // Also drop a stage-change event on the candidate timeline (best-effort).
+  try {
+    await db.insert(activity).values({
+      orgId: member.orgId,
+      applicationId,
+      type: "stage_change",
+      body: `→ ${targetStage.name}`,
+      authorUserId: member.userId,
+      authorName: member.email,
+    });
+  } catch {
+    // timeline event is non-critical
+  }
 
   return NextResponse.json({ ok: true, id: applicationId, stageId });
 }
