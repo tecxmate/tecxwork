@@ -1249,3 +1249,9 @@ attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
 ## [2026-07-27] ingest | Split profile "Experience" tab into Work + Certifications
 attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
 - Per niko, split the combined Experience tab into two: "Work" (work experience) and "Certifications". Profile tabs now 9: basic, education, preferences, work, certifications, skills, cvqr, applications, view. Removed the now-unused Separator import. tsc + next build green.
+## [2026-07-27] ingest | Job detail page: two-column reading flow + related-jobs internal linking
+attributed_to: [niko]   belongs_to: [job-detail-page]
+- niko: job content belongs on the LEFT, supporting content on the right — "that's how the natural reading flow is". References: a job-board detail screenshot and tuyendungviettrien.com/viec-lam/ke-toan-truong-1782868345700.
+- /jobs/[id] reflowed from a single max-w-4xl column into max-w-6xl `minmax(0,1fr) 20rem`: left = title + Summary/Responsibilities/Requirements/Benefits + JD link; right (sticky) = salary + apply CTA + deadline, About-the-company card, General-information fact list. New src/components/job-detail-content.tsx; TextBlock exported from recruiter-job-posting-card.tsx for reuse.
+- niko: add related-jobs suggestions at the end with backlinks — "keeps the person going inside the platform". New src/components/related-jobs.tsx + getRelatedJobs(): approved openings, same recruiter OR same category, newest first, max 6, topped up with newest approved so the block is never empty. Backlinks to /jobs/<id>, /jobs/cat/<slug>, /recruiter/<id>. Rendered via a `footer` prop so it hides during the booking flow.
+- New `jobDetail` i18n block in en/vi/zh-TW. Verified: tsc clean, next build clean, page renders 200 in all three locales with 6 related backlinks.

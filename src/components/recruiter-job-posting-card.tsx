@@ -135,7 +135,7 @@ function limitBlocks(blocks: ContentBlock[], max: number): ContentBlock[] {
   return limited;
 }
 
-function TextBlock({
+export function TextBlock({
   label,
   value,
   compact,
