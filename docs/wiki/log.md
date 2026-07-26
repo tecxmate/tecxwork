@@ -1174,3 +1174,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - 2b (commit db121ab): getAgencyCrm() + ClientsCrmView on a new agency-only /dashboard/clients tab (totals, submission funnel, per-client table). Non-agency recruiters redirected.
 - Also seeded a demo applicant (student@yangluck.demo/demo1234) + slots for 麗明營造 so the full apply→card flow is testable; verified apply→application row live.
 - Verified: agency Clients tab renders CRM (client 上銀科技 present); client recruiter gets no agency client list (no leak). Polish TODO: hide Clients nav item for non-agency.
+
+## [2026-07-27] feat | ATS Phase 3 — migrant-labor compliance documents (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- The Yang-Luck differentiator. Migration db:update:ats-compliance (commit 128b234): compliance_documents (doc_type enum), unique per (candidate, doc_type). Seeded 48 docs / 12 candidates — 6 expired, 8 expiring ≤30 days.
+- getAgencyCrm() computes expiry status live (expired/expiring_soon/valid, 30-day window). Clients tab shows a compliance panel: expired + expiring alert cards + attention table (candidate, ARC/work-permit, number, expiry, status), bilingual.
+- Verified live: ARC docs + status badges render on the agency Clients tab; clients table intact.
+- Phase 3 remaining: talent pools, activity feed, resume/doc R2 + signed URLs.

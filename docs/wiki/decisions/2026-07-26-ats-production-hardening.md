@@ -37,7 +37,8 @@ Existing engines: `applications`/pipeline spine + kanban board; the concurrency-
   - **2a** (migration `db:update:ats-agency`, commit `c391a80`): `clients`, `contacts`, `job_orders` (client_order|internal_req), `submissions`, `placements`, each linked to its source row. Backfilled: 25 clients + 25 contacts, 35 job_orders, 37 submissions, 2 placements.
   - **2b** (commit `db121ab`): `getAgencyCrm()` roll-up + `ClientsCrmView` (totals, submission funnel, per-client table) on a new agency-only **Clients** tab (`/dashboard/clients`); non-agency redirected — verified no client-list leak to a client recruiter.
   - **Polish TODO:** the "Clients" nav tab currently shows for all recruiters (page is agency-gated) — hide it from nav for non-agency to drop the redirect quirk. Board→submissions convergence deferred.
-- **Phase 3** — migrant-labor compliance_documents (expiry sweep→tasks), talent pools, activity feed, resume/doc R2 + signed URLs.
+- **Phase 3 (compliance docs) — DONE + verified live (2026-07-27).** The Yang-Luck differentiator. Migration `db:update:ats-compliance` (commit `128b234`): `compliance_documents` (doc_type enum: passport/visa/arc/work_permit/medical/…), unique per (candidate, doc_type). Seeded 48 docs across 12 in-process candidates — 6 expired, 8 expiring ≤30 days. `getAgencyCrm()` computes expiry status LIVE (expired/expiring_soon/valid, 30-day window; no cron). The Clients tab gained a compliance panel (expired + expiring alert cards + attention table). Verified: ARC/work-permit docs + status badges render for the agency.
+  - **Phase 3 remaining (TODO):** talent pools, polymorphic activity feed, resume/document R2 upload type + signed URLs.
 - **Phase 4** — scorecards/evaluations, funnel/time-in-stage reporting, notes/@mentions.
 - **Phase 5** — staged PII tooling (consent capture, retention timers, erasure), optional client portal.
 
