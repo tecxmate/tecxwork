@@ -167,6 +167,11 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   description: text("description").notNull().default(""),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
   wantsNewsletter: boolean("wants_newsletter").notNull().default(false),
+  // PII governance (Phase 5 — design-for-PII): consent + retention + erasure.
+  consentAt: timestamp("consent_at", { withTimezone: true }),
+  consentPurpose: text("consent_purpose"),
+  retentionUntil: text("retention_until"), // YYYY-MM-DD
+  anonymizedAt: timestamp("anonymized_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

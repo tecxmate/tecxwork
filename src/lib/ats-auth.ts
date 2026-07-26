@@ -77,7 +77,12 @@ export type AppAuthz =
   | { error: string; status: 401 | 403 | 404 }
   | {
       member: Member;
-      app: { id: number; recruiterId: number; orgId: number | null };
+      app: {
+        id: number;
+        recruiterId: number;
+        orgId: number | null;
+        applicantId: number;
+      };
     };
 
 /**
@@ -96,6 +101,7 @@ export async function authorizeApplication(applicationId: number): Promise<AppAu
       id: applications.id,
       recruiterId: applications.recruiterId,
       orgId: applications.orgId,
+      applicantId: applications.applicantId,
     })
     .from(applications)
     .where(eq(applications.id, applicationId))

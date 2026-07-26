@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, MessageSquarePlus, Star } from "lucide-react";
+import { Loader2, MessageSquarePlus, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -23,6 +23,13 @@ type ScorecardItem = {
   comment: string;
   createdAt: string;
 };
+type Candidate = {
+  consentAt: string | null;
+  retentionUntil: string | null;
+  anonymizedAt: string | null;
+  retentionDue: boolean;
+  canErase: boolean;
+};
 
 const T: Record<Locale, Record<string, string>> = {
   zh: {
@@ -38,6 +45,13 @@ const T: Record<Locale, Record<string, string>> = {
     empty: "尚無評分",
     noActivity: "尚無動態",
     stageMoved: "階段變更",
+    dataConsent: "資料與同意",
+    consented: "已取得同意",
+    retentionUntil: "保留至",
+    retentionDue: "即將到期",
+    erased: "個資已刪除",
+    erase: "刪除個資",
+    eraseConfirm: "確定刪除此候選人的個人資料？此動作無法復原。",
   },
   en: {
     scorecards: "Scorecards",
@@ -52,6 +66,13 @@ const T: Record<Locale, Record<string, string>> = {
     empty: "No scorecards yet",
     noActivity: "No activity yet",
     stageMoved: "Stage change",
+    dataConsent: "Data & consent",
+    consented: "Consent on file",
+    retentionUntil: "Retain until",
+    retentionDue: "Review due",
+    erased: "PII erased",
+    erase: "Erase PII",
+    eraseConfirm: "Erase this candidate's personal data? This cannot be undone.",
   },
 };
 
@@ -88,6 +109,7 @@ export function CandidateTimeline({
   const [loading, setLoading] = useState(true);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [cards, setCards] = useState<ScorecardItem[]>([]);
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -108,6 +130,7 @@ export function CandidateTimeline({
         if (!alive) return;
         setActivity(d.activity ?? []);
         setCards(d.scorecards ?? []);
+        setCandidate(d.candidate ?? null);
       })
       .catch(() => {})
       .finally(() => alive && setLoading(false));
@@ -160,6 +183,22 @@ export function CandidateTimeline({
     }
   }
 
+  async function eraseCandidate() {
+    if (busy || !window.confirm(t.eraseConfirm)) return;
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/applications/${applicationId}/erase-candidate`, {
+        method: "POST",
+      });
+      if (r.ok) {
+        const d = await r.json();
+        setCandidate((c) => (c ? { ...c, anonymizedAt: d.anonymizedAt } : c));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-6 text-muted-foreground">
@@ -170,6 +209,48 @@ export function CandidateTimeline({
 
   return (
     <div className="space-y-5">
+      {/* Data & consent (PII governance) */}
+      {candidate ? (
+        <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t.dataConsent}
+            </p>
+            {candidate.anonymizedAt ? (
+              <Badge variant="secondary">{t.erased}</Badge>
+            ) : candidate.canErase ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={eraseCandidate}
+                disabled={busy}
+                className="h-7 gap-1 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t.erase}
+              </Button>
+            ) : null}
+          </div>
+          {candidate.anonymizedAt ? null : (
+            <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+              {candidate.consentAt ? (
+                <p>
+                  ✓ {t.consented} · {new Date(candidate.consentAt).toLocaleDateString()}
+                </p>
+              ) : null}
+              {candidate.retentionUntil ? (
+                <p>
+                  {t.retentionUntil}: {candidate.retentionUntil}
+                  {candidate.retentionDue ? (
+                    <span className="ml-1 font-medium text-amber-600">· {t.retentionDue}</span>
+                  ) : null}
+                </p>
+              ) : null}
+            </div>
+          )}
+        </div>
+      ) : null}
+
       {/* Scorecards */}
       <div>
         <div className="mb-2 flex items-center justify-between">

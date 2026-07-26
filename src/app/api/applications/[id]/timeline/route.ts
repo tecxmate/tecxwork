@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, asc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { authorizeApplication } from "@/lib/ats-auth";
-import { activity, scorecards, users } from "@/lib/db/schema";
+import { authorizeApplication, isOrgManager } from "@/lib/ats-auth";
+import { activity, scorecards, users, applicantProfiles } from "@/lib/db/schema";
 
 export async function GET(
   _req: NextRequest,
@@ -45,7 +45,33 @@ export async function GET(
       .orderBy(asc(scorecards.createdAt)),
   ]);
 
-  return NextResponse.json({ activity: acts, scorecards: cards });
+  const [cand] = await db
+    .select({
+      consentAt: applicantProfiles.consentAt,
+      consentPurpose: applicantProfiles.consentPurpose,
+      retentionUntil: applicantProfiles.retentionUntil,
+      anonymizedAt: applicantProfiles.anonymizedAt,
+    })
+    .from(applicantProfiles)
+    .where(eq(applicantProfiles.id, auth.app.applicantId))
+    .limit(1);
+
+  const retentionDue = cand?.retentionUntil
+    ? new Date(`${cand.retentionUntil}T00:00:00Z`).getTime() <= Date.now() + 30 * 86_400_000
+    : false;
+
+  return NextResponse.json({
+    activity: acts,
+    scorecards: cards,
+    candidate: {
+      consentAt: cand?.consentAt ?? null,
+      consentPurpose: cand?.consentPurpose ?? null,
+      retentionUntil: cand?.retentionUntil ?? null,
+      anonymizedAt: cand?.anonymizedAt ?? null,
+      retentionDue,
+      canErase: isOrgManager(auth.member.role),
+    },
+  });
 }
 
 export async function POST(
