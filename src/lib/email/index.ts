@@ -4,12 +4,21 @@ import { getEventBranding } from "@/lib/event-branding";
 import { db, emailLogs } from "@/lib/db";
 
 export function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
+  // RESEND_API_KEY was saved with a stray trailing "\n" (literal backslash-n
+  // pasted into the Vercel dashboard), which makes Resend reject it as invalid
+  // and silently breaks all outgoing email. Sanitize the same way as EMAIL_FROM.
+  const key = process.env.RESEND_API_KEY?.replace(/\\[rn]/g, "").trim();
   if (!key) return null;
   return new Resend(key);
 }
 
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? "TECXWORK <onboarding@resend.dev>";
+// The EMAIL_FROM env var has arrived with a stray trailing "\n" (a literal
+// backslash-n pasted into the Vercel dashboard) plus surrounding whitespace,
+// which makes the From header invalid and causes Resend to reject every send.
+// Sanitize defensively so a malformed env value can't silently break all email.
+export const EMAIL_FROM = (process.env.EMAIL_FROM ?? "TECXWORK <onboarding@resend.dev>")
+  .replace(/\\[rn]/g, "")
+  .trim();
 
 export function getPublicBaseUrl(): string {
   return (
