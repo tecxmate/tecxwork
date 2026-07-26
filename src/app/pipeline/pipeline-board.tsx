@@ -208,6 +208,16 @@ function PipelineBoardBody({ board, locale }: { board: Board; locale: Locale }) 
   const [selected, setSelected] = useState<PipelineCard | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  // On desktop the detail panel docks beside the board (push layout); below lg
+  // it opens as a full-screen overlay. Pick one so the panel mounts only once.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
   const t = T[locale];
 
   const jobById = useMemo(() => new Map(board.jobs.map((j) => [j.id, j])), [board.jobs]);
@@ -326,27 +336,49 @@ function PipelineBoardBody({ board, locale }: { board: Board; locale: Locale }) 
         {selectedCompany?.name} · {jobCards.length} {t.cand} · {t.drag}
       </p>
 
-      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="flex gap-3 overflow-x-auto pb-4">
-          {board.stages.map((stage) => (
-            <Column
-              key={stage.id}
-              stage={stage}
-              locale={locale}
-              cards={jobCards.filter((c) => c.stageId === stage.id)}
-              onOpen={setSelected}
-              activeId={activeId}
-              enabled={mounted}
-              positionById={positionById}
-            />
-          ))}
+      <div className="flex gap-4">
+        {/* Board — narrows to make room when the panel docks on desktop */}
+        <div className="min-w-0 flex-1">
+          <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+            <div className="flex gap-3 overflow-x-auto pb-4">
+              {board.stages.map((stage) => (
+                <Column
+                  key={stage.id}
+                  stage={stage}
+                  locale={locale}
+                  cards={jobCards.filter((c) => c.stageId === stage.id)}
+                  onOpen={setSelected}
+                  activeId={activeId}
+                  enabled={mounted}
+                  positionById={positionById}
+                />
+              ))}
+            </div>
+            <DragOverlay>
+              {activeCard ? <CandidateCard card={activeCard} onOpen={() => {}} /> : null}
+            </DragOverlay>
+          </DndContext>
         </div>
-        <DragOverlay>
-          {activeCard ? <CandidateCard card={activeCard} onOpen={() => {}} /> : null}
-        </DragOverlay>
-      </DndContext>
 
-      {selected ? (
+        {/* Desktop: detail panel docked in-flow to the right (push, not overlay) */}
+        {selected && isDesktop ? (
+          <aside className="w-[380px] shrink-0 xl:w-[420px]">
+            <div className="sticky top-4 flex max-h-[calc(100vh-6rem)] flex-col overflow-y-auto rounded-xl border border-border bg-card shadow-sm">
+              <CandidatePanelBody
+                card={selected}
+                locale={locale}
+                stageLabel={selectedStageLabel}
+                companyLabel={jobById.get(selected.jobOpeningId)?.clientCompany ?? ""}
+                positionLabel={positionById.get(selected.jobOpeningId) ?? ""}
+                onClose={() => setSelected(null)}
+              />
+            </div>
+          </aside>
+        ) : null}
+      </div>
+
+      {/* Mobile / tablet: full-screen overlay drawer */}
+      {selected && !isDesktop ? (
         <CandidateDrawer
           card={selected}
           locale={locale}
@@ -382,21 +414,25 @@ export function DashboardPipeline({ board }: { board: Board }) {
   );
 }
 
-function CandidateDrawer({
-  card,
-  locale,
-  stageLabel,
-  companyLabel,
-  positionLabel,
-  onClose,
-}: {
+type CandidatePanelProps = {
   card: PipelineCard;
   locale: Locale;
   stageLabel: string;
   companyLabel: string;
   positionLabel: string;
   onClose: () => void;
-}) {
+};
+
+// The panel's inner content (header + scrollable body). Shared by the desktop
+// docked panel and the mobile overlay drawer so both render identically.
+function CandidatePanelBody({
+  card,
+  locale,
+  stageLabel,
+  companyLabel,
+  positionLabel,
+  onClose,
+}: CandidatePanelProps) {
   const t = T[locale];
   const a = card.applicant;
   useEffect(() => {
@@ -407,9 +443,7 @@ function CandidateDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
   return (
-    <div className="fixed inset-0 z-40 flex justify-end" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <aside className="relative z-50 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-border bg-card shadow-2xl">
+    <>
         <div className="flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -489,6 +523,19 @@ function CandidateDrawer({
             <CandidateTimeline applicationId={card.id} locale={locale} />
           </div>
         </div>
+    </>
+  );
+}
+
+// Mobile / tablet: the same panel content as a full-screen overlay with a
+// dimmed backdrop. On desktop the content is docked in-flow instead (see
+// PipelineBoardBody), so the board pushes left rather than being covered.
+function CandidateDrawer(props: CandidatePanelProps) {
+  return (
+    <div className="fixed inset-0 z-40 flex justify-end" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/40" onClick={props.onClose} />
+      <aside className="relative z-50 flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-border bg-card shadow-2xl">
+        <CandidatePanelBody {...props} />
       </aside>
     </div>
   );

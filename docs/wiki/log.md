@@ -1266,3 +1266,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, recruitment-workflows]
 attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
 - niko: the pipeline candidate drawer felt "way too much to the right" and "not very logical". Chose the wider-drawer + 2-col option.
 - pipeline-board.tsx CandidateDrawer: widened max-w-md → max-w-xl; Placement + AI score now sit side by side (2-col); structured facts (School, Major) in a 2-col grid; dropped the duplicate Nationality row (already in the header); relabeled the blank-label description line as "About/簡介" (was reading as a mysterious duplicate of Major); View CV made full-width. Added `about` to the drawer i18n dict (zh/en). tsc clean.
+
+## [2026-07-27] ingest | Pipeline candidate panel: desktop push/split-view (was overlay)
+attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
+- niko wanted the board to shift left and the candidate panel to dock on the right (push, not float-over), unsure if it changes the foundational layout. Chose the contained split-view scoped to the pipeline board only — no app-shell change.
+- pipeline-board.tsx: board now sits in a `flex` row (`min-w-0 flex-1`, kanban scrolls x); on desktop (matchMedia >=1024px) the detail panel docks in-flow as a sticky right column (w-380/xl:420, own scroll, no backdrop); below lg it stays the full-screen overlay. Extracted shared CandidatePanelBody (header+body, incl. Escape-to-close) used by both the docked panel and CandidateDrawer overlay, so the panel mounts once (no double CandidateTimeline fetch). tsc + next build green.
+- If detail panels are later wanted on other surfaces (jobs/companies), generalize CandidatePanelBody into a shared right-rail component then — deferred.
