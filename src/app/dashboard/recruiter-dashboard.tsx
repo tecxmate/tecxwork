@@ -26,6 +26,7 @@ import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import type { PipelineBoard } from "@/lib/pipeline-types";
+import type { AgencyCrm } from "@/lib/agency-crm";
 
 // ... existing Booking/Recruiter types ...
 
@@ -63,7 +64,13 @@ type Recruiter = {
   galleryUrls: string[];
 };
 
-type Section = "interviews" | "applicants" | "pipeline" | "jobs" | "company";
+type Section =
+  | "interviews"
+  | "applicants"
+  | "pipeline"
+  | "clients"
+  | "jobs"
+  | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
   "recruiter_applicants_compliance_notice_dismissed_v1";
 
@@ -81,6 +88,12 @@ const DashboardPipeline = dynamic(
   { loading: () => <DashboardTabLoader /> }
 );
 
+// Agency-only CRM view (clients → job orders → submissions → placements).
+const ClientsCrmView = dynamic(
+  () => import("@/components/clients-crm-view").then((m) => m.ClientsCrmView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
 export function RecruiterDashboard({
   recruiter,
   bookings,
@@ -88,6 +101,7 @@ export function RecruiterDashboard({
   jobModerationEnabled,
   salaryCurrencyOptions,
   pipelineBoard = null,
+  agencyCrm = null,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
@@ -96,6 +110,7 @@ export function RecruiterDashboard({
   jobModerationEnabled: boolean;
   salaryCurrencyOptions: string[];
   pipelineBoard?: PipelineBoard | null;
+  agencyCrm?: AgencyCrm | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -120,9 +135,11 @@ export function RecruiterDashboard({
         ? "/dashboard/applicants"
         : section === "pipeline"
           ? "/dashboard/pipeline"
-          : section === "jobs"
-            ? "/dashboard/jobs"
-            : "/dashboard/company";
+          : section === "clients"
+            ? "/dashboard/clients"
+            : section === "jobs"
+              ? "/dashboard/jobs"
+              : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -134,6 +151,7 @@ export function RecruiterDashboard({
       "/dashboard/interviews",
       "/dashboard/applicants",
       "/dashboard/pipeline",
+      "/dashboard/clients",
       "/dashboard/jobs",
       "/dashboard/company",
     ];
@@ -196,6 +214,14 @@ export function RecruiterDashboard({
             ) : (
               <p className="py-16 text-center text-sm text-muted-foreground">
                 No candidates in the pipeline yet.
+              </p>
+            )
+          ) : section === "clients" ? (
+            agencyCrm ? (
+              <ClientsCrmView crm={agencyCrm} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Clients are available for agency accounts.
               </p>
             )
           ) : section === "jobs" ? (

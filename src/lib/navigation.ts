@@ -3,6 +3,7 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarClock,
+  Handshake,
   Home,
   KanbanSquare,
   SlidersHorizontal,
@@ -68,6 +69,12 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Pipeline",
       icon: KanbanSquare,
       matches: ["/dashboard/pipeline"],
+    },
+    {
+      href: "/dashboard/clients",
+      label: "Clients",
+      icon: Handshake,
+      matches: ["/dashboard/clients"],
     },
     {
       href: "/dashboard/jobs",
