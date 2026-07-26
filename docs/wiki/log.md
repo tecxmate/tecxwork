@@ -1181,3 +1181,8 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - getAgencyCrm() computes expiry status live (expired/expiring_soon/valid, 30-day window). Clients tab shows a compliance panel: expired + expiring alert cards + attention table (candidate, ARC/work-permit, number, expiry, status), bilingual.
 - Verified live: ARC docs + status badges render on the agency Clients tab; clients table intact.
 - Phase 3 remaining: talent pools, activity feed, resume/doc R2 + signed URLs.
+
+## [2026-07-27] refactor | Split compliance into its own tab (Client ≠ ARC)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Feedback: ARC/compliance shouldn't live under "Clients". Moved the compliance panel out of ClientsCrmView into a dedicated ComplianceView + agency-only "Compliance" nav tab (/dashboard/compliance) — commit 5b4d163.
+- Verified live: Compliance tab shows ARC/work-permit + expiry status; Clients tab is clean (client list only). Both agency-gated.
