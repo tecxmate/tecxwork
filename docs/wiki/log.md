@@ -1246,6 +1246,9 @@ attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
 - src/app/profile/page.tsx: added an 8-tab shell (basic, education, preferences, experience[work+certifications], skills, cvqr, applications, view) over the SAME draft + single PUT /api/me/profile save. Persistent identity header (avatar + completion + Save) stays visible on every tab; Save decoupled from the form (calls saveProfile() directly so it works on any tab). Each tab shows one region; a wizard footer offers Back / "Save Changes & Next" that advances only on a successful save. Added i18n keys profile.tabsBasic/tabsCvQr/tabsView (en/vi/zh-TW).
 - Decision: free tab navigation (not linear wizard) + one-payload save, per niko. No API changes.
 
+## [2026-07-27] ingest | Split profile "Experience" tab into Work + Certifications
+attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
+- Per niko, split the combined Experience tab into two: "Work" (work experience) and "Certifications". Profile tabs now 9: basic, education, preferences, work, certifications, skills, cvqr, applications, view. Removed the now-unused Separator import. tsc + next build green.
 ## [2026-07-27] ingest | Job detail page: two-column reading flow + related-jobs internal linking
 attributed_to: [niko]   belongs_to: [job-detail-page]
 - niko: job content belongs on the LEFT, supporting content on the right — "that's how the natural reading flow is". References: a job-board detail screenshot and tuyendungviettrien.com/viec-lam/ke-toan-truong-1782868345700.
