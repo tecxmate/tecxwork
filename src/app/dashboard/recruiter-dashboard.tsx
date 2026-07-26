@@ -27,6 +27,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import type { PipelineBoard } from "@/lib/pipeline-types";
 import type { AgencyCrm } from "@/lib/agency-crm";
+import type { PipelineReport } from "@/lib/pipeline-report";
 
 // ... existing Booking/Recruiter types ...
 
@@ -71,6 +72,7 @@ type Section =
   | "pipeline"
   | "clients"
   | "compliance"
+  | "reports"
   | "jobs"
   | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
@@ -102,6 +104,12 @@ const ComplianceView = dynamic(
   { loading: () => <DashboardTabLoader /> }
 );
 
+// Agency-only pipeline analytics (funnel / time-in-stage / placements).
+const PipelineReportView = dynamic(
+  () => import("@/components/pipeline-report-view").then((m) => m.PipelineReportView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
 export function RecruiterDashboard({
   recruiter,
   bookings,
@@ -110,6 +118,7 @@ export function RecruiterDashboard({
   salaryCurrencyOptions,
   pipelineBoard = null,
   agencyCrm = null,
+  pipelineReport = null,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
@@ -119,6 +128,7 @@ export function RecruiterDashboard({
   salaryCurrencyOptions: string[];
   pipelineBoard?: PipelineBoard | null;
   agencyCrm?: AgencyCrm | null;
+  pipelineReport?: PipelineReport | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -147,9 +157,11 @@ export function RecruiterDashboard({
             ? "/dashboard/clients"
             : section === "compliance"
               ? "/dashboard/compliance"
-              : section === "jobs"
-                ? "/dashboard/jobs"
-                : "/dashboard/company";
+              : section === "reports"
+                ? "/dashboard/reports"
+                : section === "jobs"
+                  ? "/dashboard/jobs"
+                  : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -163,6 +175,7 @@ export function RecruiterDashboard({
       "/dashboard/pipeline",
       "/dashboard/clients",
       "/dashboard/compliance",
+      "/dashboard/reports",
       "/dashboard/jobs",
       "/dashboard/company",
     ];
@@ -242,6 +255,14 @@ export function RecruiterDashboard({
             ) : (
               <p className="py-16 text-center text-sm text-muted-foreground">
                 Compliance is available for agency accounts.
+              </p>
+            )
+          ) : section === "reports" ? (
+            pipelineReport ? (
+              <PipelineReportView report={pipelineReport} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Reports are available for agency accounts.
               </p>
             )
           ) : section === "jobs" ? (
