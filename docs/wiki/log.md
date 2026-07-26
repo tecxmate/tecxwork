@@ -1153,3 +1153,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - Started the ATS production-hardening effort (full roadmap: decisions/2026-07-26-ats-production-hardening.md; detailed plan in ~/.claude/plans/glowing-wiggling-eich.md). Decisions: multi-tenant-ready, unified agency+corporate, design-for-PII (staged tooling).
 - Phase 0 (commit 3b8a167, code-only, no migration): getPipelineBoard() recruiter-scoped (agency keeps cross-client super-view); PATCH /api/applications/:id now auth-gated + ownership-checked (was fully open); applying to a job creates a real 'applied' pipeline card (idempotent on the unique index).
 - Verified live on yangluck.tecxmate.com: unauth stage-move → 401; agency login sees all candidates, 麗明營造 client login is scoped (no cross-company leak). Apply→card path (needs an applicant login) verified by review only.
+
+## [2026-07-26] feat | ATS Phase 1a — multi-tenancy + RBAC + audit (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-tenancy (commit 5a5c4a6): orgs, memberships (member_role enum), audit_log (append-only, PII-by-reference), org_id on recruiters/job_openings/applications. Applied to demo DB (lingering-sun): 1 Yang Luck org, 27 memberships, 26 recruiters + 36 applications backfilled.
+- Wiring (commit 669868d): getMember() resolves org+role+recruiter; RBAC canMoveStage/isOrgManager; PATCH /api/applications/:id enforces tenant isolation + row ownership + writes move_stage audit; getPipelineBoard org-scoped; apply stamps org_id.
+- Verified live: authenticated agency move → 200 + audit_log row (org 1, actor 2, move_stage, field_names[stage], metadata{from,to}); client moving another company's card → 403; agency/client board scoping intact. Phase 1b (configurable pipeline) is next.
