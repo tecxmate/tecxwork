@@ -49,17 +49,21 @@ const STAGE_KIND_LABEL: Record<StageKind, Record<Locale, string>> = {
   rejected: { zh: "未錄取", en: "Rejected" },
 };
 
-const STAGE_KIND_ACCENT: Record<StageKind, string> = {
-  sourced: "#64748b",
-  screened: "#2563eb",
-  internal_submit: "#0ea5e9",
-  client_submit: "#6366f1",
-  interview: "#d97706",
-  offer: "#7c3aed",
-  placed: "#059669",
-  onboarding: "#0d9488",
-  started: "#16a34a",
-  rejected: "#dc2626",
+// Per-stage count-pill tints, keyed by stable stage_kind. These are the same
+// colored count circles the recruiter dashboard's booking tab uses to head each
+// application-stage group (bg-{c}/15 text-{c}) — the kanban is the board form of
+// that same pipeline, so it heads its columns the identical way.
+const STAGE_COUNT: Record<StageKind, string> = {
+  sourced: "bg-muted text-muted-foreground",
+  screened: "bg-primary/15 text-primary",
+  internal_submit: "bg-primary/15 text-primary",
+  client_submit: "bg-primary/15 text-primary",
+  interview: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  offer: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+  placed: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  onboarding: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
+  started: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  rejected: "bg-destructive/10 text-destructive",
 };
 
 function flag(nat: string): string {
@@ -69,10 +73,11 @@ function flag(nat: string): string {
   return "🌏";
 }
 
-function aiColor(score: number): string {
-  if (score >= 85) return "#059669";
-  if (score >= 75) return "#d97706";
-  return "#94a3b8";
+// AI badge tint follows the app's subtle status-pill style (bg-{c}/15 text-{c}).
+function aiStyle(score: number): string {
+  if (score >= 85) return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400";
+  if (score >= 75) return "bg-amber-500/15 text-amber-600 dark:text-amber-400";
+  return "bg-muted text-muted-foreground";
 }
 
 function CandidateCard({
@@ -101,7 +106,7 @@ function CandidateCard({
       {...dragProps}
       onClick={() => onOpen(card)}
       className={cn(
-        "cursor-grab touch-none gap-2 p-3 shadow-sm hover:border-primary/50 active:cursor-grabbing",
+        "cursor-grab touch-none gap-2 border-border/70 p-3 shadow-sm transition-all duration-200 ease-out hover:border-primary/40 hover:shadow-[0_0_24px_rgba(140,82,255,0.12)] active:cursor-grabbing",
         (isDragging || dragging) && "opacity-40"
       )}
     >
@@ -117,8 +122,8 @@ function CandidateCard({
         </div>
         {card.aiScore != null ? (
           <Badge
-            className="shrink-0 text-white"
-            style={{ background: aiColor(card.aiScore) }}
+            variant="secondary"
+            className={cn("shrink-0 border-0", aiStyle(card.aiScore))}
             title="AI CV screening (demo)"
           >
             AI {card.aiScore}
@@ -160,25 +165,26 @@ function Column({
   positionById: Map<number, string>;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
-  const accent = STAGE_KIND_ACCENT[stage.stageKind];
   return (
-    <div className="flex w-64 shrink-0 flex-col rounded-2xl bg-muted/40">
-      <div
-        className="flex items-center justify-between rounded-t-2xl px-3 py-2.5"
-        style={{ borderTop: `3px solid ${accent}` }}
-      >
-        <span className="text-sm font-bold" style={{ color: accent }}>
+    <div className="flex w-64 shrink-0 flex-col rounded-xl border border-border/60 bg-muted/30">
+      <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2.5">
+        <span
+          className={cn(
+            "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums",
+            STAGE_COUNT[stage.stageKind]
+          )}
+        >
+          {cards.length}
+        </span>
+        <span className="truncate text-sm font-semibold text-foreground">
           {STAGE_KIND_LABEL[stage.stageKind][locale]}
         </span>
-        <Badge variant="secondary" className="bg-card shadow-sm">
-          {cards.length}
-        </Badge>
       </div>
       <div
         ref={setNodeRef}
         className={cn(
-          "flex min-h-[120px] flex-1 flex-col gap-2 rounded-b-2xl p-2 transition-colors",
-          isOver && "bg-primary/10 ring-2 ring-inset ring-primary/40"
+          "flex min-h-[120px] flex-1 flex-col gap-2 p-2 transition-colors",
+          isOver && "bg-primary/5 ring-2 ring-inset ring-primary/30"
         )}
       >
         {cards.map((c) => (
@@ -404,21 +410,19 @@ function CandidateDrawer({
     <div className="fixed inset-0 z-40 flex justify-end" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <aside className="relative z-50 flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-border bg-card shadow-2xl">
-        <div className="flex items-start justify-between bg-primary px-5 py-4 text-primary-foreground">
-          <div>
-            <p className="text-[11px] uppercase tracking-wide opacity-70">{t.profile}</p>
-            <h2 className="font-heading text-lg font-bold">{a.name}</h2>
-            <p className="text-sm opacity-90">
+        <div className="flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t.profile}
+            </p>
+            <h2 className="truncate font-heading text-lg font-semibold text-foreground">
+              {a.name}
+            </h2>
+            <p className="mt-0.5 truncate text-sm text-muted-foreground">
               {flag(a.nationality)} {a.nationality} · {stageLabel}
             </p>
           </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={onClose}
-            className="bg-white/15 text-primary-foreground hover:bg-white/25"
-          >
+          <Button type="button" size="sm" variant="outline" onClick={onClose} className="shrink-0">
             {t.close}
           </Button>
         </div>
@@ -438,7 +442,10 @@ function CandidateDrawer({
           ) : null}
           {card.aiScore != null ? (
             <div className="flex items-center gap-2 rounded-xl bg-muted p-3">
-              <Badge className="text-white" style={{ background: aiColor(card.aiScore) }}>
+              <Badge
+                variant="secondary"
+                className={cn("border-0", aiStyle(card.aiScore))}
+              >
                 AI {card.aiScore}
               </Badge>
               <span className="text-xs text-muted-foreground">{t.ai} (demo)</span>

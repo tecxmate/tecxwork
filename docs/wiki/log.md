@@ -1224,3 +1224,8 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - GET /api/cron/retention-sweep (CRON_SECRET-gated, commit 222a2ff): auto-anonymizes candidates past retention_until, audited as system erasure; ?dryRun=true reports count. Schedule via cron config to activate.
 - Verified: unauth→401; detection logic finds due candidates (0→1 on temp past-retention, reset→0, no erasure).
 - Judged NOT needed for the demo (with reasons): cross-border transfer register (needs legal counsel), signed-URL docs (no real files in demo), @mentions (few users), client portal (large separate build). ATS is now feature-complete for the roadmap.
+
+## [2026-07-27] ingest | Kanban pipeline board aligned to design system
+attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
+- Pipeline kanban read as "brand new" / not part of the app. Realigned to native idioms: candidate cards use the signature Glow Card hover; hex stage/AI colors → palette tokens + status-pill tints; column headers now use the booking tab's colored count-circle (bg-{c}/15 text-{c}) instead of a gray count badge + dot; borders softened to /60.
+- Faithful port of the booking tab's application-stage grouping (kanban = board form of same pipeline). See docs/wiki/topics/design-system.md History.
