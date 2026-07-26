@@ -8,7 +8,20 @@ import {
   placements,
   recruiters,
   pipelineStages,
+  complianceDocuments,
+  applicantProfiles,
 } from "@/lib/db/schema";
+
+export type ComplianceStatus = "expired" | "expiring_soon" | "valid";
+
+export type ComplianceDocRow = {
+  candidateName: string;
+  docType: string;
+  docNumber: string | null;
+  issuingAuthority: string | null;
+  expiryDate: string | null;
+  status: ComplianceStatus;
+};
 
 export type CrmClientRow = {
   id: number;
@@ -23,6 +36,12 @@ export type AgencyCrm = {
   clients: CrmClientRow[];
   totals: { clients: number; jobOrders: number; submissions: number; placements: number };
   byStage: { kind: string; count: number }[];
+  compliance: {
+    total: number;
+    expired: number;
+    expiringSoon: number;
+    attention: ComplianceDocRow[]; // expired + expiring, soonest first
+  };
 };
 
 /**
@@ -97,6 +116,46 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
     }))
     .sort((a, b) => b.submissions - a.submissions || b.jobOrders - a.jobOrders);
 
+  // Compliance documents — expiry status computed live (no cron).
+  const docRows = await db
+    .select({
+      candidateName: applicantProfiles.name,
+      docType: complianceDocuments.docType,
+      docNumber: complianceDocuments.docNumber,
+      issuingAuthority: complianceDocuments.issuingAuthority,
+      expiryDate: complianceDocuments.expiryDate,
+    })
+    .from(complianceDocuments)
+    .innerJoin(
+      applicantProfiles,
+      eq(complianceDocuments.candidateId, applicantProfiles.id)
+    )
+    .where(eq(complianceDocuments.orgId, orgId));
+
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const soonCutoff = new Date(today);
+  soonCutoff.setUTCDate(soonCutoff.getUTCDate() + 30);
+  const docStatus = (expiry: string | null): ComplianceStatus => {
+    if (!expiry) return "valid";
+    const d = new Date(`${expiry}T00:00:00Z`);
+    if (Number.isNaN(d.getTime())) return "valid";
+    if (d < today) return "expired";
+    if (d <= soonCutoff) return "expiring_soon";
+    return "valid";
+  };
+  const docsWithStatus: ComplianceDocRow[] = docRows.map((r) => ({
+    candidateName: r.candidateName,
+    docType: r.docType,
+    docNumber: r.docNumber,
+    issuingAuthority: r.issuingAuthority,
+    expiryDate: r.expiryDate,
+    status: docStatus(r.expiryDate),
+  }));
+  const attention = docsWithStatus
+    .filter((d) => d.status !== "valid")
+    .sort((a, b) => (a.expiryDate ?? "").localeCompare(b.expiryDate ?? ""));
+
   return {
     clients: clientsOut,
     totals: {
@@ -106,5 +165,11 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
       placements: placeRows.length,
     },
     byStage: [...stageCounts.entries()].map(([kind, count]) => ({ kind, count })),
+    compliance: {
+      total: docsWithStatus.length,
+      expired: docsWithStatus.filter((d) => d.status === "expired").length,
+      expiringSoon: docsWithStatus.filter((d) => d.status === "expiring_soon").length,
+      attention,
+    },
   };
 }

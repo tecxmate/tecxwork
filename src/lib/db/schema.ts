@@ -613,6 +613,54 @@ export const placements = pgTable(
   (table) => [uniqueIndex("unique_placement_submission").on(table.submissionId)]
 );
 
+// ---- Migrant-labor compliance documents (Phase 3) ----
+// Taiwan MOL requires a valid work permit + ARC (居留證) for the whole
+// employment; ARC renewal must be filed ≥30 days before expiry. Expiry status
+// is computed live from expiry_date (see getAgencyCrm) — no cron needed.
+
+export const docTypeEnum = pgEnum("doc_type", [
+  "passport",
+  "visa",
+  "arc", // 居留證
+  "work_permit", // 工作許可
+  "medical",
+  "contract",
+  "diploma",
+  "criminal_record",
+  "health_insurance",
+]);
+
+export const complianceDocuments = pgTable(
+  "compliance_documents",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    placementId: integer("placement_id").references(() => placements.id),
+    docType: docTypeEnum("doc_type").notNull(),
+    docNumber: text("doc_number"),
+    issuingAuthority: text("issuing_authority"),
+    issueDate: text("issue_date"),
+    expiryDate: text("expiry_date"), // YYYY-MM-DD
+    status: text("status").notNull().default("valid"),
+    fileId: text("file_id"),
+    verifiedByUserId: integer("verified_by_user_id").references(() => users.id),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_candidate_doc_type").on(table.candidateId, table.docType),
+    index("compliance_docs_expiry_idx").on(table.orgId, table.expiryDate),
+  ]
+);
+
 // ---- Allowed recruiter email domains (admin whitelist) ----
 
 export const allowedDomains = pgTable("allowed_domains", {
