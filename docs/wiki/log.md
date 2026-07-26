@@ -1159,3 +1159,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - Migration db:update:ats-tenancy (commit 5a5c4a6): orgs, memberships (member_role enum), audit_log (append-only, PII-by-reference), org_id on recruiters/job_openings/applications. Applied to demo DB (lingering-sun): 1 Yang Luck org, 27 memberships, 26 recruiters + 36 applications backfilled.
 - Wiring (commit 669868d): getMember() resolves org+role+recruiter; RBAC canMoveStage/isOrgManager; PATCH /api/applications/:id enforces tenant isolation + row ownership + writes move_stage audit; getPipelineBoard org-scoped; apply stamps org_id.
 - Verified live: authenticated agency move → 200 + audit_log row (org 1, actor 2, move_stage, field_names[stage], metadata{from,to}); client moving another company's card → 403; agency/client board scoping intact. Phase 1b (configurable pipeline) is next.
+
+## [2026-07-26] feat | ATS Phase 1b — configurable pipeline + transition log (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-pipeline (commit 646534a): pipeline_templates, pipeline_stages (stage_kind), application_stage_transitions (append-only), applications.stage_id. Seeded Yang Luck default template (5 stages), backfilled 36 apps + 36 initial transitions.
+- Board renders columns from the org template (board.stages), grouped by stageId, bilingual by stage_kind; drag PATCHes {stageId}. PATCH validates target stage ∈ org, updates stage_id + writes an append-only transition (txn) + audit. Legacy stage enum kept as fallback.
+- Verified live: agency {stageId} move → 200 + transition row (app 1: 1→3, moved_by 2), card restored; client moving another company's card → 403; board renders + scoping intact.
+- CAVEAT: seed-yang-luck.ts is not yet tenancy-aware — after any reseed, re-run db:update:ats-tenancy && db:update:ats-pipeline (idempotent) or scoped boards return null.
