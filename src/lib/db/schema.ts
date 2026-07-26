@@ -478,6 +478,141 @@ export const applicationStageTransitions = pgTable(
   ]
 );
 
+// ---- Agency CRM (Phase 2 — a LAYER mirroring the recruiter/job/application
+// model into the Bullhorn-style client → job_order → submission → placement
+// spine. The student-facing recruiter/job/application model is unchanged. ----
+
+// A client company the agency places into (mirrors a non-agency recruiter).
+export const clients = pgTable(
+  "clients",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    // Source mirror: the recruiter row this client was backfilled from.
+    recruiterId: integer("recruiter_id").references(() => recruiters.id),
+    name: text("name").notNull(),
+    nameZh: text("name_zh"),
+    industry: text("industry").notNull().default(""),
+    city: text("city"),
+    unifiedBusinessNo: text("unified_business_no"), // 統一編號
+    ownerUserId: integer("owner_user_id").references(() => users.id),
+    defaultFeePct: integer("default_fee_pct"),
+    status: text("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_client_recruiter").on(table.recruiterId)]
+);
+
+// A hiring contact at a client.
+export const contacts = pgTable("contacts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id")
+    .notNull()
+    .references(() => orgs.id),
+  clientId: integer("client_id")
+    .notNull()
+    .references(() => clients.id),
+  name: text("name").notNull(),
+  title: text("title"),
+  email: text("email"),
+  phone: text("phone"),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const jobOrderTypeEnum = pgEnum("job_order_type", [
+  "client_order",
+  "internal_req",
+]);
+
+// The opening the agency is filling (mirrors a job_opening). type distinguishes
+// an agency client order from a corporate internal requisition.
+export const jobOrders = pgTable(
+  "job_orders",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    clientId: integer("client_id").references(() => clients.id), // null for internal_req
+    recruiterId: integer("recruiter_id").references(() => recruiters.id),
+    jobOpeningId: integer("job_opening_id").references(() => jobOpenings.id), // source mirror
+    type: jobOrderTypeEnum("type").notNull().default("client_order"),
+    title: text("title").notNull(),
+    headcount: integer("headcount").notNull().default(1),
+    feePct: integer("fee_pct"),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_joborder_jobopening").on(table.jobOpeningId)]
+);
+
+// A candidate presented to a job order (mirrors an application). The pipeline
+// spine between candidate and job order.
+export const submissions = pgTable(
+  "submissions",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    jobOrderId: integer("job_order_id")
+      .notNull()
+      .references(() => jobOrders.id),
+    applicationId: integer("application_id").references(() => applications.id), // source mirror
+    stageId: integer("stage_id").references(() => pipelineStages.id),
+    submittedByUserId: integer("submitted_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_submission_application").on(table.applicationId),
+    uniqueIndex("unique_submission_candidate_joborder").on(
+      table.candidateId,
+      table.jobOrderId
+    ),
+  ]
+);
+
+// A confirmed hire, created from a winning submission.
+export const placements = pgTable(
+  "placements",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    submissionId: integer("submission_id").references(() => submissions.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    jobOrderId: integer("job_order_id")
+      .notNull()
+      .references(() => jobOrders.id),
+    clientId: integer("client_id").references(() => clients.id),
+    status: text("status").notNull().default("placed"),
+    startDate: text("start_date"),
+    salary: integer("salary"),
+    feeAmount: integer("fee_amount"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_placement_submission").on(table.submissionId)]
+);
+
 // ---- Allowed recruiter email domains (admin whitelist) ----
 
 export const allowedDomains = pgTable("allowed_domains", {

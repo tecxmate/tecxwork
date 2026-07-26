@@ -35,6 +35,7 @@
     "db:update:yang-luck-ats": "npx tsx src/lib/db/add-yang-luck-ats-schema.ts",
     "db:update:ats-tenancy": "npx tsx src/lib/db/add-ats-tenancy.ts",
     "db:update:ats-pipeline": "npx tsx src/lib/db/add-ats-pipeline.ts",
+    "db:update:ats-agency": "npx tsx src/lib/db/add-ats-agency.ts",
     "db:seed:demo-applicant": "npx tsx src/lib/db/seed-demo-applicant.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",
     "db:seed:schools": "npx tsx src/lib/db/import-schools.ts",
