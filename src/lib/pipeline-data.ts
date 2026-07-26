@@ -1,5 +1,6 @@
 import { eq, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db";
+import { getRecruiterFromSession } from "@/lib/auth";
 import {
   applications,
   applicantProfiles,
@@ -18,48 +19,79 @@ export { PIPELINE_STAGES } from "@/lib/pipeline-types";
 import type { PipelineBoard, PipelineCard } from "@/lib/pipeline-types";
 
 /**
- * Yang Luck agency view: the whole placement pipeline across every client
- * company (each client company is its own recruiter). The board groups by the
- * client company; the agency recruiter itself (clientKind "agency") is excluded.
+ * Recruiter pipeline board, scoped to the logged-in recruiter.
+ *
+ * - A normal recruiter (client / subsidiary) sees ONLY their own jobs and the
+ *   applications to them.
+ * - An "agency" recruiter (clientKind "agency", e.g. Yang Luck HQ) keeps the
+ *   cross-client placement super-view: every client company's jobs + all
+ *   applications, grouped client-side by company. This is the real agency
+ *   model, not a demo shortcut.
+ *
+ * Returns null when there is no recruiter session or the recruiter has no jobs.
  */
 export async function getPipelineBoard(): Promise<PipelineBoard | null> {
+  const auth = await getRecruiterFromSession();
+  if (!auth) return null;
+
   const db = getDb();
+  const [me] = await db
+    .select({
+      id: recruiters.id,
+      company: recruiters.company,
+      clientKind: recruiters.clientKind,
+    })
+    .from(recruiters)
+    .where(eq(recruiters.id, auth.recruiterId))
+    .limit(1);
+  if (!me) return null;
+
+  const isAgency = me.clientKind === "agency";
+
+  const jobsQuery = db
+    .select({
+      id: jobOpenings.id,
+      title: jobOpenings.title,
+      jobCategory: jobOpenings.jobCategory,
+      location: jobOpenings.location,
+      clientCompany: recruiters.company,
+      clientIndustry: recruiters.industry,
+      clientKind: recruiters.clientKind,
+    })
+    .from(jobOpenings)
+    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
+    .where(
+      isAgency
+        ? ne(recruiters.clientKind, "agency")
+        : eq(jobOpenings.recruiterId, me.id)
+    );
+
+  const cardsBase = db
+    .select({
+      id: applications.id,
+      jobOpeningId: applications.jobOpeningId,
+      stage: applications.stage,
+      aiScore: applications.aiScore,
+      notes: applications.notes,
+      name: applicantProfiles.name,
+      nationality: applicantProfiles.nationality,
+      schoolName: applicantProfiles.schoolName,
+      schoolNameEn: applicantProfiles.schoolNameEn,
+      major: applicantProfiles.major,
+      studyLevel: applicantProfiles.studyLevel,
+      skills: applicantProfiles.skills,
+      cvLink: applicantProfiles.cvLink,
+      description: applicantProfiles.description,
+    })
+    .from(applications)
+    .innerJoin(
+      applicantProfiles,
+      eq(applications.applicantId, applicantProfiles.id)
+    );
+
   const [jobs, rows] = await Promise.all([
-    db
-      .select({
-        id: jobOpenings.id,
-        title: jobOpenings.title,
-        jobCategory: jobOpenings.jobCategory,
-        location: jobOpenings.location,
-        clientCompany: recruiters.company,
-        clientIndustry: recruiters.industry,
-        clientKind: recruiters.clientKind,
-      })
-      .from(jobOpenings)
-      .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
-      .where(ne(recruiters.clientKind, "agency")),
-    db
-      .select({
-        id: applications.id,
-        jobOpeningId: applications.jobOpeningId,
-        stage: applications.stage,
-        aiScore: applications.aiScore,
-        notes: applications.notes,
-        name: applicantProfiles.name,
-        nationality: applicantProfiles.nationality,
-        schoolName: applicantProfiles.schoolName,
-        schoolNameEn: applicantProfiles.schoolNameEn,
-        major: applicantProfiles.major,
-        studyLevel: applicantProfiles.studyLevel,
-        skills: applicantProfiles.skills,
-        cvLink: applicantProfiles.cvLink,
-        description: applicantProfiles.description,
-      })
-      .from(applications)
-      .innerJoin(
-        applicantProfiles,
-        eq(applications.applicantId, applicantProfiles.id)
-      ),
+    jobsQuery,
+    isAgency ? cardsBase : cardsBase.where(eq(applications.recruiterId, me.id)),
   ]);
 
   if (jobs.length === 0) return null;
@@ -83,5 +115,5 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
     },
   }));
 
-  return { recruiter: { id: 0, company: "揚運 Yang Luck" }, jobs, cards };
+  return { recruiter: { id: me.id, company: me.company }, jobs, cards };
 }

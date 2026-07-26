@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { applications } from "@/lib/db/schema";
+import { getRecruiterFromSession } from "@/lib/auth";
+import { applications, recruiters } from "@/lib/db/schema";
 import { PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-types";
 
 function isStage(v: unknown): v is PipelineStage {
@@ -10,12 +11,21 @@ function isStage(v: unknown): v is PipelineStage {
 
 /**
  * PATCH /api/applications/:id  { stage }
- * Moves a candidate to a new ATS pipeline stage (demo — no strict auth gate).
+ * Moves a candidate to a new ATS pipeline stage.
+ *
+ * Authorization: must be a recruiter. A normal recruiter may only move
+ * applications to their OWN job openings; an "agency" recruiter may move any
+ * (they manage the whole cross-client placement pipeline).
  */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await getRecruiterFromSession();
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
   const applicationId = Number(id);
   if (!Number.isInteger(applicationId)) {
@@ -38,6 +48,27 @@ export async function PATCH(
   }
 
   const db = getDb();
+
+  const [application] = await db
+    .select({ id: applications.id, recruiterId: applications.recruiterId })
+    .from(applications)
+    .where(eq(applications.id, applicationId))
+    .limit(1);
+  if (!application) {
+    return NextResponse.json({ error: "Application not found" }, { status: 404 });
+  }
+
+  const [me] = await db
+    .select({ clientKind: recruiters.clientKind })
+    .from(recruiters)
+    .where(eq(recruiters.id, auth.recruiterId))
+    .limit(1);
+  const isAgency = me?.clientKind === "agency";
+
+  if (!isAgency && application.recruiterId !== auth.recruiterId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const [updated] = await db
     .update(applications)
     .set({ stage, stageUpdatedAt: new Date() })

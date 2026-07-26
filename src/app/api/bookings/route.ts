@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, bookings, applicantProfiles, recruiters, jobOpenings } from "@/lib/db";
+import { db, bookings, applicantProfiles, recruiters, jobOpenings, applications } from "@/lib/db";
 import { eq, and, inArray, or } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { createBookingSchema, parseJsonBody } from "@/lib/validation";
@@ -181,6 +181,22 @@ export async function POST(req: NextRequest) {
       position: application.position,
     },
   });
+
+  // ATS pipeline: mirror this application into the recruiter's kanban board at
+  // stage "applied". Only when a concrete job opening was resolved (the
+  // applications row requires a job); idempotent on the (job, applicant) unique
+  // index so re-applying never duplicates a pipeline card.
+  if (jobOpeningId) {
+    await db
+      .insert(applications)
+      .values({
+        jobOpeningId,
+        applicantId: profile.id,
+        recruiterId: body.recruiterId,
+        stage: "applied",
+      })
+      .onConflictDoNothing();
+  }
 
   const [recruiter] = await db
     .select({
