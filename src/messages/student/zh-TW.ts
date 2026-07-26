@@ -137,6 +137,7 @@ export const studentZhTwMessages = {
     openPositions: "開放職缺",
     jdAvailable: "可查看職務說明",
     viewBook: "查看與預約",
+    verified: "揚運認證企業",
   },
   getStarted: {
     ...studentEnMessages.getStarted,

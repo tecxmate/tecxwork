@@ -17,6 +17,7 @@ import {
   ChevronUp,
   ChevronRight,
   CheckCircle2,
+  BadgeCheck,
   ArrowRight,
   LogIn,
   Loader2,
@@ -54,6 +55,7 @@ type Recruiter = {
   logoUrl: string | null;
   websiteUrl: string | null;
   galleryUrls: string[];
+  verified: boolean;
 };
 
 type SelectedSlot = {
@@ -623,7 +625,15 @@ export function RecruiterDetail({
                     </div>
                     <div>
                       <h1 className="font-heading text-xl font-bold">{recruiter.company}</h1>
-                      <Badge variant="secondary" className="mt-1 text-xs">{recruiter.industry}</Badge>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <Badge variant="secondary" className="text-xs">{recruiter.industry}</Badge>
+                        {recruiter.verified && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                            <BadgeCheck className="h-3.5 w-3.5" />
+                            {messages.recruiterCard.verified}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3 pt-0">

@@ -131,6 +131,7 @@ export const studentEnMessages = {
     openPositions: "Open Positions",
     jdAvailable: "Job description available",
     viewBook: "View & Book",
+    verified: "Verified employer",
   },
   getStarted: {
     title: "Sign Up for Yang Luck 揚運",

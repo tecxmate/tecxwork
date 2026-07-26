@@ -76,6 +76,9 @@ export const recruiters = pgTable("recruiters", {
   industry: text("industry").notNull(),
   // Demo agency model: "subsidiary" / "client" companies vs the "agency" itself.
   clientKind: text("client_kind").notNull().default("client"),
+  // Trust signal: employer vetted (agency-verified in the demo; admin-settable
+  // in the real product). Defaults false so ordinary sign-ups are NOT verified.
+  verified: boolean("verified").notNull().default(false),
   description: text("description").notNull().default(""),
   positions: text("positions").array().notNull().default([]),
   contactEmail: text("contact_email").notNull(),

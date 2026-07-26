@@ -33,6 +33,7 @@ export default async function RecruiterPage({
         logoUrl: recruiters.logoUrl,
         websiteUrl: recruiters.websiteUrl,
         galleryUrls: recruiters.galleryUrls,
+        verified: recruiters.verified,
       })
       .from(recruiters)
       .where(eq(recruiters.id, recruiterId)),

@@ -176,6 +176,9 @@ async function seed() {
 
   console.log("Resetting demo data…");
   await db.delete(schema.applications);
+  // Clear booking-dependent logs before bookings (FK: logs → bookings).
+  await db.delete(schema.bookingActionLogs);
+  await db.delete(schema.bookingRescheduleLogs);
   await db.delete(schema.bookings);
   await db.delete(schema.slots);
   await db.delete(schema.jobOpenings);
@@ -198,12 +201,14 @@ async function seed() {
     clientKind: "agency",
     description: "揚運國際集團 — 台中總部的國際人力仲介與派遣集團，為營造、製造、旅宿業客戶媒合學生與白領人才。",
     contactEmail: "hr@yangluck.demo",
+    verified: true,
     interviewerCount: 3,
   });
 
   // Each client company is its own recruiter (appears in /browse) with positions.
   const recruiterIdByCompany: Record<string, number> = {};
   const jobIdByPos: Record<string, number> = {};
+  let jobSeq = 0; // spreads seeded closing dates across mid-September
   for (const co of COMPANIES) {
     const [u] = await db.insert(schema.users)
       .values({ email: `co-${co.key}@yangluck.demo`, name: `${co.zh} HR`, passwordHash: pw, role: "recruiter" })
@@ -213,6 +218,8 @@ async function seed() {
       company: `${co.zh} ${co.en}`,
       industry: co.industry,
       clientKind: co.kind,
+      // Agency-vetted client/subsidiary → shows the "verified employer" badge.
+      verified: true,
       description: `${co.zh}（${co.en}）— 揚運${co.kind === "subsidiary" ? "集團關係企業" : "合作客戶"}，${co.industry}。`,
       contactEmail: `hr@${co.key}.demo`,
     }).returning();
@@ -235,6 +242,8 @@ async function seed() {
         seniority: "entry_level",
         languageRequirement: p.lang,
         visaSupport: "case_by_case",
+        // Closing date shown on the job card (a trust signal CBtalent lacks).
+        applicationDeadline: `2026-09-${String(10 + (jobSeq++ % 18)).padStart(2, "0")}`,
         description: `${co.zh}｜由揚運媒合之${p.zh}職缺。`,
         requirements: "相關科系在學或應屆畢業；具備基本溝通能力。",
         moderationStatus: "approved",

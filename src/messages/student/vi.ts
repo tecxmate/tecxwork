@@ -136,6 +136,7 @@ export const studentViMessages = {
     openPositions: "Vị trí tuyển dụng",
     jdAvailable: "Có mô tả công việc",
     viewBook: "Xem & đặt lịch",
+    verified: "Nhà tuyển dụng đã xác minh",
   },
   getStarted: {
     ...studentEnMessages.getStarted,

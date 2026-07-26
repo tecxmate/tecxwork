@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, ArrowRight, FileText } from "lucide-react";
+import { Building2, ArrowRight, FileText, BadgeCheck } from "lucide-react";
 import { useStudentI18n } from "@/components/student-locale-provider";
 
 export type RecruiterCardData = {
@@ -14,6 +14,7 @@ export type RecruiterCardData = {
   positions: string[];
   jdAvailable: boolean;
   logoUrl: string | null;
+  verified: boolean;
 };
 
 export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
@@ -42,6 +43,14 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
           <div className="min-w-0 flex-1 space-y-1">
             <h3 className="line-clamp-2 font-heading text-base font-semibold leading-tight sm:text-lg">
               {recruiter.company}
+              {recruiter.verified && (
+                <span
+                  title={messages.recruiterCard.verified}
+                  className="ml-1 inline-flex translate-y-0.5 items-center text-primary"
+                >
+                  <BadgeCheck className="h-4 w-4" aria-label={messages.recruiterCard.verified} />
+                </span>
+              )}
             </h3>
             <Badge variant="secondary" className="min-w-0 max-w-full !shrink text-xs">
               <span className="block truncate">{recruiter.industry}</span>
