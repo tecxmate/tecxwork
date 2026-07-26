@@ -297,7 +297,10 @@ export const applications = pgTable(
       .notNull()
       .references(() => recruiters.id),
     orgId: integer("org_id").references(() => orgs.id),
+    // Legacy fixed stage (Phase 0). Kept as a fallback for rows without stageId.
     stage: pipelineStageEnum("stage").notNull().default("applied"),
+    // Configurable pipeline (Phase 1b): authoritative stage → pipeline_stages.
+    stageId: integer("stage_id").references(() => pipelineStages.id),
     stageUpdatedAt: timestamp("stage_updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -396,6 +399,81 @@ export const auditLog = pgTable(
       table.orgId,
       table.actorUserId,
       table.createdAt
+    ),
+  ]
+);
+
+// ---- Configurable pipeline (Phase 1b) ----
+// Stages are ROWS, not a fixed enum, so each org (later each job) can shape its
+// own pipeline. `stage_kind` is the stable, coarse label used for cross-org
+// reporting even when display names differ.
+
+export const stageKindEnum = pgEnum("stage_kind", [
+  "sourced",
+  "screened",
+  "internal_submit",
+  "client_submit",
+  "interview",
+  "offer",
+  "placed",
+  "onboarding",
+  "started",
+  "rejected",
+]);
+
+export const pipelineTemplates = pgTable("pipeline_templates", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id")
+    .notNull()
+    .references(() => orgs.id),
+  name: text("name").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const pipelineStages = pgTable(
+  "pipeline_stages",
+  {
+    id: serial("id").primaryKey(),
+    templateId: integer("template_id")
+      .notNull()
+      .references(() => pipelineTemplates.id),
+    name: text("name").notNull(),
+    stageKind: stageKindEnum("stage_kind").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isTerminal: boolean("is_terminal").notNull().default(false),
+    slaDays: integer("sla_days"),
+  },
+  (table) => [
+    index("pipeline_stages_template_idx").on(table.templateId, table.sortOrder),
+  ]
+);
+
+// Append-only stage history — the source of truth for funnel + time-in-stage
+// reporting. Never derive those from the mutable applications.stage_id cache.
+export const applicationStageTransitions = pgTable(
+  "application_stage_transitions",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id").references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    fromStageId: integer("from_stage_id").references(() => pipelineStages.id),
+    toStageId: integer("to_stage_id")
+      .notNull()
+      .references(() => pipelineStages.id),
+    movedByUserId: integer("moved_by_user_id").references(() => users.id),
+    movedAt: timestamp("moved_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("app_stage_transitions_app_idx").on(
+      table.applicationId,
+      table.movedAt
     ),
   ]
 );

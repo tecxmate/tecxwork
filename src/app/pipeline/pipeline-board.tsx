@@ -19,10 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
-  PIPELINE_STAGES,
   type PipelineBoard as Board,
   type PipelineCard,
-  type PipelineStage,
+  type PipelineStageDef,
+  type StageKind,
 } from "@/lib/pipeline-types";
 
 // Recruiter dashboard is bilingual (繁中 / English) — the board follows it.
@@ -33,21 +33,32 @@ const T: Record<Locale, Record<string, string>> = {
   en: { title: "Talent Pipeline", subtitle: "ATS hiring board", client: "Client", group: "Group", position: "Applied for", cv: "View CV", skills: "Skills", cand: "candidates", drag: "Drag a card to change stage", close: "Close", profile: "Candidate profile", company: "Placement", school: "School", major: "Major", nat: "Nationality", ai: "AI score" },
 };
 
-const STAGE_LABEL: Record<PipelineStage, Record<Locale, string>> = {
-  applied: { zh: "收到履歷", en: "Applied" },
-  screening: { zh: "初步篩選", en: "Screening" },
+// Bilingual labels + colours keyed by the stable stage_kind, so configurable
+// per-org stage names still render bilingually and consistently coloured.
+const STAGE_KIND_LABEL: Record<StageKind, Record<Locale, string>> = {
+  sourced: { zh: "收到履歷", en: "Applied" },
+  screened: { zh: "初步篩選", en: "Screening" },
+  internal_submit: { zh: "內部推薦", en: "Internal submit" },
+  client_submit: { zh: "推薦客戶", en: "Submitted to client" },
   interview: { zh: "安排面試", en: "Interview" },
   offer: { zh: "發送錄取", en: "Offer" },
-  hired: { zh: "到職", en: "Hired" },
+  placed: { zh: "到職", en: "Hired" },
+  onboarding: { zh: "報到準備", en: "Onboarding" },
+  started: { zh: "已上工", en: "Started" },
+  rejected: { zh: "未錄取", en: "Rejected" },
 };
 
-// Semantic stage colours (separate from the app accent by design).
-const STAGE_ACCENT: Record<PipelineStage, string> = {
-  applied: "#64748b",
-  screening: "#2563eb",
+const STAGE_KIND_ACCENT: Record<StageKind, string> = {
+  sourced: "#64748b",
+  screened: "#2563eb",
+  internal_submit: "#0ea5e9",
+  client_submit: "#6366f1",
   interview: "#d97706",
   offer: "#7c3aed",
-  hired: "#059669",
+  placed: "#059669",
+  onboarding: "#0d9488",
+  started: "#16a34a",
+  rejected: "#dc2626",
 };
 
 function flag(nat: string): string {
@@ -139,7 +150,7 @@ function Column({
   enabled,
   positionById,
 }: {
-  stage: PipelineStage;
+  stage: PipelineStageDef;
   locale: Locale;
   cards: PipelineCard[];
   onOpen: (c: PipelineCard) => void;
@@ -147,8 +158,8 @@ function Column({
   enabled: boolean;
   positionById: Map<number, string>;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage });
-  const accent = STAGE_ACCENT[stage];
+  const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const accent = STAGE_KIND_ACCENT[stage.stageKind];
   return (
     <div className="flex w-64 shrink-0 flex-col rounded-2xl bg-muted/40">
       <div
@@ -156,7 +167,7 @@ function Column({
         style={{ borderTop: `3px solid ${accent}` }}
       >
         <span className="text-sm font-bold" style={{ color: accent }}>
-          {STAGE_LABEL[stage][locale]}
+          {STAGE_KIND_LABEL[stage.stageKind][locale]}
         </span>
         <Badge variant="secondary" className="bg-card shadow-sm">
           {cards.length}
@@ -240,23 +251,30 @@ function PipelineBoardBody({ board, locale }: { board: Board; locale: Locale }) 
     const { active, over } = e;
     if (!over) return;
     const cardId = Number(active.id);
-    const newStage = over.id as PipelineStage;
+    const newStageId = Number(over.id);
     const current = cards.find((c) => c.id === cardId);
-    if (!current || current.stage === newStage) return;
-    const prevStage = current.stage;
-    setCards((cs) => cs.map((c) => (c.id === cardId ? { ...c, stage: newStage } : c)));
+    if (!current || current.stageId === newStageId) return;
+    const prevStageId = current.stageId;
+    setCards((cs) => cs.map((c) => (c.id === cardId ? { ...c, stageId: newStageId } : c)));
     fetch(`/api/applications/${cardId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stage: newStage }),
+      body: JSON.stringify({ stageId: newStageId }),
     })
       .then((r) => {
         if (!r.ok) throw new Error("persist failed");
       })
       .catch(() => {
-        setCards((cs) => cs.map((c) => (c.id === cardId ? { ...c, stage: prevStage } : c)));
+        setCards((cs) => cs.map((c) => (c.id === cardId ? { ...c, stageId: prevStageId } : c)));
       });
   }
+
+  const selectedStage = selected
+    ? board.stages.find((s) => s.id === selected.stageId)
+    : null;
+  const selectedStageLabel = selectedStage
+    ? STAGE_KIND_LABEL[selectedStage.stageKind][locale]
+    : "";
 
   return (
     <div>
@@ -303,12 +321,12 @@ function PipelineBoardBody({ board, locale }: { board: Board; locale: Locale }) 
 
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4">
-          {PIPELINE_STAGES.map((stage) => (
+          {board.stages.map((stage) => (
             <Column
-              key={stage}
+              key={stage.id}
               stage={stage}
               locale={locale}
-              cards={jobCards.filter((c) => c.stage === stage)}
+              cards={jobCards.filter((c) => c.stageId === stage.id)}
               onOpen={setSelected}
               activeId={activeId}
               enabled={mounted}
@@ -325,6 +343,7 @@ function PipelineBoardBody({ board, locale }: { board: Board; locale: Locale }) 
         <CandidateDrawer
           card={selected}
           locale={locale}
+          stageLabel={selectedStageLabel}
           companyLabel={jobById.get(selected.jobOpeningId)?.clientCompany ?? ""}
           positionLabel={positionById.get(selected.jobOpeningId) ?? ""}
           onClose={() => setSelected(null)}
@@ -359,12 +378,14 @@ export function DashboardPipeline({ board }: { board: Board }) {
 function CandidateDrawer({
   card,
   locale,
+  stageLabel,
   companyLabel,
   positionLabel,
   onClose,
 }: {
   card: PipelineCard;
   locale: Locale;
+  stageLabel: string;
   companyLabel: string;
   positionLabel: string;
   onClose: () => void;
@@ -387,7 +408,7 @@ function CandidateDrawer({
             <p className="text-[11px] uppercase tracking-wide opacity-70">{t.profile}</p>
             <h2 className="font-heading text-lg font-bold">{a.name}</h2>
             <p className="text-sm opacity-90">
-              {flag(a.nationality)} {a.nationality} · {STAGE_LABEL[card.stage][locale]}
+              {flag(a.nationality)} {a.nationality} · {stageLabel}
             </p>
           </div>
           <Button

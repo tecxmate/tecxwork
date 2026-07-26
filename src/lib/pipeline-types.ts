@@ -1,20 +1,34 @@
 // Client-safe pipeline types + constants (no server imports — safe to import
 // from client components and the shared API route).
 
-export const PIPELINE_STAGES = [
-  "applied",
-  "screening",
+// Coarse, stable stage semantics used for cross-org reporting + bilingual
+// labels, even when a template's display names differ.
+export const STAGE_KINDS = [
+  "sourced",
+  "screened",
+  "internal_submit",
+  "client_submit",
   "interview",
   "offer",
-  "hired",
+  "placed",
+  "onboarding",
+  "started",
+  "rejected",
 ] as const;
 
-export type PipelineStage = (typeof PIPELINE_STAGES)[number];
+export type StageKind = (typeof STAGE_KINDS)[number];
+
+export interface PipelineStageDef {
+  id: number;
+  name: string;
+  stageKind: StageKind;
+  sortOrder: number;
+}
 
 export interface PipelineCard {
   id: number;
   jobOpeningId: number;
-  stage: PipelineStage;
+  stageId: number;
   aiScore: number | null;
   notes: string;
   applicant: {
@@ -42,6 +56,7 @@ export interface PipelineJob {
 
 export interface PipelineBoard {
   recruiter: { id: number; company: string };
+  stages: PipelineStageDef[];
   jobs: PipelineJob[];
   cards: PipelineCard[];
 }
