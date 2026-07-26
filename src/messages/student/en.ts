@@ -345,6 +345,9 @@ export const studentEnMessages = {
     cvExportLinks: "Links",
     cvExportCurrent: "Present",
     applicationsTitle: "My Applications",
+    tabsBasic: "Basic",
+    tabsCvQr: "CV / QR",
+    tabsView: "View Profile",
     applicationsSubtitle:
       "Track companies you applied to and confirmed interviews.",
     applicationsTotal: "{count} total",

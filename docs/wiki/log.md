@@ -1239,3 +1239,9 @@ attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
 attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
 - Add/Edit job form gave no signal for which fields gate the Add button. Add is disabled until Position title + Employment type are set (only two inputs with `required`).
 - Marked exactly those two labels with a red asterisk (text-destructive, aria-hidden since inputs already carry `required`). All other fields are genuinely optional and stay unmarked — not marking unenforced fields keeps the signal truthful. Shared renderJobForm, so applies to both Add and Edit.
+
+## [2026-07-27] decision | Student profile → tabbed layout (was one long scroll)
+attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
+- Competitor uses a tabbed profile editor (Basic / Education / Work / Skill / CV / Additional / View); ours was a single very long scroll, hard to track. Adopted the pattern.
+- src/app/profile/page.tsx: added an 8-tab shell (basic, education, preferences, experience[work+certifications], skills, cvqr, applications, view) over the SAME draft + single PUT /api/me/profile save. Persistent identity header (avatar + completion + Save) stays visible on every tab; Save decoupled from the form (calls saveProfile() directly so it works on any tab). Each tab shows one region; a wizard footer offers Back / "Save Changes & Next" that advances only on a successful save. Added i18n keys profile.tabsBasic/tabsCvQr/tabsView (en/vi/zh-TW).
+- Decision: free tab navigation (not linear wizard) + one-payload save, per niko. No API changes.

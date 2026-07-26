@@ -17,6 +17,11 @@ import {
   AlertCircle,
   BriefcaseBusiness,
   FileText,
+  User,
+  Sparkles,
+  QrCode,
+  Eye,
+  ChevronRight,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -699,9 +704,39 @@ const CertificationEditor = memo(function CertificationEditor({
   );
 });
 
+type ProfileTab =
+  | "basic"
+  | "education"
+  | "preferences"
+  | "experience"
+  | "skills"
+  | "cvqr"
+  | "applications"
+  | "view";
+
+// Tabs that edit the shared profile draft (share the single #profile-form save).
+const PROFILE_FORM_TABS: ProfileTab[] = [
+  "basic",
+  "education",
+  "preferences",
+  "experience",
+  "skills",
+];
+const PROFILE_TAB_ORDER: ProfileTab[] = [
+  "basic",
+  "education",
+  "preferences",
+  "experience",
+  "skills",
+  "cvqr",
+  "applications",
+  "view",
+];
+
 export default function ProfilePage() {
   const router = useRouter();
   const { messages, locale } = useStudentI18n();
+  const [activeTab, setActiveTab] = useState<ProfileTab>("basic");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -1119,10 +1154,12 @@ export default function ProfilePage() {
       setLastSavedPayload(serializedPayload);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 3000);
+      return true;
     } catch (err) {
       setError(
         err instanceof Error ? err.message : messages.register.somethingWentWrong
       );
+      return false;
     } finally {
       setSaving(false);
     }
@@ -1138,6 +1175,45 @@ export default function ProfilePage() {
     e.preventDefault();
     await saveProfile();
   }
+
+  function goToTab(tab: ProfileTab) {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function nextTab() {
+    const index = PROFILE_TAB_ORDER.indexOf(activeTab);
+    const next = PROFILE_TAB_ORDER[index + 1];
+    if (next) goToTab(next);
+  }
+
+  function prevTab() {
+    const index = PROFILE_TAB_ORDER.indexOf(activeTab);
+    const prev = PROFILE_TAB_ORDER[index - 1];
+    if (prev) goToTab(prev);
+  }
+
+  // Save the shared draft, then advance to the next tab only if the save stuck.
+  async function handleSaveAndNext() {
+    const ok = await saveProfile();
+    if (ok) nextTab();
+  }
+
+  const isFormTab = PROFILE_FORM_TABS.includes(activeTab);
+  const isFirstTab = activeTab === PROFILE_TAB_ORDER[0];
+  const isLastTab = activeTab === PROFILE_TAB_ORDER[PROFILE_TAB_ORDER.length - 1];
+  const profileTabs = [
+    { id: "basic", label: messages.profile.tabsBasic ?? "Basic", icon: User },
+    { id: "education", label: messages.register.educationSection, icon: GraduationCap },
+    { id: "preferences", label: messages.register.preferencesSection, icon: Building2 },
+    { id: "experience", label: messages.register.workExperienceSection, icon: BriefcaseBusiness },
+    { id: "skills", label: messages.register.skills, icon: Sparkles },
+    { id: "cvqr", label: messages.profile.tabsCvQr ?? "CV / QR", icon: QrCode },
+    { id: "applications", label: messages.profile.applicationsTitle ?? "Applications", icon: CalendarClock },
+    { id: "view", label: messages.profile.tabsView ?? "View Profile", icon: Eye },
+  ] as const;
 
   async function handleCancelApplication(application: ApplicationSummaryItem) {
     const confirmMessage =
@@ -1289,6 +1365,87 @@ export default function ProfilePage() {
 
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
         <div className="mx-auto max-w-5xl space-y-4">
+          {/* Persistent identity + primary save (visible on every tab) */}
+          <Card>
+            <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 flex-1 items-start gap-4 text-left">
+                <ImageUpload
+                  value={avatarUrl ?? undefined}
+                  onChange={setAvatarUrl}
+                  type="avatar"
+                  hint=""
+                  className="shrink-0"
+                />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div>
+                    <h1 className="font-heading text-xl font-bold">
+                      {messages.profile.title}
+                    </h1>
+                    <p className="text-xs text-muted-foreground">{profileEmail}</p>
+                  </div>
+                  <div className="w-full max-w-sm">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {messages.profile.profileCompletion ?? "Profile completion"}
+                      </span>
+                      <span className={profileCompletion >= 80 ? "font-medium text-green-600" : "font-medium text-primary"}>
+                        {profileCompletion}%
+                      </span>
+                    </div>
+                    <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className={`h-full transition-all ${profileCompletion >= 80 ? "bg-green-500" : "bg-primary"}`}
+                        style={{ width: `${profileCompletion}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={() => void saveProfile()}
+                disabled={saving}
+                className="shrink-0"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {messages.common.saving}
+                  </>
+                ) : (
+                  messages.common.saveChanges
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Tab bar — paginates the profile so it is not one long scroll */}
+          <div className="-mx-1 overflow-x-auto px-1 py-1">
+            <div className="flex min-w-max gap-1 rounded-xl border border-border/60 bg-muted/40 p-1">
+              {profileTabs.map((tab) => {
+                const active = activeTab === tab.id;
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => goToTab(tab.id)}
+                    aria-current={active ? "page" : undefined}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {activeTab === "cvqr" && (
           <QRCard
             value={draft.cvLink}
             title={messages.profile.cvQrTitle}
@@ -1330,7 +1487,9 @@ export default function ProfilePage() {
               )}
             </div>
           </QRCard>
+          )}
 
+          {activeTab === "applications" && (
           <Card className="print:hidden">
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1454,6 +1613,7 @@ export default function ProfilePage() {
               ) : null}
             </CardContent>
           </Card>
+          )}
 
           <div ref={cvPrintRef} className="student-cv-print-only">
             <CvExportTemplate
@@ -1463,62 +1623,11 @@ export default function ProfilePage() {
             />
           </div>
 
+          {isFormTab && (
           <Card>
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div className="flex min-w-0 flex-1 items-start gap-4 text-left">
-                <ImageUpload
-                  value={avatarUrl ?? undefined}
-                  onChange={setAvatarUrl}
-                  type="avatar"
-                  hint=""
-                  className="shrink-0"
-                />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div>
-                    <h1 className="font-heading text-xl font-bold">
-                      {messages.profile.title}
-                    </h1>
-                    <p className="text-xs text-muted-foreground">{profileEmail}</p>
-                  </div>
-                  <div className="w-full max-w-sm">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        {messages.profile.profileCompletion ?? "Profile completion"}
-                      </span>
-                      <span className={profileCompletion >= 80 ? "font-medium text-green-600" : "font-medium text-primary"}>
-                        {profileCompletion}%
-                      </span>
-                    </div>
-                    <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-secondary">
-                      <div
-                        className={`h-full transition-all ${profileCompletion >= 80 ? "bg-green-500" : "bg-primary"}`}
-                        style={{ width: `${profileCompletion}%` }}
-                      />
-                    </div>
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      Profile Photo
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <Button
-                type="submit"
-                form="profile-form"
-                disabled={saving}
-                className="shrink-0"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {messages.common.saving}
-                  </>
-                ) : (
-                  messages.common.saveChanges
-                )}
-              </Button>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <form id="profile-form" onSubmit={handleSave} className="space-y-6">
+                {activeTab === "basic" && (
                 <section className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
@@ -1559,9 +1668,9 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </section>
+                )}
 
-                <Separator />
-
+                {activeTab === "education" && (
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4 text-primary" />
@@ -1732,9 +1841,9 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </section>
+                )}
 
-                <Separator />
-
+                {activeTab === "preferences" && (
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-primary" />
@@ -1829,9 +1938,10 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </section>
+                )}
 
-                <Separator />
-
+                {activeTab === "experience" && (
+                <>
                 <section className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -1945,9 +2055,10 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </section>
+                </>
+                )}
 
-                <Separator />
-
+                {activeTab === "skills" && (
                 <section className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
@@ -2032,13 +2143,14 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </section>
-
-                <Separator />
+                )}
 
               </form>
             </CardContent>
           </Card>
+          )}
 
+          {activeTab === "view" && (
           <Card className="print:hidden">
             <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
               <div className="flex min-w-0 gap-3">
@@ -2076,6 +2188,39 @@ export default function ProfilePage() {
               </p>
             </CardContent>
           </Card>
+          )}
+
+          {/* Wizard-style footer nav — Back / Save & Next across tabs */}
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={prevTab}
+              className={isFirstTab ? "invisible" : ""}
+            >
+              ← {messages.common.back}
+            </Button>
+            {!isLastTab ? (
+              isFormTab ? (
+                <Button
+                  type="button"
+                  onClick={() => void handleSaveAndNext()}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  {messages.common.saveChanges} & {messages.common.next}
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button type="button" onClick={nextTab}>
+                  {messages.common.next}
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              )
+            ) : null}
+          </div>
 
         </div>
       </main>

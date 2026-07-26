@@ -332,6 +332,9 @@ export const studentViMessages = {
     cvExportLinks: "Liên kết",
     cvExportCurrent: "Hiện tại",
     applicationsTitle: "Đơn ứng tuyển của tôi",
+    tabsBasic: "Cơ bản",
+    tabsCvQr: "CV / QR",
+    tabsView: "Xem hồ sơ",
     applicationsSubtitle:
       "Theo dõi công ty bạn đã ứng tuyển và lịch phỏng vấn đã xác nhận.",
     applicationsTotal: "{count} đơn",
