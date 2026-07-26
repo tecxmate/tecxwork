@@ -1129,3 +1129,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, photo-uploads]
 - Scraped real logos for 20/25 client companies (public/yl/logos/) + company photos for 18 companies' detail-page galleries (public/yl/photos/, recruiters.gallery_urls).
 - Homepage hero now cycles Yang Luck's own 5 branded key-visuals (public/yl/hero/; homepageImages + hero_overlay_enabled=false; page.tsx passes all images to HeroCarousel). Real documentary Yang Luck photos don't exist publicly — used their official branded banners.
 - Preview domain yangluck.tecxmate.com added in Vercel (bound to demo/yang-luck branch); needs a Cloudflare CNAME -> cname.vercel-dns.com (DNS-only).
+
+## [2026-07-26] feat | Competitive audit (CBtalent/NTUT) → directory-quality fixes
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- ntut.cbtalent.tw is NOT copying tecxwork — it's NTUT's instance of CBtalent (white-label campus-recruiting SaaS). Treated as competitive intel.
+- Shipped on demo/yang-luck: #2 hide 0-job companies in /browse, #5 dedupe titles + company rows, #6 verified-employer badge (new recruiters.verified col, default false) + seeded job closing dates. #4 (counts/pagination) was already done.
+- Root-caused "only 1 company": demo Neon DB (lingering-sun) was never migrated (no applications table). Fixed via drizzle-kit push + FK-safe reseed (25 verified companies). See decisions/2026-07-26-competitive-audit-cbtalent.md.
