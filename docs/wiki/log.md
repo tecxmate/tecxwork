@@ -1218,3 +1218,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - Migration db:update:ats-pools (commit c507076): talent_pools + talent_pool_members; seeded 4 pools (VN Engineers, ID Manufacturing, Hospitality CN/EN, Redeployment) + 15 members. Manager-only APIs; candidate-drawer Talent-pools panel (add/remove/create).
 - Verified live: 4 pools with counts, candidate 阮氏梅 in VN Engineers, add/remove works, client recruiter→403.
 - Remaining (secondary): automated retention enforcement, cross-border transfer register, client portal, signed-URL docs, @mentions.
+
+## [2026-07-27] feat | Retention enforcement cron — completes PII lifecycle (verified)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- GET /api/cron/retention-sweep (CRON_SECRET-gated, commit 222a2ff): auto-anonymizes candidates past retention_until, audited as system erasure; ?dryRun=true reports count. Schedule via cron config to activate.
+- Verified: unauth→401; detection logic finds due candidates (0→1 on temp past-retention, reset→0, no erasure).
+- Judged NOT needed for the demo (with reasons): cross-border transfer register (needs legal counsel), signed-URL docs (no real files in demo), @mentions (few users), client portal (large separate build). ATS is now feature-complete for the roadmap.
