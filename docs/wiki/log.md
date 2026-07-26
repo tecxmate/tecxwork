@@ -1198,3 +1198,10 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - seed-report-demo backdates demo apps/transitions ~8 weeks for realistic spread (oldest ~37d).
 - Verified live: funnel/metrics/aging render on agency Reports tab; tab hidden from client recruiters.
 - Phase 4 remaining: scorecards/evaluations, notes + @mentions.
+
+## [2026-07-27] feat | ATS Phase 4b — candidate notes + scorecards (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-collab (commit 6192b21): activity (notes + stage_change events) + scorecards (recommendation enum, ratings jsonb, comment); seeded 15 notes + 10 scorecards. Shared authorizeApplication() authz helper.
+- APIs: GET/POST /api/applications/:id/timeline (fetch/add note), POST /api/applications/:id/scorecard. Stage moves write a stage_change activity event.
+- CandidateTimeline in the pipeline candidate drawer: fetch-on-open, scorecards (rec + star ratings + comment) + notes timeline, add-note input + submit-scorecard form.
+- Verified live: unauth→401; GET returns seeded data; add note (author name resolved) + add scorecard persist. Remaining: @mentions.
