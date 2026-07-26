@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useStudentI18n } from "@/components/student-locale-provider";
 
-import { isNavItemActive, navItemsByRole, type NavRole } from "@/lib/navigation";
+import { isNavItemActive, visibleNavItems, type NavRole } from "@/lib/navigation";
 
 function getStandaloneDisplayMode() {
   if (typeof window === "undefined") return false;
@@ -18,15 +18,17 @@ function getStandaloneDisplayMode() {
 
 export function MobileBottomNav({
   role,
+  isAgency = false,
 }: {
   role: NavRole;
+  isAgency?: boolean;
 }) {
   const router = useRouter();
   const { messages } = useStudentI18n();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
-  const items = navItemsByRole[role];
+  const items = visibleNavItems(role, isAgency);
   function getLabel(href: string, fallback: string) {
     if (role === "guest" || role === "applicant") {
       if (href === "/") return messages.nav.home;

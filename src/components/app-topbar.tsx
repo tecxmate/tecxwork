@@ -11,12 +11,13 @@ import {
 } from "@/components/notification-bell";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { navItemsByRole, type NavRole } from "@/lib/navigation";
+import { visibleNavItems, type NavRole } from "@/lib/navigation";
 
 export function AppTopBar({
   href = "/",
   navRole,
   currentPath,
+  isAgency = false,
   desktopActions,
   mobileActions,
   showActionsOnMobile = false,
@@ -27,6 +28,7 @@ export function AppTopBar({
   href?: string;
   navRole?: NavRole;
   currentPath?: string;
+  isAgency?: boolean;
   desktopActions?: React.ReactNode;
   mobileActions?: React.ReactNode;
   showActionsOnMobile?: boolean;
@@ -34,7 +36,7 @@ export function AppTopBar({
   notificationLabels?: NotificationBellLabels;
   rightStatus?: React.ReactNode;
 }) {
-  const navItems = navRole ? navItemsByRole[navRole] : [];
+  const navItems = navRole ? visibleNavItems(navRole, isAgency) : [];
   const showStudentLanguageSwitcher =
     navRole === "guest" || navRole === "applicant" || navRole === "admin";
   const showNotifications = Boolean(navRole && navRole !== "guest");
@@ -53,7 +55,7 @@ export function AppTopBar({
           </div>
           {navItems.length > 0 ? (
             <div className="hidden md:flex md:justify-self-center">
-              <DesktopTopNav role={navRole!} currentPath={currentPath} />
+              <DesktopTopNav role={navRole!} currentPath={currentPath} isAgency={isAgency} />
             </div>
           ) : null}
           <div className="ml-auto flex items-center gap-2 whitespace-nowrap sm:gap-3 md:ml-0 md:justify-self-end">

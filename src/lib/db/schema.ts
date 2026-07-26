@@ -74,6 +74,13 @@ export const recruiters = pgTable("recruiters", {
     .unique(),
   company: text("company").notNull(),
   industry: text("industry").notNull(),
+  // Multi-tenancy: the org (tenant) this recruiter belongs to (Phase 1).
+  orgId: integer("org_id").references(() => orgs.id),
+  // Demo agency model: "subsidiary" / "client" companies vs the "agency" itself.
+  clientKind: text("client_kind").notNull().default("client"),
+  // Trust signal: employer vetted (agency-verified in the demo; admin-settable
+  // in the real product). Defaults false so ordinary sign-ups are NOT verified.
+  verified: boolean("verified").notNull().default(false),
   description: text("description").notNull().default(""),
   positions: text("positions").array().notNull().default([]),
   contactEmail: text("contact_email").notNull(),
@@ -97,8 +104,14 @@ export const jobOpenings = pgTable("job_openings", {
   recruiterId: integer("recruiter_id")
     .notNull()
     .references(() => recruiters.id),
+  orgId: integer("org_id").references(() => orgs.id),
   title: text("title").notNull(),
   jobCategory: text("job_category").notNull().default(""),
+  // Agency model: the client company Yang Luck is placing this role for, and
+  // whether it's a group subsidiary vs an external client ("" for normal jobs).
+  clientCompany: text("client_company").notNull().default(""),
+  clientIndustry: text("client_industry").notNull().default(""),
+  clientKind: text("client_kind").notNull().default(""),
   jdLink: text("jd_link"),
   location: text("location").notNull().default(""),
   employmentType: text("employment_type").notNull().default(""),
@@ -154,6 +167,11 @@ export const applicantProfiles = pgTable("applicant_profiles", {
   description: text("description").notNull().default(""),
   pipaConsent: boolean("pipa_consent").notNull().default(false),
   wantsNewsletter: boolean("wants_newsletter").notNull().default(false),
+  // PII governance (Phase 5 — design-for-PII): consent + retention + erasure.
+  consentAt: timestamp("consent_at", { withTimezone: true }),
+  consentPurpose: text("consent_purpose"),
+  retentionUntil: text("retention_until"), // YYYY-MM-DD
+  anonymizedAt: timestamp("anonymized_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -256,6 +274,482 @@ export const bookings = pgTable("bookings", {
     .notNull()
     .defaultNow(),
 });
+
+// ---- Applications / ATS pipeline (Yang Luck demo) ----
+// One row per candidate applying to a job; drives the recruiter kanban board.
+// Distinct from `bookings` (interview-slot machinery) on purpose.
+
+export const pipelineStageEnum = pgEnum("pipeline_stage", [
+  "applied",
+  "screening",
+  "interview",
+  "offer",
+  "hired",
+]);
+
+export const applications = pgTable(
+  "applications",
+  {
+    id: serial("id").primaryKey(),
+    jobOpeningId: integer("job_opening_id")
+      .notNull()
+      .references(() => jobOpenings.id),
+    applicantId: integer("applicant_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    // Denormalized for fast board queries (a job always belongs to one recruiter).
+    recruiterId: integer("recruiter_id")
+      .notNull()
+      .references(() => recruiters.id),
+    orgId: integer("org_id").references(() => orgs.id),
+    // Legacy fixed stage (Phase 0). Kept as a fallback for rows without stageId.
+    stage: pipelineStageEnum("stage").notNull().default("applied"),
+    // Configurable pipeline (Phase 1b): authoritative stage → pipeline_stages.
+    stageId: integer("stage_id").references(() => pipelineStages.id),
+    stageUpdatedAt: timestamp("stage_updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    notes: text("notes").notNull().default(""),
+    // Mocked "AI CV screening" score (0-100) for the demo badge — not real inference.
+    aiScore: integer("ai_score"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_application_job_applicant").on(
+      table.jobOpeningId,
+      table.applicantId
+    ),
+    index("applications_recruiter_stage_idx").on(
+      table.recruiterId,
+      table.stage
+    ),
+  ]
+);
+
+// ---- ATS multi-tenancy + RBAC + audit (Phase 1) ----
+
+export const memberRoleEnum = pgEnum("member_role", [
+  "admin",
+  "account_manager",
+  "recruiter",
+  "hiring_manager",
+  "interviewer",
+  "coordinator",
+  "viewer",
+]);
+
+// A tenant. An agency (Yang Luck) or a corporate employer. Everything ATS is
+// scoped to one org; the agency's client companies live as data WITHIN its org.
+export const orgs = pgTable("orgs", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  kind: text("kind").notNull().default("agency"), // agency | employer
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// A user's role within an org. Replaces the single recruiters.userId link as the
+// authorization source of truth (a user can belong to one org here; multi-org
+// per user is a later extension).
+export const memberships = pgTable(
+  "memberships",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    role: memberRoleEnum("role").notNull().default("recruiter"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_org_member").on(table.orgId, table.userId)]
+);
+
+// Append-only PII/access audit trail. Stores field NAMES + non-PII metadata,
+// never raw PII values, so candidate erasure never has to touch this table.
+// Grant the app DB role INSERT+SELECT only (no UPDATE/DELETE) once RLS lands.
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id").references(() => orgs.id),
+    actorUserId: integer("actor_user_id").references(() => users.id),
+    actorType: text("actor_type").notNull().default("user"), // user | system | job
+    action: text("action").notNull(), // view | create | update | move_stage | export | ...
+    entityType: text("entity_type").notNull(), // application | candidate | job | ...
+    entityId: integer("entity_id"),
+    fieldNames: text("field_names").array(),
+    metadata: jsonb("metadata"),
+    ip: text("ip"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("audit_log_org_entity_idx").on(
+      table.orgId,
+      table.entityType,
+      table.entityId,
+      table.createdAt
+    ),
+    index("audit_log_org_actor_idx").on(
+      table.orgId,
+      table.actorUserId,
+      table.createdAt
+    ),
+  ]
+);
+
+// ---- Configurable pipeline (Phase 1b) ----
+// Stages are ROWS, not a fixed enum, so each org (later each job) can shape its
+// own pipeline. `stage_kind` is the stable, coarse label used for cross-org
+// reporting even when display names differ.
+
+export const stageKindEnum = pgEnum("stage_kind", [
+  "sourced",
+  "screened",
+  "internal_submit",
+  "client_submit",
+  "interview",
+  "offer",
+  "placed",
+  "onboarding",
+  "started",
+  "rejected",
+]);
+
+export const pipelineTemplates = pgTable("pipeline_templates", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id")
+    .notNull()
+    .references(() => orgs.id),
+  name: text("name").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const pipelineStages = pgTable(
+  "pipeline_stages",
+  {
+    id: serial("id").primaryKey(),
+    templateId: integer("template_id")
+      .notNull()
+      .references(() => pipelineTemplates.id),
+    name: text("name").notNull(),
+    stageKind: stageKindEnum("stage_kind").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isTerminal: boolean("is_terminal").notNull().default(false),
+    slaDays: integer("sla_days"),
+  },
+  (table) => [
+    index("pipeline_stages_template_idx").on(table.templateId, table.sortOrder),
+  ]
+);
+
+// Append-only stage history — the source of truth for funnel + time-in-stage
+// reporting. Never derive those from the mutable applications.stage_id cache.
+export const applicationStageTransitions = pgTable(
+  "application_stage_transitions",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id").references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    fromStageId: integer("from_stage_id").references(() => pipelineStages.id),
+    toStageId: integer("to_stage_id")
+      .notNull()
+      .references(() => pipelineStages.id),
+    movedByUserId: integer("moved_by_user_id").references(() => users.id),
+    movedAt: timestamp("moved_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("app_stage_transitions_app_idx").on(
+      table.applicationId,
+      table.movedAt
+    ),
+  ]
+);
+
+// ---- Agency CRM (Phase 2 — a LAYER mirroring the recruiter/job/application
+// model into the Bullhorn-style client → job_order → submission → placement
+// spine. The student-facing recruiter/job/application model is unchanged. ----
+
+// A client company the agency places into (mirrors a non-agency recruiter).
+export const clients = pgTable(
+  "clients",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    // Source mirror: the recruiter row this client was backfilled from.
+    recruiterId: integer("recruiter_id").references(() => recruiters.id),
+    name: text("name").notNull(),
+    nameZh: text("name_zh"),
+    industry: text("industry").notNull().default(""),
+    city: text("city"),
+    unifiedBusinessNo: text("unified_business_no"), // 統一編號
+    ownerUserId: integer("owner_user_id").references(() => users.id),
+    defaultFeePct: integer("default_fee_pct"),
+    status: text("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_client_recruiter").on(table.recruiterId)]
+);
+
+// A hiring contact at a client.
+export const contacts = pgTable("contacts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id")
+    .notNull()
+    .references(() => orgs.id),
+  clientId: integer("client_id")
+    .notNull()
+    .references(() => clients.id),
+  name: text("name").notNull(),
+  title: text("title"),
+  email: text("email"),
+  phone: text("phone"),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const jobOrderTypeEnum = pgEnum("job_order_type", [
+  "client_order",
+  "internal_req",
+]);
+
+// The opening the agency is filling (mirrors a job_opening). type distinguishes
+// an agency client order from a corporate internal requisition.
+export const jobOrders = pgTable(
+  "job_orders",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    clientId: integer("client_id").references(() => clients.id), // null for internal_req
+    recruiterId: integer("recruiter_id").references(() => recruiters.id),
+    jobOpeningId: integer("job_opening_id").references(() => jobOpenings.id), // source mirror
+    type: jobOrderTypeEnum("type").notNull().default("client_order"),
+    title: text("title").notNull(),
+    headcount: integer("headcount").notNull().default(1),
+    feePct: integer("fee_pct"),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_joborder_jobopening").on(table.jobOpeningId)]
+);
+
+// A candidate presented to a job order (mirrors an application). The pipeline
+// spine between candidate and job order.
+export const submissions = pgTable(
+  "submissions",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    jobOrderId: integer("job_order_id")
+      .notNull()
+      .references(() => jobOrders.id),
+    applicationId: integer("application_id").references(() => applications.id), // source mirror
+    stageId: integer("stage_id").references(() => pipelineStages.id),
+    submittedByUserId: integer("submitted_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_submission_application").on(table.applicationId),
+    uniqueIndex("unique_submission_candidate_joborder").on(
+      table.candidateId,
+      table.jobOrderId
+    ),
+  ]
+);
+
+// A confirmed hire, created from a winning submission.
+export const placements = pgTable(
+  "placements",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    submissionId: integer("submission_id").references(() => submissions.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    jobOrderId: integer("job_order_id")
+      .notNull()
+      .references(() => jobOrders.id),
+    clientId: integer("client_id").references(() => clients.id),
+    status: text("status").notNull().default("placed"),
+    startDate: text("start_date"),
+    salary: integer("salary"),
+    feeAmount: integer("fee_amount"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_placement_submission").on(table.submissionId)]
+);
+
+// ---- Migrant-labor compliance documents (Phase 3) ----
+// Taiwan MOL requires a valid work permit + ARC (居留證) for the whole
+// employment; ARC renewal must be filed ≥30 days before expiry. Expiry status
+// is computed live from expiry_date (see getAgencyCrm) — no cron needed.
+
+export const docTypeEnum = pgEnum("doc_type", [
+  "passport",
+  "visa",
+  "arc", // 居留證
+  "work_permit", // 工作許可
+  "medical",
+  "contract",
+  "diploma",
+  "criminal_record",
+  "health_insurance",
+]);
+
+export const complianceDocuments = pgTable(
+  "compliance_documents",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    placementId: integer("placement_id").references(() => placements.id),
+    docType: docTypeEnum("doc_type").notNull(),
+    docNumber: text("doc_number"),
+    issuingAuthority: text("issuing_authority"),
+    issueDate: text("issue_date"),
+    expiryDate: text("expiry_date"), // YYYY-MM-DD
+    status: text("status").notNull().default("valid"),
+    fileId: text("file_id"),
+    verifiedByUserId: integer("verified_by_user_id").references(() => users.id),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("unique_candidate_doc_type").on(table.candidateId, table.docType),
+    index("compliance_docs_expiry_idx").on(table.orgId, table.expiryDate),
+  ]
+);
+
+// ---- Collaboration: activity feed + scorecards (Phase 4b) ----
+
+// Per-application timeline: recruiter notes + stage-change events.
+export const activity = pgTable(
+  "activity",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    type: text("type").notNull().default("note"), // note | stage_change
+    body: text("body").notNull().default(""),
+    authorUserId: integer("author_user_id").references(() => users.id),
+    authorName: text("author_name"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("activity_application_idx").on(table.applicationId, table.createdAt)]
+);
+
+export const scorecardRecommendationEnum = pgEnum("scorecard_recommendation", [
+  "strong_no",
+  "no",
+  "yes",
+  "strong_yes",
+]);
+
+// Structured interview evaluation of one candidate.
+export const scorecards = pgTable(
+  "scorecards",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    interviewerUserId: integer("interviewer_user_id").references(() => users.id),
+    interviewerName: text("interviewer_name"),
+    recommendation: scorecardRecommendationEnum("recommendation").notNull(),
+    ratings: jsonb("ratings"), // [{ attribute, rating (1-4) }]
+    comment: text("comment").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("scorecards_application_idx").on(table.applicationId, table.createdAt)]
+);
+
+// ---- Talent pools / hotlists (Phase 3 leftover — agency's reusable lists) ----
+
+export const talentPools = pgTable("talent_pools", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id")
+    .notNull()
+    .references(() => orgs.id),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  createdByUserId: integer("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const talentPoolMembers = pgTable(
+  "talent_pool_members",
+  {
+    id: serial("id").primaryKey(),
+    poolId: integer("pool_id")
+      .notNull()
+      .references(() => talentPools.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    addedByUserId: integer("added_by_user_id").references(() => users.id),
+    addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("unique_pool_member").on(table.poolId, table.candidateId)]
+);
 
 // ---- Allowed recruiter email domains (admin whitelist) ----
 

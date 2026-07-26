@@ -921,9 +921,9 @@ export default function RegisterPage() {
           <Card>
             <CardHeader className="items-center gap-2">
               <img
-                src="/icon.svg"
-                alt="TECXWORK"
-                className="h-12 w-12 rounded-lg"
+                src="/yang-luck-logo.png"
+                alt="Yang Luck 揚運國際"
+                className="h-12 w-12 rounded-lg bg-white object-contain p-1.5 ring-1 ring-black/5"
               />
               <h1 className="font-heading text-xl font-bold">
                 {messages.register.title}

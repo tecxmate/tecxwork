@@ -25,6 +25,9 @@ import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switc
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
+import type { PipelineBoard } from "@/lib/pipeline-types";
+import type { AgencyCrm } from "@/lib/agency-crm";
+import type { PipelineReport } from "@/lib/pipeline-report";
 
 // ... existing Booking/Recruiter types ...
 
@@ -54,6 +57,7 @@ type Recruiter = {
   id: number;
   company: string;
   industry: string;
+  clientKind: string;
   description: string;
   contactEmail: string;
   interviewerCount: number;
@@ -62,7 +66,15 @@ type Recruiter = {
   galleryUrls: string[];
 };
 
-type Section = "interviews" | "applicants" | "jobs" | "company";
+type Section =
+  | "interviews"
+  | "applicants"
+  | "pipeline"
+  | "clients"
+  | "compliance"
+  | "reports"
+  | "jobs"
+  | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
   "recruiter_applicants_compliance_notice_dismissed_v1";
 
@@ -74,12 +86,39 @@ const RecruiterCompanyTab = dynamic(
   { loading: () => <DashboardTabLoader /> }
 );
 
+// dnd-kit-heavy — load only when the Pipeline tab is opened.
+const DashboardPipeline = dynamic(
+  () => import("../pipeline/pipeline-board").then((m) => m.DashboardPipeline),
+  { loading: () => <DashboardTabLoader /> }
+);
+
+// Agency-only CRM view (clients → job orders → submissions → placements).
+const ClientsCrmView = dynamic(
+  () => import("@/components/clients-crm-view").then((m) => m.ClientsCrmView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
+// Agency-only migrant-labor document compliance view (ARC / work-permit expiry).
+const ComplianceView = dynamic(
+  () => import("@/components/compliance-view").then((m) => m.ComplianceView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
+// Agency-only pipeline analytics (funnel / time-in-stage / placements).
+const PipelineReportView = dynamic(
+  () => import("@/components/pipeline-report-view").then((m) => m.PipelineReportView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
 export function RecruiterDashboard({
   recruiter,
   bookings,
   section,
   jobModerationEnabled,
   salaryCurrencyOptions,
+  pipelineBoard = null,
+  agencyCrm = null,
+  pipelineReport = null,
 }: {
   recruiter: Recruiter;
   bookings: Booking[];
@@ -87,6 +126,9 @@ export function RecruiterDashboard({
   showApplicants: boolean;
   jobModerationEnabled: boolean;
   salaryCurrencyOptions: string[];
+  pipelineBoard?: PipelineBoard | null;
+  agencyCrm?: AgencyCrm | null;
+  pipelineReport?: PipelineReport | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -109,9 +151,17 @@ export function RecruiterDashboard({
       ? "/dashboard/interviews"
       : section === "applicants"
         ? "/dashboard/applicants"
-        : section === "jobs"
-          ? "/dashboard/jobs"
-          : "/dashboard/company";
+        : section === "pipeline"
+          ? "/dashboard/pipeline"
+          : section === "clients"
+            ? "/dashboard/clients"
+            : section === "compliance"
+              ? "/dashboard/compliance"
+              : section === "reports"
+                ? "/dashboard/reports"
+                : section === "jobs"
+                  ? "/dashboard/jobs"
+                  : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -122,6 +172,10 @@ export function RecruiterDashboard({
     const recruiterRoutes = [
       "/dashboard/interviews",
       "/dashboard/applicants",
+      "/dashboard/pipeline",
+      "/dashboard/clients",
+      "/dashboard/compliance",
+      "/dashboard/reports",
       "/dashboard/jobs",
       "/dashboard/company",
     ];
@@ -146,6 +200,7 @@ export function RecruiterDashboard({
         href="/"
         navRole="recruiter"
         currentPath={currentPath}
+        isAgency={recruiter.clientKind === "agency"}
         mobileActions={<RecruiterLanguageSwitcher />}
         showActionsOnMobile
         accountLabels={{
@@ -168,11 +223,48 @@ export function RecruiterDashboard({
       />
 
       <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 md:py-8">
-        <div className="mx-auto max-w-6xl">
+        <div
+          className={cn(
+            "mx-auto",
+            section === "pipeline" ? "max-w-[1400px]" : "max-w-6xl"
+          )}
+        >
           {section === "interviews" ? (
             <InterviewScheduleTab bookings={bookings} />
           ) : section === "applicants" ? (
             <BookingsTab bookings={bookings} />
+          ) : section === "pipeline" ? (
+            pipelineBoard && pipelineBoard.jobs.length > 0 ? (
+              <DashboardPipeline board={pipelineBoard} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                No candidates in the pipeline yet.
+              </p>
+            )
+          ) : section === "clients" ? (
+            agencyCrm ? (
+              <ClientsCrmView crm={agencyCrm} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Clients are available for agency accounts.
+              </p>
+            )
+          ) : section === "compliance" ? (
+            agencyCrm ? (
+              <ComplianceView compliance={agencyCrm.compliance} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Compliance is available for agency accounts.
+              </p>
+            )
+          ) : section === "reports" ? (
+            pipelineReport ? (
+              <PipelineReportView report={pipelineReport} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Reports are available for agency accounts.
+              </p>
+            )
           ) : section === "jobs" ? (
             <RecruiterCompanyTab
               recruiter={recruiter}

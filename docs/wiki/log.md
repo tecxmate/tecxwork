@@ -1095,6 +1095,157 @@ attributed_to: [niko]   belongs_to: [photo-uploads]
 - Re-sourced 30/33 company logos from the open web (official sites, Wikimedia, FB); SVG/ICO rasterized to PNG; stored in public/company-logos/ with recruiters.logo_url rewritten to /company-logos/<id>.<ext>. Originals backed up. Left for niko: BellWether, Futsu, 富利餐飲, KD 9 Spa. Gallery images unrecoverable.
 - Decision: docs/wiki/decisions/2026-07-16-r2-image-storage-migration.md. Shipped via branch fix/logo-recovery-r2-migration off main (multi-tenant work deliberately excluded).
 
+## [2026-07-18] build | Yang Luck ATS-kanban pitch demo
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Built clickable Yang Luck demo on branch demo/yang-luck (off main, not merged). Star = /pipeline 5-stage ATS kanban with dnd-kit drag-drop that persists.
+- Isolated demo Neon project tecxwork-yl-demo (MCP can't branch prod delicate-lab). New applications table. Seeded 1 recruiter + 7 jobs + 30 candidates across 5 stages.
+- Vercel preview (branch-scoped demo DB): https://app-git-demo-yang-luck-nikolasdoans-projects.vercel.app/pipeline
+- Decision: docs/wiki/decisions/2026-07-18-yang-luck-demo.md
+
+## [2026-07-18] build | Yang Luck demo — 25 real client companies + subsidiaries
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Scraped 6 confirmed Yang Luck group subsidiaries (yangluck.com.tw 集團夥伴) + 19 real representative central-Taiwan client firms in served sectors (agencies don't publish client lists).
+- Added job_openings.client_company/client_industry/client_kind. Reseeded: 25 companies, 35 white-collar positions, 36 candidates across 11 companies + 5 stages (showcase 麗明營造 = 12).
+- ATS board now groups by CLIENT company (25 tabs, subsidiaries badged 集團); candidate cards show applied position; drawer shows placement company+role.
+
+## [2026-07-18] build | Demo: design-system alignment + yangluck rebrand
+attributed_to: [niko]   belongs_to: [tecxwork, design-system]
+- Kanban/pipeline now reuse the app design system: Card/Button/Badge components, font-heading, tokens. Standalone /pipeline dropped its custom header/toggle → redirects to /dashboard/pipeline (the native tab), reusing AppTopBar + RecruiterLanguageSwitcher (bilingual 繁中/English).
+- Rebranded app chrome tecxwork → "yangluck 揚運" (brand-link, brand/pwa splash, site-footer, browse loading, layout metadata, student login/signup messages).
+
+## [2026-07-18] fix | Demo: 25 client companies now real recruiters (visible in /browse)
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Previously the 25 clients were only tags on Yang Luck's jobs (ATS-only). Now each client/subsidiary is its own recruiter with positions → shows in /browse "Participating Companies" (25, agency hidden via recruiters.client_kind='agency').
+- getPipelineBoard now aggregates the whole placement pipeline across all client recruiters (agency super-view), grouped by company. cache.ts fetchRecruiters excludes clientKind='agency'.
+
+## [2026-07-18] build | Demo: real Yang Luck logo mark replaces placeholder glyph
+attributed_to: [niko]   belongs_to: [tecxwork, design-system]
+- Added `public/yang-luck-logo.png` — the actual Yang Luck red/navy swoosh-wave mark (white knocked out to transparent, tight-cropped from the 394×368 brand PNG).
+- Swapped the purple placeholder `/icon.svg` briefcase glyph for the real mark in all 5 visible logo renders: brand-link header, browse loading skeleton, register card, brand-splash, pwa-first-run-splash. Presented on an always-white rounded chip (`bg-white object-contain ring-1`) so it reads in both light and dark themes.
+- Dropped the now-unused eye-blink keyframes/CSS from both splash components (the animation was tied to the placeholder glyph); kept the pop-in animation. Favicons (`icon.svg`, `icon-192/512`, manifest) left unchanged — this pass only touched the in-app wordmark lockup.
+
+## [2026-07-18] feat | Demo: company logos + photos + Yang Luck hero carousel
+attributed_to: [niko]   belongs_to: [tecxwork, photo-uploads]
+- Scraped real logos for 20/25 client companies (public/yl/logos/) + company photos for 18 companies' detail-page galleries (public/yl/photos/, recruiters.gallery_urls).
+- Homepage hero now cycles Yang Luck's own 5 branded key-visuals (public/yl/hero/; homepageImages + hero_overlay_enabled=false; page.tsx passes all images to HeroCarousel). Real documentary Yang Luck photos don't exist publicly — used their official branded banners.
+- Preview domain yangluck.tecxmate.com added in Vercel (bound to demo/yang-luck branch); needs a Cloudflare CNAME -> cname.vercel-dns.com (DNS-only).
+
+## [2026-07-26] feat | Competitive audit (CBtalent/NTUT) → directory-quality fixes
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- ntut.cbtalent.tw is NOT copying tecxwork — it's NTUT's instance of CBtalent (white-label campus-recruiting SaaS). Treated as competitive intel.
+- Shipped on demo/yang-luck: #2 hide 0-job companies in /browse, #5 dedupe titles + company rows, #6 verified-employer badge (new recruiters.verified col, default false) + seeded job closing dates. #4 (counts/pagination) was already done.
+- Root-caused "only 1 company": demo Neon DB (lingering-sun) was never migrated (no applications table). Fixed via drizzle-kit push + FK-safe reseed (25 verified companies). See decisions/2026-07-26-competitive-audit-cbtalent.md.
+
+## [2026-07-26] fix | Resolve Neon env hazard — realign stale prod vars to delicate-lab
+attributed_to: [niko]   belongs_to: [tecxwork]
+- Root of the demo 500: 3 Neon DBs; only DATABASE_URL is authoritative. Prod runtime=delicate-lab; lingering-sun is OLD prod (post Tokyo-migration) now repurposed as the yang-luck demo DB.
+- Demo branch DATABASE_URL had drifted → realigned to lingering-sun (integration DB); demo recovered (200, 25 verified companies).
+- PROD env footgun fixed: 7 stale vars (POSTGRES_URL/_NON_POOLING/_NO_SSL/_PRISMA_URL, POSTGRES_HOST, PGHOST, PGHOST_UNPOOLED) pointed at lingering-sun (= demo DB); realigned all to delicate-lab. Live prod unaffected (still 38 companies; code reads only DATABASE_URL).
+- Note: lingering-sun was truncated+reseeded as the demo DB — it was decommissioned old-prod, no live data loss. Pending: add `verified` column to delicate-lab before any demo→main merge.
+
+## [2026-07-26] chore | Prepared Yang Luck ATS merge migration
+attributed_to: [niko]   belongs_to: [tecxwork]
+- src/lib/db/add-yang-luck-ats-schema.ts (npm run db:update:yang-luck-ats): idempotent, additive migration = exact `git diff main...HEAD` schema delta. Adds recruiters.client_kind/verified, job_openings.client_company/industry/kind, pipeline_stage enum, applications table (+indexes). Run with DATABASE_URL=prod (delicate-lab) at merge; safe to re-run.
+- Side note: realigning prod Neon vars (POSTGRES_URL/PGHOST/etc.) via rm+add left them Production-scoped only (dropped from Preview/Dev). Harmless — code reads only DATABASE_URL; demo uses its branch DATABASE_URL override. Both prod (38 cos) + demo (25 cos) verified 200.
+
+## [2026-07-26] feat | ATS Phase 0 hardening — de-demo the pipeline (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Started the ATS production-hardening effort (full roadmap: decisions/2026-07-26-ats-production-hardening.md; detailed plan in ~/.claude/plans/glowing-wiggling-eich.md). Decisions: multi-tenant-ready, unified agency+corporate, design-for-PII (staged tooling).
+- Phase 0 (commit 3b8a167, code-only, no migration): getPipelineBoard() recruiter-scoped (agency keeps cross-client super-view); PATCH /api/applications/:id now auth-gated + ownership-checked (was fully open); applying to a job creates a real 'applied' pipeline card (idempotent on the unique index).
+- Verified live on yangluck.tecxmate.com: unauth stage-move → 401; agency login sees all candidates, 麗明營造 client login is scoped (no cross-company leak). Apply→card path (needs an applicant login) verified by review only.
+
+## [2026-07-26] feat | ATS Phase 1a — multi-tenancy + RBAC + audit (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-tenancy (commit 5a5c4a6): orgs, memberships (member_role enum), audit_log (append-only, PII-by-reference), org_id on recruiters/job_openings/applications. Applied to demo DB (lingering-sun): 1 Yang Luck org, 27 memberships, 26 recruiters + 36 applications backfilled.
+- Wiring (commit 669868d): getMember() resolves org+role+recruiter; RBAC canMoveStage/isOrgManager; PATCH /api/applications/:id enforces tenant isolation + row ownership + writes move_stage audit; getPipelineBoard org-scoped; apply stamps org_id.
+- Verified live: authenticated agency move → 200 + audit_log row (org 1, actor 2, move_stage, field_names[stage], metadata{from,to}); client moving another company's card → 403; agency/client board scoping intact. Phase 1b (configurable pipeline) is next.
+
+## [2026-07-26] feat | ATS Phase 1b — configurable pipeline + transition log (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-pipeline (commit 646534a): pipeline_templates, pipeline_stages (stage_kind), application_stage_transitions (append-only), applications.stage_id. Seeded Yang Luck default template (5 stages), backfilled 36 apps + 36 initial transitions.
+- Board renders columns from the org template (board.stages), grouped by stageId, bilingual by stage_kind; drag PATCHes {stageId}. PATCH validates target stage ∈ org, updates stage_id + writes an append-only transition (txn) + audit. Legacy stage enum kept as fallback.
+- Verified live: agency {stageId} move → 200 + transition row (app 1: 1→3, moved_by 2), card restored; client moving another company's card → 403; board renders + scoping intact.
+- CAVEAT: seed-yang-luck.ts is not yet tenancy-aware — after any reseed, re-run db:update:ats-tenancy && db:update:ats-pipeline (idempotent) or scoped boards return null.
+
+## [2026-07-26] feat | ATS Phase 2 — agency CRM layer + Clients view (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Decision: LAYER the agency spine over the existing recruiter/job/application model (don't replace) — student-facing app untouched.
+- 2a (db:update:ats-agency, commit c391a80): clients/contacts/job_orders/submissions/placements tables + backfill (25 clients, 25 contacts, 35 job_orders, 37 submissions, 2 placements).
+- 2b (commit db121ab): getAgencyCrm() + ClientsCrmView on a new agency-only /dashboard/clients tab (totals, submission funnel, per-client table). Non-agency recruiters redirected.
+- Also seeded a demo applicant (student@yangluck.demo/demo1234) + slots for 麗明營造 so the full apply→card flow is testable; verified apply→application row live.
+- Verified: agency Clients tab renders CRM (client 上銀科技 present); client recruiter gets no agency client list (no leak). Polish TODO: hide Clients nav item for non-agency.
+
+## [2026-07-27] feat | ATS Phase 3 — migrant-labor compliance documents (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- The Yang-Luck differentiator. Migration db:update:ats-compliance (commit 128b234): compliance_documents (doc_type enum), unique per (candidate, doc_type). Seeded 48 docs / 12 candidates — 6 expired, 8 expiring ≤30 days.
+- getAgencyCrm() computes expiry status live (expired/expiring_soon/valid, 30-day window). Clients tab shows a compliance panel: expired + expiring alert cards + attention table (candidate, ARC/work-permit, number, expiry, status), bilingual.
+- Verified live: ARC docs + status badges render on the agency Clients tab; clients table intact.
+- Phase 3 remaining: talent pools, activity feed, resume/doc R2 + signed URLs.
+
+## [2026-07-27] refactor | Split compliance into its own tab (Client ≠ ARC)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Feedback: ARC/compliance shouldn't live under "Clients". Moved the compliance panel out of ClientsCrmView into a dedicated ComplianceView + agency-only "Compliance" nav tab (/dashboard/compliance) — commit 5b4d163.
+- Verified live: Compliance tab shows ARC/work-permit + expiry status; Clients tab is clean (client list only). Both agency-gated.
+
+## [2026-07-27] feat | Hide agency-only nav tabs from non-agency recruiters
+attributed_to: [niko]   belongs_to: [tecxwork]
+- NavItem.agencyOnly + visibleNavItems(role,isAgency); isAgency threads dashboard→AppTopBar→DesktopTopNav and layout→MobileBottomNav (one indexed clientKind query for recruiter sessions). Commit 18b31d2.
+- Verified live: agency sees Clients + Compliance tabs; co-leeming (client recruiter) sees neither; shared tabs (Pipeline) unaffected. Removes the phantom-tab quirk from Phase 2/3.
+
+## [2026-07-27] feat | ATS Phase 4 — pipeline reporting (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Agency-only Reports tab (/dashboard/reports, commit bd6c087) from the append-only transition log: getPipelineReport() → metrics (candidates/placements/rate/avg days), funnel per stage with avg days-in-stage, aging list. PipelineReportView = metric cards + funnel bars + aging table.
+- seed-report-demo backdates demo apps/transitions ~8 weeks for realistic spread (oldest ~37d).
+- Verified live: funnel/metrics/aging render on agency Reports tab; tab hidden from client recruiters.
+- Phase 4 remaining: scorecards/evaluations, notes + @mentions.
+
+## [2026-07-27] feat | ATS Phase 4b — candidate notes + scorecards (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-collab (commit 6192b21): activity (notes + stage_change events) + scorecards (recommendation enum, ratings jsonb, comment); seeded 15 notes + 10 scorecards. Shared authorizeApplication() authz helper.
+- APIs: GET/POST /api/applications/:id/timeline (fetch/add note), POST /api/applications/:id/scorecard. Stage moves write a stage_change activity event.
+- CandidateTimeline in the pipeline candidate drawer: fetch-on-open, scorecards (rec + star ratings + comment) + notes timeline, add-note input + submit-scorecard form.
+- Verified live: unauth→401; GET returns seeded data; add note (author name resolved) + add scorecard persist. Remaining: @mentions.
+
+## [2026-07-27] feat | ATS Phase 5 — PII governance (consent/retention/erasure, verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-pii (commit ac3f1a4): applicant_profiles + consent_at/consent_purpose/retention_until/anonymized_at; backfilled consent + 18-month retention for 37 candidates.
+- Timeline API returns candidate governance (consent date, retention + review-due flag, canErase by role). POST /api/applications/:id/erase-candidate = org-manager-only right-to-erasure (anonymize PII in place, audited). CandidateTimeline "Data & consent" panel + Erase-PII action (managers only).
+- Verified live: consent/retention shown (retention 2028-01-26); unauth erase→401, non-manager(co-leeming)→403, canErase true only for agency; 0 accidental erasures.
+- Remaining: automated retention enforcement, cross-border transfer register, client portal; plus talent pools + signed-URL docs (Phase 3 leftovers).
+
+## [2026-07-27] feat | ATS talent pools / hotlists (verified live)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- Migration db:update:ats-pools (commit c507076): talent_pools + talent_pool_members; seeded 4 pools (VN Engineers, ID Manufacturing, Hospitality CN/EN, Redeployment) + 15 members. Manager-only APIs; candidate-drawer Talent-pools panel (add/remove/create).
+- Verified live: 4 pools with counts, candidate 阮氏梅 in VN Engineers, add/remove works, client recruiter→403.
+- Remaining (secondary): automated retention enforcement, cross-border transfer register, client portal, signed-URL docs, @mentions.
+
+## [2026-07-27] feat | Retention enforcement cron — completes PII lifecycle (verified)
+attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
+- GET /api/cron/retention-sweep (CRON_SECRET-gated, commit 222a2ff): auto-anonymizes candidates past retention_until, audited as system erasure; ?dryRun=true reports count. Schedule via cron config to activate.
+- Verified: unauth→401; detection logic finds due candidates (0→1 on temp past-retention, reset→0, no erasure).
+- Judged NOT needed for the demo (with reasons): cross-border transfer register (needs legal counsel), signed-URL docs (no real files in demo), @mentions (few users), client portal (large separate build). ATS is now feature-complete for the roadmap.
+
+## [2026-07-27] ingest | Kanban pipeline board aligned to design system
+attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
+- Pipeline kanban read as "brand new" / not part of the app. Realigned to native idioms: candidate cards use the signature Glow Card hover; hex stage/AI colors → palette tokens + status-pill tints; column headers now use the booking tab's colored count-circle (bg-{c}/15 text-{c}) instead of a gray count badge + dot; borders softened to /60.
+- Faithful port of the booking tab's application-stage grouping (kanban = board form of same pipeline). See docs/wiki/topics/design-system.md History.
+
+## [2026-07-27] ingest | De-floated the recruiter save/status "Add" action
+attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
+- On /dashboard/jobs (and My Company) the shared save/status action rendered as a fixed (mobile) / md:sticky top-right floating pill with heavy shadow + backdrop-blur — read as a detached, distracting FAB overlapping the header.
+- Fix (recruiter-dashboard-company.tsx): removed the fixed/sticky wrapper, pill shape, glow shadow, backdrop-blur and pb-28 spacer; renderStatusStrip() now returns an in-flow button co-located in each form header (next to the Add / Edit title and the existing Submit/Delete cluster). Hardcoded Apple hex (#FF9500/#30D158) on the button swapped for the system orange/emerald scale. Only instance of the pattern; both jobs + company surfaces fixed.
+
+## [2026-07-27] ingest | Required-field asterisks on the job form
+attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
+- Add/Edit job form gave no signal for which fields gate the Add button. Add is disabled until Position title + Employment type are set (only two inputs with `required`).
+- Marked exactly those two labels with a red asterisk (text-destructive, aria-hidden since inputs already carry `required`). All other fields are genuinely optional and stay unmarked — not marking unenforced fields keeps the signal truthful. Shared renderJobForm, so applies to both Add and Edit.
+
+## [2026-07-27] decision | Student profile → tabbed layout (was one long scroll)
+attributed_to: [niko]   belongs_to: [design-system, recruitment-workflows]
+- Competitor uses a tabbed profile editor (Basic / Education / Work / Skill / CV / Additional / View); ours was a single very long scroll, hard to track. Adopted the pattern.
+- src/app/profile/page.tsx: added an 8-tab shell (basic, education, preferences, experience[work+certifications], skills, cvqr, applications, view) over the SAME draft + single PUT /api/me/profile save. Persistent identity header (avatar + completion + Save) stays visible on every tab; Save decoupled from the form (calls saveProfile() directly so it works on any tab). Each tab shows one region; a wizard footer offers Back / "Save Changes & Next" that advances only on a successful save. Added i18n keys profile.tabsBasic/tabsCvQr/tabsView (en/vi/zh-TW).
+- Decision: free tab navigation (not linear wizard) + one-payload save, per niko. No API changes.
+
 ## [2026-07-27] ingest | Job detail page: two-column reading flow + related-jobs internal linking
 attributed_to: [niko]   belongs_to: [job-detail-page]
 - niko: job content belongs on the LEFT, supporting content on the right — "that's how the natural reading flow is". References: a job-board detail screenshot and tuyendungviettrien.com/viec-lam/ke-toan-truong-1782868345700.

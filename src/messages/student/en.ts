@@ -145,9 +145,10 @@ export const studentEnMessages = {
     openPositions: "Open Positions",
     jdAvailable: "Job description available",
     viewBook: "View & Book",
+    verified: "Verified employer",
   },
   getStarted: {
-    title: "Sign Up for TECXWORK",
+    title: "Sign Up for Yang Luck 揚運",
     subtitle: "Choose your role to get started",
     studentTitle: "I'm a Student",
     studentDescription:
@@ -162,7 +163,7 @@ export const studentEnMessages = {
   },
   login: {
     welcomeBack: "Welcome back",
-    subtitle: "Log in to TECXWORK",
+    subtitle: "Log in to Yang Luck 揚運",
     email: "Email",
     password: "Password",
     forgotPassword: "Forgot password?",
@@ -175,7 +176,7 @@ export const studentEnMessages = {
     signUpAsStudent: "Sign up as Student",
     signUpAsRecruiter: "Sign up as Recruiter",
     signingIn: "Signing in...",
-    newToTecxwork: "New to TECXWORK?",
+    newToTecxwork: "New to Yang Luck 揚運?",
   },
   forgotPassword: {
     backToLogin: "Back to Login",
@@ -346,7 +347,7 @@ export const studentEnMessages = {
     certIssueDate: "Issue Date",
     noCertifications: "No certifications added yet.",
     cvExportTitle: "Export CV",
-    cvExportSubtitle: "Generate a polished CV from your TECXWORK profile data.",
+    cvExportSubtitle: "Generate a polished CV from your Yang Luck 揚運 profile data.",
     cvExportButton: "Export PDF",
     cvExportHint: "Your browser will open the print dialog. Choose Save as PDF to export.",
     cvExportSummary: "Summary",
@@ -358,6 +359,9 @@ export const studentEnMessages = {
     cvExportLinks: "Links",
     cvExportCurrent: "Present",
     applicationsTitle: "My Applications",
+    tabsBasic: "Basic",
+    tabsCvQr: "CV / QR",
+    tabsView: "View Profile",
     applicationsSubtitle:
       "Track companies you applied to and confirmed interviews.",
     applicationsTotal: "{count} total",

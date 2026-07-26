@@ -627,24 +627,18 @@ export function RecruiterCompanyTab({
     if (!statusAction) return null;
 
     return (
-      <div
-        className={cn(
-          "fixed inset-x-0 bottom-[calc(max(0.5rem,env(safe-area-inset-bottom))+4.25rem)] z-40 flex justify-center px-4 md:sticky md:top-3 md:bottom-auto md:justify-end md:px-0"
-        )}
-        role="status"
-        aria-live="polite"
-      >
+      <div role="status" aria-live="polite" className="flex shrink-0">
         <Button
           type={statusAction.form ? "submit" : "button"}
           form={statusAction.form}
           size="sm"
           variant={statusAction.tone === "saved" ? "outline" : "default"}
           className={cn(
-            "h-11 min-w-[12rem] max-w-[calc(100vw-2rem)] gap-2 rounded-full px-5 text-sm font-semibold shadow-[0_12px_28px_-10px_rgba(0,0,0,0.35),0_4px_12px_-6px_rgba(0,0,0,0.25)] backdrop-blur-xl disabled:cursor-default disabled:opacity-100 md:min-w-[11rem] md:rounded-lg",
+            "gap-2",
             statusAction.tone === "saved" &&
-              "border-[#30D158]/35 bg-background/90 text-[#1f8f3a] supports-[backdrop-filter]:bg-background/75",
+              "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-400",
             statusAction.tone === "unsaved" &&
-              "border-[#FF9500] bg-[#FF9500] text-white hover:bg-[#e68600]",
+              "border-orange-500 bg-orange-500 text-white hover:bg-orange-600",
             statusAction.tone === "saving" &&
               "border-primary bg-primary text-primary-foreground",
             statusAction.tone === "error" &&
@@ -692,6 +686,7 @@ export function RecruiterCompanyTab({
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.positionTitle}
+            <span aria-hidden="true" className="ml-0.5 text-destructive">*</span>
           </label>
           <Input
             value={draft.title}
@@ -714,6 +709,7 @@ export function RecruiterCompanyTab({
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
             {companyMessages.employmentType}
+            <span aria-hidden="true" className="ml-0.5 text-destructive">*</span>
           </label>
           <select
             value={draft.employmentType}
@@ -985,17 +981,19 @@ export function RecruiterCompanyTab({
   }
 
   return (
-    <div className="space-y-6 pb-28 md:pb-0">
-      {renderStatusStrip()}
+    <div className="space-y-6">
       {section === "company" ? (
         <section className="space-y-6">
-          <div className="space-y-1">
-            <h2 className="font-heading text-2xl font-semibold tracking-tight">
-              {recruiter.company}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {recruiter.industry} · {recruiter.contactEmail}
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <h2 className="font-heading text-2xl font-semibold tracking-tight">
+                {recruiter.company}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {recruiter.industry} · {recruiter.contactEmail}
+              </p>
+            </div>
+            {renderStatusStrip()}
           </div>
           <form id={companyFormId} onSubmit={handleSaveCompany} className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
@@ -1202,8 +1200,9 @@ export function RecruiterCompanyTab({
           <div className="w-full overflow-hidden rounded-xl border bg-card p-4 shadow-sm sm:p-6 md:flex-1">
             {selectedJobId === "new" ? (
               <div className="space-y-4">
-                <div className="mb-4 border-b pb-4">
-                  <h2 className="text-lg font-semibold">{messages.dashboard.company.add}</h2>
+                <div className="mb-4 flex items-center justify-between gap-4 border-b pb-4">
+                  <h2 className="truncate text-lg font-semibold">{messages.dashboard.company.add}</h2>
+                  {renderStatusStrip()}
                 </div>
                 <form id={newJobFormId} onSubmit={handleAddJob}>
                   {renderJobForm({
@@ -1225,6 +1224,7 @@ export function RecruiterCompanyTab({
                     Edit {selectedJob?.title}
                   </h2>
                   <div className="flex shrink-0 items-center gap-2">
+                    {renderStatusStrip()}
                     {jobModerationEnabled &&
                     selectedJob?.moderationStatus !== "pending_review" ? (
                       <Button

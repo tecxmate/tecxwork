@@ -80,79 +80,28 @@ export function BrandSplash() {
     >
       <style>{`
         @keyframes tw-splash-fade { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes tw-eye-open {
-          0%, 100% { transform: scaleY(1); }
-          50% { transform: scaleY(0.08); }
-        }
         @keyframes tw-pop {
           0% { transform: scale(0.7); opacity: 0; }
           60% { transform: scale(1.06); opacity: 1; }
           100% { transform: scale(1); opacity: 1; }
         }
-        .tw-eye {
-          transform-box: fill-box;
-          transform-origin: center;
-          animation: tw-eye-open 220ms cubic-bezier(.5,1.6,.6,1) both;
-        }
-        .tw-eye-r { animation-delay: 40ms; }
         .tw-pop { animation: tw-pop 180ms cubic-bezier(.4,1.4,.5,1) both; }
       `}</style>
-      <svg
-        viewBox="0 0 512 512"
-        className="tw-pop h-28 w-28 rounded-3xl"
-        xmlns="http://www.w3.org/2000/svg"
+      <img
+        src="/yang-luck-logo.png"
+        alt="Yang Luck 揚運國際"
+        className="tw-pop h-28 w-28 rounded-3xl bg-white object-contain p-4 ring-1 ring-black/5"
         style={
           isCompact
             ? { boxShadow: "0 0 60px 30px rgba(255,255,255,0.95), 0 8px 32px rgba(0,0,0,0.18)" }
             : undefined
         }
-      >
-        <rect width="512" height="512" rx="104" fill="#8C52FF" />
-        <rect
-          x="132"
-          y="190"
-          width="248"
-          height="192"
-          rx="34"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="28"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M198 190v-28c0-18 14-32 32-32h52c18 0 32 14 32 32v28"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="28"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M132 256h248"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="28"
-          strokeLinecap="round"
-        />
-        <path
-          className="tw-eye"
-          d="M216 286v48"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="24"
-          strokeLinecap="round"
-        />
-        <path
-          className="tw-eye tw-eye-r"
-          d="M296 286v48"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="24"
-          strokeLinecap="round"
-        />
-      </svg>
+      />
       {isCompact ? null : (
-        <span className="font-wordmark text-3xl text-primary italic">tecxwork</span>
+        <span className="flex items-baseline gap-2 text-primary">
+          <span className="font-wordmark text-3xl italic">Yang Luck</span>
+          <span className="font-heading text-3xl font-semibold">揚運</span>
+        </span>
       )}
     </div>
   );

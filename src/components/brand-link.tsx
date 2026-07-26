@@ -18,8 +18,15 @@ export function BrandLink({ href = "/" }: { href?: string }) {
 
   return (
     <a href={href} onClick={handleClick} className="flex items-center gap-2">
-      <img src="/icon.svg" alt="TECXWORK" className="h-8 w-8 rounded-md" />
-      <span className="font-wordmark text-xl text-primary italic">tecxwork</span>
+      <img
+        src="/yang-luck-logo.png"
+        alt="Yang Luck 揚運國際"
+        className="h-8 w-8 rounded-md bg-white object-contain p-1 ring-1 ring-black/5"
+      />
+      <span className="flex items-baseline gap-1.5 text-primary">
+        <span className="font-wordmark text-xl italic">Yang Luck</span>
+        <span className="font-heading text-xl font-semibold">揚運</span>
+      </span>
     </a>
   );
 }

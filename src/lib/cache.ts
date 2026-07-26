@@ -1,7 +1,7 @@
 import { getCache } from "@vercel/functions";
 import { getExternalJobs, type GetExternalJobsOptions } from "./crawler";
 import { db, recruiters, users, jobOpenings } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 
 const cache = getCache({ namespace: "app" });
 const CACHE_TTL = 300; // 5 minutes
@@ -31,7 +31,7 @@ export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
  * Cached recruiters list - 5 minute TTL
  */
 export async function getCachedRecruiters() {
-  const key = "recruiters:list:v6";
+  const key = "recruiters:list:v7";
   const cached = await cache.get(key);
 
   if (cached) {
@@ -51,10 +51,13 @@ async function fetchRecruiters() {
       industry: recruiters.industry,
       description: recruiters.description,
       logoUrl: recruiters.logoUrl,
+      verified: recruiters.verified,
       pinnedRank: recruiters.pinnedRank,
     })
     .from(recruiters)
-    .innerJoin(users, eq(recruiters.userId, users.id));
+    .innerJoin(users, eq(recruiters.userId, users.id))
+    // Hide the agency itself from the public company directory (demo).
+    .where(ne(recruiters.clientKind, "agency"));
 
   const approvedJobs = await db
     .select({
@@ -80,15 +83,30 @@ async function fetchRecruiters() {
     jobsByRecruiter.set(job.recruiterId, current);
   }
 
-  return recruiterList
+  const mapped = recruiterList
     .map((recruiter) => {
       const jobs = jobsByRecruiter.get(recruiter.id);
       return {
         ...recruiter,
-        positions: jobs?.titles ?? [],
+        // Dedupe titles so a company never lists the same role twice.
+        positions: [...new Set(jobs?.titles ?? [])],
         jdAvailable: jobs?.hasJdLink ?? false,
       };
     })
+    // Never surface a company with zero open positions in the directory.
+    .filter((recruiter) => recruiter.positions.length > 0);
+
+  // Collapse duplicate companies (same normalized name), keeping the richer row.
+  const byName = new Map<string, (typeof mapped)[number]>();
+  for (const recruiter of mapped) {
+    const nameKey = recruiter.company.trim().replace(/\s+/g, " ").toLowerCase();
+    const existing = byName.get(nameKey);
+    if (!existing || recruiter.positions.length > existing.positions.length) {
+      byName.set(nameKey, recruiter);
+    }
+  }
+
+  return [...byName.values()]
     .sort((a, b) => {
       // Admin-pinned companies lead, ordered by ascending pinnedRank.
       const rankA = a.pinnedRank ?? Number.POSITIVE_INFINITY;

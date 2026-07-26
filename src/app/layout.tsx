@@ -10,7 +10,9 @@ import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { StudentLocaleProvider } from "@/components/student-locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { db, recruiters } from "@/lib/db";
 import { getEventBranding } from "@/lib/event-branding";
 import { getStudentLocale } from "@/lib/student-locale.server";
 
@@ -51,7 +53,7 @@ function getMetadataBase(): URL {
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await getEventBranding();
   const base = getMetadataBase();
-  const title = `tecxwork — ${branding.name} | Vietnamese Jobs in Taiwan · 越南人才台灣工作 · Việc làm tại Đài Loan`;
+  const title = `Yang Luck 揚運 — ${branding.name} | Vietnamese Jobs in Taiwan · 越南人才台灣工作 · Việc làm tại Đài Loan`;
   const description = `tecxwork: ${branding.organizerShort} ${branding.displayYear} — ${branding.tagline}. Vietnamese engineers, workers & students hiring in Taiwan. 越南招募・越南工程師・越南工人・台灣工作. Việc làm Đài Loan cho người Việt. ${branding.displayDate} @ ${branding.hostedAt}.`;
   return {
     metadataBase: base,
@@ -87,7 +89,7 @@ export async function generateMetadata(): Promise<Metadata> {
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",
-      title: "tecxwork",
+      title: "Yang Luck 揚運",
     },
     title: {
       default: title,
@@ -228,5 +230,21 @@ async function MobileBottomNavServer({
   sessionPromise: ReturnType<typeof getSession>;
 }) {
   const session = await sessionPromise;
-  return <MobileBottomNavClient role={session?.role ?? "guest"} />;
+  // Agency-only tabs (Clients / Compliance) are hidden for normal recruiters.
+  let isAgency = false;
+  if (session?.role === "recruiter") {
+    try {
+      const [r] = await db
+        .select({ clientKind: recruiters.clientKind })
+        .from(recruiters)
+        .where(eq(recruiters.userId, session.userId))
+        .limit(1);
+      isAgency = r?.clientKind === "agency";
+    } catch {
+      isAgency = false;
+    }
+  }
+  return (
+    <MobileBottomNavClient role={session?.role ?? "guest"} isAgency={isAgency} />
+  );
 }
