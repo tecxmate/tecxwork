@@ -18,8 +18,11 @@ A comprehensive, workflow-driven operating manual covering **every screen and fu
 of the platform across all four roles. Built 2026-08-08 at niko's request, serving three
 audiences at once: end-user onboarding, investor/partner product tour, and internal handover.
 
-**In repo:** `docs/manual/tecxwork-platform-manual.html` — single self-contained file
-(3.5 MB, 51 screenshots embedded as base64 WebP; works offline). See `docs/manual/README.md`.
+**Live:** https://yangluck.tecxmate.com/documentation — linked from the site footer.
+**In repo:** `public/documentation.html` (7.7 MB, 51 screenshots inlined as base64 WebP;
+works served *and* offline). Trilingual EN / 繁中 / VN. See `docs/manual/README.md`.
+**Public build strips `data-internal` blocks** — and their strings in the i18n dictionary,
+not just their DOM nodes.
 **Artifact:** https://claude.ai/code/artifact/dc62f299-3a37-43be-86e9-99e93d412d9e
 **Source:** `docs/manual/src/manual.src.html` + `src/build.py` — placeholders
 `{{IMG:name}}` / `{{IMG_BARE:name}}` are substituted with base64 WebP at build time, so the
