@@ -30,6 +30,11 @@ export function SiteFooter() {
               Tutorial
             </Link>
             <span className="opacity-40">&middot;</span>
+            {/* Static file in public/, so a plain <a> — Link would client-navigate and 404. */}
+            <a href="/documentation" className="underline hover:text-primary">
+              Documentation
+            </a>
+            <span className="opacity-40">&middot;</span>
             <Link href="/about" className="underline hover:text-primary">
               About
             </Link>

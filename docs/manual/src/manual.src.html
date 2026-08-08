@@ -1,0 +1,2301 @@
+<title data-t="1">TECXWORK User Manual</title>
+<style>
+/* ============================================================ TOKENS ==== */
+:root{
+  --accent:#8C52FF; --accent-ink:#5B21B6; --accent-wash:#F4F1FA;
+  --ground:#FAFAFA; --surface:#FFFFFF; --rail:#F3F0F9;
+  --ink:#1D1D1F; --ink-2:#4A4750; --muted:#6E6E73; --line:#E5E1EC; --line-2:#D6D0E2;
+  --r-applicant:#0F766E; --r-agency:#8C52FF; --r-employer:#245E9D; --r-admin:#9A5B12;
+  --ok:#167C4A; --warn:#A8620A; --crit:#B3261E;
+  --shadow:0 1px 2px rgba(29,29,31,.05), 0 12px 28px -18px rgba(29,29,31,.22);
+
+  --display:Georgia,"Iowan Old Style","Palatino Linotype",Palatino,"Times New Roman",serif;
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+
+  --s1:.25rem; --s2:.5rem; --s3:.75rem; --s4:1rem; --s5:1.5rem; --s6:2rem; --s7:3rem; --s8:4.5rem;
+  --maxw:1560px; --bar-h:54px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --accent:#A886FF; --accent-ink:#C9B4FF; --accent-wash:#241E33;
+    --ground:#141216; --surface:#1C1A21; --rail:#201D28;
+    --ink:#EDEBF0; --ink-2:#C4BFCE; --muted:#98939F; --line:#302B3A; --line-2:#413A4E;
+    --r-applicant:#4FB3A6; --r-agency:#A886FF; --r-employer:#6BA3DC; --r-admin:#D69A4F;
+    --ok:#4FBF85; --warn:#E0A34E; --crit:#F0796E;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 32px -20px rgba(0,0,0,.75);
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#A886FF; --accent-ink:#C9B4FF; --accent-wash:#241E33;
+  --ground:#141216; --surface:#1C1A21; --rail:#201D28;
+  --ink:#EDEBF0; --ink-2:#C4BFCE; --muted:#98939F; --line:#302B3A; --line-2:#413A4E;
+  --r-applicant:#4FB3A6; --r-agency:#A886FF; --r-employer:#6BA3DC; --r-admin:#D69A4F;
+  --ok:#4FBF85; --warn:#E0A34E; --crit:#F0796E;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 32px -20px rgba(0,0,0,.75);
+}
+:root[data-theme="light"]{
+  --accent:#8C52FF; --accent-ink:#5B21B6; --accent-wash:#F4F1FA;
+  --ground:#FAFAFA; --surface:#FFFFFF; --rail:#F3F0F9;
+  --ink:#1D1D1F; --ink-2:#4A4750; --muted:#6E6E73; --line:#E5E1EC; --line-2:#D6D0E2;
+  --r-applicant:#0F766E; --r-agency:#8C52FF; --r-employer:#245E9D; --r-admin:#9A5B12;
+  --ok:#167C4A; --warn:#A8620A; --crit:#B3261E;
+  --shadow:0 1px 2px rgba(29,29,31,.05), 0 12px 28px -18px rgba(29,29,31,.22);
+}
+
+/* ============================================================= BASE ===== */
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--accent-ink);text-decoration-thickness:1px;text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;scroll-behavior:auto !important}}
+html{scroll-behavior:smooth}
+
+/* ============================================================ SHELL ===== */
+.shell{max-width:var(--maxw);margin:0 auto;display:grid;grid-template-columns:266px minmax(0,1fr);gap:var(--s7);padding:0 var(--s5)}
+@media (max-width:1080px){.shell{grid-template-columns:minmax(0,1fr);gap:0}}
+
+/* --- rail --- */
+.rail{position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;
+  padding:var(--s6) 0 var(--s7);font-size:.8125rem;scrollbar-width:thin}
+/* ---- mobile: the rail becomes an off-canvas drawer -------------------------
+   Below the breakpoint the 41-entry contents list would otherwise sit in the
+   document flow, so every visit starts by scrolling past the whole table of
+   contents. As a drawer it is one tap away and never in the way. */
+.rail-close{display:none}
+
+.nav-bar{display:none}
+.nav-scrim{position:fixed;inset:0;background:rgba(10,8,14,.5);z-index:55;
+  opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
+.nav-scrim.on{opacity:1;visibility:visible}
+
+@media (max-width:1080px){
+  .nav-bar{display:flex;align-items:center;gap:var(--s3);position:sticky;top:0;z-index:50;
+    height:var(--bar-h);padding:0 var(--s4);
+    background:color-mix(in srgb,var(--ground) 90%,transparent);
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)}
+  .nav-toggle{display:inline-flex;align-items:center;gap:.45rem;font:inherit;font-size:.875rem;
+    font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);
+    border-radius:7px;padding:.4rem .7rem;cursor:pointer}
+  .nav-toggle:hover{border-color:var(--accent)}
+  .nav-toggle svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none}
+  .nav-bar-title{font-family:var(--display);font-size:1rem;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .rail{position:fixed;top:0;bottom:0;left:0;width:min(87vw,332px);max-height:100dvh;
+    z-index:60;background:var(--surface);border-right:1px solid var(--line);
+    padding:var(--s5) var(--s4) var(--s7);margin:0;
+    box-shadow:12px 0 40px -20px rgba(0,0,0,.55);
+    transform:translateX(-101%);visibility:hidden;
+    transition:transform .26s ease,visibility .26s ease;
+    overscroll-behavior:contain}
+  .rail.open{transform:none;visibility:visible}
+
+  .rail-close{display:inline-flex;align-items:center;justify-content:center;
+    position:absolute;top:var(--s4);right:var(--s4);width:2rem;height:2rem;
+    border-radius:6px;border:1px solid var(--line-2);background:var(--ground);
+    color:var(--ink);cursor:pointer;font-size:1rem;line-height:1}
+  .rail-close:hover{border-color:var(--accent)}
+
+  /* anchors must clear the sticky bar */
+  section[id],div[id]{scroll-margin-top:calc(var(--bar-h) + 12px)}
+  body.nav-open{overflow:hidden}
+}
+@media (min-width:1081px){.nav-scrim{display:none}}
+.rail-brand{font-family:var(--display);font-size:1.0625rem;letter-spacing:-.01em;margin:0 0 var(--s1)}
+.rail-sub{color:var(--muted);font-size:.75rem;margin:0 0 var(--s5)}
+.rail h4{font-size:.6875rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);
+  margin:var(--s5) 0 var(--s2);font-weight:600}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.rail a{display:block;padding:.3rem .55rem;border-radius:5px;color:var(--ink-2);text-decoration:none;
+  border-left:2px solid transparent;transition:background .12s,color .12s}
+.rail a:hover{background:var(--rail);color:var(--ink)}
+.rail a.on{background:var(--accent-wash);color:var(--accent-ink);border-left-color:var(--accent);font-weight:600}
+
+/* --- language switcher --- */
+.lang-switch{display:inline-flex;gap:2px;margin:0 0 var(--s5);padding:2px;
+  background:var(--rail);border:1px solid var(--line);border-radius:7px}
+.lang-switch button{font:inherit;font-size:.6875rem;font-family:var(--mono);letter-spacing:.02em;
+  padding:.25rem .5rem;border:0;border-radius:5px;background:transparent;color:var(--muted);
+  cursor:pointer;line-height:1.5}
+.lang-switch button:hover{color:var(--ink)}
+.lang-switch button[aria-pressed="true"]{background:var(--surface);color:var(--accent-ink);
+  font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.lang-switch-bar{display:none;margin:0}
+@media (max-width:1080px){.lang-switch-bar{display:inline-flex;margin-left:auto}
+  .nav-bar-title{flex:0 1 auto}}
+
+/* Chinese and Vietnamese set better with a slightly looser measure. */
+:root[lang="zh-Hant"] body,:root[lang="vi"] body{line-height:1.72}
+:root[lang="zh-Hant"] .lede{letter-spacing:.01em}
+
+/* --- main --- */
+main{padding:var(--s6) 0 var(--s8);min-width:0}
+
+/* ============================================================= HERO ===== */
+.hero{border-bottom:1px solid var(--line);padding-bottom:var(--s6);margin-bottom:var(--s7)}
+.eyebrow{font-family:var(--mono);font-size:.6875rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 var(--s3)}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(2.4rem,1.4rem+3.4vw,4rem);
+  line-height:1.02;letter-spacing:-.025em;margin:0 0 var(--s5);text-wrap:balance}
+.hero h1 em{font-style:italic;color:var(--accent-ink)}
+/* First paragraph sets the product; second sets the document. Size separates the two jobs. */
+.lede{font-size:1.1875rem;line-height:1.55;color:var(--ink);max-width:60ch;margin:0 0 var(--s4)}
+.lede b{font-weight:600}
+.lede-2{font-size:1rem;color:var(--ink-2);max-width:64ch;margin:0 0 var(--s5)}
+.router{font-size:.9375rem;color:var(--muted);max-width:64ch;margin:0 0 var(--s5);
+  padding-left:var(--s4);border-left:2px solid var(--line-2);line-height:1.75}
+.router b{color:var(--ink)}
+.facts{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s5);list-style:none;margin:0;padding:0;
+  font-size:.8125rem;color:var(--muted)}
+.facts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ========================================================== SECTIONS ==== */
+section{scroll-margin-top:var(--s4)}
+.act{margin:var(--s8) 0 var(--s6);padding-top:var(--s5);border-top:2px solid var(--ink)}
+.act-no{font-family:var(--mono);font-size:.75rem;letter-spacing:.11em;text-transform:uppercase;color:var(--role,var(--accent));font-weight:600}
+.act h2{font-family:var(--display);font-weight:400;font-size:clamp(1.6rem,1.1rem+1.9vw,2.5rem);
+  line-height:1.1;letter-spacing:-.015em;margin:var(--s2) 0 var(--s3);text-wrap:balance}
+.act p{color:var(--ink-2);max-width:70ch;margin:0}
+.act .who{display:inline-flex;align-items:center;gap:.4rem;font-size:.75rem;font-family:var(--mono);
+  background:var(--rail);border:1px solid var(--line);border-radius:99px;padding:.2rem .6rem;color:var(--ink-2);margin-top:var(--s3)}
+.act .who::before{content:"";width:7px;height:7px;border-radius:99px;background:var(--role,var(--accent))}
+
+/* ---------------------------------------------------------- SCREEN ----- */
+.screen{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--shadow);margin:0 0 var(--s5);overflow:hidden}
+.screen-head{padding:var(--s5) var(--s5) var(--s4);border-bottom:1px solid var(--line);
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--s4);align-items:start}
+.step{font-family:var(--mono);font-size:.8125rem;font-weight:700;color:var(--surface);
+  background:var(--role,var(--accent));min-width:2rem;height:2rem;border-radius:6px;
+  display:grid;place-items:center;padding:0 .45rem;font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em;white-space:nowrap}
+.screen-head h3{font-family:var(--display);font-weight:400;font-size:1.375rem;line-height:1.25;
+  letter-spacing:-.01em;margin:0 0 .35rem;text-wrap:balance}
+.route{font-family:var(--mono);font-size:.75rem;color:var(--muted);word-break:break-all}
+.route b{color:var(--ink-2);font-weight:500}
+.purpose{margin:var(--s3) 0 0;color:var(--ink-2);max-width:72ch}
+
+figure{margin:0;background:var(--rail);border-bottom:1px solid var(--line);padding:var(--s5);
+  display:flex;justify-content:center}
+/* Screenshots are encoded at 2100px (see optimize.py). Pinning the rendered width to
+   1050px keeps them at a true 2x on every viewport -- without this the content column
+   grows to ~1150px on a wide display and they soften to 1.8x. */
+figure img{border:1px solid var(--line-2);border-radius:6px;box-shadow:0 8px 24px -16px rgba(0,0,0,.4);
+  width:100%;max-width:1050px;height:auto}
+figcaption{font-size:.75rem;color:var(--muted);padding:0 var(--s5) var(--s4);font-family:var(--mono)}
+
+.body{padding:var(--s5)}
+.body > *:first-child{margin-top:0}
+.body > *:last-child{margin-bottom:0}
+.body h4{font-size:.6875rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);
+  font-weight:600;margin:var(--s5) 0 var(--s3)}
+.inline-shot{width:100%;max-width:1050px;height:auto;margin:0 auto var(--s4);
+  border:1px solid var(--line-2);border-radius:6px}
+
+/* controls list */
+dl.controls{margin:0;display:grid;grid-template-columns:minmax(150px,236px) minmax(0,1fr);
+  gap:0;border-top:1px solid var(--line)}
+dl.controls dt{font-weight:600;font-size:.875rem;padding:.6rem var(--s4) .6rem 0;
+  border-bottom:1px solid var(--line);color:var(--ink)}
+dl.controls dd{margin:0;font-size:.875rem;color:var(--ink-2);padding:.6rem 0;border-bottom:1px solid var(--line)}
+@media (max-width:660px){
+  dl.controls{grid-template-columns:minmax(0,1fr)}
+  dl.controls dt{padding-bottom:.15rem;border-bottom:0}
+  dl.controls dd{padding-top:0}
+}
+code{font-family:var(--mono);font-size:.8125em;background:var(--rail);border:1px solid var(--line);
+  border-radius:4px;padding:.08em .34em;color:var(--ink)}
+dl.controls dd code{background:transparent;border:0;padding:0;color:var(--accent-ink)}
+
+/* callouts */
+.note{border-left:3px solid var(--accent);background:var(--accent-wash);padding:var(--s3) var(--s4);
+  border-radius:0 6px 6px 0;font-size:.875rem;margin:var(--s4) 0;color:var(--ink-2)}
+.note b{color:var(--ink)}
+.note.warn{border-left-color:var(--warn);background:color-mix(in srgb,var(--warn) 9%,transparent)}
+.note.crit{border-left-color:var(--crit);background:color-mix(in srgb,var(--crit) 9%,transparent)}
+.note.ok{border-left-color:var(--ok);background:color-mix(in srgb,var(--ok) 9%,transparent)}
+
+/* pills */
+.pill{display:inline-block;font-family:var(--mono);font-size:.6875rem;letter-spacing:.04em;
+  border-radius:99px;padding:.12rem .5rem;border:1px solid currentColor;vertical-align:.05em}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.crit{color:var(--crit)}
+.pill.n{color:var(--muted)}
+
+/* tables */
+.tw{overflow-x:auto;margin:var(--s4) 0;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.8125rem;min-width:560px}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.6875rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+  font-weight:600;background:var(--rail);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+
+/* stage strip — the 5 ATS stages, used as a legend */
+.stages{display:flex;flex-wrap:wrap;gap:var(--s2);margin:var(--s4) 0;padding:0;list-style:none}
+.stages li{flex:1 1 130px;background:var(--rail);border:1px solid var(--line);border-radius:7px;padding:var(--s3)}
+.stages b{display:block;font-size:.875rem;margin-bottom:.15rem}
+.stages span{font-size:.75rem;color:var(--muted)}
+
+/* two-up */
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s4);margin:var(--s4) 0}
+.trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:var(--s4);margin:var(--s4) 0}
+.trio > div{background:var(--rail);border:1px solid var(--line);border-top:3px solid var(--pc,var(--accent));
+  border-radius:8px;padding:var(--s4)}
+.trio h5{margin:0 0 var(--s2);font-size:.875rem;font-family:var(--sans);color:var(--pc,var(--ink))}
+.trio p{margin:0;font-size:.8125rem;color:var(--ink-2)}
+.trio ul{margin:var(--s2) 0 0;padding-left:1.1rem;font-size:.8125rem;color:var(--ink-2)}
+.trio ul li{margin-bottom:.2rem}
+.duo > div{background:var(--rail);border:1px solid var(--line);border-radius:8px;padding:var(--s4)}
+.duo h5{margin:0 0 var(--s2);font-size:.875rem;font-family:var(--sans)}
+.duo p{margin:0;font-size:.8125rem;color:var(--ink-2)}
+.duo ul{margin:var(--s2) 0 0;padding-left:1.1rem;font-size:.8125rem;color:var(--ink-2)}
+
+ul.tight{margin:var(--s3) 0;padding-left:1.15rem;font-size:.875rem;color:var(--ink-2)}
+ul.tight li{margin-bottom:.3rem}
+
+/* --- reader paths: who should read what --- */
+.paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:var(--s4);margin:var(--s5) 0}
+.path{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--pc,var(--accent));
+  border-radius:0 8px 8px 0;padding:var(--s4)}
+.path h5{margin:0 0 .15rem;font-size:.9375rem}
+.path .mins{font-family:var(--mono);font-size:.6875rem;color:var(--muted);letter-spacing:.04em;
+  text-transform:uppercase;display:block;margin-bottom:var(--s3)}
+.path p{margin:0 0 var(--s3);font-size:.8125rem;color:var(--ink-2)}
+.path ol{margin:0;padding-left:1.1rem;font-size:.8125rem;color:var(--ink-2)}
+.path ol li{margin-bottom:.25rem}
+.path a{text-decoration:none;border-bottom:1px solid color-mix(in srgb,currentColor 35%,transparent)}
+.path a:hover{border-bottom-color:currentColor}
+
+/* --- jump straight to your role --- */
+.roles-jump{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  gap:var(--s3);margin:var(--s4) 0}
+.role-jump{display:flex;flex-direction:column;gap:.28rem;text-decoration:none;
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--pc,var(--accent));
+  border-radius:0 8px 8px 0;padding:var(--s4);
+  transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease}
+.role-jump:hover{border-color:var(--pc,var(--accent));transform:translateY(-2px);box-shadow:var(--shadow)}
+.rj-role{font-weight:600;font-size:.9375rem;color:var(--pc,var(--accent))}
+.rj-who{font-size:.8125rem;color:var(--ink-2);line-height:1.5}
+.rj-go{font-family:var(--mono);font-size:.6875rem;color:var(--muted);margin-top:.25rem;
+  letter-spacing:.03em}
+.role-jump:hover .rj-go{color:var(--pc,var(--accent))}
+
+/* --- conventions legend --- */
+.legend{margin:var(--s4) 0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.legend-row{display:grid;grid-template-columns:minmax(140px,190px) minmax(0,1fr);gap:var(--s4);
+  padding:.7rem var(--s4);border-bottom:1px solid var(--line);align-items:center;font-size:.8125rem}
+.legend-row:last-child{border-bottom:0}
+.legend-row > :first-child{color:var(--ink);font-weight:600}
+.legend-row > :last-child{color:var(--ink-2)}
+@media (max-width:600px){.legend-row{grid-template-columns:minmax(0,1fr);gap:.2rem}}
+.sample-step{font-family:var(--mono);font-size:.75rem;font-weight:700;color:var(--surface);
+  background:var(--accent);min-width:1.6rem;height:1.6rem;border-radius:5px;display:inline-grid;
+  place-items:center;padding:0 .4rem;vertical-align:middle;white-space:nowrap}
+
+/* --- diagram --- */
+/* NB: overrides the generic `figure{display:flex}` above — as a flex container the SVG and
+   the caption become side-by-side items and the drawing collapses to its intrinsic size. */
+.diagram{display:block;margin:var(--s5) 0;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:var(--s5);box-shadow:var(--shadow);overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:620px;height:auto;color:var(--ink-2)}
+.diagram figcaption{padding:var(--s4) 0 0;font-family:var(--sans);font-size:.8125rem;
+  color:var(--ink-2);max-width:74ch}
+.dg-box{fill:var(--rail);stroke:var(--line-2);stroke-width:1.5}
+.dg-label{fill:var(--ink);font-size:12px;font-family:var(--sans);text-anchor:middle}
+.dg-edge{fill:var(--muted);font-size:10.5px;font-family:var(--mono);text-anchor:middle;
+  letter-spacing:.02em}
+.dg-band{fill:var(--muted);font-size:10.5px;font-family:var(--mono);letter-spacing:.1em;
+  text-transform:uppercase}
+.dg-line{stroke:var(--line-2);stroke-width:1.5;fill:none}
+
+/* --- glossary --- */
+.glossary{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 var(--s6);margin:var(--s4) 0}
+.glossary dl{margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.glossary dt{font-weight:600;font-size:.875rem;margin-top:var(--s4);color:var(--ink)}
+.glossary dt:first-child{margin-top:0}
+.glossary dt .zh{font-weight:400;color:var(--muted);font-size:.8125rem}
+.glossary dd{margin:.15rem 0 0;font-size:.8125rem;color:var(--ink-2)}
+
+/* ---- lightbox --------------------------------------------------------------
+   Screenshots are dense UI shrunk to fit the column; on a phone they are barely
+   legible. Tapping one opens it full-bleed with next/prev across every shot in
+   the manual, so it doubles as a way to flip through the whole product. */
+.shot-open{cursor:zoom-in}
+/* Opaque, not translucent-with-blur: WebKit composites a backdrop-filtered element's
+   backdrop unevenly, so the page underneath stayed legible through a 94%-opaque layer.
+   An image viewer wants maximum contrast anyway. */
+.lightbox{position:fixed;inset:0;z-index:100;display:none;background:#0A0810}
+.lightbox.on{display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.lb-bar{display:flex;align-items:center;gap:var(--s4);padding:var(--s3) var(--s4);color:#fff}
+.lb-count{font-family:var(--mono);font-size:.75rem;opacity:.7;font-variant-numeric:tabular-nums}
+.lb-title{font-size:.8125rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;opacity:.92}
+.lb-btn{display:inline-grid;place-items:center;width:2.4rem;height:2.4rem;flex:none;
+  border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);
+  color:#fff;cursor:pointer;font-size:1rem;line-height:1}
+.lb-btn:hover{background:rgba(255,255,255,.16)}
+.lb-btn[disabled]{opacity:.3;cursor:default}
+.lb-btn svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none}
+.lb-stage{overflow:auto;padding:0 var(--s4);display:grid;place-items:center;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+/* Fit-to-screen by default. Zoomed renders at the screenshots' 1x design width, so text is
+   the same size it would be on a desktop and the pane pans -- on a phone, fitting to the
+   viewport is barely larger than the in-page image and would make "enlarge" pointless. */
+.lb-stage img{max-width:100%;border-radius:8px;background:#fff;cursor:zoom-in;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.9)}
+.lightbox.zoom .lb-stage{place-items:start center}
+.lightbox.zoom .lb-stage img{max-width:none;width:1050px;cursor:zoom-out}
+.lb-foot{display:flex;align-items:center;justify-content:center;gap:var(--s4);
+  padding:var(--s3) var(--s4) var(--s5);color:#fff}
+.lb-hint{font-family:var(--mono);font-size:.6875rem;opacity:.5;letter-spacing:.04em}
+@media (max-width:700px){.lb-hint{display:none}}
+body.lb-open{overflow:hidden}
+
+footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0 var(--s7);
+  font-size:.8125rem;color:var(--muted);max-width:var(--maxw)}
+</style>
+<header class="nav-bar">
+<button aria-controls="rail" aria-expanded="false" class="nav-toggle" data-t="2" type="button">
+<svg aria-hidden="true" viewbox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"></path></svg>
+    Contents
+  </button>
+<span class="nav-bar-title" data-t="3">TECXWORK User Manual</span>
+  <div class="lang-switch lang-switch-bar" role="group" aria-label="Language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="zh" aria-pressed="false">繁中</button>
+    <button type="button" data-lang="vi" aria-pressed="false">VN</button>
+  </div>
+</header>
+<div aria-hidden="true" class="nav-scrim"></div>
+<div aria-label="Screenshot viewer" aria-modal="true" class="lightbox" id="lightbox" role="dialog">
+<div class="lb-bar">
+<span class="lb-count" id="lb-count"></span>
+<span class="lb-title" id="lb-title"></span>
+<button aria-label="Zoom in" aria-pressed="false" class="lb-btn" data-ta="a1039" id="lb-zoom" type="button">
+<svg aria-hidden="true" viewbox="0 0 20 20"><circle cx="9" cy="9" r="5.5"></circle><path d="M13 13l4 4M9 6.7v4.6M6.7 9h4.6"></path></svg>
+</button>
+<button aria-label="Close" class="lb-btn" data-ta="a1036" id="lb-close" type="button">✕</button>
+</div>
+<div class="lb-stage" id="lb-stage"></div>
+<div class="lb-foot">
+<button aria-label="Previous screenshot" class="lb-btn" data-ta="a1037" id="lb-prev" type="button">
+<svg aria-hidden="true" viewbox="0 0 20 20"><path d="M12.5 4 6.5 10l6 6"></path></svg>
+</button>
+<span class="lb-hint" data-t="4">← → to move · tap image to zoom · Esc to close</span>
+<button aria-label="Next screenshot" class="lb-btn" data-ta="a1038" id="lb-next" type="button">
+<svg aria-hidden="true" viewbox="0 0 20 20"><path d="M7.5 4l6 6-6 6"></path></svg>
+</button>
+</div>
+</div>
+<div class="shell">
+<!-- =========================================================== RAIL ==== -->
+<nav aria-label="Manual contents" class="rail" id="rail">
+<button aria-label="Close contents" class="rail-close" data-ta="a1035" type="button">✕</button>
+<p class="rail-brand" data-t="5">TECXWORK</p>
+<p class="rail-sub" data-t="6">User Manual · Yang Luck 揚運 build</p>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="zh" aria-pressed="false">繁中</button>
+    <button type="button" data-lang="vi" aria-pressed="false">VN</button>
+  </div>
+<h4 data-t="7">Start here</h4>
+<ol>
+<li data-t="8"><a href="#start">How to read this manual</a></li>
+<li data-t="9"><a href="#what">What the platform is</a></li>
+<li data-t="10"><a href="#lifecycle">How a placement happens</a></li>
+<li data-t="11"><a href="#jobfair">How a live job fair runs</a></li>
+<li data-t="12"><a href="#vocab">Vocabulary</a></li>
+<li data-t="13"><a href="#roles">Roles &amp; access</a></li>
+<li data-t="14"><a href="#map">Screen map</a></li>
+</ol>
+<h4 data-t="15">Act 1 · Applicant</h4>
+<ol>
+<li data-t="16"><a href="#a-arrive">1.1 Arriving</a></li>
+<li data-t="17"><a href="#a-signup">1.2 Choosing a role</a></li>
+<li data-t="18"><a href="#a-register">1.3 Registering</a></li>
+<li data-t="19"><a href="#a-login">1.4 Logging in</a></li>
+<li data-t="20"><a href="#a-profile">1.5 Building the profile</a></li>
+<li data-t="21"><a href="#a-browse">1.6 Browsing companies</a></li>
+<li data-t="22"><a href="#a-jobs">1.7 The jobs board</a></li>
+<li data-t="23"><a href="#a-jobdetail">1.8 Reading a job</a></li>
+<li data-t="24"><a href="#a-company">1.9 The company page</a></li>
+<li data-t="25"><a href="#a-slot">1.10 Picking a time</a></li>
+<li data-t="26"><a href="#a-form">1.11 CV &amp; consent</a></li>
+<li data-t="27"><a href="#a-done">1.12 Submitted</a></li>
+<li data-t="28"><a href="#a-track">1.13 Tracking it</a></li>
+<li data-t="29"><a href="#a-feedback">1.14 Reporting a problem</a></li>
+</ol>
+<h4 data-t="30">Act 2 · Employer</h4>
+<ol>
+<li data-t="31"><a href="#e-signup">2.1 Employer sign-up</a></li>
+<li data-t="32"><a href="#e-jobs">2.2 Posting a job</a></li>
+<li data-t="33"><a href="#e-form">2.3 The job form</a></li>
+<li data-t="34"><a href="#e-company">2.4 Company profile</a></li>
+<li data-t="35"><a href="#e-approvals">2.5 Triaging applicants</a></li>
+<li data-t="36"><a href="#e-schedule">2.6 Interview day</a></li>
+</ol>
+<h4 data-t="37">Act 3 · Agency (ATS)</h4>
+<ol>
+<li data-t="38"><a href="#g-pipeline">3.1 The pipeline board</a></li>
+<li data-t="39"><a href="#g-drawer">3.2 The candidate drawer</a></li>
+<li data-t="40"><a href="#g-switch">3.3 Switching clients</a></li>
+<li data-t="41"><a href="#g-clients">3.4 Client accounts</a></li>
+<li data-t="42"><a href="#g-compliance">3.5 Compliance</a></li>
+<li data-t="43"><a href="#g-reports">3.6 Reports</a></li>
+</ol>
+<h4 data-t="44">Act 4 · Admin</h4>
+<ol>
+<li data-t="45"><a href="#d-bookings">4.1 Every booking</a></li>
+<li data-t="46"><a href="#d-moderation">4.2 Job moderation</a></li>
+<li data-t="47"><a href="#d-jobdetail">4.3 Moderating one job</a></li>
+<li data-t="48"><a href="#d-applicants">4.4 Applicant registry</a></li>
+<li data-t="49"><a href="#d-recruiters">4.5 Recruiter registry</a></li>
+<li data-t="50"><a href="#d-settings">4.6 Platform settings</a></li>
+</ol>
+<h4 data-t="51">Reference</h4>
+<ol>
+<li data-t="52"><a href="#x-common">Everywhere on the app</a></li>
+<li data-t="53"><a href="#x-public">Public &amp; legal pages</a></li>
+<li data-internal data-t="54"><a href="#x-notes">Notes &amp; known gaps</a></li>
+</ol>
+</nav>
+<main>
+<!-- =========================================================== HERO ==== -->
+<header class="hero">
+<p class="eyebrow" data-t="55">Yang Luck 揚運 build · August 2026</p>
+<h1 data-t="56">TECXWORK <em>User Manual</em></h1>
+<p class="lede" data-t="57"><b>TECXWORK is a hiring platform for Vietnamese and Indonesian applicants
+  seeking white-collar work in Taiwan.</b> Applicants find jobs at Taiwanese companies and
+  book a real interview in a few minutes. Employers post their open roles and choose who to meet. And the
+  recruitment agency working between them tracks every candidate from first application
+  through to first day at work.</p>
+<p class="lede-2" data-t="58">This manual covers all of it — every screen, every button, and the job
+  each one does — for the four kinds of people who use the platform. It is organised around
+  the work they each do rather than around the software, so you can read one part start to
+  finish and come away knowing how to do the whole task.</p>
+<p class="router" data-t="59">
+<b>New here?</b> Read <a href="#start">How to read this manual</a> and
+  <a href="#lifecycle">How a placement happens</a> first — about ten minutes, and everything
+  after it will make sense.<br/>
+<b>Already know the platform?</b> Go straight to <a href="#act1">Applicant</a>,
+  <a href="#act2">Employer</a>, <a href="#act3">Agency</a> or <a href="#act4">Admin</a>.</p>
+<ul class="facts">
+<li data-t="60"><b>51</b> annotated screens</li>
+<li data-t="61"><b>4</b> roles</li>
+<li data-t="62"><b>25</b> client companies</li>
+<li data-t="63"><b>35</b> live positions</li>
+<li data-t="64">Captured from the running application</li>
+</ul>
+</header>
+<!-- ==================================================== ORIENTATION ==== -->
+<section id="start">
+<div class="act" style="--role:var(--accent)">
+<p class="act-no" data-t="65">Start here</p>
+<h2 data-t="66">How to read this manual</h2>
+<p data-t="67">The manual is ordered by <b>the work, not the software</b>. Rather than listing
+    screens alphabetically or by URL, it follows four people through their jobs, start to
+    finish. If you read one Act top to bottom you will have watched a complete piece of work
+    happen, and every screen involved will have appeared in the order you would actually
+    meet it.</p>
+</div>
+<h4 data-t="68" style="font-size:.6875rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin:0 0 var(--s3)">Pick your route</h4>
+<div class="paths">
+<div class="path" style="--pc:var(--r-applicant)">
+<h5 data-t="69">You're learning the product</h5>
+<span class="mins" data-t="70">~45 min · read in order</span>
+<p data-t="71">New to the platform, joining the team, or being onboarded onto it.</p>
+<ol>
+<li data-t="72">Finish this Start here section</li>
+<li data-t="73"><a href="#lifecycle">How a placement happens</a> — the one picture that explains the rest</li>
+<li data-t="74">Then Acts 1 → 4 in order</li>
+</ol>
+</div>
+<div class="path" style="--pc:var(--r-agency)">
+<h5 data-t="75">You're evaluating the product</h5>
+<span class="mins" data-t="76">~10 min · skim</span>
+<p data-t="77">Investor, partner, or prospective client company judging what it does.</p>
+<ol>
+<li data-t="78"><a href="#what">What the platform is</a></li>
+<li data-t="79"><a href="#lifecycle">How a placement happens</a></li>
+<li data-t="80"><a href="#jobfair">How a live job fair runs</a></li>
+<li data-t="81"><a href="#g-pipeline">3.1 The pipeline board</a> — the core of the product</li>
+<li data-t="82"><a href="#g-clients">3.4 Clients</a> and <a href="#g-compliance">3.5 Compliance</a> — what a generic job board can't do</li>
+</ol>
+</div>
+</div>
+<h4 data-t="83" style="font-size:.6875rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin:var(--s6) 0 var(--s3)">Or go straight to your role</h4>
+<p data-t="84" style="color:var(--ink-2);max-width:66ch;margin:0 0 var(--s4)">Already have an account and
+  a task in front of you? Each part stands on its own — start at yours.</p>
+<div class="roles-jump">
+<a class="role-jump" href="#act1" style="--pc:var(--r-applicant)">
+<span class="rj-role" data-t="85">I'm an applicant</span>
+<span class="rj-who" data-t="86">Looking for a job in Taiwan, building a profile, booking interviews.</span>
+<span class="rj-go" data-t="87">Act 1 · 14 screens →</span>
+</a>
+<a class="role-jump" href="#act2" style="--pc:var(--r-employer)">
+<span class="rj-role" data-t="88">I'm a recruiter</span>
+<span class="rj-who" data-t="89">Hiring for one company — posting roles and choosing who to meet.</span>
+<span class="rj-go" data-t="90">Act 2 · 6 screens →</span>
+</a>
+<a class="role-jump" href="#act3" style="--pc:var(--r-agency)">
+<span class="rj-role" data-t="91">I'm an agency recruiter</span>
+<span class="rj-who" data-t="92">Placing candidates into client companies and running the pipeline.</span>
+<span class="rj-go" data-t="93">Act 3 · 6 screens →</span>
+</a>
+<a class="role-jump" href="#act4" style="--pc:var(--r-admin)">
+<span class="rj-role" data-t="94">I'm an admin</span>
+<span class="rj-who" data-t="95">Running the platform or the event — approvals, moderation, settings.</span>
+<span class="rj-go" data-t="96">Act 4 · 6 screens →</span>
+</a>
+</div>
+<h4 data-t="97" style="font-size:.6875rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin:var(--s6) 0 var(--s3)">How each screen is documented</h4>
+<p data-t="98" style="color:var(--ink-2);max-width:70ch;margin:0 0 var(--s4)">Every screen in this
+  manual follows the same four-part shape, so you can learn the pattern once and then skim.</p>
+<div class="legend">
+<div class="legend-row">
+<div data-t="99"><span class="sample-step">3.5</span>  Step number</div>
+<div data-t="100">Act, then position within it — <code>3.5</code> is the fifth screen of Act 3. It always matches the sidebar, so you can tell where you are without scrolling back. Coloured by role: teal for applicant, blue for employer, violet for agency, amber for admin.</div>
+</div>
+<div class="legend-row">
+<div data-t="101"><span class="route"><b>GET</b> /dashboard/pipeline</span></div>
+<div data-t="102">The actual route. Paste it after the site address to land on that screen.</div>
+</div>
+<div class="legend-row">
+<div data-t="103">Purpose paragraph</div>
+<div data-t="104">What the screen is for and why it was built this way — the reasoning, not just the label.</div>
+</div>
+<div class="legend-row">
+<div data-t="105">Screenshot</div>
+<div data-t="106">Captured from the running application against seeded demo data. Nothing is mocked up or drawn.</div>
+</div>
+<div class="legend-row">
+<div data-t="107">Control list</div>
+<div data-t="108">Every button, field, filter and column on that screen, and what each one does.</div>
+</div>
+<div class="legend-row">
+<div data-t="109"><code>required</code> · <span class="pill crit">required</span></div>
+<div data-t="110"><code>Monospace</code> marks a literal control label or route. Pills mark a status or a constraint.</div>
+</div>
+<div class="legend-row">
+<div data-t="111">Callout boxes</div>
+<div data-t="112">Blue explains a design decision · <span style="color:var(--ok)">green</span> confirms a safeguard · <span style="color:var(--warn)">amber</span> warns of a limit · <span style="color:var(--crit)">red</span> flags a blocking rule.</div>
+</div>
+</div>
+<div class="note" data-t="113"><b>Everything here is real and fictional at once.</b> Every screenshot
+  comes from the running application — but the database behind it is an isolated demo seeded
+  with invented Vietnamese, Indonesian and Filipino candidates and 25 real Taiwanese company
+  names used as representative clients. No real applicant's data appears anywhere in this
+  document.</div>
+</section>
+<section id="what">
+<div class="act" style="--role:var(--accent)">
+<p class="act-no" data-t="114">Start here</p>
+<h2 data-t="115">What the platform is</h2>
+<p data-t="116">TECXWORK moves Vietnamese and Indonesian applicants into white-collar
+    jobs at Taiwanese employers. It is operated by a <b>recruitment agency</b> — in this build,
+    揚運國際集團 Yang Luck — which sits between the two sides and gets paid when someone is
+    actually hired.</p>
+</div>
+<p data-t="117" style="color:var(--ink-2);max-width:72ch;margin:0 0 var(--s5)">That agency model is the
+  single most important thing to understand, because it shapes every screen. The agency does
+  not hire for itself. It recruits <em>on behalf of</em> 25 client companies, so almost
+  everything in the product is scoped per client rather than global.</p>
+<h4 data-t="118" style="font-size:.6875rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin:0 0 var(--s3)">The four parties</h4>
+<div class="tw">
+<table>
+<thead><tr><th data-t="119">Party</th><th data-t="120">Who they are</th><th data-t="121">What they want</th></tr></thead>
+<tbody>
+<tr>
+<td data-t="122"><b style="color:var(--r-applicant)">The applicant</b></td>
+<td data-t="123">Vietnamese or Indonesian, usually in their final year or master's at a Taiwanese university.</td>
+<td data-t="124">A job in Taiwan that sponsors a work permit.</td>
+</tr>
+<tr>
+<td data-t="125"><b style="color:var(--r-employer)">The client company</b></td>
+<td data-t="126">Mid-size Taiwanese construction, manufacturing, MEP and hospitality firms — Giant, HIWIN, Largan, Lee Ming Construction.</td>
+<td data-t="127">To fill entry-level and trainee roles they struggle to staff locally.</td>
+</tr>
+<tr>
+<td data-t="128"><b style="color:var(--r-agency)">The agency</b></td>
+<td data-t="129">Yang Luck 揚運 — the operator, with six group subsidiaries and 19 external clients.</td>
+<td data-t="130">To place candidates and get paid on placement.</td>
+</tr>
+<tr>
+<td data-t="131"><b style="color:var(--r-admin)">The platform admin</b></td>
+<td data-t="132">Whoever runs the event or the platform itself.</td>
+<td data-t="133">That employers are legitimate and job posts are accurate.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 data-t="134" style="font-size:.6875rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin:var(--s6) 0 var(--s3)">Three products, one codebase</h4>
+<div class="trio">
+<div style="--pc:var(--r-applicant)">
+<h5 data-t="135">1 · The marketplace</h5>
+<p data-t="136">Public and applicant-facing. A company directory, a jobs board, job detail pages,
+      and an application that ends in a confirmed interview time.</p>
+<ul>
+<li data-t="137">Applicants apply to a <em>position</em>, not a company</li>
+<li data-t="138">Every application reserves a specific time slot</li>
+<li data-t="139">The employer accepts, waitlists, reschedules, or rejects</li>
+</ul>
+</div>
+<div style="--pc:var(--r-agency)">
+<h5 data-t="140">2 · The ATS</h5>
+<p data-t="141">Yang Luck is a staffing agency: it does not hire for itself, it places people
+      <em>into</em> client companies. So the pipeline is scoped per client.</p>
+<ul>
+<li data-t="142">25 client accounts, each with its own board</li>
+<li data-t="143">Five stages from Applied to Hired</li>
+<li data-t="144">Document-expiry compliance for migrant workers</li>
+</ul>
+</div>
+<div style="--pc:var(--r-employer)">
+<h5 data-t="145">3 · The live job fair</h5>
+<p data-t="146">An event-operations system for a single day where hundreds of interviews are
+      scheduled against real, finite capacity — and matching runs in both directions.</p>
+<ul>
+<li data-t="147">Applicants book recruiters <em>and</em> recruiters book applicants</li>
+<li data-t="148">Capacity is real: interviewers per company, slots per hour</li>
+<li data-t="149">Seats are claimed atomically, so nothing double-books</li>
+</ul>
+</div>
+</div>
+<p data-t="150" style="color:var(--ink-2);max-width:70ch">The three share one login, one candidate
+  record and one set of components, which is why they read as a single product. But they
+  answer different questions — <em>who is hiring</em>, <em>where is each candidate up to</em>,
+  and <em>who is meeting whom, when</em> — and the third is the one most easily mistaken for a
+  calendar. It isn't: see <a href="#jobfair">How a live job fair runs</a>.</p>
+<p data-t="151" style="color:var(--ink-2);max-width:70ch">This also explains most of the navigation. A
+  <b>client-company recruiter</b> sees only their own applicants and interviews. The
+  <b>agency recruiter</b> sees the pipeline, clients, compliance and reports across all 25
+  companies. Both are the <code>recruiter</code> role — the navigation differs by what the
+  account owns.</p>
+</section>
+<section id="lifecycle">
+<div class="act" style="--role:var(--accent)">
+<p class="act-no" data-t="152">Start here</p>
+<h2 data-t="153">How a placement actually happens</h2>
+<p data-t="154">This is the diagram to understand before anything else. The thing that trips people up
+    is that an applicant's single <b>Apply</b> creates <em>two</em> records at once — an interview
+    booking and a pipeline card — which are then worked by different people, on different
+    screens, at different speeds.</p>
+</div>
+<figure class="diagram">
+<svg aria-label="Lifecycle diagram. Setup: an employer signs up, an admin approves them, they post a position, an admin moderates it, and the position goes live. The apply: an applicant builds a profile, browses, then applies and picks a time slot. That single action forks into two parallel tracks. The booking track, worked by the employer, goes from booking pending to employer accepts to interview confirmed. The pipeline track, worked by the agency, goes from Applied to Screening and Interview to Offer. The two tracks describe the same candidate but hold no shared status field. Both converge on a hired placement." role="img" viewbox="0 0 1080 690">
+<defs>
+<marker id="ar" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--line-2)"></path>
+</marker>
+<marker id="ar-emp" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--r-employer)"></path>
+</marker>
+<marker id="ar-agy" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--r-agency)"></path>
+</marker>
+<marker id="ar-ok" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--ok)"></path>
+</marker>
+</defs>
+<!-- ============ BAND 1 — setup ============ -->
+<text class="dg-band" data-t="155" x="0" y="14">Setup — before any applicant sees a job</text>
+<rect class="dg-box" height="46" rx="6" width="200" x="0" y="30"></rect>
+<text class="dg-label" data-t="156" x="100" y="58">Employer signs up</text>
+<rect class="dg-box" height="46" rx="6" width="200" x="330" y="30"></rect>
+<text class="dg-label" data-t="157" x="430" y="58">Posts a position</text>
+<rect class="dg-box" height="46" rx="6" width="200" x="660" y="30"></rect>
+<text class="dg-label" data-t="158" x="760" y="58">Position goes live</text>
+<line class="dg-line" marker-end="url(#ar)" x1="200" x2="322" y1="53" y2="53"></line>
+<text class="dg-edge" data-t="159" fill="var(--r-admin)" x="261" y="44">admin approves</text>
+<line class="dg-line" marker-end="url(#ar)" x1="530" x2="652" y1="53" y2="53"></line>
+<text class="dg-edge" data-t="160" fill="var(--r-admin)" x="591" y="44">admin moderates</text>
+<!-- ============ BAND 2 — the apply ============ -->
+<text class="dg-band" data-t="161" x="0" y="136">The apply — one action by the applicant</text>
+<rect class="dg-box" height="46" rx="6" width="200" x="0" y="152"></rect>
+<text class="dg-label" data-t="162" x="100" y="180">Applicant profile</text>
+<rect fill="var(--accent-wash)" height="46" rx="6" stroke="var(--accent)" stroke-width="2" width="200" x="330" y="152"></rect>
+<text class="dg-label" data-t="163" fill="var(--accent-ink)" x="430" y="180">Apply + pick a slot</text>
+<line class="dg-line" marker-end="url(#ar)" x1="200" x2="322" y1="175" y2="175"></line>
+<text class="dg-edge" data-t="164" x="261" y="166">browses</text>
+<!-- position live feeds down into the apply -->
+<path class="dg-line" d="M760,76 L760,120 L440,120 L440,144" marker-end="url(#ar)"></path>
+<text class="dg-edge" data-t="165" x="600" y="112">applicant can see it</text>
+<!-- ============ BAND 3 — the fork ============ -->
+<!-- centred in the gap between the two diverging fork curves -->
+<text class="dg-band" data-t="166" style="text-anchor:middle" x="460" y="254">Two tracks, worked separately</text>
+<!-- fork arrows -->
+<path d="M400,198 C400,240 190,235 155,282" fill="none" marker-end="url(#ar-emp)" stroke="var(--r-employer)" stroke-width="1.75"></path>
+<path d="M460,198 C460,240 730,235 765,282" fill="none" marker-end="url(#ar-agy)" stroke="var(--r-agency)" stroke-width="1.75"></path>
+<text class="dg-edge" data-t="167" fill="var(--r-employer)" x="150" y="238">reserves a time slot</text>
+<text class="dg-edge" data-t="168" fill="var(--r-agency)" x="775" y="238">enters the pipeline</text>
+<!-- ---- left track: booking (employer) ---- -->
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-employer)" stroke-width="1.5" width="200" x="55" y="290"></rect>
+<text class="dg-label" data-t="169" x="155" y="318">Booking: pending</text>
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-employer)" stroke-width="1.5" width="200" x="55" y="392"></rect>
+<text class="dg-label" data-t="170" x="155" y="420">Employer decides</text>
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-employer)" stroke-width="1.5" width="200" x="55" y="494"></rect>
+<text class="dg-label" data-t="171" x="155" y="522">Interview happens</text>
+<line marker-end="url(#ar-emp)" stroke="var(--r-employer)" stroke-width="1.5" x1="155" x2="155" y1="336" y2="384"></line>
+<line marker-end="url(#ar-emp)" stroke="var(--r-employer)" stroke-width="1.5" x1="155" x2="155" y1="438" y2="486"></line>
+<text class="dg-edge" data-t="172" fill="var(--r-employer)" style="text-anchor:start" x="172" y="368">accept · waitlist</text>
+<text class="dg-edge" data-t="173" fill="var(--r-employer)" style="text-anchor:start" x="172" y="470">reschedule · reject</text>
+<text class="dg-edge" data-t="174" fill="var(--r-employer)" style="text-anchor:start" x="175" y="562">Act 2 · the employer's screens</text>
+<!-- ---- right track: pipeline (agency) ---- -->
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-agency)" stroke-width="1.5" width="200" x="665" y="290"></rect>
+<text class="dg-label" data-t="175" x="765" y="318">Applied</text>
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-agency)" stroke-width="1.5" width="200" x="665" y="392"></rect>
+<text class="dg-label" data-t="176" x="765" y="420">Screening → Interview</text>
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-agency)" stroke-width="1.5" width="200" x="665" y="494"></rect>
+<text class="dg-label" data-t="177" x="765" y="522">Offer</text>
+<line marker-end="url(#ar-agy)" stroke="var(--r-agency)" stroke-width="1.5" x1="765" x2="765" y1="336" y2="384"></line>
+<line marker-end="url(#ar-agy)" stroke="var(--r-agency)" stroke-width="1.5" x1="765" x2="765" y1="438" y2="486"></line>
+<text class="dg-edge" data-t="178" fill="var(--r-agency)" style="text-anchor:start" x="782" y="368">agency drags the card</text>
+<text class="dg-edge" data-t="179" fill="var(--r-agency)" style="text-anchor:start" x="782" y="470">each move is logged</text>
+<text class="dg-edge" data-t="180" fill="var(--r-agency)" style="text-anchor:end" x="745" y="562">Act 3 · the pipeline board</text>
+<!-- ---- the link between tracks ---- -->
+<line stroke="var(--muted)" stroke-dasharray="5 5" stroke-width="1.25" x1="265" x2="655" y1="415" y2="415"></line>
+<rect fill="var(--surface)" height="28" rx="14" stroke="var(--line-2)" stroke-width="1" width="136" x="392" y="401"></rect>
+<text class="dg-edge" data-t="181" x="460" y="419">same candidate</text>
+<text class="dg-edge" data-t="182" fill="var(--muted)" x="460" y="447">no shared status field</text>
+<!-- ============ converge ============ -->
+<rect fill="color-mix(in srgb, var(--ok) 12%, transparent)" height="52" rx="8" stroke="var(--ok)" stroke-width="2" width="300" x="390" y="610"></rect>
+<text class="dg-label" data-t="183" fill="var(--ok)" x="540" y="641">Hired — a placement</text>
+<path d="M155,540 L155,586 C155,600 340,604 442,604" fill="none" marker-end="url(#ar-ok)" stroke="var(--ok)" stroke-width="1.75"></path>
+<path d="M765,540 L765,586 C765,600 700,604 638,604" fill="none" marker-end="url(#ar-ok)" stroke="var(--ok)" stroke-width="1.75"></path>
+</svg>
+<figcaption data-t="184"><b>One Apply, two tracks.</b> The booking track is the employer's — it is
+    about a calendar slot, and it ends when the interview is held. The pipeline track is the
+    agency's — it is about the hiring decision, and it runs for weeks. They describe the same
+    person but share no status field, which is why a candidate can sit in <em>Screening</em>
+    without holding an interview slot, and why an interview can be booked with no pipeline
+    card behind it. Everything an admin does is a gate on the top band, before an applicant ever
+    sees a job.</figcaption>
+</figure>
+</section>
+<section id="jobfair">
+<div class="act" style="--role:var(--r-employer)">
+<p class="act-no" data-t="185">Start here</p>
+<h2 data-t="186">How a live job fair runs</h2>
+<p data-t="187">The third product, and the one that looks deceptively like a calendar. On event day
+    the constraint is physical: a company has a fixed number of interviewers, each interview
+    takes a fixed time, and two applicants cannot sit in the same chair. Everything below
+    exists to keep that constraint true while hundreds of people book at once.</p>
+</div>
+<figure class="diagram">
+<svg aria-label="Diagram of the live job fair booking system. An admin sets the event time frame, which generates a slot grid; each company's interviewer count multiplies that into bookable seats. Seats can be filled from two directions: an applicant books a recruiter, or a recruiter books an applicant from that applicant's published availability. Both directions go through a single atomic claim, implemented as one database transaction using SELECT FOR UPDATE SKIP LOCKED. The claim has three outcomes: the seat is claimed and an interviewer is assigned; the seat was taken a moment earlier so the next free interviewer is used instead; or every interviewer is booked at that time, and the candidate is offered the waitlist." role="img" viewbox="0 0 1080 336">
+<defs>
+<marker id="j-ar" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--line-2)"></path>
+</marker>
+<marker id="j-app" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--r-applicant)"></path>
+</marker>
+<marker id="j-emp" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--r-employer)"></path>
+</marker>
+<marker id="j-acc" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"></path>
+</marker>
+</defs>
+<!-- ---- band 1: capacity is generated, not assumed ---- -->
+<text class="dg-band" data-t="188" x="0" y="14">Capacity — what actually exists to book</text>
+<rect class="dg-box" height="46" rx="6" width="230" x="0" y="30"></rect>
+<text class="dg-label" data-t="189" x="115" y="58">Event time frame</text>
+<text class="dg-edge" data-t="190" x="115" y="94">10:00–17:30 · 30 min</text>
+<rect class="dg-box" height="46" rx="6" width="190" x="310" y="30"></rect>
+<text class="dg-label" data-t="191" x="405" y="58">Slot grid</text>
+<rect class="dg-box" height="46" rx="6" width="280" x="580" y="30"></rect>
+<text class="dg-label" data-t="192" x="720" y="58">× interviewers = seats</text>
+<text class="dg-edge" data-t="193" x="720" y="94">3 interviewers → 3 seats at 14:00</text>
+<line class="dg-line" marker-end="url(#j-ar)" x1="230" x2="302" y1="53" y2="53"></line>
+<line class="dg-line" marker-end="url(#j-ar)" x1="500" x2="572" y1="53" y2="53"></line>
+<!-- ---- band 2: two directions ---- -->
+<text class="dg-band" data-t="194" x="0" y="150">Two directions — matching runs both ways</text>
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-applicant)" stroke-width="1.5" width="290" x="0" y="168"></rect>
+<text class="dg-label" data-t="195" x="145" y="196">Applicant books a recruiter</text>
+<rect fill="var(--rail)" height="46" rx="6" stroke="var(--r-employer)" stroke-width="1.5" width="290" x="0" y="252"></rect>
+<text class="dg-label" data-t="196" x="145" y="280">Recruiter books an applicant</text>
+<text class="dg-edge" data-t="197" fill="var(--r-employer)" x="145" y="316">from the applicant's published availability</text>
+<path d="M290,191 C340,191 340,214 372,220" fill="none" marker-end="url(#j-app)" stroke="var(--r-applicant)" stroke-width="1.75"></path>
+<path d="M290,275 C340,275 340,246 372,240" fill="none" marker-end="url(#j-emp)" stroke="var(--r-employer)" stroke-width="1.75"></path>
+<!-- ---- band 3: the atomic claim ---- -->
+<rect fill="var(--accent-wash)" height="68" rx="8" stroke="var(--accent)" stroke-width="2" width="250" x="380" y="196"></rect>
+<text class="dg-label" data-t="198" fill="var(--accent-ink)" x="505" y="224">One atomic claim</text>
+<text class="dg-edge" data-t="199" fill="var(--accent-ink)" x="505" y="246">one transaction</text>
+<text class="dg-edge" data-t="200" x="505" y="284">SELECT … FOR UPDATE SKIP LOCKED</text>
+<!-- ---- outcomes ---- -->
+<text class="dg-band" data-t="201" x="700" y="150">Outcomes</text>
+<rect fill="color-mix(in srgb, var(--ok) 12%, transparent)" height="42" rx="6" stroke="var(--ok)" stroke-width="1.5" width="380" x="700" y="168"></rect>
+<text class="dg-label" data-t="202" fill="var(--ok)" x="890" y="194">Seat claimed → Interviewer 2</text>
+<rect class="dg-box" height="42" rx="6" width="380" x="700" y="226"></rect>
+<text class="dg-label" data-t="203" x="890" y="252">Just taken → next free interviewer</text>
+<rect fill="color-mix(in srgb, var(--warn) 12%, transparent)" height="42" rx="6" stroke="var(--warn)" stroke-width="1.5" width="380" x="700" y="284"></rect>
+<text class="dg-label" data-t="204" fill="var(--warn)" x="890" y="310">All seats gone → offer waitlist</text>
+<path d="M630,215 C665,215 665,192 692,189" fill="none" marker-end="url(#j-acc)" stroke="var(--accent)" stroke-width="1.6"></path>
+<line marker-end="url(#j-acc)" stroke="var(--accent)" stroke-width="1.6" x1="630" x2="692" y1="240" y2="245"></line>
+<path d="M630,255 C665,255 665,296 692,303" fill="none" marker-end="url(#j-acc)" stroke="var(--accent)" stroke-width="1.6"></path>
+</svg>
+<figcaption data-t="205"><b>The seat, not the calendar entry, is the scarce thing.</b> Both directions
+    funnel into a single claim that runs inside one database transaction. <code>SKIP LOCKED</code>
+    is the Postgres job-queue pattern: when two people accept the same time in the same
+    instant they lock <em>different</em> interviewer rows and both succeed against different
+    seats — rather than one erroring, or worse, both being told a seat is free that isn't.
+    It also means nobody is ever told "full" while a seat is genuinely available, which is the
+    failure a naïve <code>count()</code>-then-<code>insert</code> produces under load.</figcaption>
+</figure>
+<div class="duo">
+<div>
+<h5 data-t="206">Why it needs to be its own product</h5>
+<p data-t="207">A job board can afford to be eventually consistent — a stale listing is a minor
+      annoyance. A job fair cannot: at 14:00 a real person either has a chair or is standing
+      in a corridor.</p>
+<ul>
+<li data-t="208">Capacity is finite and known in advance</li>
+<li data-t="209">Demand is bursty — everyone books in the same few hours</li>
+<li data-t="210">A double-booking is visible to two strangers at once</li>
+</ul>
+</div>
+<div>
+<h5 data-t="211">What the organiser controls</h5>
+<p data-t="212">All of it from <a href="#d-settings">Platform settings</a>, without touching code.</p>
+<ul>
+<li data-t="213">Event date, opening and closing time</li>
+<li data-t="214">Slot length and the buffer between interviews</li>
+<li data-t="215">Whether applicants may cancel their own bookings</li>
+<li data-t="216">Per company: how many interviewers are on site</li>
+</ul>
+</div>
+</div>
+<div class="note" data-t="217"><b>Where to see this working.</b> The organiser's live view of every
+  booking is <a href="#d-bookings">4.1 Every booking</a>; the company's own run sheet is
+  <a href="#e-schedule">2.6 Interview day</a>; the applicant's side of the same transaction is
+  <a href="#a-slot">1.10 Picking a time</a>.</div>
+</section>
+<section id="vocab">
+<div class="act" style="--role:var(--accent)">
+<p class="act-no" data-t="218">Start here</p>
+<h2 data-t="219">Vocabulary</h2>
+<p data-t="220">Terms used throughout the manual and inside the product. Several are staffing-industry
+    or Taiwanese-regulatory words that mean something specific here.</p>
+</div>
+<div class="glossary">
+<dl>
+<dt data-t="221">Applicant <span class="zh">求職者</span></dt>
+<dd data-t="222">Someone looking for work on the platform. This is the account role in the system
+      (<code>applicant</code>) and the word this manual uses throughout. A few screens still
+      say <em>Student</em> — the sign-up chooser's <code>I'm a Student</code> button and the
+      <code>STUDENT</code> column on the admin bookings table — because most applicants are
+      final-year university students. Same person either way.</dd>
+<dt data-t="223">Position <span class="zh">職缺</span></dt>
+<dd data-t="224">A single job opening at one company. The unit applicants apply to — never a company on its own.</dd>
+<dt data-t="225">Job order</dt>
+<dd data-t="226">A client company's request for the agency to fill a position. The agency-side name for the same opening.</dd>
+<dt data-t="227">Submission</dt>
+<dd data-t="228">A candidate the agency has put forward to a client. Counted per client on the Clients screen.</dd>
+<dt data-t="229">Placement</dt>
+<dd data-t="230">A candidate who was actually hired. What the agency is paid on, and the number the whole ATS optimises for.</dd>
+<dt data-t="231">Pipeline stage</dt>
+<dd data-t="232">One of five: Applied → Screening → Interview → Offer → Hired. Changed by dragging a card.</dd>
+<dt data-t="233">Booking</dt>
+<dd data-t="234">A reserved interview slot. Separate from pipeline stage — see the diagram above.</dd>
+<dt data-t="235">Slot</dt>
+<dd data-t="236">A bookable interview window, typically 30 minutes. Generated from the event time frame in admin settings.</dd>
+</dl>
+<dl>
+<dt data-t="237">Client · subsidiary <span class="zh">客戶 · 集團</span></dt>
+<dd data-t="238">A company the agency recruits for. Six are Yang Luck group subsidiaries (badged <code>Group</code>); 19 are external clients.</dd>
+<dt data-t="239">ARC <span class="zh">居留證</span></dt>
+<dd data-t="240">Alien Resident Certificate — the residency document for a foreign national in Taiwan. Issued by <code>NIA 移民署</code>. Expiry is tracked on the Compliance screen.</dd>
+<dt data-t="241">Work permit <span class="zh">工作許可</span></dt>
+<dd data-t="242">Permission to be employed in Taiwan, issued by <code>MOL/WDA 勞動部</code>. Separate from the ARC, with its own expiry.</dd>
+<dt data-t="243">Visa support</dt>
+<dd data-t="244">Whether an employer will sponsor a work permit. Often the first thing an applicant checks on a job.</dd>
+<dt data-t="245">PIPA <span class="zh">個資法</span></dt>
+<dd data-t="246">Taiwan's Personal Data Protection Act. Drives the per-application consent checkbox and the retention and deletion behaviour.</dd>
+<dt data-t="247">Moderation</dt>
+<dd data-t="248">Admin review of a position before it becomes publicly visible. Can be switched off platform-wide.</dd>
+<dt data-t="249">AI score</dt>
+<dd data-t="250">A CV-screening score shown on each pipeline card. <b>Simulated in this build</b> — a placeholder, not a live model.</dd>
+</dl>
+</div>
+</section>
+<section id="roles">
+<div class="act" style="--role:var(--accent)">
+<p class="act-no" data-t="251">Orientation</p>
+<h2 data-t="252">Roles &amp; access</h2>
+<p data-t="253">Four working roles. Access is enforced server-side on every page — visiting a
+    route you don't own redirects to login rather than rendering an empty shell.</p>
+</div>
+<div class="tw">
+<table>
+<thead><tr><th data-t="254">Role</th><th data-t="255">Signs in as</th><th data-t="256">Navigation they see</th><th data-t="257">Owns</th></tr></thead>
+<tbody>
+<tr>
+<td data-t="258"><b style="color:var(--r-applicant)">Applicant</b><br/><span class="pill n">applicant</span></td>
+<td data-t="259"><code>student@yangluck.demo</code></td>
+<td data-t="260">Home · Companies · Jobs · Profile</td>
+<td data-t="261">Their own profile, CV and applications</td>
+</tr>
+<tr>
+<td data-t="262"><b style="color:var(--r-employer)">Employer</b><br/><span class="pill n">client recruiter</span></td>
+<td data-t="263"><code>co-yanghong@yangluck.demo</code></td>
+<td data-t="264">Interviews · Applicants · Pipeline · Jobs · My Company</td>
+<td data-t="265">Their company's jobs, applicants and interview schedule</td>
+</tr>
+<tr>
+<td data-t="266"><b style="color:var(--r-agency)">Agency</b><br/><span class="pill n">ATS operator</span></td>
+<td data-t="267"><code>hr@yangluck.demo</code></td>
+<td data-t="268">Interviews · Applicants · Pipeline · <b>Clients · Compliance · Reports</b> · Jobs · My Company</td>
+<td data-t="269">The pipeline across all client accounts</td>
+</tr>
+<tr>
+<td data-t="270"><b style="color:var(--r-admin)">Admin</b><br/><span class="pill n">platform</span></td>
+<td data-t="271"><code>admin@yangluck.demo</code></td>
+<td data-t="272">Recruiters · Jobs · Applicants · Interviews · Platform</td>
+<td data-t="273">Moderation, accounts, and event-wide settings</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="note" data-t="274"><b>Demo credentials.</b> All four demo accounts use the password
+  <code>demo1234</code> and live on an isolated demo database seeded entirely with
+  fictional people. No real applicant data appears anywhere in this manual.</div>
+</section>
+<section id="map">
+<div class="act" style="--role:var(--accent)">
+<p class="act-no" data-t="275">Orientation</p>
+<h2 data-t="276">Screen map</h2>
+<p data-t="277">Every route in the product, and which role reaches it.</p>
+</div>
+<div class="tw">
+<table>
+<thead><tr><th data-t="278">Route</th><th data-t="279">Screen</th><th data-t="280">Applicant</th><th data-t="281">Employer</th><th data-t="282">Agency</th><th data-t="283">Admin</th></tr></thead>
+<tbody>
+<tr><td data-t="284"><code>/</code></td><td data-t="285">Home / company directory</td><td data-t="286">✓</td><td data-t="287">✓</td><td data-t="288">✓</td><td data-t="289">✓</td></tr>
+<tr><td data-t="290"><code>/browse</code></td><td data-t="291">Participating companies</td><td data-t="292">✓</td><td data-t="293">✓</td><td data-t="294">✓</td><td data-t="295">✓</td></tr>
+<tr><td data-t="296"><code>/jobs</code></td><td data-t="297">Jobs board</td><td data-t="298">✓</td><td data-t="299">✓</td><td data-t="300">✓</td><td data-t="301">✓</td></tr>
+<tr><td data-t="302"><code>/jobs/[id]</code></td><td data-t="303">Job detail</td><td data-t="304">✓</td><td data-t="305">✓</td><td data-t="306">✓</td><td data-t="307">✓</td></tr>
+<tr><td data-t="308"><code>/jobs/cat/[category]</code></td><td data-t="309">Jobs filtered by category</td><td data-t="310">✓</td><td data-t="311">✓</td><td data-t="312">✓</td><td data-t="313">✓</td></tr>
+<tr><td data-t="314"><code>/recruiter/[id]</code></td><td data-t="315">Company profile + booking</td><td data-t="316">✓</td><td data-t="317">✓</td><td data-t="318">✓</td><td data-t="319">✓</td></tr>
+<tr><td data-t="320"><code>/get-started</code></td><td data-t="321">Role chooser</td><td data-t="322">✓</td><td data-t="323">✓</td><td data-t="324">—</td><td data-t="325">—</td></tr>
+<tr><td data-t="326"><code>/register</code></td><td data-t="327">Applicant sign-up</td><td data-t="328">✓</td><td data-t="329">—</td><td data-t="330">—</td><td data-t="331">—</td></tr>
+<tr><td data-t="332"><code>/recruiter/signup</code></td><td data-t="333">Employer sign-up</td><td data-t="334">—</td><td data-t="335">✓</td><td data-t="336">—</td><td data-t="337">—</td></tr>
+<tr><td data-t="338"><code>/login</code> · <code>/forgot-password</code></td><td data-t="339">Authentication</td><td data-t="340">✓</td><td data-t="341">✓</td><td data-t="342">✓</td><td data-t="343">✓</td></tr>
+<tr><td data-t="344"><code>/profile</code></td><td data-t="345">Applicant profile (8 tabs)</td><td data-t="346">✓</td><td data-t="347">—</td><td data-t="348">—</td><td data-t="349">—</td></tr>
+<tr><td data-t="350"><code>/applicant/[id]</code></td><td data-t="351">Public applicant card</td><td data-t="352">—</td><td data-t="353">✓</td><td data-t="354">✓</td><td data-t="355">✓</td></tr>
+<tr><td data-t="356"><code>/dashboard/interviews</code></td><td data-t="357">Accepted interview schedule</td><td data-t="358">—</td><td data-t="359">✓</td><td data-t="360">✓</td><td data-t="361">—</td></tr>
+<tr><td data-t="362"><code>/dashboard/applicants</code></td><td data-t="363">Applicant approval stages</td><td data-t="364">—</td><td data-t="365">✓</td><td data-t="366">✓</td><td data-t="367">—</td></tr>
+<tr><td data-t="368"><code>/dashboard/pipeline</code></td><td data-t="369">ATS pipeline board</td><td data-t="370">—</td><td data-t="371">✓</td><td data-t="372">✓</td><td data-t="373">—</td></tr>
+<tr><td data-t="374"><code>/dashboard/clients</code></td><td data-t="375">Client accounts</td><td data-t="376">—</td><td data-t="377">—</td><td data-t="378">✓</td><td data-t="379">—</td></tr>
+<tr><td data-t="380"><code>/dashboard/compliance</code></td><td data-t="381">Document expiry</td><td data-t="382">—</td><td data-t="383">—</td><td data-t="384">✓</td><td data-t="385">—</td></tr>
+<tr><td data-t="386"><code>/dashboard/reports</code></td><td data-t="387">Funnel &amp; time-in-stage</td><td data-t="388">—</td><td data-t="389">—</td><td data-t="390">✓</td><td data-t="391">—</td></tr>
+<tr><td data-t="392"><code>/dashboard/jobs</code></td><td data-t="393">Job openings + create form</td><td data-t="394">—</td><td data-t="395">✓</td><td data-t="396">✓</td><td data-t="397">—</td></tr>
+<tr><td data-t="398"><code>/dashboard/company</code></td><td data-t="399">Company profile editor</td><td data-t="400">—</td><td data-t="401">✓</td><td data-t="402">✓</td><td data-t="403">—</td></tr>
+<tr><td data-t="404"><code>/admin/interviews</code></td><td data-t="405">All bookings</td><td data-t="406">—</td><td data-t="407">—</td><td data-t="408">—</td><td data-t="409">✓</td></tr>
+<tr><td data-t="410"><code>/admin/jobs</code> · <code>/admin/jobs/[id]</code></td><td data-t="411">Job moderation</td><td data-t="412">—</td><td data-t="413">—</td><td data-t="414">—</td><td data-t="415">✓</td></tr>
+<tr><td data-t="416"><code>/admin/applicants</code></td><td data-t="417">Applicant registry</td><td data-t="418">—</td><td data-t="419">—</td><td data-t="420">—</td><td data-t="421">✓</td></tr>
+<tr><td data-t="422"><code>/admin/recruiters</code></td><td data-t="423">Recruiter registry</td><td data-t="424">—</td><td data-t="425">—</td><td data-t="426">—</td><td data-t="427">✓</td></tr>
+<tr><td data-t="428"><code>/admin/settings</code></td><td data-t="429">Platform settings (6 tabs)</td><td data-t="430">—</td><td data-t="431">—</td><td data-t="432">—</td><td data-t="433">✓</td></tr>
+<tr><td data-t="434"><code>/tutorial</code> · <code>/about</code> · <code>/feedback</code></td><td data-t="435">Help, about, bug report</td><td data-t="436">✓</td><td data-t="437">✓</td><td data-t="438">✓</td><td data-t="439">✓</td></tr>
+<tr><td data-t="440"><code>/privacy-policy</code> · <code>/terms-of-service</code></td><td data-t="441">Legal</td><td data-t="442">✓</td><td data-t="443">✓</td><td data-t="444">✓</td><td data-t="445">✓</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- ======================================================== ACT 1 ====== -->
+<div class="act" id="act1" style="--role:var(--r-applicant)">
+<p class="act-no" data-t="446">Act 1</p>
+<h2 data-t="447">The applicant: from stranger to confirmed interview</h2>
+<p data-t="448">Fourteen screens, in order. An applicant arrives knowing nothing about the platform
+  and leaves holding a specific 30-minute interview slot with a named company. Every
+  step below is a real screen from the running build.</p>
+<span class="who" data-t="449">Applicant · student@yangluck.demo</span>
+</div>
+<section class="screen" id="a-arrive" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.1</div>
+<div>
+<h3 data-t="450">Arriving — the company directory</h3>
+<p class="route"><b>GET</b> /</p>
+<p class="purpose" data-t="451">The home page is a directory, not a marketing splash. An applicant
+      sees who is actually hiring within the first screenful — company name, industry,
+      a one-line description, and the open positions at each. The goal is to answer
+      "is there anything here for me?" before asking anyone to sign up.</p>
+</div>
+</div>
+  {{IMG:pub-01-home}}
+  <figcaption data-t="452">/ — signed out, English</figcaption>
+<div class="body">
+<h4 data-t="453">What's on the screen</h4>
+<dl class="controls">
+<dt data-t="454">Company card</dt><dd data-t="455">One per participating employer. Shows the company name in Chinese and English, an industry tag (製造 Manufacturing, 營造 Construction, 旅宿 Hospitality, 人力派遣 Staffing), and a short description.</dd>
+<dt data-t="456">Open positions</dt><dd data-t="457">Up to two live roles listed inside each card, so the applicant can judge fit without navigating away.</dd>
+<dt data-t="458"><code>View &amp; Book</code></dt><dd data-t="459">Opens that company's profile page, where the booking flow starts. The wording is deliberate — booking, not just browsing.</dd>
+<dt data-t="460"><code>View all</code></dt><dd data-t="461">Goes to the full directory at <code>/browse</code>.</dd>
+<dt data-t="462">Top bar</dt><dd data-t="463">Home · Companies · Jobs, plus <code>Log In</code> / <code>Sign Up</code> while signed out, and the EN / VN / 中 language switcher.</dd>
+</dl>
+<div class="note" data-t="464"><b>Why a directory first.</b> The audience is applicants who often
+    haven't heard of the mid-size Taiwanese manufacturers and construction firms doing
+    the hiring. Leading with real company names and industries does more work than a
+    headline would.</div>
+</div>
+</section>
+<section class="screen" id="a-signup" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.2</div>
+<div>
+<h3 data-t="465">Choosing a role</h3>
+<p class="route"><b>GET</b> /get-started</p>
+<p class="purpose" data-t="466">Sign-up forks here. Applicants and employers need different fields,
+      different verification, and different approval rules, so the platform asks which
+      you are before showing a form rather than branching inside one.</p>
+</div>
+</div>
+  {{IMG:pub-02-get-started}}
+  <figcaption data-t="467">/get-started — the role fork</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="468"><code>I'm a Student</code></dt><dd data-t="469">Goes to <code>/register</code>. Self-serve — the account is usable as soon as the email is verified.</dd>
+<dt data-t="470"><code>I'm a Recruiter</code></dt><dd data-t="471">Goes to <code>/recruiter/signup</code>. Requires admin approval before the account can post jobs.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="a-register" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.3</div>
+<div>
+<h3 data-t="472">Registering — email verification first</h3>
+<p class="route"><b>GET</b> /register</p>
+<p class="purpose" data-t="473">Sign-up opens with just email and password, and sends a
+      verification code before collecting anything else. Nothing is asked twice, and an
+      abandoned sign-up leaves no half-built profile behind.</p>
+</div>
+</div>
+  {{IMG:pub-04-register-student}}
+  <figcaption data-t="474">/register — step 1 of the applicant sign-up</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="475">Email</dt><dd data-t="476">Becomes the account identifier and the address interview notifications are sent to. Normalised to lower-case on submit.</dd>
+<dt data-t="477">Password</dt><dd data-t="478">Minimum six characters, with a show/hide toggle.</dd>
+<dt data-t="479"><code>Send verification code</code></dt><dd data-t="480">Emails a code and advances to code entry. The rest of the profile is collected after verification.</dd>
+</dl>
+<div class="note" data-t="481"><b>Rate limiting.</b> Authentication endpoints are limited on two
+    rings — a generous per-IP cap so a whole campus behind one NAT isn't locked out by
+    each other's attempts, and a tighter per-account cap that is the real brute-force
+    defence.</div>
+</div>
+</section>
+<section class="screen" id="a-login" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.4</div>
+<div>
+<h3 data-t="482">Logging in</h3>
+<p class="route"><b>GET</b> /login · <b>GET</b> /forgot-password</p>
+<p class="purpose" data-t="483">One login screen for all four roles — the account's role decides
+      where you land. Errors distinguish "no such account" from "wrong password", because
+      the two need different next actions.</p>
+</div>
+</div>
+  {{IMG:pub-03-login}}
+  <figcaption data-t="484">/login — shared by all roles</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="485">Email · Password</dt><dd data-t="486">Password field has a show/hide toggle.</dd>
+<dt data-t="487"><code>Log In</code></dt><dd data-t="488">On success sets a session cookie and redirects by role: applicants to the directory, recruiters to <code>/dashboard/interviews</code>, admins to <code>/admin/interviews</code>.</dd>
+<dt data-t="489">Account not found</dt><dd data-t="490">Offers to send you to sign-up with the email pre-filled, rather than a dead end.</dd>
+<dt data-t="491"><code>Forgot password?</code></dt><dd data-t="492">Goes to <code>/forgot-password</code>, which emails a reset code.</dd>
+<dt data-t="493">PIPA notice</dt><dd data-t="494">A dismissible banner about Taiwan's Personal Data Protection Act. Dismissal is remembered in local storage.</dd>
+<dt data-t="495"><code>next</code> parameter</dt><dd data-t="496">Protected pages redirect here with the intended destination attached — e.g. <code>/login?next=/feedback</code> — and you land there after signing in.</dd>
+</dl>
+<h4 data-t="497">Password reset</h4>
+    {{IMG_BARE:pub-06-forgot-password}}
+    <p data-t="498" style="font-size:.875rem;color:var(--ink-2);margin-top:var(--s3)">Entering the account
+    email sends a reset code. Same code-based mechanism as sign-up verification, so applicants
+    only ever learn one pattern.</p>
+</div>
+</section>
+<section class="screen" id="a-profile" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.5</div>
+<div>
+<h3 data-t="499">Building the profile — eight tabs</h3>
+<p class="route"><b>GET</b> /profile</p>
+<p class="purpose" data-t="500">The profile is what recruiters actually read, so it is split into
+      eight short tabs rather than one long form. A completion meter shows how much is
+      filled in, and <code>Save Changes &amp; Next</code> walks the tabs in order — the
+      form is designed to be finished in sittings, not one go.</p>
+</div>
+</div>
+  {{IMG:app-01-profile-basic}}
+  <figcaption data-t="501">/profile — Basic tab, 65% complete</figcaption>
+<div class="body">
+<h4 data-t="502">Header controls</h4>
+<dl class="controls">
+<dt data-t="503">Photo <code>Upload</code></dt><dd data-t="504">Profile picture, shown to recruiters on the candidate card.</dd>
+<dt data-t="505">Profile completion</dt><dd data-t="506">A live percentage across all eight tabs. It is a nudge, not a gate — you can apply before reaching 100%.</dd>
+<dt data-t="507"><code>Save Changes</code></dt><dd data-t="508">Saves and stays. <code>Save Changes &amp; Next</code> saves and advances to the next tab.</dd>
+<dt data-t="509"><code>View Profile</code></dt><dd data-t="510">Opens the public card at <code>/applicant/[id]</code> — exactly what a recruiter sees.</dd>
+</dl>
+<h4 data-t="511">The eight tabs</h4>
+<dl class="controls">
+<dt data-t="512">Basic</dt><dd data-t="513">Full name, phone / WhatsApp, nationality. WhatsApp matters — it is the practical contact channel for Vietnamese and Indonesian applicants.</dd>
+<dt data-t="514">Education</dt><dd data-t="515">School, major, study level (大三 Junior, 大四 Senior, 碩一 M1, 碩二 M2). These drive the school and major shown on the recruiter's pipeline card.</dd>
+<dt data-t="516">Career Preferences</dt><dd data-t="517">Desired role, location, and industry — what the applicant wants, as opposed to what they've done.</dd>
+<dt data-t="518">Work Experience</dt><dd data-t="519">Repeatable entries of employer, role and dates.</dd>
+<dt data-t="520">Certifications</dt><dd data-t="521">Licences and language certificates (TOCFL, TOEIC, JLPT), which are often decisive for visa-sponsored roles.</dd>
+<dt data-t="522">Skills</dt><dd data-t="523">Tags added one at a time. These appear verbatim as chips on the recruiter's pipeline card — AutoCAD, BIM, SolidWorks, Revit, Excel.</dd>
+<dt data-t="524">CV / QR</dt><dd data-t="525">The CV link plus a QR code, so an applicant can show their profile from a phone at an in-person fair.</dd>
+<dt data-t="526">My Applications</dt><dd data-t="527">Every application and its current status. Covered at step 13.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.5b</div>
+<div>
+<h3 data-t="528">Education, preferences and experience</h3>
+<p class="route"><b>GET</b> /profile → Education · Career Preferences · Work Experience</p>
+<p class="purpose" data-t="529">The three tabs that carry the most weight in screening. School and
+      major populate the pipeline card; career preferences let the agency match a candidate
+      to a client before the applicant has applied anywhere.</p>
+</div>
+</div>
+  {{IMG:app-02-profile-education}}
+  <figcaption data-t="530">/profile → Education</figcaption>
+<div class="body">
+  {{IMG_BARE:app-03-profile-career-preferences}}
+  {{IMG_BARE:app-04-profile-work-experience}}
+  </div>
+</section>
+<section class="screen" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.5c</div>
+<div>
+<h3 data-t="531">Certifications, skills, and the CV</h3>
+<p class="route"><b>GET</b> /profile → Certifications · Skills · CV / QR</p>
+<p class="purpose" data-t="532">The evidence tabs. Skills become the chips a recruiter scans on the
+      board; the CV link is required to apply at all.</p>
+</div>
+</div>
+  {{IMG:app-06-profile-skills}}
+  <figcaption data-t="533">/profile → Skills</figcaption>
+<div class="body">
+  {{IMG_BARE:app-05-profile-certifications}}
+  {{IMG_BARE:app-07-profile-cv-qr}}
+    <div class="note warn" data-t="534"><b>The CV is a link, not an upload.</b> Applicants host the CV on
+    Google Drive and paste the link. That keeps the platform out of document storage — but
+    it means sharing permissions are the applicant's responsibility, and the booking form
+    makes them confirm it explicitly (step 11).</div>
+</div>
+</section>
+<section class="screen" id="a-browse" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.6</div>
+<div>
+<h3 data-t="535">Browsing companies</h3>
+<p class="route"><b>GET</b> /browse</p>
+<p class="purpose" data-t="536">The full directory of participating employers, with search across
+      both company names and position titles — so typing a job title finds the companies
+      hiring for it.</p>
+</div>
+</div>
+  {{IMG:app-09-browse}}
+  <figcaption data-t="537">/browse — signed in as an applicant</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="538">Search</dt><dd data-t="539">Matches company names and position titles. Works in Chinese and English.</dd>
+<dt data-t="540">Company card</dt><dd data-t="541">Name, industry tag, description, and open positions.</dd>
+<dt data-t="542"><code>View &amp; Book</code></dt><dd data-t="543">Opens the company profile and booking flow.</dd>
+<dt data-t="544">Pagination</dt><dd data-t="545">Numbered pages at the foot of the list.</dd>
+</dl>
+<h4 data-t="546">Searching</h4>
+    {{IMG_BARE:app-10-browse-search}}
+    <p data-t="547" style="font-size:.875rem;color:var(--ink-2);margin-top:var(--s3)">Searching <code>麗明</code>
+    narrows 25 companies to one. The agency's own account is deliberately excluded from this
+    directory — applicants book with the client company that would employ them, not with the agency.</p>
+</div>
+</section>
+<section class="screen" id="a-jobs" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.7</div>
+<div>
+<h3 data-t="548">The jobs board</h3>
+<p class="route"><b>GET</b> /jobs · <b>GET</b> /jobs/cat/[category]</p>
+<p class="purpose" data-t="549">The position-first view, for applicants who care what the work is
+      more than who the employer is. A master list on the left, the selected job rendered
+      in full on the right — so comparing roles takes no navigation.</p>
+</div>
+</div>
+  {{IMG:app-11-jobs-search}}
+  <figcaption data-t="550">/jobs — split list and detail</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="551">Search</dt><dd data-t="552">Across job titles, company names and locations.</dd>
+<dt data-t="553">Category filter</dt><dd data-t="554">Narrows to a job category. Categories are assigned by an admin during moderation (step 4.3) and have their own shareable URL at <code>/jobs/cat/[category]</code>.</dd>
+<dt data-t="555">Job list</dt><dd data-t="556">Each row shows title, company, location and employment type.</dd>
+<dt data-t="557">Detail pane</dt><dd data-t="558">The selected job in full, with an <code>Apply</code> button.</dd>
+<dt data-t="559">Pagination</dt><dd data-t="560">Pages through the full set of live positions.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="a-jobdetail" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.8</div>
+<div>
+<h3 data-t="561">Reading a job</h3>
+<p class="route"><b>GET</b> /jobs/[id]</p>
+<p class="purpose" data-t="562">The full description on its own shareable URL. Structured into
+      fixed sections so two jobs can be compared field by field, and so the facts that
+      decide it for an international applicant — salary and visa support — are never buried.</p>
+</div>
+</div>
+  {{IMG:app-12-job-detail}}
+  <figcaption data-t="563">/jobs/43 — 工地工程師 Site Engineer</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="564">Header</dt><dd data-t="565">Title, company, location, and employment type.</dd>
+<dt data-t="566">Summary · Requirements</dt><dd data-t="567">The role in prose, then the hiring bar.</dd>
+<dt data-t="568">JD link</dt><dd data-t="569">An external full job description, when the employer supplied one.</dd>
+<dt data-t="570">Salary</dt><dd data-t="571">A real range with currency and period — e.g. <code>TWD 34,000 – 50,000 per month</code>. TWD, VND and USD are supported.</dd>
+<dt data-t="572">General information</dt><dd data-t="573">Location, employment type, workplace (on-site / hybrid / remote), and seniority.</dd>
+<dt data-t="574"><b>Visa support</b></dt><dd data-t="575">Whether the employer sponsors a work permit. For this audience it is often the first thing checked.</dd>
+<dt data-t="576">About the company</dt><dd data-t="577">Links through to the company profile.</dd>
+<dt data-t="578">Similar jobs</dt><dd data-t="579">Other openings in the same category, to keep a rejected fit from becoming a dead end.</dd>
+<dt data-t="580"><code>Apply</code></dt><dd data-t="581">Starts the booking flow. Signed out, this reads <code>Log in to Apply</code>.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="a-company" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.9</div>
+<div>
+<h3 data-t="582">The company page</h3>
+<p class="route"><b>GET</b> /recruiter/[id]</p>
+<p class="purpose" data-t="583">Where applying actually happens. The employer on the left, their
+      open positions in the middle, and the booking flow taking over the right column —
+      the applicant never leaves this page between choosing a role and holding a slot.</p>
+</div>
+</div>
+  {{IMG:app-13-apply-company}}
+  <figcaption data-t="584">/recruiter/16 — 巨大機械 Giant Manufacturing</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="585">Company panel</dt><dd data-t="586">Logo, name, industry tag, description, interview length (<code>30 min interview</code>) and location.</dd>
+<dt data-t="587">Photo gallery</dt><dd data-t="588">Workplace photos in a lightbox — swipeable on touch devices.</dd>
+<dt data-t="589">Open positions</dt><dd data-t="590">Each opening is selectable; picking one loads its detail below.</dd>
+<dt data-t="591">Position detail</dt><dd data-t="592">Language requirement, summary, requirements, salary and visa support for the selected role.</dd>
+<dt data-t="593"><code>Apply</code></dt><dd data-t="594">Advances the right column to the slot picker.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="a-slot" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.10</div>
+<div>
+<h3 data-t="595">Picking a time</h3>
+<p class="route"><b>GET</b> /recruiter/[id] → step <code>pick-slot</code></p>
+<p class="purpose" data-t="596">Applying means booking. The applicant picks a real 30-minute slot
+      from the employer's published availability — first come, first served — so an
+      application arrives already scheduled.</p>
+</div>
+</div>
+  {{IMG:app-14-apply-pick-slot}}
+  <figcaption data-t="597">Slot picker — event day, Asia/Taipei</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="598">Date stepper</dt><dd data-t="599">Arrows move between days. The date and <code>Asia/Taipei</code> are stated explicitly, since applicants are frequently in another timezone.</dd>
+<dt data-t="600">Time grid</dt><dd data-t="601">Available start times only. Slots already taken by another applicant are not offered.</dd>
+<dt data-t="602">Slot length</dt><dd data-t="603">Set per event in admin settings — 30 minutes here, between 10:00 and 17:30.</dd>
+<dt data-t="604">Empty day</dt><dd data-t="605">Reads <em>"No available slots on this day — try selecting a different date."</em></dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="a-form" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.11</div>
+<div>
+<h3 data-t="606">CV and consent</h3>
+<p class="route"><b>GET</b> /recruiter/[id] → step <code>booking-form</code></p>
+<p class="purpose" data-t="607">The last screen before submitting. Identity is pre-filled from the
+      profile; what the applicant must actively confirm is the two things that break
+      downstream — an unreadable CV link, and consent to share their data with this
+      specific employer.</p>
+</div>
+</div>
+  {{IMG:app-15-apply-booking-form}}
+  <figcaption data-t="608">Booking form as it opens — confirmations not yet checked</figcaption>
+<div class="body">
+<h4 data-t="609">Both confirmations checked, ready to submit</h4>
+    {{IMG_BARE:app-16-apply-consent}}
+    <dl class="controls">
+<dt data-t="610">Chosen time</dt><dd data-t="611">Restated at the top — <code>Saturday, June 6 at 14:00</code>.</dd>
+<dt data-t="612">Name · Email</dt><dd data-t="613">Read-only, from the profile.</dd>
+<dt data-t="614">Position applying for <span class="pill crit">required</span></dt><dd data-t="615">The specific role. Applications attach to a position, never to a company alone.</dd>
+<dt data-t="616">CV Link <span class="pill crit">required</span></dt><dd data-t="617">Pre-filled from the profile, editable per application — so an applicant can send a tailored CV to one employer.</dd>
+<dt data-t="618">Access confirmation <span class="pill crit">required</span></dt><dd data-t="619"><em>"I confirm I have set access to 'Anyone with the link can view'."</em> A recruiter who cannot open the CV is the single most common failure in this flow, so it is confirmed by hand.</dd>
+<dt data-t="620">PIPA consent <span class="pill crit">required</span></dt><dd data-t="621">Names the employer and the position, and cites Taiwan's Personal Data Protection Act. Consent is per application, not a blanket permission.</dd>
+<dt data-t="622"><code>Request Booking</code></dt><dd data-t="623">Submits. <code>Back</code> returns to the slot picker with the position kept.</dd>
+</dl>
+<div class="note crit" data-t="624"><b>Double-booking is blocked.</b> Requesting a slot that clashes
+    with an interview the applicant already holds fails with <em>"You already have a pending
+    or confirmed interview at this time."</em> The guard is on the applicant's own schedule
+    across all employers, not just within one company.</div>
+</div>
+</section>
+<section class="screen" id="a-done" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.12</div>
+<div>
+<h3 data-t="625">Submitted</h3>
+<p class="route"><b>POST</b> /api/bookings → confirmation</p>
+<p class="purpose" data-t="626">The confirmation states what was booked, with whom, for when — and
+      is honest that the interview is not yet confirmed. It is <em>pending review</em> until
+      the employer accepts.</p>
+</div>
+</div>
+  {{IMG:app-17-apply-confirmed}}
+  <figcaption data-t="627">Application Submitted — pending employer review</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="628">Confirmation</dt><dd data-t="629">Company, position and time in one sentence, ending in <em>"is now pending review."</em></dd>
+<dt data-t="630">What happens next</dt><dd data-t="631"><em>"The recruiter will review your CV and confirm your interview. You'll receive an email when accepted."</em></dd>
+<dt data-t="632"><code>Turn on notifications</code></dt><dd data-t="633">Enables browser push, so the accept/reject decision arrives without waiting on email — which matters for applicants on university mail systems that delay or filter.</dd>
+<dt data-t="634"><code>View Other Positions</code></dt><dd data-t="635">Returns to the company's openings. Applicants are expected to book several employers.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="a-track" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.13</div>
+<div>
+<h3 data-t="636">Tracking it</h3>
+<p class="route"><b>GET</b> /profile → My Applications</p>
+<p class="purpose" data-t="637">One list of every application and where it stands, plus an in-app
+      notification feed. The applicant never has to email anyone to ask.</p>
+</div>
+</div>
+  {{IMG:app-08-profile-my-applications}}
+  <figcaption data-t="638">/profile → My Applications</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="639">Application row</dt><dd data-t="640">Company, position, booked time, and current status.</dd>
+<dt data-t="641">Statuses</dt><dd data-t="642"><span class="pill n">pending</span> awaiting the employer · <span class="pill ok">accepted</span> confirmed, attend at the stated time · <span class="pill warn">reschedule proposed</span> the employer offered a different time, needs a response · <span class="pill n">waitlisted</span> held pending a cancellation · <span class="pill crit">rejected</span> not progressing · <span class="pill n">cancelled</span> called off.</dd>
+<dt data-t="643">Notification bell</dt><dd data-t="644">In-app feed in the top bar — <em>"Your application to 麗明營造 for Site Engineer is pending review."</em> with <code>Mark all read</code>.</dd>
+</dl>
+<div class="note" data-t="645"><b>Cancellation is a platform setting.</b> Whether applicants may cancel
+    their own bookings is toggled by an admin (step 4.6). It ships off, so cancellations go
+    through the employer or organiser.</div>
+</div>
+</section>
+<section class="screen" id="a-feedback" style="--role:var(--r-applicant)">
+<div class="screen-head">
+<div class="step">1.14</div>
+<div>
+<h3 data-t="646">Reporting a problem</h3>
+<p class="route"><b>GET</b> /feedback <span class="pill n">sign-in required</span></p>
+<p class="purpose" data-t="647">A built-in bug and feedback report, reachable from the footer on
+      every page. Reports land in the admin console rather than an inbox.</p>
+</div>
+</div>
+  {{IMG:app-19-feedback}}
+  <figcaption data-t="648">/feedback — signed in as an applicant</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="649">Report form</dt><dd data-t="650">Category and description. The reporter's account is attached automatically, so there is no "who are you?" round trip.</dd>
+<dt data-t="651">Where it goes</dt><dd data-t="652">Admin → Platform → <em>Feedback &amp; bugs</em> (step 4.6).</dd>
+<dt data-t="653">Signed out</dt><dd data-t="654">Redirects to <code>/login?next=/feedback</code> and returns here after sign-in.</dd>
+</dl>
+</div>
+</section>
+<!-- ======================================================== ACT 2 ====== -->
+<div class="act" id="act2" style="--role:var(--r-employer)">
+<p class="act-no" data-t="655">Act 2</p>
+<h2 data-t="656">The employer: from posting a role to interview day</h2>
+<p data-t="657">The other side of the same booking. A client-company recruiter publishes a position,
+  receives applications that already carry a proposed time, and decides on each one. Six
+  screens.</p>
+<span class="who" data-t="658">Employer · co-yanghong@yangluck.demo</span>
+</div>
+<section class="screen" id="e-signup" style="--role:var(--r-employer)">
+<div class="screen-head">
+<div class="step">2.1</div>
+<div>
+<h3 data-t="659">Employer sign-up — approval required</h3>
+<p class="route"><b>GET</b> /recruiter/signup</p>
+<p class="purpose" data-t="660">Employer accounts are not self-serve. Registration creates the
+      account, but an admin must approve it before it can publish jobs or receive
+      applicants — the gate that keeps an applicant-facing directory trustworthy.</p>
+</div>
+</div>
+  {{IMG:pub-05-register-recruiter}}
+  <figcaption data-t="661">/recruiter/signup</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="662">Company details</dt><dd data-t="663">Company name, industry, and contact email.</dd>
+<dt data-t="664">Email verification</dt><dd data-t="665">Same code-first flow as applicants.</dd>
+<dt data-t="666">Approval</dt><dd data-t="667">Pending until an admin approves it at <code>/admin/recruiters</code> (step 4.5). Allowed email domains can be pre-registered so known employers clear automatically.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="e-jobs" style="--role:var(--r-employer)">
+<div class="screen-head">
+<div class="step">2.2</div>
+<div>
+<h3 data-t="668">Job openings</h3>
+<p class="route"><b>GET</b> /dashboard/jobs</p>
+<p class="purpose" data-t="669">Every position the company has posted. Positions are the unit
+      applicants apply to, so each one carries its own description, salary and JD link
+      rather than sharing a single company-level advert.</p>
+</div>
+</div>
+  {{IMG:rec-07-jobs-list}}
+  <figcaption data-t="670">/dashboard/jobs</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="671">Position list</dt><dd data-t="672">All openings, each editable in place.</dd>
+<dt data-t="673"><code>+ Add</code></dt><dd data-t="674">Opens the new-position form (step 3).</dd>
+<dt data-t="675">Moderation status</dt><dd data-t="676">Each position is Draft, Pending, Approved or Rejected. Only approved positions appear publicly.</dd>
+</dl>
+<div class="note" data-t="677"><b>Agency accounts show no positions of their own.</b> Yang Luck's own
+    job list is empty by design — its 35 positions belong to the 25 client companies it
+    recruits for, and are managed as job orders on the client accounts (step 3.4).</div>
+</div>
+</section>
+<section class="screen" id="e-form" style="--role:var(--r-employer)">
+<div class="screen-head">
+<div class="step">2.3</div>
+<div>
+<h3 data-t="678">The job form — every field</h3>
+<p class="route"><b>GET</b> /dashboard/jobs → Add</p>
+<p class="purpose" data-t="679">The form that produces everything an applicant reads on the job detail
+      page. Only three fields are mandatory; the rest exist because this audience makes
+      decisions on salary, language and visa long before responsibilities.</p>
+</div>
+</div>
+  {{IMG:rec-08-jobs-create-form}}
+  <figcaption data-t="680">/dashboard/jobs → Add — the complete form</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="681">Position title <span class="pill crit">required</span></dt><dd data-t="682">Conventionally bilingual — <code>工地工程師（會 AutoCAD） Site Engineer</code>.</dd>
+<dt data-t="683">Location</dt><dd data-t="684">Free text, e.g. <code>台中 Taichung</code>.</dd>
+<dt data-t="685">Employment type <span class="pill crit">required</span></dt><dd data-t="686">Full-time, part-time, internship, contract.</dd>
+<dt data-t="687">Workplace type</dt><dd data-t="688">On-site, hybrid or remote.</dd>
+<dt data-t="689">Job category</dt><dd data-t="690">Drives the category filter and <code>/jobs/cat/[category]</code>. An admin can override it during moderation.</dd>
+<dt data-t="691">Salary min · max</dt><dd data-t="692">A numeric range. Publishing a real range is the norm here, not the exception.</dd>
+<dt data-t="693">Currency</dt><dd data-t="694">TWD, VND or USD. The available list is configured by an admin.</dd>
+<dt data-t="695">Salary period</dt><dd data-t="696">Per month, per year, or per hour.</dd>
+<dt data-t="697">Seniority</dt><dd data-t="698">Entry level through senior — most listings are entry level or trainee.</dd>
+<dt data-t="699">Application deadline</dt><dd data-t="700">Optional closing date.</dd>
+<dt data-t="701"><b>Visa / work permit support</b></dt><dd data-t="702">Whether the employer sponsors. Surfaced prominently on the job page because it decides eligibility.</dd>
+<dt data-t="703">Language requirement</dt><dd data-t="704">Toggle chips — English, Chinese, Vietnamese, Japanese, Korean, Thai, Bahasa Indonesia — plus a free-text note for a specific score target or proficiency level.</dd>
+<dt data-t="705">JD link</dt><dd data-t="706">Optional link to a full external job description.</dd>
+<dt data-t="707">Summary</dt><dd data-t="708">Short role summary. Has a bulleted-list toggle.</dd>
+<dt data-t="709">Responsibilities</dt><dd data-t="710">Day-to-day work and deliverables.</dd>
+<dt data-t="711">Requirements</dt><dd data-t="712">Required skills, experience, language or degree.</dd>
+<dt data-t="713">Benefits &amp; perks</dt><dd data-t="714">Bonus structure, training, flexibility, travel support.</dd>
+<dt data-t="715"><code>Add</code></dt><dd data-t="716">Saves the position and submits it for moderation.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="e-company" style="--role:var(--r-employer)">
+<div class="screen-head">
+<div class="step">2.4</div>
+<div>
+<h3 data-t="717">Company profile</h3>
+<p class="route"><b>GET</b> /dashboard/company</p>
+<p class="purpose" data-t="718">What applicants see on the company page and the directory card, plus
+      the interview capacity that determines how many slots exist at all.</p>
+</div>
+</div>
+  {{IMG:rec-09-company-profile}}
+  <figcaption data-t="719">/dashboard/company</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="720">Company description</dt><dd data-t="721">Shown on the directory card and company page.</dd>
+<dt data-t="722">Company website</dt><dd data-t="723">Linked from the public profile.</dd>
+<dt data-t="724"><b>Number of interviewers</b></dt><dd data-t="725">How many interviews the company can run in parallel. Multiplies available slots — two interviewers means two applicants can be booked at 10:00. Accepted interviews are labelled <em>Interviewer 1</em>, <em>Interviewer 2</em>, and so on.</dd>
+<dt data-t="726">Photo <code>Upload</code> <code>0/4</code></dt><dd data-t="727">Up to four workplace photos for the gallery on the company page.</dd>
+<dt data-t="728"><code>All changes saved</code></dt><dd data-t="729">The form autosaves; this is a status indicator, not a button.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="e-approvals" style="--role:var(--r-employer)">
+<div class="screen-head">
+<div class="step">2.5</div>
+<div>
+<h3 data-t="730">Triaging applicants</h3>
+<p class="route"><b>GET</b> /dashboard/applicants</p>
+<p class="purpose" data-t="731">The employer's working screen. Applications arrive already holding a
+      time, grouped by what they need from you — so the queue is ordered by decision
+      required, not by arrival.</p>
+</div>
+</div>
+  {{IMG:rec-10-applicant-approvals}}
+  <figcaption data-t="732">/dashboard/applicants — 揚宏營造, four groups</figcaption>
+<div class="body">
+<h4 data-t="733">The four groups</h4>
+<dl class="controls">
+<dt data-t="734"><b>Pending Review</b></dt><dd data-t="735">New applications awaiting a decision. Each row shows the CV link, candidate name, position, email, and the requested time.</dd>
+<dt data-t="736"><b>Awaiting applicant response</b></dt><dd data-t="737">You proposed a different time and the applicant hasn't answered yet.</dd>
+<dt data-t="738"><b>Accepted</b></dt><dd data-t="739">Confirmed interviews. These populate the schedule at step 6.</dd>
+<dt data-t="740"><b>Past</b></dt><dd data-t="741">Rejected and cancelled applications, kept for the record.</dd>
+</dl>
+<h4 data-t="742">Actions on a pending application</h4>
+<dl class="controls">
+<dt data-t="743"><code>Accept</code></dt><dd data-t="744">Confirms the interview at the requested time. The slot is locked and the applicant is notified.</dd>
+<dt data-t="745"><code>Waitlist</code></dt><dd data-t="746">Holds the candidate without committing a slot — used when a better fit may still apply, or a cancellation may free time.</dd>
+<dt data-t="747"><code>Suggest time</code></dt><dd data-t="748">Proposes a different slot. Moves the row to <em>Awaiting applicant response</em>; the applicant sees <span class="pill warn">reschedule proposed</span>.</dd>
+<dt data-t="749"><code>Reject</code></dt><dd data-t="750">Declines. The slot is released back to the pool.</dd>
+</dl>
+<h4 data-t="751">Actions on the other groups</h4>
+<dl class="controls">
+<dt data-t="752"><code>Change time</code></dt><dd data-t="753">Revises a proposal that is still awaiting a response.</dd>
+<dt data-t="754"><code>Retract</code></dt><dd data-t="755">Withdraws the proposal and returns the application to pending.</dd>
+<dt data-t="756"><code>Cancel interview</code></dt><dd data-t="757">Calls off an already-accepted interview and frees the slot.</dd>
+<dt data-t="758"><code>CV</code></dt><dd data-t="759">Opens the candidate's CV — the link they confirmed was shareable at step 1.11.</dd>
+<dt data-t="760">Sort by</dt><dd data-t="761">Newest first, oldest first, name A–Z or Z–A.</dd>
+</dl>
+<div class="note ok" data-t="762"><b>Every action is logged.</b> Accepts, rejects, cancellations and
+    reschedules are written to action and reschedule logs, so a disputed interview time has
+    a record behind it.</div>
+</div>
+</section>
+<section class="screen" id="e-schedule" style="--role:var(--r-employer)">
+<div class="screen-head">
+<div class="step">2.6</div>
+<div>
+<h3 data-t="763">Interview day</h3>
+<p class="route"><b>GET</b> /dashboard/interviews</p>
+<p class="purpose" data-t="764">The run sheet: only accepted interviews, in time order, each with a
+      one-click CV and an interviewer assignment. This is the screen that gets used on the
+      day itself.</p>
+</div>
+</div>
+  {{IMG:rec-11-interview-schedule}}
+  <figcaption data-t="765">/dashboard/interviews — eight confirmed interviews</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="766">Accepted count</dt><dd data-t="767">Confirmed interviews for this company.</dd>
+<dt data-t="768">Interview row</dt><dd data-t="769">Candidate name, position, email, and the exact window — <code>Jun 6, 09:30 – 10:00</code>.</dd>
+<dt data-t="770"><code>CV</code></dt><dd data-t="771">Opens the CV. Placed first in the row because it is what an interviewer reaches for.</dd>
+<dt data-t="772">Interviewer badge</dt><dd data-t="773">Which interviewer takes this one, derived from the company's interviewer count.</dd>
+<dt data-t="774">Sort by</dt><dd data-t="775">Booking time earliest/latest, interviewer low/high, name, email, or position — ten orderings, so the same list works as a schedule, as a per-interviewer sheet, or as a checklist.</dd>
+</dl>
+</div>
+</section>
+<!-- ======================================================== ACT 3 ====== -->
+<div class="act" id="act3" style="--role:var(--r-agency)">
+<p class="act-no" data-t="776">Act 3</p>
+<h2 data-t="777">The agency: running a pipeline across 25 clients</h2>
+<p data-t="778">The ATS, and the reason the platform is more than a job board. Yang Luck places people
+  <em>into</em> client companies, so every screen here is scoped by client — one board per
+  account, from first application to confirmed placement.</p>
+<span class="who" data-t="779">Agency · hr@yangluck.demo</span>
+</div>
+<section class="screen" id="g-pipeline" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.1</div>
+<div>
+<h3 data-t="780">The pipeline board</h3>
+<p class="route"><b>GET</b> /dashboard/pipeline <span class="pill n">/pipeline redirects here</span></p>
+<p class="purpose" data-t="781">The centre of the product. A five-stage kanban board of every
+      candidate for one client company, moved by dragging. It is a native tab inside the
+      recruiter dashboard — same top bar, same language switcher, same components — not a
+      separate tool.</p>
+</div>
+</div>
+  {{IMG:rec-01-pipeline-board}}
+  <figcaption data-t="782">/dashboard/pipeline — 麗明營造, 13 candidates across five stages</figcaption>
+<div class="body">
+<h4 data-t="783">The five stages</h4>
+<ul class="stages">
+<li data-t="784"><b>Applied</b><span>Application received, not yet reviewed</span></li>
+<li data-t="785"><b>Screening</b><span>CV reviewed, being assessed</span></li>
+<li data-t="786"><b>Interview</b><span>Interviewing with the client</span></li>
+<li data-t="787"><b>Offer</b><span>Offer extended, awaiting acceptance</span></li>
+<li data-t="788"><b>Hired</b><span>Placed and started</span></li>
+</ul>
+<h4 data-t="789">Controls</h4>
+<dl class="controls">
+<dt data-t="790">CLIENT selector</dt><dd data-t="791">All 25 client accounts as tabs, each with its live candidate count. Subsidiaries of the group carry a <code>Group</code> badge, distinguishing them from external clients.</dd>
+<dt data-t="792">Board context line</dt><dd data-t="793"><em>"麗明營造 Lee Ming Construction · 13 candidates · Drag a card to change stage."</em></dd>
+<dt data-t="794">Stage column</dt><dd data-t="795">Header with a live count; cards stack beneath.</dd>
+<dt data-t="796"><b>Drag to change stage</b></dt><dd data-t="797">Dragging a card to another column updates the candidate's stage and <em>persists</em> — a refresh keeps the new position. Each move is written as a stage transition, which is what makes time-in-stage reporting possible (step 6).</dd>
+<dt data-t="798">Candidate card</dt><dd data-t="799">Name in Latin and Chinese, school · major, the position applied for, a nationality flag, study level, and skill chips.</dd>
+<dt data-t="800">AI score</dt><dd data-t="801">A CV-screening score on each card, colour-graded by band. <b>Simulated in this build</b> — the placeholder for real CV screening.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="g-drawer" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.2</div>
+<div>
+<h3 data-t="802">The candidate drawer</h3>
+<p class="route"><b>GET</b> /dashboard/pipeline → candidate card</p>
+<p class="purpose" data-t="803">Clicking a card opens the full candidate beside the board rather
+      than over it — so the recruiter keeps the pipeline in view while reading one person,
+      and can go straight back to dragging.</p>
+</div>
+</div>
+  {{IMG:rec-02-pipeline-candidate-drawer}}
+  <figcaption data-t="804">Candidate profile drawer, docked beside the board</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="805">Header</dt><dd data-t="806">Name, nationality flag, and current stage.</dd>
+<dt data-t="807"><b>Placement</b></dt><dd data-t="808">The client company and the exact role this candidate is being placed into — the agency-model fact that a plain ATS would omit.</dd>
+<dt data-t="809">AI score</dt><dd data-t="810">The score again, labelled <em>(demo)</em> so it is never mistaken for a live model.</dd>
+<dt data-t="811">School · Major</dt><dd data-t="812">Institution and field with study level.</dd>
+<dt data-t="813">About</dt><dd data-t="814">The candidate's summary, typically including language levels — <code>中文初級 · 英文中級</code>.</dd>
+<dt data-t="815">Skills</dt><dd data-t="816">Full skill list, not the truncated card version.</dd>
+<dt data-t="817"><code>View CV →</code></dt><dd data-t="818">Opens the CV.</dd>
+<dt data-t="819"><code>Close</code></dt><dd data-t="820">Returns the board to full width.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="g-switch" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.3</div>
+<div>
+<h3 data-t="821">Switching clients</h3>
+<p class="route"><b>GET</b> /dashboard/pipeline → CLIENT tab</p>
+<p class="purpose" data-t="822">Each client gets its own board. Selecting a different account
+      reloads the five columns with that company's candidates — the mechanism that keeps 25
+      simultaneous hiring processes from becoming one undifferentiated list.</p>
+</div>
+</div>
+  {{IMG:rec-03-pipeline-client-switch}}
+  <figcaption data-t="823">Same board, switched to 巨大機械 Giant Manufacturing</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="824">Counts on tabs</dt><dd data-t="825">Live per client, so where the work is sitting is visible before clicking.</dd>
+<dt data-t="826">Zero-candidate clients</dt><dd data-t="827">Shown with a <code>0</code> rather than hidden — a signed client with no pipeline is itself the signal.</dd>
+<dt data-t="828"><code>Group</code> badge</dt><dd data-t="829">Marks the six Yang Luck group subsidiaries, as opposed to the 19 external client firms.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="g-clients" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.4</div>
+<div>
+<h3 data-t="830">Client accounts</h3>
+<p class="route"><b>GET</b> /dashboard/clients</p>
+<p class="purpose" data-t="831">The commercial view. Each client as an account with its job orders,
+      submissions and placements — how the agency sees whether a relationship is producing
+      anything.</p>
+</div>
+</div>
+  {{IMG:rec-04-clients}}
+  <figcaption data-t="832">/dashboard/clients — 25 accounts and the submission funnel</figcaption>
+<div class="body">
+<h4 data-t="833">Summary</h4>
+<dl class="controls">
+<dt data-t="834">Headline figures</dt><dd data-t="835"><b>25</b> clients · <b>35</b> job orders · <b>36</b> submissions · <b>2</b> placements.</dd>
+<dt data-t="836">Submission funnel</dt><dd data-t="837">Applied 9 → Screening 8 → Interview 11 → Offer 6 → Hired 2, aggregated across every client.</dd>
+</dl>
+<h4 data-t="838">The table</h4>
+<dl class="controls">
+<dt data-t="839">CLIENT</dt><dd data-t="840">Company name, Chinese and English.</dd>
+<dt data-t="841">INDUSTRY</dt><dd data-t="842">營造 Construction · 製造 Manufacturing · 旅宿 Hospitality · 機電 MEP · 人力派遣 Staffing.</dd>
+<dt data-t="843">JOB ORDERS</dt><dd data-t="844">Open requisitions the agency is recruiting against for this client.</dd>
+<dt data-t="845">SUBMISSIONS</dt><dd data-t="846">Candidates put forward.</dd>
+<dt data-t="847">PLACEMENTS</dt><dd data-t="848">Candidates hired — the number the commercial relationship is judged on.</dd>
+</dl>
+<div class="note" data-t="849"><b>Reading the table.</b> Sorted by submissions, it separates clients
+    with volume from clients with conversion. 麗明營造 shows 12 submissions and 1 placement;
+    清新溫泉飯店 shows 2 submissions and 1 placement. High submissions with no placements is
+    the pattern worth acting on.</div>
+</div>
+</section>
+<section class="screen" id="g-compliance" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.5</div>
+<div>
+<h3 data-t="850">Compliance — document expiry</h3>
+<p class="route"><b>GET</b> /dashboard/compliance</p>
+<p class="purpose" data-t="851">Placing foreign nationals in Taiwan means every candidate carries
+      documents that expire. This screen exists so an expiry is caught before it becomes an
+      illegal-employment problem — the requirement that most generic ATS products have no
+      answer for.</p>
+</div>
+</div>
+  {{IMG:rec-05-compliance}}
+  <figcaption data-t="852">/dashboard/compliance — 6 expired, 8 expiring within 30 days</figcaption>
+<div class="body">
+<h4 data-t="853">Summary</h4>
+<dl class="controls">
+<dt data-t="854"><span class="pill crit">6 Expired</span></dt><dd data-t="855">Already lapsed. Blocking.</dd>
+<dt data-t="856"><span class="pill warn">8 Expiring ≤30 days</span></dt><dd data-t="857">Renewal window — the group that needs action now.</dd>
+<dt data-t="858"><span class="pill ok">34 Valid</span></dt><dd data-t="859">In good standing.</dd>
+</dl>
+<h4 data-t="860">Documents needing attention</h4>
+<dl class="controls">
+<dt data-t="861">CANDIDATE</dt><dd data-t="862">Who the document belongs to.</dd>
+<dt data-t="863">DOCUMENT</dt><dd data-t="864">ARC (Alien Resident Certificate), work permit, passport, or medical check.</dd>
+<dt data-t="865">NO.</dt><dd data-t="866">The document number, for cross-checking against the physical document.</dd>
+<dt data-t="867">ISSUER</dt><dd data-t="868">The issuing authority — <code>NIA 移民署</code> for ARCs, <code>MOL/WDA 勞動部</code> for work permits.</dd>
+<dt data-t="869">EXPIRY</dt><dd data-t="870">The date, with an <span class="pill crit">Expired</span> or <span class="pill warn">Expiring</span> flag.</dd>
+</dl>
+<div class="note warn" data-t="871"><b>Sorted by urgency, not alphabetically.</b> The list leads with
+    the earliest expiry, so the top of the table is always the next thing to fix.</div>
+</div>
+</section>
+<section class="screen" id="g-reports" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.6</div>
+<div>
+<h3 data-t="872">Reports</h3>
+<p class="route"><b>GET</b> /dashboard/reports</p>
+<p class="purpose" data-t="873">Where the pipeline is leaking and who is stuck. Built from the
+      stage transitions recorded every time a card is dragged, which is why time-in-stage is
+      measurable at all.</p>
+</div>
+</div>
+  {{IMG:rec-06-reports}}
+  <figcaption data-t="874">/dashboard/reports — funnel, time-in-stage, and the longest-waiting candidates</figcaption>
+<div class="body">
+<h4 data-t="875">Headline metrics</h4>
+<dl class="controls">
+<dt data-t="876">Candidates</dt><dd data-t="877">Total in the pipeline across all clients — 37.</dd>
+<dt data-t="878">Placements</dt><dd data-t="879">Hired — 2.</dd>
+<dt data-t="880">Placement rate</dt><dd data-t="881">Placements over candidates — 5%.</dd>
+<dt data-t="882">Avg days in stage</dt><dd data-t="883">Mean time a candidate sits before moving — 19 days.</dd>
+</dl>
+<h4 data-t="884">Pipeline funnel</h4>
+<dl class="controls">
+<dt data-t="885">Per-stage counts</dt><dd data-t="886">Applied 9 · Screening 8 · Interview 11 · Offer 6 · Hired 2, each with its average dwell time. Where the count drops sharply between stages is where candidates are being lost.</dd>
+</dl>
+<h4 data-t="887">Longest in stage</h4>
+<dl class="controls">
+<dt data-t="888">CANDIDATE · POSITION · STAGE · DAYS IN STAGE</dt><dd data-t="889">The individuals waiting longest, ranked. This converts the funnel into a to-do list — a candidate 20 days in Offer is a specific call to make today.</dd>
+</dl>
+</div>
+</section>
+<!-- ======================================================== ACT 4 ====== -->
+<div class="act" id="act4" style="--role:var(--r-admin)">
+<p class="act-no" data-t="890">Act 4</p>
+<h2 data-t="891">The admin: running the platform</h2>
+<p data-t="892">Oversight rather than participation. The admin approves employers, moderates every job
+  before it goes public, holds the registry of accounts, and configures the event the whole
+  booking system runs on. Six screens.</p>
+<span class="who" data-t="893">Admin · admin@yangluck.demo</span>
+</div>
+<section class="screen" id="d-bookings" style="--role:var(--r-admin)">
+<div class="screen-head">
+<div class="step">4.1</div>
+<div>
+<h3 data-t="894">Every booking on the platform</h3>
+<p class="route"><b>GET</b> /admin/interviews <span class="pill n">default admin landing</span></p>
+<p class="purpose" data-t="895">One table of every interview across every company — the view no
+      employer has. It is where a "my interview disappeared" question gets answered without
+      asking the employer.</p>
+</div>
+</div>
+  {{IMG:adm-01-bookings}}
+  <figcaption data-t="896">/admin/interviews — 15 bookings, 13 active</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="897">Filter tabs</dt><dd data-t="898"><code>Active</code> pending, accepted and reschedule-proposed · <code>Cancelled / Rejected</code> · <code>All</code>. Each carries a live count.</dd>
+<dt data-t="899">Search</dt><dd data-t="900">Across applicant, company, position and status in one box.</dd>
+<dt data-t="901">STUDENT</dt><dd data-t="902">Name and email.</dd>
+<dt data-t="903">COMPANY</dt><dd data-t="904">The employer holding the interview.</dd>
+<dt data-t="905">POSITION</dt><dd data-t="906">The specific role applied for.</dd>
+<dt data-t="907">TIME</dt><dd data-t="908">Booked slot. A proposed reschedule shows the new time marked <code>proposed</code>.</dd>
+<dt data-t="909">STATUS</dt><dd data-t="910"><span class="pill n">pending</span> <span class="pill ok">accepted</span> <span class="pill warn">reschedule proposed</span> <span class="pill n">waitlisted</span> <span class="pill crit">rejected</span> <span class="pill n">cancelled</span></dd>
+</dl>
+<h4 data-t="911">All bookings, including closed ones</h4>
+    {{IMG_BARE:adm-02-bookings-all}}
+  </div>
+</section>
+<section class="screen" id="d-moderation" style="--role:var(--r-admin)">
+<div class="screen-head">
+<div class="step">4.2</div>
+<div>
+<h3 data-t="912">Job moderation</h3>
+<p class="route"><b>GET</b> /admin/jobs</p>
+<p class="purpose" data-t="913">Every position an employer submits passes through here before
+      applicants can see it. The queue is the quality gate on a directory aimed at applicants
+      who cannot easily verify an employer themselves.</p>
+</div>
+</div>
+  {{IMG:adm-03-job-moderation}}
+  <figcaption data-t="914">/admin/jobs — the moderation queue</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="915">Search</dt><dd data-t="916">By company, title or status.</dd>
+<dt data-t="917">Job row</dt><dd data-t="918">Company, title and current moderation state.</dd>
+<dt data-t="919"><code>Approved</code></dt><dd data-t="920">Publishes the position to <code>/jobs</code>, <code>/browse</code> and the company page.</dd>
+<dt data-t="921"><code>Reject</code></dt><dd data-t="922">Blocks publication and returns it to the employer with a reason.</dd>
+<dt data-t="923">Moderation toggle</dt><dd data-t="924">Moderation itself can be switched off platform-wide in settings, in which case positions publish immediately.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="d-jobdetail" style="--role:var(--r-admin)">
+<div class="screen-head">
+<div class="step">4.3</div>
+<div>
+<h3 data-t="925">Moderating one job</h3>
+<p class="route"><b>GET</b> /admin/jobs/[id]</p>
+<p class="purpose" data-t="926">The decision screen for a single position, with the category
+      override and a note field that goes back to the employer.</p>
+</div>
+</div>
+  {{IMG:adm-04-job-moderation-detail}}
+  <figcaption data-t="927">/admin/jobs/43</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="928">Category · <code>Save category</code></dt><dd data-t="929">Overrides the employer's chosen category. Admin-controlled because categories drive the public filters and employers tend to self-select generously.</dd>
+<dt data-t="930">Review note</dt><dd data-t="931"><em>"Add review guidance or rejection reason…"</em> — attached to the decision and returned to the employer.</dd>
+<dt data-t="932"><code>Approved</code></dt><dd data-t="933">Publishes.</dd>
+<dt data-t="934"><code>Reject</code></dt><dd data-t="935">Blocks, with the note as the reason.</dd>
+<dt data-t="936"><code>Reset to Draft</code></dt><dd data-t="937">Returns it to the employer for editing without an outright rejection — the middle path for a fixable listing.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="d-applicants" style="--role:var(--r-admin)">
+<div class="screen-head">
+<div class="step">4.4</div>
+<div>
+<h3 data-t="938">Applicant registry</h3>
+<p class="route"><b>GET</b> /admin/applicants</p>
+<p class="purpose" data-t="939">Every registered applicant. Used for support, for adding someone who
+      registered on paper at an in-person event, and for honouring data-deletion requests.</p>
+</div>
+</div>
+  {{IMG:adm-05-applicants}}
+  <figcaption data-t="940">/admin/applicants</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="941">Search</dt><dd data-t="942">By name, email or major.</dd>
+<dt data-t="943">Columns</dt><dd data-t="944">Name · Email · Major · Joined, each sortable.</dd>
+<dt data-t="945"><code>Add Applicant</code></dt><dd data-t="946">Creates an account manually — for walk-ups at a physical career fair.</dd>
+<dt data-t="947"><code>Remove</code></dt><dd data-t="948">Deletes the applicant. The route by which a PIPA erasure request is actually carried out.</dd>
+</dl>
+<div class="note" data-t="949"><b>All names in this manual are fictional.</b> The demo database is
+    seeded with invented Vietnamese, Indonesian and Filipino candidates. No real applicant
+    appears in any screenshot.</div>
+</div>
+</section>
+<section class="screen" id="d-recruiters" style="--role:var(--r-admin)">
+<div class="screen-head">
+<div class="step">4.5</div>
+<div>
+<h3 data-t="950">Recruiter registry &amp; approval</h3>
+<p class="route"><b>GET</b> /admin/recruiters</p>
+<p class="purpose" data-t="951">The gate on the employer side. New employer accounts are inert
+      until approved here, and this screen also controls which companies lead the public
+      directory.</p>
+</div>
+</div>
+  {{IMG:adm-06-recruiters}}
+  <figcaption data-t="952">/admin/recruiters — 26 accounts</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="953"><code>Approve Recruiter</code></dt><dd data-t="954">Activates a pending employer account so it can publish jobs and receive applicants.</dd>
+<dt data-t="955"><code>Pin</code></dt><dd data-t="956">Sets a pinned rank, promoting a company to the top of the public directory — the lever for featuring anchor employers.</dd>
+<dt data-t="957"><code>Edit</code></dt><dd data-t="958">Amends company details on the employer's behalf.</dd>
+<dt data-t="959"><code>Remove</code></dt><dd data-t="960">Deletes the recruiter account.</dd>
+<dt data-t="961">Search · filter</dt><dd data-t="962">By name, company or email, with a status filter.</dd>
+<dt data-t="963">Columns</dt><dd data-t="964">Name · Email · Joined.</dd>
+<dt data-t="965">Verified badge</dt><dd data-t="966">A trust signal on the public profile. Off by default for ordinary sign-ups; set deliberately.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="d-settings" style="--role:var(--r-admin)">
+<div class="screen-head">
+<div class="step">4.6</div>
+<div>
+<h3 data-t="967">Platform settings — six tabs</h3>
+<p class="route"><b>GET</b> /admin/settings</p>
+<p class="purpose" data-t="968">Where the event itself is configured. The interview time frame here
+      is what generates every bookable slot in the applicant flow — this screen is upstream of
+      the entire booking system.</p>
+</div>
+</div>
+  {{IMG:adm-07-settings-overview}}
+  <figcaption data-t="969">/admin/settings → Overview</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="970">Overview</dt><dd data-t="971">Platform-wide counts and health at a glance.</dd>
+<dt data-t="972">General</dt><dd data-t="973">Event name, organiser, host institution, and operating mode. <b>Onboarding mode</b> controls how much an applicant must complete before applying; <b>job moderation</b> switches the approval gate on or off; <b>self-service cancellation</b> decides whether applicants may cancel their own bookings.</dd>
+<dt data-t="974">Event Branding</dt><dd data-t="975">Display name, tagline, display date, location, and homepage hero images — how the platform is white-labelled for a given event or client.</dd>
+<dt data-t="976">Feedback &amp; bugs</dt><dd data-t="977">Reports submitted from <code>/feedback</code> (step 1.14).</dd>
+<dt data-t="978"><b>Interview Time Frame</b></dt><dd data-t="979">Event date, start and end times, slot duration and buffer between interviews. <b>Changing these regenerates the slot grid every applicant books against</b> — 10:00–17:30 in 30-minute slots here.</dd>
+<dt data-t="980">Tools &amp; Media</dt><dd data-t="981">Image management and operational utilities.</dd>
+</dl>
+<h4 data-t="982">General</h4>
+    {{IMG_BARE:adm-08-settings-general}}
+    <h4 data-t="983">Event Branding</h4>
+    {{IMG_BARE:adm-09-settings-event-branding}}
+    <h4 data-t="984">Feedback &amp; bugs</h4>
+    {{IMG_BARE:adm-10-settings-feedback-bugs}}
+    <h4 data-t="985">Interview Time Frame</h4>
+    {{IMG_BARE:adm-11-settings-interview-time-frame}}
+    <h4 data-t="986">Tools &amp; Media</h4>
+    {{IMG_BARE:adm-12-settings-tools-media}}
+  </div>
+</section>
+<!-- ===================================================== REFERENCE ===== -->
+<div class="act" id="ref" style="--role:var(--accent)">
+<p class="act-no" data-t="987">Reference</p>
+<h2 data-t="988">Everywhere on the app</h2>
+<p data-t="989">Behaviour that isn't owned by any single screen.</p>
+</div>
+<section id="x-common">
+<div class="duo">
+<div>
+<h5 data-t="990">Languages</h5>
+<p data-t="991">The switcher sits in the top bar on every page and swaps the whole interface, not
+      just labels.</p>
+<ul>
+<li data-t="992"><b>Applicants &amp; admins:</b> EN · VN · 中 (繁體)</li>
+<li data-t="993"><b>Recruiters:</b> EN · 中</li>
+<li data-t="994">Vietnamese is a first-class locale, not an afterthought — it is the primary
+        applicant language</li>
+</ul>
+</div>
+<div>
+<h5 data-t="995">Notifications</h5>
+<p data-t="996">A bell in the top bar with an in-app feed, plus optional browser push.</p>
+<ul>
+<li data-t="997">Fires on application submitted, accepted, rejected, and reschedule proposed</li>
+<li data-t="998"><code>Mark all read</code> clears the feed</li>
+<li data-t="999">Push matters because university mail often delays or filters</li>
+</ul>
+</div>
+<div>
+<h5 data-t="1000">Data protection (PIPA)</h5>
+<p data-t="1001">Taiwan's Personal Data Protection Act shapes several flows.</p>
+<ul>
+<li data-t="1002">Consent is captured per application, naming the employer and position</li>
+<li data-t="1003">A dismissible PIPA notice on the login screen</li>
+<li data-t="1004">Consent and retention dates are recorded per candidate</li>
+<li data-t="1005">Deletion is carried out from the admin registry</li>
+</ul>
+</div>
+<div>
+<h5 data-t="1006">Theme &amp; access</h5>
+<p data-t="1007">A light/dark toggle in the top bar, persisted per browser. Every dashboard route is
+      guarded server-side: requesting a page your role doesn't own redirects to
+      <code>/login?next=…</code> and returns you after signing in.</p>
+</div>
+</div>
+</section>
+<div class="act" id="x-public" style="--role:var(--accent)">
+<p class="act-no" data-t="1008">Reference</p>
+<h2 data-t="1009">Public &amp; legal pages</h2>
+<p data-t="1010">Linked from the footer of every screen.</p>
+</div>
+<section class="screen">
+<div class="screen-head">
+<div class="step">§</div>
+<div>
+<h3 data-t="1011">Tutorial, about, and legal</h3>
+<p class="route"><b>GET</b> /tutorial · /about · /privacy-policy · /terms-of-service</p>
+<p class="purpose" data-t="1012">In-product help and the legal basis for handling applicant data.</p>
+</div>
+</div>
+  {{IMG:pub-12-tutorial}}
+  <figcaption data-t="1013">/tutorial — in-product walkthrough</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="1014"><code>/tutorial</code></dt><dd data-t="1015">An illustrated walkthrough of the applicant flow, inside the product.</dd>
+<dt data-t="1016"><code>/about</code></dt><dd data-t="1017">The platform, the organiser, and the event.</dd>
+<dt data-t="1018"><code>/privacy-policy</code></dt><dd data-t="1019">PIPA-based privacy notice — what is collected, why, who it is shared with, and retention.</dd>
+<dt data-t="1020"><code>/terms-of-service</code></dt><dd data-t="1021">Terms for both applicants and employers.</dd>
+</dl>
+<h4 data-t="1022">About</h4>
+    {{IMG_BARE:pub-11-about}}
+    <h4 data-t="1023">Privacy policy</h4>
+    {{IMG_BARE:pub-13-privacy}}
+    <h4 data-t="1024">Terms of service</h4>
+    {{IMG_BARE:pub-14-terms}}
+  </div>
+</section>
+<div class="act" id="x-notes" data-internal style="--role:var(--accent)">
+<p class="act-no" data-t="1025">Reference</p>
+<h2 data-t="1026">Notes &amp; known gaps</h2>
+<p data-t="1027">Recorded so the manual isn't read as claiming more than the build does.</p>
+</div>
+<section data-internal>
+<div class="note warn" data-t="1028"><b>The AI score is simulated.</b> Every candidate card and the
+  drawer show an <em>AI score</em>, labelled <code>(demo)</code> in the drawer. It is a
+  seeded placeholder for CV screening, not a live model. Treat it as a slot in the design,
+  not a capability.</div>
+<div class="note warn" data-t="1029"><b>The slot picker ignores the configured event date.</b>
+<code>src/components/slot-picker.tsx</code> opens on the build-time constant
+  <code>EVENT_CONFIG.date</code> rather than the event date set in admin settings. Changing
+  the date under <em>Interview Time Frame</em> updates the rest of the app, but the picker
+  still opens on the old day, where an applicant sees <em>"No available slots on this day."</em>
+  Found while capturing this manual; worth fixing before the next live event.</div>
+<div class="note" data-t="1030"><b>Interview booking and the ATS pipeline are separate systems.</b>
+  Bookings (slots, accept/reject, the schedule) and pipeline stages (Applied → Hired) are
+  deliberately distinct: a candidate can sit in Screening without holding an interview slot,
+  and an interview can be booked without a pipeline card. They meet on the candidate, not in
+  a single status field.</div>
+<div class="note" data-t="1031"><b>Two recruiter surfaces, one role.</b> Client-company and agency
+  accounts are both <code>recruiter</code>. Clients, Compliance and Reports appear only for
+  the agency account. If an employer reports "missing tabs", this is why.</div>
+<div class="note ok" data-t="1032"><b>Captured environment.</b> Every screenshot is from the running
+  application against an isolated demo database — 28 accounts, 25 client companies, 35
+  positions, 37 candidates, 15 bookings, all fictional. Production data was never used.</div>
+</section>
+<footer>
+<p data-t="1033"><b>TECXWORK User Manual</b> · Yang Luck 揚運 build · captured August 2026 from the
+  running application. 51 annotated screens across four roles.</p>
+<p data-t="1034">Demo accounts — applicant <code>student@yangluck.demo</code> · employer
+  <code>co-yanghong@yangluck.demo</code> · agency <code>hr@yangluck.demo</code> · admin
+  <code>admin@yangluck.demo</code> · password <code>demo1234</code></p>
+</footer>
+</main>
+</div>
+<script>
+// ---- language switching ------------------------------------------------------
+// The dictionaries are injected by build.py as window.__I18N = {en, zh, vi}, keyed by the
+// data-t / data-ta attributes that i18n_extract.py stamped on to each element. Swapping
+// innerHTML is safe here because no translated element contains a node with a listener
+// attached -- screenshots sit outside every translated unit.
+(function () {
+  var DICT = window.__I18N || {};
+  var LANGS = { en: 'en', zh: 'zh-Hant', vi: 'vi' };
+  var KEY = 'tecxwork-manual-lang';
+
+  function apply(lang) {
+    var d = DICT[lang];
+    if (!d) return;
+    var nodes = document.querySelectorAll('[data-t]');
+    for (var i = 0; i < nodes.length; i++) {
+      var v = d[nodes[i].getAttribute('data-t')];
+      if (v != null) nodes[i].innerHTML = v;
+    }
+    var aria = document.querySelectorAll('[data-ta]');
+    for (var j = 0; j < aria.length; j++) {
+      var a = d[aria[j].getAttribute('data-ta')];
+      if (a != null) aria[j].setAttribute('aria-label', a);
+    }
+    if (d['1']) document.title = d['1'].replace(/<[^>]+>/g, '');
+    document.documentElement.setAttribute('lang', LANGS[lang] || 'en');
+    var btns = document.querySelectorAll('.lang-switch button');
+    for (var k = 0; k < btns.length; k++) {
+      btns[k].setAttribute('aria-pressed', btns[k].getAttribute('data-lang') === lang ? 'true' : 'false');
+    }
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.lang-switch button') : null;
+    if (btn) apply(btn.getAttribute('data-lang'));
+  });
+
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (!saved) {
+    // fall back to the browser's preference, so a Vietnamese reader lands in Vietnamese
+    var nav = (navigator.language || 'en').toLowerCase();
+    if (nav.indexOf('vi') === 0) saved = 'vi';
+    else if (nav.indexOf('zh') === 0) saved = 'zh';
+  }
+  if (saved && saved !== 'en') apply(saved);
+})();
+
+// ---- screenshot lightbox ----------------------------------------------------
+(function () {
+  var box = document.getElementById('lightbox');
+  if (!box) return;
+  var stage = document.getElementById('lb-stage');
+  var elCount = document.getElementById('lb-count');
+  var elTitle = document.getElementById('lb-title');
+  var btnPrev = document.getElementById('lb-prev');
+  var btnNext = document.getElementById('lb-next');
+  var btnClose = document.getElementById('lb-close');
+  var btnZoom = document.getElementById('lb-zoom');
+
+  // Every screenshot in the document, in reading order. The caption under a figure is a
+  // better title than the alt text, so prefer it when there is one.
+  var shots = [].slice.call(document.querySelectorAll('figure img, img.inline-shot'))
+    .filter(function (img) { return !img.closest('.diagram'); });
+  if (!shots.length) return;
+
+  var items = shots.map(function (img) {
+    var fig = img.closest('figure');
+    var cap = fig && fig.querySelector('figcaption');
+    return { src: img.currentSrc || img.src, w: img.width, h: img.height,
+             title: (cap && cap.textContent.trim()) || img.alt.replace(/^Screenshot:\s*/, '') };
+  });
+
+  var index = -1;
+  var lastFocus = null;
+
+  function setZoom(on) {
+    box.classList.toggle('zoom', on);
+    btnZoom.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btnZoom.setAttribute('aria-label', on ? 'Fit to screen' : 'Zoom in');
+    if (on) {
+      // centre the pan horizontally, otherwise a zoomed shot opens on its left gutter
+      stage.scrollLeft = Math.max(0, (stage.scrollWidth - stage.clientWidth) / 2);
+    } else {
+      stage.scrollLeft = 0;
+    }
+  }
+
+  function show(i) {
+    index = (i + items.length) % items.length;
+    var it = items[index];
+    stage.innerHTML = '';
+    var img = new Image();
+    img.src = it.src;
+    if (it.w && it.h) { img.width = it.w; img.height = it.h; }
+    img.alt = it.title;
+    img.addEventListener('click', function (e) {
+      e.stopPropagation();                       // don't let it reach the dismiss handler
+      setZoom(!box.classList.contains('zoom'));
+    });
+    stage.appendChild(img);
+    stage.scrollTop = 0;
+    setZoom(false);                              // each screenshot starts fitted
+    elCount.textContent = (index + 1) + ' / ' + items.length;
+    elTitle.textContent = it.title;
+  }
+
+  function open(i) {
+    lastFocus = document.activeElement;
+    box.classList.add('on');
+    document.body.classList.add('lb-open');
+    show(i);
+    btnClose.focus({ preventScroll: true });
+  }
+
+  function close() {
+    box.classList.remove('on');
+    document.body.classList.remove('lb-open');
+    stage.innerHTML = '';           // drop the decoded copy
+    if (lastFocus) lastFocus.focus({ preventScroll: true });
+  }
+
+  shots.forEach(function (img, i) {
+    img.classList.add('shot-open');
+    img.setAttribute('role', 'button');
+    img.setAttribute('tabindex', '0');
+    img.title = 'Tap to enlarge';
+    img.addEventListener('click', function () { open(i); });
+    img.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(i); }
+    });
+  });
+
+  btnZoom.addEventListener('click', function () { setZoom(!box.classList.contains('zoom')); });
+  btnPrev.addEventListener('click', function () { show(index - 1); });
+  btnNext.addEventListener('click', function () { show(index + 1); });
+  btnClose.addEventListener('click', close);
+  box.addEventListener('click', function (e) {
+    // click the backdrop (but not the image or the controls) to dismiss
+    if (e.target === box || e.target === stage) close();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (!box.classList.contains('on')) return;
+    if (e.key === 'Escape') { close(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); show(index - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); show(index + 1); }
+  });
+
+  // horizontal swipe to move between screenshots; vertical is left to the scroller
+  var x0 = null, y0 = null;
+  stage.addEventListener('touchstart', function (e) {
+    x0 = e.changedTouches[0].clientX; y0 = e.changedTouches[0].clientY;
+  }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    var dy = e.changedTouches[0].clientY - y0;
+    var panning = box.classList.contains('zoom') && stage.scrollWidth > stage.clientWidth + 1;
+    if (!panning && Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+      show(index + (dx < 0 ? 1 : -1));
+    }
+    x0 = y0 = null;
+  }, { passive: true });
+})();
+
+// ---- mobile contents drawer -------------------------------------------------
+(function () {
+  var rail = document.getElementById('rail');
+  var toggle = document.querySelector('.nav-toggle');
+  var scrim = document.querySelector('.nav-scrim');
+  var closeBtn = document.querySelector('.rail-close');
+  if (!rail || !toggle || !scrim) return;
+
+  var mobile = window.matchMedia('(max-width: 1080px)');
+
+  function setOpen(open, returnFocus) {
+    rail.classList.toggle('open', open);
+    scrim.classList.toggle('on', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.classList.toggle('nav-open', open);
+    // preventScroll matters: focusing must not fight the anchor jump that follows
+    // when the drawer is closed by tapping a contents link.
+    if (open) {
+      // 41 entries is too many to open at the top every time: bring the section you are
+      // currently reading into view, so the drawer answers "where am I" as well as
+      // "where can I go".
+      var current = rail.querySelector('a.on');
+      if (current) current.scrollIntoView({ block: 'center' });
+      else rail.scrollTop = 0;
+      var first = rail.querySelector('a');
+      if (first) first.focus({ preventScroll: true });
+    } else if (returnFocus) {
+      toggle.focus({ preventScroll: true });
+    }
+  }
+
+  toggle.addEventListener('click', function () {
+    setOpen(!rail.classList.contains('open'), true);
+  });
+  scrim.addEventListener('click', function () { setOpen(false, true); });
+  if (closeBtn) closeBtn.addEventListener('click', function () { setOpen(false, true); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && rail.classList.contains('open')) setOpen(false, true);
+  });
+
+  // Tapping a contents link should close the drawer and let the jump happen.
+  rail.addEventListener('click', function (e) {
+    if (e.target.closest('a') && mobile.matches) setOpen(false, false);
+  });
+
+  // Rotating to landscape / resizing up to the desktop layout must not leave the
+  // body scroll-locked by a drawer that is no longer rendered.
+  var onChange = function () { if (!mobile.matches) setOpen(false, false); };
+  if (mobile.addEventListener) mobile.addEventListener('change', onChange);
+  else if (mobile.addListener) mobile.addListener(onChange);
+})();
+
+// Highlight the rail entry for the section currently in view.
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a[href^="#"]'));
+  var byId = {};
+  var targets = [];
+  links.forEach(function (a) {
+    var el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el) { byId[el.id] = a; targets.push(el); }
+  });
+  if (!('IntersectionObserver' in window) || !targets.length) return;
+  var visible = {};
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    var current = null;
+    for (var i = 0; i < targets.length; i++) {
+      if (visible[targets[i].id]) { current = targets[i].id; break; }
+    }
+    links.forEach(function (a) { a.classList.remove('on'); });
+    if (current && byId[current]) {
+      byId[current].classList.add('on');
+      byId[current].setAttribute('aria-current', 'true');
+    }
+  }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+  targets.forEach(function (t) { io.observe(t); });
+})();
+</script>

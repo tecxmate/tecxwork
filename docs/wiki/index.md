@@ -54,6 +54,8 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [tecxwork web app](topics/tecxwork.md) — the product itself (area: full stack)
 - [Event-Day Load Readiness](topics/load-readiness.md) — verified prod capacity (max_conn 901, pooled), slot-concurrency protections, and the per-IP venue-NAT rate-limit risk
 - [V-GEN TRIDENT 2026](topics/v-gen-trident-2026.md) — flagship career fair event
+- [Platform Manual (screens & functions)](topics/platform-manual.md) — workflow-driven manual of every screen/function across all 4 roles; published artifact
+- [Demo DB state for manual capture](topics/demo-db-manual-capture.md) — .env.local points at PROD; the 4 fixes tecxwork-yl-demo needed, plus the SlotPicker event-date bug
 - [Admin panel](topics/admin-panel.md) — area: event-config + uploads
 - [Capacity analytics](topics/capacity-analytics.md) — Overview chart: per-company slot supply vs booking-request demand, status buckets, query
 - [Recruiter dashboard](topics/recruiter-dashboard.md) — area: company profile + slots
