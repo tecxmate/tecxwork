@@ -99,7 +99,7 @@
  "98": "Mọi màn hình trong hướng dẫn này đều theo cùng một bố cục bốn phần, nên bạn chỉ cần quen một lần là sau đó đọc lướt được.",
  "99": "<span class=\"sample-step\">3.5</span>  Số thứ tự bước",
  "100": "Phần, rồi đến vị trí trong phần đó — <code>3.5</code> là màn hình thứ năm của Phần 3. Số này luôn khớp với mục lục bên trái, nên dù đã cuộn đi xa bạn vẫn biết mình đang ở đâu. Màu sắc theo vai trò: xanh ngọc là ứng viên, xanh dương là nhà tuyển dụng, tím là môi giới, hổ phách là quản trị viên.",
- "101": "<span class=\"route\"><b>GET</b> /dashboard/pipeline</span>",
+ "101": "<span class=\"route\">/dashboard/pipeline</span>",
  "102": "Đường dẫn thật. Gắn nó sau địa chỉ trang web là vào thẳng màn hình đó.",
  "103": "Đoạn nêu mục đích",
  "104": "Màn hình này dùng để làm gì và tại sao lại thiết kế như vậy — nói về lý do, không chỉ là tên gọi.",

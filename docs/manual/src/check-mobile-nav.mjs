@@ -12,6 +12,7 @@
  */
 import { webkit } from '/Users/niko/antigravity/tecxwork/node_modules/playwright-core/index.mjs';
 import path from 'node:path';
+import os from 'node:os';
 
 const WEBKIT = '/Users/niko/Library/Caches/ms-playwright/webkit_mac14_arm64_special-2251/pw_run.sh';
 const target = process.argv[2];
@@ -104,10 +105,10 @@ check('tapping a link closes the drawer', !s.open);
 check('…and releases the scroll lock', !s.bodyLocked);
 check('…and lands on the right section', Math.abs(landed) < 90, `${landed}px from the bar`);
 
-await page.screenshot({ path: path.resolve(path.dirname(target), 'src/.mobile-closed.png') });
+await page.screenshot({ path: path.join(os.tmpdir(), '.mobile-closed.png') });
 await page.click('.nav-toggle');
 await page.waitForTimeout(700);
-await page.screenshot({ path: path.resolve(path.dirname(target), 'src/.mobile-open.png') });
+await page.screenshot({ path: path.join(os.tmpdir(), '.mobile-open.png') });
 
 console.log(fails.length ? `\n✗ ${fails.length} check(s) failed` : `\n✓ all mobile nav checks passed`);
 await browser.close();

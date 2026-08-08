@@ -562,7 +562,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div data-t="100">Act, then position within it — <code>3.5</code> is the fifth screen of Act 3. It always matches the sidebar, so you can tell where you are without scrolling back. Coloured by role: teal for applicant, blue for employer, violet for agency, amber for admin.</div>
 </div>
 <div class="legend-row">
-<div data-t="101"><span class="route"><b>GET</b> /dashboard/pipeline</span></div>
+<div data-t="101"><span class="route">/dashboard/pipeline</span></div>
 <div data-t="102">The actual route. Paste it after the site address to land on that screen.</div>
 </div>
 <div class="legend-row">
@@ -1021,7 +1021,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.1</div>
 <div>
 <h3 data-t="450">Arriving — the company directory</h3>
-<p class="route"><b>GET</b> /</p>
+<p class="route">/</p>
 <p class="purpose" data-t="451">The home page is a directory, not a marketing splash. An applicant
       sees who is actually hiring within the first screenful — company name, industry,
       a one-line description, and the open positions at each. The goal is to answer
@@ -1050,7 +1050,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.2</div>
 <div>
 <h3 data-t="465">Choosing a role</h3>
-<p class="route"><b>GET</b> /get-started</p>
+<p class="route">/get-started</p>
 <p class="purpose" data-t="466">Sign-up forks here. Applicants and employers need different fields,
       different verification, and different approval rules, so the platform asks which
       you are before showing a form rather than branching inside one.</p>
@@ -1070,7 +1070,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.3</div>
 <div>
 <h3 data-t="472">Registering — email verification first</h3>
-<p class="route"><b>GET</b> /register</p>
+<p class="route">/register</p>
 <p class="purpose" data-t="473">Sign-up opens with just email and password, and sends a
       verification code before collecting anything else. Nothing is asked twice, and an
       abandoned sign-up leaves no half-built profile behind.</p>
@@ -1095,7 +1095,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.4</div>
 <div>
 <h3 data-t="482">Logging in</h3>
-<p class="route"><b>GET</b> /login · <b>GET</b> /forgot-password</p>
+<p class="route">/login · /forgot-password</p>
 <p class="purpose" data-t="483">One login screen for all four roles — the account's role decides
       where you land. Errors distinguish "no such account" from "wrong password", because
       the two need different next actions.</p>
@@ -1124,7 +1124,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.5</div>
 <div>
 <h3 data-t="499">Building the profile — eight tabs</h3>
-<p class="route"><b>GET</b> /profile</p>
+<p class="route">/profile</p>
 <p class="purpose" data-t="500">The profile is what recruiters actually read, so it is split into
       eight short tabs rather than one long form. A completion meter shows how much is
       filled in, and <code>Save Changes &amp; Next</code> walks the tabs in order — the
@@ -1159,7 +1159,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.5b</div>
 <div>
 <h3 data-t="528">Education, preferences and experience</h3>
-<p class="route"><b>GET</b> /profile → Education · Career Preferences · Work Experience</p>
+<p class="route">/profile → Education · Career Preferences · Work Experience</p>
 <p class="purpose" data-t="529">The three tabs that carry the most weight in screening. School and
       major populate the pipeline card; career preferences let the agency match a candidate
       to a client before the applicant has applied anywhere.</p>
@@ -1177,7 +1177,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.5c</div>
 <div>
 <h3 data-t="531">Certifications, skills, and the CV</h3>
-<p class="route"><b>GET</b> /profile → Certifications · Skills · CV / QR</p>
+<p class="route">/profile → Certifications · Skills · CV / QR</p>
 <p class="purpose" data-t="532">The evidence tabs. Skills become the chips a recruiter scans on the
       board; the CV link is required to apply at all.</p>
 </div>
@@ -1198,7 +1198,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.6</div>
 <div>
 <h3 data-t="535">Browsing companies</h3>
-<p class="route"><b>GET</b> /browse</p>
+<p class="route">/browse</p>
 <p class="purpose" data-t="536">The full directory of participating employers, with search across
       both company names and position titles — so typing a job title finds the companies
       hiring for it.</p>
@@ -1225,7 +1225,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.7</div>
 <div>
 <h3 data-t="548">The jobs board</h3>
-<p class="route"><b>GET</b> /jobs · <b>GET</b> /jobs/cat/[category]</p>
+<p class="route">/jobs · /jobs/cat/[category]</p>
 <p class="purpose" data-t="549">The position-first view, for applicants who care what the work is
       more than who the employer is. A master list on the left, the selected job rendered
       in full on the right — so comparing roles takes no navigation.</p>
@@ -1248,7 +1248,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.8</div>
 <div>
 <h3 data-t="561">Reading a job</h3>
-<p class="route"><b>GET</b> /jobs/[id]</p>
+<p class="route">/jobs/[id]</p>
 <p class="purpose" data-t="562">The full description on its own shareable URL. Structured into
       fixed sections so two jobs can be compared field by field, and so the facts that
       decide it for an international applicant — salary and visa support — are never buried.</p>
@@ -1275,7 +1275,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.9</div>
 <div>
 <h3 data-t="582">The company page</h3>
-<p class="route"><b>GET</b> /recruiter/[id]</p>
+<p class="route">/recruiter/[id]</p>
 <p class="purpose" data-t="583">Where applying actually happens. The employer on the left, their
       open positions in the middle, and the booking flow taking over the right column —
       the applicant never leaves this page between choosing a role and holding a slot.</p>
@@ -1298,7 +1298,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.10</div>
 <div>
 <h3 data-t="595">Picking a time</h3>
-<p class="route"><b>GET</b> /recruiter/[id] → step <code>pick-slot</code></p>
+<p class="route">/recruiter/[id] → step <code>pick-slot</code></p>
 <p class="purpose" data-t="596">Applying means booking. The applicant picks a real 30-minute slot
       from the employer's published availability — first come, first served — so an
       application arrives already scheduled.</p>
@@ -1320,7 +1320,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.11</div>
 <div>
 <h3 data-t="606">CV and consent</h3>
-<p class="route"><b>GET</b> /recruiter/[id] → step <code>booking-form</code></p>
+<p class="route">/recruiter/[id] → step <code>booking-form</code></p>
 <p class="purpose" data-t="607">The last screen before submitting. Identity is pre-filled from the
       profile; what the applicant must actively confirm is the two things that break
       downstream — an unreadable CV link, and consent to share their data with this
@@ -1374,7 +1374,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.13</div>
 <div>
 <h3 data-t="636">Tracking it</h3>
-<p class="route"><b>GET</b> /profile → My Applications</p>
+<p class="route">/profile → My Applications</p>
 <p class="purpose" data-t="637">One list of every application and where it stands, plus an in-app
       notification feed. The applicant never has to email anyone to ask.</p>
 </div>
@@ -1397,7 +1397,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">1.14</div>
 <div>
 <h3 data-t="646">Reporting a problem</h3>
-<p class="route"><b>GET</b> /feedback <span class="pill n">sign-in required</span></p>
+<p class="route">/feedback <span class="pill n">sign-in required</span></p>
 <p class="purpose" data-t="647">A built-in bug and feedback report, reachable from the footer on
       every page. Reports land in the admin console rather than an inbox.</p>
 </div>
@@ -1426,7 +1426,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">2.1</div>
 <div>
 <h3 data-t="659">Employer sign-up — approval required</h3>
-<p class="route"><b>GET</b> /recruiter/signup</p>
+<p class="route">/recruiter/signup</p>
 <p class="purpose" data-t="660">Employer accounts are not self-serve. Registration creates the
       account, but an admin must approve it before it can publish jobs or receive
       applicants — the gate that keeps an applicant-facing directory trustworthy.</p>
@@ -1447,7 +1447,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">2.2</div>
 <div>
 <h3 data-t="668">Job openings</h3>
-<p class="route"><b>GET</b> /dashboard/jobs</p>
+<p class="route">/dashboard/jobs</p>
 <p class="purpose" data-t="669">Every position the company has posted. Positions are the unit
       applicants apply to, so each one carries its own description, salary and JD link
       rather than sharing a single company-level advert.</p>
@@ -1471,7 +1471,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">2.3</div>
 <div>
 <h3 data-t="678">The job form — every field</h3>
-<p class="route"><b>GET</b> /dashboard/jobs → Add</p>
+<p class="route">/dashboard/jobs → Add</p>
 <p class="purpose" data-t="679">The form that produces everything an applicant reads on the job detail
       page. Only three fields are mandatory; the rest exist because this audience makes
       decisions on salary, language and visa long before responsibilities.</p>
@@ -1507,7 +1507,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">2.4</div>
 <div>
 <h3 data-t="717">Company profile</h3>
-<p class="route"><b>GET</b> /dashboard/company</p>
+<p class="route">/dashboard/company</p>
 <p class="purpose" data-t="718">What applicants see on the company page and the directory card, plus
       the interview capacity that determines how many slots exist at all.</p>
 </div>
@@ -1529,7 +1529,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">2.5</div>
 <div>
 <h3 data-t="730">Triaging applicants</h3>
-<p class="route"><b>GET</b> /dashboard/applicants</p>
+<p class="route">/dashboard/applicants</p>
 <p class="purpose" data-t="731">The employer's working screen. Applications arrive already holding a
       time, grouped by what they need from you — so the queue is ordered by decision
       required, not by arrival.</p>
@@ -1570,7 +1570,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">2.6</div>
 <div>
 <h3 data-t="763">Interview day</h3>
-<p class="route"><b>GET</b> /dashboard/interviews</p>
+<p class="route">/dashboard/interviews</p>
 <p class="purpose" data-t="764">The run sheet: only accepted interviews, in time order, each with a
       one-click CV and an interviewer assignment. This is the screen that gets used on the
       day itself.</p>
@@ -1602,7 +1602,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">3.1</div>
 <div>
 <h3 data-t="780">The pipeline board</h3>
-<p class="route"><b>GET</b> /dashboard/pipeline <span class="pill n">/pipeline redirects here</span></p>
+<p class="route">/dashboard/pipeline <span class="pill n">/pipeline redirects here</span></p>
 <p class="purpose" data-t="781">The centre of the product. A five-stage kanban board of every
       candidate for one client company, moved by dragging. It is a native tab inside the
       recruiter dashboard — same top bar, same language switcher, same components — not a
@@ -1636,7 +1636,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">3.2</div>
 <div>
 <h3 data-t="802">The candidate drawer</h3>
-<p class="route"><b>GET</b> /dashboard/pipeline → candidate card</p>
+<p class="route">/dashboard/pipeline → candidate card</p>
 <p class="purpose" data-t="803">Clicking a card opens the full candidate beside the board rather
       than over it — so the recruiter keeps the pipeline in view while reading one person,
       and can go straight back to dragging.</p>
@@ -1662,7 +1662,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">3.3</div>
 <div>
 <h3 data-t="821">Switching clients</h3>
-<p class="route"><b>GET</b> /dashboard/pipeline → CLIENT tab</p>
+<p class="route">/dashboard/pipeline → CLIENT tab</p>
 <p class="purpose" data-t="822">Each client gets its own board. Selecting a different account
       reloads the five columns with that company's candidates — the mechanism that keeps 25
       simultaneous hiring processes from becoming one undifferentiated list.</p>
@@ -1683,7 +1683,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">3.4</div>
 <div>
 <h3 data-t="830">Client accounts</h3>
-<p class="route"><b>GET</b> /dashboard/clients</p>
+<p class="route">/dashboard/clients</p>
 <p class="purpose" data-t="831">The commercial view. Each client as an account with its job orders,
       submissions and placements — how the agency sees whether a relationship is producing
       anything.</p>
@@ -1716,7 +1716,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">3.5</div>
 <div>
 <h3 data-t="850">Compliance — document expiry</h3>
-<p class="route"><b>GET</b> /dashboard/compliance</p>
+<p class="route">/dashboard/compliance</p>
 <p class="purpose" data-t="851">Placing foreign nationals in Taiwan means every candidate carries
       documents that expire. This screen exists so an expiry is caught before it becomes an
       illegal-employment problem — the requirement that most generic ATS products have no
@@ -1749,7 +1749,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">3.6</div>
 <div>
 <h3 data-t="872">Reports</h3>
-<p class="route"><b>GET</b> /dashboard/reports</p>
+<p class="route">/dashboard/reports</p>
 <p class="purpose" data-t="873">Where the pipeline is leaking and who is stuck. Built from the
       stage transitions recorded every time a card is dragged, which is why time-in-stage is
       measurable at all.</p>
@@ -1789,7 +1789,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">4.1</div>
 <div>
 <h3 data-t="894">Every booking on the platform</h3>
-<p class="route"><b>GET</b> /admin/interviews <span class="pill n">default admin landing</span></p>
+<p class="route">/admin/interviews <span class="pill n">default admin landing</span></p>
 <p class="purpose" data-t="895">One table of every interview across every company — the view no
       employer has. It is where a "my interview disappeared" question gets answered without
       asking the employer.</p>
@@ -1816,7 +1816,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">4.2</div>
 <div>
 <h3 data-t="912">Job moderation</h3>
-<p class="route"><b>GET</b> /admin/jobs</p>
+<p class="route">/admin/jobs</p>
 <p class="purpose" data-t="913">Every position an employer submits passes through here before
       applicants can see it. The queue is the quality gate on a directory aimed at applicants
       who cannot easily verify an employer themselves.</p>
@@ -1839,7 +1839,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">4.3</div>
 <div>
 <h3 data-t="925">Moderating one job</h3>
-<p class="route"><b>GET</b> /admin/jobs/[id]</p>
+<p class="route">/admin/jobs/[id]</p>
 <p class="purpose" data-t="926">The decision screen for a single position, with the category
       override and a note field that goes back to the employer.</p>
 </div>
@@ -1861,7 +1861,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">4.4</div>
 <div>
 <h3 data-t="938">Applicant registry</h3>
-<p class="route"><b>GET</b> /admin/applicants</p>
+<p class="route">/admin/applicants</p>
 <p class="purpose" data-t="939">Every registered applicant. Used for support, for adding someone who
       registered on paper at an in-person event, and for honouring data-deletion requests.</p>
 </div>
@@ -1885,7 +1885,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">4.5</div>
 <div>
 <h3 data-t="950">Recruiter registry &amp; approval</h3>
-<p class="route"><b>GET</b> /admin/recruiters</p>
+<p class="route">/admin/recruiters</p>
 <p class="purpose" data-t="951">The gate on the employer side. New employer accounts are inert
       until approved here, and this screen also controls which companies lead the public
       directory.</p>
@@ -1910,7 +1910,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">4.6</div>
 <div>
 <h3 data-t="967">Platform settings — six tabs</h3>
-<p class="route"><b>GET</b> /admin/settings</p>
+<p class="route">/admin/settings</p>
 <p class="purpose" data-t="968">Where the event itself is configured. The interview time frame here
       is what generates every bookable slot in the applicant flow — this screen is upstream of
       the entire booking system.</p>
@@ -1995,7 +1995,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">§</div>
 <div>
 <h3 data-t="1011">Tutorial, about, and legal</h3>
-<p class="route"><b>GET</b> /tutorial · /about · /privacy-policy · /terms-of-service</p>
+<p class="route">/tutorial · /about · /privacy-policy · /terms-of-service</p>
 <p class="purpose" data-t="1012">In-product help and the legal basis for handling applicant data.</p>
 </div>
 </div>

@@ -14,6 +14,7 @@
  */
 import { webkit } from '/Users/niko/antigravity/tecxwork/node_modules/playwright-core/index.mjs';
 import path from 'node:path';
+import os from 'node:os';
 
 const WEBKIT = '/Users/niko/Library/Caches/ms-playwright/webkit_mac14_arm64_special-2251/pw_run.sh';
 const target = process.argv[2];
@@ -127,7 +128,7 @@ check('…and releases the lock', !s.locked);
 // swipe
 await page.click('img.shot-open');
 await page.waitForTimeout(600);
-await page.screenshot({ path: path.resolve(path.dirname(target), 'src/.lightbox.png') });
+await page.screenshot({ path: path.join(os.tmpdir(), '.lightbox.png') });
 await browser.close();
 
 // ---- swipe, checked in Chromium -------------------------------------------------------

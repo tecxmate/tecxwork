@@ -99,7 +99,7 @@
  "98": "Every screen in this\n  manual follows the same four-part shape, so you can learn the pattern once and then skim.",
  "99": "<span class=\"sample-step\">3.5</span>  Step number",
  "100": "Act, then position within it — <code>3.5</code> is the fifth screen of Act 3. It always matches the sidebar, so you can tell where you are without scrolling back. Coloured by role: teal for applicant, blue for employer, violet for agency, amber for admin.",
- "101": "<span class=\"route\"><b>GET</b> /dashboard/pipeline</span>",
+ "101": "<span class=\"route\">/dashboard/pipeline</span>",
  "102": "The actual route. Paste it after the site address to land on that screen.",
  "103": "Purpose paragraph",
  "104": "What the screen is for and why it was built this way — the reasoning, not just the label.",

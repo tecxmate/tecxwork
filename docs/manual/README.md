@@ -106,6 +106,30 @@ Literal UI strings are deliberately *not* translated: routes, `demo1234`, the de
 addresses, and button labels that really are English in the product. The glossary explains
 why a few screens still say "Student" where the manual says "applicant".
 
+## PowerPoint decks
+
+```bash
+node /tmp/render-diagrams.mjs                    # SVG diagrams -> PNG (python-pptx can't embed SVG)
+python3 docs/manual/src/build_pptx.py en zh vi
+```
+
+Produces `public/tecxwork-manual{,-zh,-vi}.pptx` — 43 slides each, 16:9, ~4 MB.
+
+The deck is **parsed out of `manual.src.html`**, not retyped: every screen slide takes its
+step number, title, route, purpose and control list from the same markup the HTML renders,
+and translated decks reuse the same i18n dictionaries. So the deck cannot quietly drift from
+the manual.
+
+Layout: text column left, screenshot **full-bleed on the right**. An earlier version put the
+screenshot in a box under a header and it was too small to read — on a slide the screenshot
+*is* the content, so it gets the larger half and no margin. Pages taller than 1.05:1 are
+cropped to their top and the slide says so.
+
+`/tmp/preview_pptx.py` renders slides to HTML by reading geometry back out of the saved
+file, which is how the layout gets checked (PowerPoint's AppleScript PNG export is blocked by
+its sandbox). Note it does not render autoshape fills, so step badges look blank in the
+preview while being correct in the file.
+
 ## Screenshot lightbox
 
 Every screenshot is tap-to-enlarge, with next/prev across all 51, arrow keys, swipe, and a
