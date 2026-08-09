@@ -92,6 +92,19 @@ beforeEach(async () => {
   const { db } = await import("@/lib/db");
   await db.execute(/* sql */ `
     truncate table
+      audit_log,
+      compliance_documents,
+      placements,
+      submissions,
+      job_orders,
+      contacts,
+      clients,
+      application_stage_transitions,
+      applications,
+      pipeline_stages,
+      pipeline_templates,
+      memberships,
+      orgs,
       booking_reschedule_logs,
       bookings,
       slots,

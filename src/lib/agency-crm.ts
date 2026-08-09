@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
 import {
@@ -15,6 +15,8 @@ import {
 export type ComplianceStatus = "expired" | "expiring_soon" | "valid";
 
 export type ComplianceDocRow = {
+  id: number;
+  candidateId: number;
   candidateName: string;
   docType: string;
   docNumber: string | null;
@@ -119,6 +121,8 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
   // Compliance documents — expiry status computed live (no cron).
   const docRows = await db
     .select({
+      id: complianceDocuments.id,
+      candidateId: complianceDocuments.candidateId,
       candidateName: applicantProfiles.name,
       docType: complianceDocuments.docType,
       docNumber: complianceDocuments.docNumber,
@@ -130,7 +134,12 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
       applicantProfiles,
       eq(complianceDocuments.candidateId, applicantProfiles.id)
     )
-    .where(eq(complianceDocuments.orgId, orgId));
+    .where(
+      and(
+        eq(complianceDocuments.orgId, orgId),
+        ne(complianceDocuments.status, "superseded")
+      )
+    );
 
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -145,6 +154,8 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
     return "valid";
   };
   const docsWithStatus: ComplianceDocRow[] = docRows.map((r) => ({
+    id: r.id,
+    candidateId: r.candidateId,
     candidateName: r.candidateName,
     docType: r.docType,
     docNumber: r.docNumber,

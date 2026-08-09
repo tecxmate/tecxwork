@@ -1,15 +1,33 @@
 "use client";
 
-import { ShieldAlert, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ShieldAlert, ShieldCheck, Plus, RefreshCw } from "lucide-react";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { AgencyCrm, ComplianceStatus } from "@/lib/agency-crm";
+import { Button } from "@/components/ui/button";
+import { AgencyFormDialog, type FieldDef } from "@/components/agency-form-dialog";
+import type { AgencyCrm, ComplianceDocRow, ComplianceStatus } from "@/lib/agency-crm";
 
 type Locale = "zh" | "en";
 
 const T: Record<Locale, Record<string, string>> = {
   zh: {
+    addDoc: "新增證件",
+    newDoc: "新增證件紀錄",
+    newDocSub: "ARC、工作許可、護照或體檢報告，含到期日。",
+    renew: "換發",
+    renewTitle: "換發證件",
+    renewSub: "舊的那一筆會標記為已被取代並保留下來 —— 稽核時需要看得到歷史，不是只有現況。",
+    save: "儲存",
+    fCandidate: "候選人",
+    fDocType: "證件種類",
+    fDocNo: "證件號碼",
+    fAuthority: "核發機關",
+    fIssueDate: "核發日",
+    fExpiryDate: "到期日",
+    fNotes: "備註",
     title: "證件合規追蹤 Compliance",
     subtitle: "移工證件到期管理 — 居留證 (ARC) / 工作許可 / 護照 / 體檢",
     expired: "已過期",
@@ -24,6 +42,20 @@ const T: Record<Locale, Record<string, string>> = {
     expiry: "到期日",
   },
   en: {
+    addDoc: "Add document",
+    newDoc: "New document record",
+    newDocSub: "ARC, work permit, passport or medical check, with its expiry date.",
+    renew: "Renew",
+    renewTitle: "Renew document",
+    renewSub: "The old record is kept and marked superseded — an audit needs the history, not just the current state.",
+    save: "Save",
+    fCandidate: "Candidate",
+    fDocType: "Document type",
+    fDocNo: "Document number",
+    fAuthority: "Issuing authority",
+    fIssueDate: "Issue date",
+    fExpiryDate: "Expiry date",
+    fNotes: "Notes",
     title: "Compliance",
     subtitle: "Migrant-worker document expiry — ARC / work permit / passport / medical",
     expired: "Expired",
@@ -90,15 +122,99 @@ export function ComplianceView({ compliance }: { compliance: AgencyCrm["complian
   const loc: Locale = locale === "zh-TW" ? "zh" : "en";
   const t = T[loc];
   const valid = compliance.total - compliance.expired - compliance.expiringSoon;
+  const router = useRouter();
+
+  const [adding, setAdding] = useState(false);
+  const [renewing, setRenewing] = useState<ComplianceDocRow | null>(null);
+  const [candidates, setCandidates] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!adding) return;
+    let alive = true;
+    fetch("/api/agency/compliance")
+      .then((r) => r.json())
+      .then((d) => {
+        if (alive) setCandidates(d?.candidates ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [adding]);
+
+  const done = useCallback(() => router.refresh(), [router]);
+
+  const docTypeOptions = Object.entries(DOC_TYPE_LABEL).map(([value, label]) => ({
+    value,
+    label: label[loc] ?? value,
+  }));
+
+  const addFields: FieldDef[] = [
+    {
+      name: "candidateId",
+      label: t.fCandidate,
+      type: "select",
+      required: true,
+      options: candidates.map((c) => ({ value: String(c.id), label: c.name })),
+    },
+    { name: "docType", label: t.fDocType, type: "select", required: true, options: docTypeOptions },
+    { name: "docNumber", label: t.fDocNo, half: true },
+    { name: "issuingAuthority", label: t.fAuthority, half: true, placeholder: "NIA 移民署" },
+    { name: "issueDate", label: t.fIssueDate, type: "date", half: true },
+    { name: "expiryDate", label: t.fExpiryDate, type: "date", half: true },
+    { name: "notes", label: t.fNotes },
+  ];
+
+  // Renewal only asks for what actually changes; the candidate and document type carry over
+  // from the record being renewed, so they cannot be mistyped into a different person.
+  const renewFields: FieldDef[] = [
+    { name: "docNumber", label: t.fDocNo, half: true },
+    { name: "issuingAuthority", label: t.fAuthority, half: true },
+    { name: "issueDate", label: t.fIssueDate, type: "date", half: true },
+    { name: "expiryDate", label: t.fExpiryDate, type: "date", required: true, half: true },
+    { name: "notes", label: t.fNotes },
+  ];
 
   return (
     <section aria-label={t.title}>
-      <div className="mb-4">
-        <h1 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-          {t.title}
-        </h1>
-        <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            {t.title}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+        </div>
+        <Button size="sm" onClick={() => setAdding(true)}>
+          <Plus className="mr-1.5 h-4 w-4" />
+          {t.addDoc}
+        </Button>
       </div>
+
+      <AgencyFormDialog
+        open={adding}
+        title={t.newDoc}
+        description={t.newDocSub}
+        fields={addFields}
+        submitLabel={t.save}
+        endpoint="/api/agency/compliance"
+        onClose={() => setAdding(false)}
+        onDone={done}
+      />
+      <AgencyFormDialog
+        open={renewing !== null}
+        title={`${t.renewTitle}${renewing ? ` — ${renewing.candidateName}` : ""}`}
+        description={t.renewSub}
+        fields={renewFields}
+        submitLabel={t.renew}
+        endpoint={renewing ? `/api/agency/compliance/${renewing.id}/renew` : ""}
+        initial={
+          renewing
+            ? { docNumber: renewing.docNumber, issuingAuthority: renewing.issuingAuthority }
+            : undefined
+        }
+        onClose={() => setRenewing(null)}
+        onDone={done}
+      />
 
       <div className="mb-6 grid grid-cols-3 gap-3">
         <AlertStat value={compliance.expired} label={t.expired} tone="red" />
@@ -134,9 +250,20 @@ export function ComplianceView({ compliance }: { compliance: AgencyCrm["complian
                     <td className="px-4 py-2 text-muted-foreground">{d.issuingAuthority}</td>
                     <td className="px-3 py-2 tabular-nums">{d.expiryDate}</td>
                     <td className="px-4 py-2 text-right">
-                      <Badge className="text-white" style={{ background: STATUS_STYLE[d.status].bg }}>
-                        {STATUS_STYLE[d.status].label[loc]}
-                      </Badge>
+                      <div className="flex items-center justify-end gap-2">
+                        <Badge className="text-white" style={{ background: STATUS_STYLE[d.status].bg }}>
+                          {STATUS_STYLE[d.status].label[loc]}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setRenewing(d)}
+                        >
+                          <RefreshCw className="mr-1 h-3 w-3" />
+                          {t.renew}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

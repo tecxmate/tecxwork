@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -661,7 +662,13 @@ export const complianceDocuments = pgTable(
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("unique_candidate_doc_type").on(table.candidateId, table.docType),
+    // One *current* document of each type per candidate. Partial, because a renewal keeps
+    // the old row (status 'superseded') as history — an auditor asking "was this worker
+    // covered on 1 August?" needs the record that has since expired, and a plain unique
+    // index would force renewals to destroy it.
+    uniqueIndex("unique_candidate_doc_type")
+      .on(table.candidateId, table.docType)
+      .where(sql`status <> 'superseded'`),
     index("compliance_docs_expiry_idx").on(table.orgId, table.expiryDate),
   ]
 );

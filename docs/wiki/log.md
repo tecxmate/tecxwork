@@ -1345,3 +1345,21 @@ attributed_to: [niko]   belongs_to: [platform-manual]
 - python-pptx limits worth remembering: **no WebP decoder** (screenshots convert to JPEG in-memory) and **no SVG** (the two diagrams are pre-rendered to PNG by `render-diagrams.mjs`).
 - Verification: PowerPoint's AppleScript PNG export is blocked by its sandbox, so `/tmp/preview_pptx.py` renders slides to HTML by reading geometry back **out of the saved file** (not from the builder's intentions), which is how the layout bugs were caught. Caveat: it does not render autoshape fills, so step badges look blank in the preview while being correct in the file — confirmed directly via python-pptx.
 - Bug found and fixed while previewing: the diagram slides' blurb read "Start here" because `#lifecycle .act p` selects the eyebrow; needs `p:not(.act-no)`. Same trap on the Act dividers.
+
+## [2026-08-09] ingest | Tier 1: agency CRM is writable (clients, contacts, job orders, placements, compliance)
+attributed_to: [niko]   belongs_to: [recruitment-workflows, admin-panel]
+- Audit finding that prompted this: the whole agency layer was READ-ONLY. `clients` (read in 5 files, 0 writes), `job_orders` (1/0), `placements` (3/0), `compliance_documents` (1/0), `pipeline_stages` (4/0), and `contacts` had 0 reads and 0 writes — a table nobody had ever used. Clients/Compliance/Reports were dashboards over data only a seed script could create.
+- Added POST/PATCH/DELETE under `/api/agency/*` plus modal forms on the Clients and Compliance screens. Everything goes through `requireAgency()` in `src/lib/agency-auth.ts` — one choke point that enforces "agency recruiters only" AND returns the orgId every query must filter by, so "did we scope this?" is answerable by reading one function instead of twelve. Every write is audit-logged (field NAMES only, never values, so candidate erasure never has to mutate audit_log).
+- Design decisions worth keeping: **placement clientId is derived from the job order, never accepted from the caller** (a mismatched client would corrupt every per-client number on the Clients screen); duplicate client name → 409; duplicate candidate+job_order placement → 409; a `client_order` without a client → 400.
+- **Compliance renewal supersedes rather than overwrites.** A labour inspector can ask "was this worker covered on 1 August?" a year later; overwriting the expiry destroys the only record that answers it. Old row → `status='superseded'`, new row inserted, and the read layer excludes superseded so a renewed doc stops showing as expired.
+
+## [2026-08-09] fix | compliance unique index had to become partial (found by tests)
+attributed_to: [claude-code]   belongs_to: [drizzle-sql-gotchas]
+- `unique_candidate_doc_type` was `UNIQUE (candidate_id, doc_type)` with no predicate, meaning a candidate could hold exactly one ARC row EVER. That is right for *current* documents and wrong for the table, and it made the supersede-and-keep-history design impossible — the renewal tests failed with `duplicate key value violates unique_candidate_doc_type`.
+- Rebuilt as `UNIQUE (candidate_id, doc_type) WHERE status <> 'superseded'` — same guarantee for live documents, history allowed behind them. Migration: `src/lib/db/add-compliance-partial-unique.ts` (applied to the demo DB and the test branch). schema.ts now needs `import { sql }` for the index predicate.
+
+## [2026-08-09] fix | half the test suite could not even import (pre-existing)
+attributed_to: [claude-code]   belongs_to: [tecxwork]
+- `booking-race.test.ts` failed at import with `Cannot find package 'server-only'` — `server-only` is not in package.json and is not installed; Next resolves it during a build, Vitest cannot. So one of the only two existing test files had been silently un-runnable. Fixed with a no-op stub aliased in vitest.config.ts (`src/test/stubs/server-only.ts`) — in tests everything already runs server-side, so the guard has nothing to protect.
+- Also added the agency tables to the per-test truncate in setup.ts, or CRM tests leak rows into each other.
+- Test DB is a Neon branch of tecxwork-yl-demo: `test-agency-crm` (br-calm-grass-ajkwm2y5). Suite now 3 files / 19 tests green.
