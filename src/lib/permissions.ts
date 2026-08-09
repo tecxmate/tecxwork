@@ -31,7 +31,9 @@ export type Capability =
   /** File or renew a compliance document. */
   | "compliance:write"
   /** Move a candidate between pipeline stages. */
-  | "stage:move";
+  | "stage:move"
+  /** Change the hiring process itself — add, rename, reorder or retire a stage. */
+  | "pipeline:configure";
 
 /**
  * The matrix. Each row is a job, not a rank — a coordinator is not "less than" a recruiter,
@@ -49,6 +51,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "compliance:read",
     "compliance:write",
     "stage:move",
+    "pipeline:configure",
   ],
 
   // Owns the client relationship end to end, which is why this is the only other role
@@ -63,6 +66,9 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "compliance:read",
     "compliance:write",
     "stage:move",
+    // Changing the process everyone else works inside is a manager's call, not a
+    // recruiter's — this is the line between using the pipeline and redefining it.
+    "pipeline:configure",
   ],
 
   // Does the recruiting: sources candidates, opens vacancies, makes placements. Reads

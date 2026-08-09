@@ -125,3 +125,42 @@ export const renewComplianceDocSchema = z.object({
   expiryDate: isoDate,
   notes: optionalText(500),
 });
+
+/* ---------- pipeline configuration ---------- */
+
+/**
+ * The stage kinds the product understands. A stage's *name* is free text the org chooses
+ * ("Client interview 2"), but its *kind* is what reporting and the legacy-stage fallback
+ * key off, so it has to come from this list.
+ */
+export const STAGE_KINDS = [
+  "sourced",
+  "screened",
+  "internal_submit",
+  "client_submit",
+  "interview",
+  "offer",
+  "placed",
+  "onboarding",
+  "started",
+  "rejected",
+] as const;
+
+export const createStageSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(60),
+  stageKind: z.enum(STAGE_KINDS),
+});
+
+export const updateStageSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60).optional(),
+    stageKind: z.enum(STAGE_KINDS).optional(),
+  })
+  .refine((v) => v.name !== undefined || v.stageKind !== undefined, {
+    message: "Nothing to update",
+  });
+
+/** A reorder names every active stage exactly once — a partial list would be ambiguous. */
+export const reorderStagesSchema = z.object({
+  order: z.array(z.number().int().positive()).min(1),
+});

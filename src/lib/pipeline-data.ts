@@ -1,4 +1,4 @@
-import { eq, ne, and } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
 import {
@@ -75,7 +75,9 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
           .where(
             and(
               eq(pipelineTemplates.orgId, me.orgId),
-              eq(pipelineTemplates.isDefault, true)
+              eq(pipelineTemplates.isDefault, true),
+              // Retired stages keep their rows for history but must not appear as columns.
+              isNull(pipelineStages.archivedAt)
             )
           )
           .orderBy(pipelineStages.sortOrder);
@@ -87,9 +89,13 @@ export async function getPipelineBoard(): Promise<PipelineBoard | null> {
     stageKind: s.stageKind as StageKind,
     sortOrder: s.sortOrder,
   }));
-  const stageIdByKind = new Map<string, number>(
-    stages.map((s) => [s.stageKind, s.id])
-  );
+  // First match wins, in board order. Now that stages are user-editable an org can have
+  // two of the same kind ("Client interview 1" / "Client interview 2"); a legacy row with
+  // only the old enum should land in the earliest one rather than whichever came last.
+  const stageIdByKind = new Map<string, number>();
+  for (const s of stages) {
+    if (!stageIdByKind.has(s.stageKind)) stageIdByKind.set(s.stageKind, s.id);
+  }
   const ENUM_TO_KIND: Record<string, StageKind> = {
     applied: "sourced",
     screening: "screened",

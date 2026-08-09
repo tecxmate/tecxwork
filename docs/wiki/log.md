@@ -1456,3 +1456,17 @@ attributed_to: [niko]   belongs_to: [tecxwork, exports]
 - Compliance exports **every** document, not the dashboard's `attention` subset — an inspection asks to see the whole file, and handing over only the problems answers a question nobody asked. Superseded revisions are excluded so one person never appears to hold two conflicting permits.
 - Placements carries a separate numeric "Fee At Risk" column so finance can sum the clawback exposure directly instead of rebuilding it with a formula.
 - `EXPORT_LIMIT = 10_000` caps the candidate query — far above any realistic pool, but an unbounded query on a user-triggered download is how one click takes the database down. Truncation is logged, never silent.
+
+## [2026-08-09] ingest | Editable pipeline stages (audit #3)
+attributed_to: [niko]   belongs_to: [tecxwork, pipeline]
+- `pipeline_stages` / `pipeline_templates` were read in four places and **written in none** — the hiring process was whatever the seed script happened to insert, and no screen could change it.
+- **Retiring a stage archives, it never deletes.** `application_stage_transitions` is the append-only record every funnel and time-in-stage report is built from, and it references stage ids; destroying a stage anyone ever moved through would either be refused by the foreign key or take the history with it. New `archived_at` column; every board query filters on it.
+- Two guards that matter more than the CRUD:
+  - **Refused while candidates stand in the stage** (409, naming the count). Archiving an occupied stage would drop those people off the board while their rows still sat in the database — silent data loss discovered weeks later. Verified live against the real demo board: retiring "Interview" with 22 candidates is refused.
+  - **Refused on the last remaining stage.** `getPipelineBoard` returns null with zero stages, so an empty board cannot be recovered from the UI.
+- Reordering requires the request to name **every** active stage exactly once. A partial list would leave unnamed stages where they were, so the order the user sees after a drag would not be the order they arranged. Applied in a transaction.
+- New capability `pipeline:configure`, held only by admin and account_manager — the line between *using* the pipeline and *redefining the process everyone else works inside*.
+- **Latent bug fixed while here:** `stageIdByKind` was built last-wins. Editable stages make duplicate kinds possible ("Client interview 1" / "…2"), so a legacy row carrying only the old enum would have landed in whichever stage came last. Now first-wins in board order.
+- The template is created on demand, so a brand-new org is never stageless.
+- UI is up/down buttons rather than drag-and-drop: a pipeline has a handful of stages and is rearranged rarely, so a drag library and its pointer/touch edge cases cost far more than they return — and buttons work with a keyboard and a screen reader. Remove is disabled (not just server-refused) for occupied stages, so the reason is visible before the click.
+- Verified live: add → reorder to position 4 → board shows the new column → rename → retire → board restored, archived row intact with its name and id. Probe stage removed afterwards.

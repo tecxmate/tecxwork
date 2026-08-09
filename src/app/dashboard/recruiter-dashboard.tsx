@@ -18,6 +18,7 @@ import {
   X,
   LayoutList,
   LayoutGrid,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,8 @@ import type { AgencyCrm } from "@/lib/agency-crm";
 import type { CandidateSearchResult } from "@/lib/candidate-search";
 import type { PlacementLifecycle } from "@/lib/placement-lifecycle";
 import type { PipelineReport } from "@/lib/pipeline-report";
+import type { StageRow } from "@/lib/pipeline-config";
+import { PipelineSettingsView } from "@/components/pipeline-settings-view";
 import type { Capability } from "@/lib/permissions";
 
 // ... existing Booking/Recruiter types ...
@@ -74,6 +77,7 @@ type Section =
   | "applicants"
   | "candidates"
   | "pipeline"
+  | "pipelineSettings"
   | "clients"
   | "placements"
   | "compliance"
@@ -139,6 +143,7 @@ export function RecruiterDashboard({
   candidateSearch = null,
   placements = null,
   pipelineReport = null,
+  pipelineStages = null,
 }: {
   recruiter: Recruiter;
   /** What this member's org role permits — used to hide tabs that would only redirect. */
@@ -153,6 +158,7 @@ export function RecruiterDashboard({
   candidateSearch?: CandidateSearchResult | null;
   placements?: PlacementLifecycle | null;
   pipelineReport?: PipelineReport | null;
+  pipelineStages?: StageRow[] | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -265,15 +271,30 @@ export function RecruiterDashboard({
           ) : section === "applicants" ? (
             <BookingsTab bookings={bookings} />
           ) : section === "pipeline" ? (
-            pipelineBoard && pipelineBoard.jobs.length > 0 ? (
-              <DashboardPipeline board={pipelineBoard} />
-            ) : (
-              <p className="py-16 text-center text-sm text-muted-foreground">
-                No candidates in the pipeline yet.
-              </p>
-            )
+            <>
+              {capabilities.includes("pipeline:configure") ? (
+                <div className="mb-3 flex justify-end">
+                  <Link
+                    href="/dashboard/pipeline/settings"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <SlidersHorizontal className="h-3.5 w-3.5" />
+                    Edit stages
+                  </Link>
+                </div>
+              ) : null}
+              {pipelineBoard && pipelineBoard.jobs.length > 0 ? (
+                <DashboardPipeline board={pipelineBoard} />
+              ) : (
+                <p className="py-16 text-center text-sm text-muted-foreground">
+                  No candidates in the pipeline yet.
+                </p>
+              )}
+            </>
           ) : section === "candidates" ? (
             candidateSearch ? <CandidateSearchView result={candidateSearch} /> : null
+          ) : section === "pipelineSettings" ? (
+            pipelineStages ? <PipelineSettingsView initialStages={pipelineStages} /> : null
           ) : section === "clients" ? (
             agencyCrm ? (
               <ClientsCrmView crm={agencyCrm} />

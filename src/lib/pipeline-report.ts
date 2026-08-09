@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
 import {
@@ -69,7 +69,13 @@ export async function getPipelineReport(): Promise<PipelineReport | null> {
       })
       .from(pipelineStages)
       .innerJoin(pipelineTemplates, eq(pipelineStages.templateId, pipelineTemplates.id))
-      .where(and(eq(pipelineTemplates.orgId, orgId), eq(pipelineTemplates.isDefault, true)))
+      .where(
+        and(
+          eq(pipelineTemplates.orgId, orgId),
+          eq(pipelineTemplates.isDefault, true),
+          isNull(pipelineStages.archivedAt)
+        )
+      )
       .orderBy(pipelineStages.sortOrder),
     db
       .select({

@@ -483,9 +483,20 @@ export const pipelineStages = pgTable(
     sortOrder: integer("sort_order").notNull().default(0),
     isTerminal: boolean("is_terminal").notNull().default(false),
     slaDays: integer("sla_days"),
+    /**
+     * Retired stages keep their id so `application_stage_transitions` — the append-only
+     * history the funnel reports are built from — stays readable. Board queries filter
+     * these out; nothing is ever deleted.
+     */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (table) => [
     index("pipeline_stages_template_idx").on(table.templateId, table.sortOrder),
+    index("pipeline_stages_active_idx").on(
+      table.templateId,
+      table.archivedAt,
+      table.sortOrder
+    ),
   ]
 );
 
