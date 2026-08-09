@@ -1363,3 +1363,13 @@ attributed_to: [claude-code]   belongs_to: [tecxwork]
 - `booking-race.test.ts` failed at import with `Cannot find package 'server-only'` — `server-only` is not in package.json and is not installed; Next resolves it during a build, Vitest cannot. So one of the only two existing test files had been silently un-runnable. Fixed with a no-op stub aliased in vitest.config.ts (`src/test/stubs/server-only.ts`) — in tests everything already runs server-side, so the guard has nothing to protect.
 - Also added the agency tables to the per-test truncate in setup.ts, or CRM tests leak rows into each other.
 - Test DB is a Neon branch of tecxwork-yl-demo: `test-agency-crm` (br-calm-grass-ajkwm2y5). Suite now 3 files / 19 tests green.
+
+## [2026-08-09] ingest | Candidate search — recruiters can finally find people
+attributed_to: [niko]   belongs_to: [recruiter-dashboard, recruitment-workflows]
+- Audit gap #5: there was no way to search the candidate pool. `/dashboard/applicants` is a booking-approval queue, not a search — so a recruiter could not ask "who has BIM, a valid ARC, and graduates in June?", which is the core daily act of recruiting.
+- New `/dashboard/candidates` tab (`src/lib/candidate-search.ts` + `candidate-search-view.tsx`). One search box covering name / school / major / description / skills, plus faceted chips for nationality, study level, skills and document status, with real counts over the whole pool.
+- **Filters live in the URL, not component state** — a useful search ("all BIM candidates needing document attention") is then just a link a recruiter can keep or send, and the back button behaves. Costs a server round-trip per filter change, which is why the query is SQL-side with LIMIT/OFFSET rather than fetch-everything-then-filter-in-JS.
+- Decisions worth keeping: skills filter is **AND not OR** (adding a skill must narrow — there's a test that would catch an OR regression); the **worst document wins** so one expired ARC flags the candidate regardless of the rest; superseded documents are ignored so a renewal clears the flag; `docStatus: "none"` is distinct from `"valid"` because nothing-on-file is not the same as verified-fine.
+- **Erased candidates are excluded from results AND from the facet counts.** After a PIPA erasure the row survives for FK integrity but the person asked not to be found; a facet reading "2" that returns 1 result would also read as a broken filter.
+- Test-perf note: `seedApplicant` bcrypt-hashes a password, and 30 of those blew the 20s timeout. Search never touches `users`, so the search tests insert `applicant_profiles` rows directly — 60s → 30s for the file.
+- Suite now 4 files / 26 tests.

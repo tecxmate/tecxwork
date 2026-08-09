@@ -27,6 +27,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import type { PipelineBoard } from "@/lib/pipeline-types";
 import type { AgencyCrm } from "@/lib/agency-crm";
+import type { CandidateSearchResult } from "@/lib/candidate-search";
 import type { PipelineReport } from "@/lib/pipeline-report";
 
 // ... existing Booking/Recruiter types ...
@@ -69,6 +70,7 @@ type Recruiter = {
 type Section =
   | "interviews"
   | "applicants"
+  | "candidates"
   | "pipeline"
   | "clients"
   | "compliance"
@@ -93,6 +95,13 @@ const DashboardPipeline = dynamic(
 );
 
 // Agency-only CRM view (clients → job orders → submissions → placements).
+// Search is its own tab and pulls in facet chips + cards — load it on demand like the others.
+const CandidateSearchView = dynamic(
+  () =>
+    import("@/components/candidate-search-view").then((m) => m.CandidateSearchView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
 const ClientsCrmView = dynamic(
   () => import("@/components/clients-crm-view").then((m) => m.ClientsCrmView),
   { loading: () => <DashboardTabLoader /> }
@@ -118,6 +127,7 @@ export function RecruiterDashboard({
   salaryCurrencyOptions,
   pipelineBoard = null,
   agencyCrm = null,
+  candidateSearch = null,
   pipelineReport = null,
 }: {
   recruiter: Recruiter;
@@ -128,6 +138,7 @@ export function RecruiterDashboard({
   salaryCurrencyOptions: string[];
   pipelineBoard?: PipelineBoard | null;
   agencyCrm?: AgencyCrm | null;
+  candidateSearch?: CandidateSearchResult | null;
   pipelineReport?: PipelineReport | null;
 }) {
   const router = useRouter();
@@ -151,6 +162,8 @@ export function RecruiterDashboard({
       ? "/dashboard/interviews"
       : section === "applicants"
         ? "/dashboard/applicants"
+        : section === "candidates"
+          ? "/dashboard/candidates"
         : section === "pipeline"
           ? "/dashboard/pipeline"
           : section === "clients"
@@ -172,6 +185,7 @@ export function RecruiterDashboard({
     const recruiterRoutes = [
       "/dashboard/interviews",
       "/dashboard/applicants",
+      "/dashboard/candidates",
       "/dashboard/pipeline",
       "/dashboard/clients",
       "/dashboard/compliance",
@@ -241,6 +255,8 @@ export function RecruiterDashboard({
                 No candidates in the pipeline yet.
               </p>
             )
+          ) : section === "candidates" ? (
+            candidateSearch ? <CandidateSearchView result={candidateSearch} /> : null
           ) : section === "clients" ? (
             agencyCrm ? (
               <ClientsCrmView crm={agencyCrm} />
