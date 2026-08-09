@@ -88,8 +88,15 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   cookieStore.clear();
-  // Truncate all mutable tables. CASCADE handles FKs.
   const { db } = await import("@/lib/db");
+
+  // TRUNCATE takes ACCESS EXCLUSIVE on every table listed, so a single connection left
+  // idle-in-transaction by an earlier file blocks it — and Postgres waits forever by
+  // default, which surfaced as one test hanging for ten minutes instead of failing.
+  // Fail fast and loudly instead; the message points at the real cause.
+  await db.execute(/* sql */ `set lock_timeout = '15s'`);
+
+  // Truncate all mutable tables. CASCADE handles FKs.
   await db.execute(/* sql */ `
     truncate table
       audit_log,
@@ -125,4 +132,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   cookieStore.clear();
+  // Release this file's connections so the next file's TRUNCATE isn't blocked by them.
+  const { closeDb } = await import("@/lib/db");
+  await closeDb();
 });

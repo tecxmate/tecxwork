@@ -457,13 +457,27 @@ function InterviewScheduleTab({ bookings }: { bookings: Booking[] }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-heading text-lg font-semibold">
-          {messages.dashboard.bookings.acceptedSchedule}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {messages.dashboard.bookings.acceptedScheduleDescription}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-heading text-lg font-semibold">
+            {messages.dashboard.bookings.acceptedSchedule}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {messages.dashboard.bookings.acceptedScheduleDescription}
+          </p>
+        </div>
+        {accepted.length > 0 ? (
+          // A file download, not a route — a plain anchor, since Link would try to
+          // client-navigate to it.
+          <a
+            href="/api/bookings/calendar"
+            download="interviews.ics"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Calendar className="h-4 w-4" />
+            Add day to calendar
+          </a>
+        ) : null}
       </div>
 
       {accepted.length === 0 ? (

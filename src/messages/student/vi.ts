@@ -368,6 +368,7 @@ export const studentViMessages = {
     applicationCancelAcceptedConfirm:
       "Hủy lịch phỏng vấn đã xác nhận này? Công ty sẽ được thông báo.",
     applicationCancelFailed: "Không thể hủy đơn ứng tuyển.",
+    applicationAddToCalendar: "Thêm vào lịch",
   },
   recruiterDetail: {
     ...studentEnMessages.recruiterDetail,

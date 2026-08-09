@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { EVENT_CONFIG } from "@/lib/data";
 import { getEventBranding } from "@/lib/event-branding";
 import { db, emailLogs } from "@/lib/db";
+import { buildCalendar, bookingUid } from "@/lib/calendar";
 
 export function getResend(): Resend | null {
   // RESEND_API_KEY was saved with a stray trailing "\n" (literal backslash-n
@@ -89,7 +90,48 @@ type BookingEmailData = {
   slotEnd: Date | string;
   cvLink: string;
   direction: "applicant_books_recruiter" | "recruiter_books_applicant";
+  /** Booking row id — used for a stable calendar UID. Omit to send without an invite. */
+  bookingId?: number;
 };
+
+/**
+ * Build the .ics attachment for a confirmed interview.
+ *
+ * Returns undefined rather than throwing: a calendar file that fails to generate must not
+ * stop the confirmation email, which is the part the candidate actually depends on.
+ */
+function buildInviteAttachment(
+  data: BookingEmailData,
+  eventName: string,
+  location: string
+): { filename: string; content: Buffer }[] | undefined {
+  if (!data.bookingId) return undefined;
+
+  const start = asDate(data.slotStart);
+  const end = asDate(data.slotEnd);
+  if (!start || !end) return undefined;
+
+  try {
+    const ics = buildCalendar(
+      [
+        {
+          uid: bookingUid(data.bookingId),
+          title: `Interview — ${data.company}`,
+          start,
+          end,
+          location,
+          description: [`Candidate: ${data.applicantName}`, `Event: ${eventName}`].join("\n"),
+          reminderMinutes: 60,
+        },
+      ],
+      new Date()
+    );
+    return [{ filename: "interview.ics", content: Buffer.from(ics, "utf8") }];
+  } catch (err) {
+    console.error("Failed to build calendar invite:", err);
+    return undefined;
+  }
+}
 
 type ApplicationSubmittedEmailData = {
   applicantName: string;
@@ -217,6 +259,9 @@ export async function sendBookingEmails(data: BookingEmailData) {
   const safeCvHref = safeUrl(data.cvLink);
   const safeCompanyHref = safeUrl(`${getPublicBaseUrl()}/recruiter/${data.recruiterId}`);
 
+  // Both sides get the same invite: it is the recruiter who most often double-books.
+  const attachments = buildInviteAttachment(data, branding.emailEventName, branding.location);
+
   // Email to applicant
   const applicantSubject = `Interview Confirmed — ${data.company} on ${timeStr}`;
   try {
@@ -224,6 +269,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
       from: EMAIL_FROM,
       to: data.applicantEmail,
       subject: applicantSubject,
+      attachments,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">Interview Confirmed</h2>
@@ -269,6 +315,7 @@ export async function sendBookingEmails(data: BookingEmailData) {
       from: EMAIL_FROM,
       to: data.recruiterEmail,
       subject: recruiterSubject,
+      attachments,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <h2 style="margin: 0 0 8px; font-size: 20px;">New Interview Booking</h2>

@@ -288,6 +288,7 @@ export async function PUT(req: NextRequest) {
       slotEnd: randomSlot.endTime,
       cvLink: booking.cvLink,
       direction: "applicant_books_recruiter",
+      bookingId: booking.id,
     }).catch(() => {});
 
     createBookingNotification({

@@ -380,6 +380,7 @@ export const studentEnMessages = {
     applicationCancelAcceptedConfirm:
       "Cancel this confirmed interview? The company will be notified.",
     applicationCancelFailed: "Could not cancel application.",
+    applicationAddToCalendar: "Add to calendar",
   },
   recruiterDetail: {
     openPositions: "Open Positions",

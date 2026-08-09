@@ -33,6 +33,21 @@ export function getDb(): NeonDatabase<typeof schema> {
   return _db;
 }
 
+/**
+ * Close the pool and drop the cached handle.
+ *
+ * Only tests need this: a serverless instance keeps its pool until it dies. Test files each
+ * get a fresh module registry but share one Postgres server, so a pool left open by an
+ * earlier file keeps idle connections that block the next file's TRUNCATE.
+ */
+export async function closeDb(): Promise<void> {
+  if (!_pool) return;
+  const pool = _pool;
+  _pool = null;
+  _db = null;
+  await pool.end();
+}
+
 // Re-export for convenience — callers use `db` from route handlers
 export const db = new Proxy({} as NeonDatabase<typeof schema>, {
   get(_, prop) {

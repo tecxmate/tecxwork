@@ -1582,6 +1582,17 @@ export default function ProfilePage() {
                                 "No time set"}
                             </span>
                           </div>
+                          {application.status === "accepted" ? (
+                            // Plain anchor: this is a file download, not a route.
+                            <a
+                              href={`/api/bookings/${application.id}/calendar`}
+                              download
+                              className="inline-flex h-7 items-center rounded-md border border-border px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            >
+                              <CalendarClock className="mr-1 h-3 w-3" />
+                              {messages.profile.applicationAddToCalendar}
+                            </a>
+                          ) : null}
                           {studentCancellationEnabled &&
                           isCancellableApplication(application.status) ? (
                             <Button

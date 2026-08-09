@@ -366,6 +366,7 @@ export const studentZhTwMessages = {
     applicationCancelConfirm: "要撤回這筆投遞嗎？",
     applicationCancelAcceptedConfirm: "要取消這場已確認的面談嗎？公司將收到通知。",
     applicationCancelFailed: "無法取消投遞。",
+    applicationAddToCalendar: "加入行事曆",
   },
   recruiterDetail: {
     ...studentEnMessages.recruiterDetail,

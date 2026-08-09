@@ -247,6 +247,7 @@ export async function POST(req: NextRequest) {
       slotEnd: recruiterSlot.endTime,
       cvLink: applicant.cvLink,
       direction: "recruiter_books_applicant",
+      bookingId: booking.id,
     }).catch(() => {});
 
     createBookingNotification({

@@ -1392,3 +1392,23 @@ attributed_to: [niko]   belongs_to: [tecxwork, load-readiness]
 - `app/error.tsx` + `app/global-error.tsx`: friendly copy, a retry, a link to /feedback, and the Next `digest` shown as a reference so a support message ties back to the server stack trace. The raw error text is deliberately NOT shown to the user. global-error styles itself inline because the design system may be exactly what failed.
 - Verified by temporarily adding a throwing route: onRequestError emitted the structured log with path/method/routeType, and the boundary rendered. Route removed afterwards.
 - Gotcha: a folder named `__errtest` is not routable — Next treats a leading underscore as a private folder.
+
+## [2026-08-09] ingest | Calendar invites for interviews (audit #11)
+attributed_to: [niko]   belongs_to: [tecxwork, interview-scheduling]
+- There was **zero** calendar code in the repo. A confirmed interview existed only inside TECXWORK, so the way anyone remembered it was by logging back in. On event day that is how no-shows happen.
+- `src/lib/calendar.ts` writes RFC 5545. Three details are load-bearing and easy to get wrong:
+  - **CRLF endings.** A bare `\n` makes Outlook reject the file outright.
+  - **Folding at 75 _octets_, breaking only on code points.** Names here are Vietnamese and Chinese; folding by character overflows the limit, folding by byte splits a multi-byte character and every client shows mojibake. Tests assert both directions.
+  - **A stable UID per booking** (`booking-<id>@tecxwork.com`) so a reschedule *updates* the event instead of adding a second one, and a cancellation actually removes it.
+- All times are emitted in UTC, so there is no VTIMEZONE block to get wrong and no ambiguity between a candidate in Vietnam and a recruiter in Taipei. Clients render in the viewer's own zone.
+- **METHOD:PUBLISH, not REQUEST.** REQUEST renders an RSVP card but expects ORGANIZER to match the sending mailbox — ours is the platform address, not the recruiter's, and the mismatch makes some clients drop the invitation entirely.
+- Endpoints: `/api/bookings/[id]/calendar` (one interview) and `/api/bookings/calendar` (the caller's whole day — a recruiter with 14 interviews will not click "add" 14 times). Both are restricted to the parties on the booking, and a stranger gets 404 rather than 403 so booking ids can't be enumerated.
+- Cancelled/rejected bookings still return a file, issued as `STATUS:CANCELLED` with no alarm, so a calendar holding the event drops it instead of leaving a ghost interview.
+- The .ics is also attached to the confirmation email for both sides. Attachment build failures are swallowed: a calendar file must never stop the confirmation email, which is the part the candidate depends on.
+
+## [2026-08-09] fix | Test suite hung for 10 minutes on a TRUNCATE lock
+attributed_to: [claude]   belongs_to: [tecxwork, testing]
+- One agency-CRM test "failed" after **599 seconds** while the same file passed 12/12 when run alone. Not flakiness in the test — a lock.
+- `beforeEach` truncates ~25 tables, which needs ACCESS EXCLUSIVE on every one of them, and `afterAll` never closed the DB pool. Each test file therefore left idle Neon connections behind, and Postgres waits **forever** for a blocked TRUNCATE by default, so the hang looked like a slow test.
+- Two fixes: `closeDb()` (new, test-only export) releases the pool in `afterAll`, and `set lock_timeout = '15s'` makes a blocked truncate fail fast and loudly instead of hanging.
+- Result: 6 files / 48 tests green in 192s, down from 759s with a failure.
