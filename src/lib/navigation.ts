@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import type { UserRole } from "@/lib/auth";
+import type { Capability } from "@/lib/permissions";
 
 export type NavRole = UserRole | "guest";
 
@@ -28,13 +29,30 @@ export type NavItem = {
   // Only shown to agency-kind recruiters (Yang Luck HQ), hidden for a normal
   // client-company recruiter.
   agencyOnly?: boolean;
+  // The capability the destination page requires. Without it the page redirects, so
+  // showing the link would just be an invitation to be bounced.
+  capability?: Capability;
 };
 
-// Nav items visible to a given role, dropping agency-only tabs for non-agency
-// recruiters.
-export function visibleNavItems(role: NavRole, isAgency: boolean): NavItem[] {
+/**
+ * Nav items visible to a given role: agency-only tabs drop away for a client-company
+ * recruiter, and capability-gated tabs drop away for org roles that lack the capability.
+ *
+ * Passing `capabilities` as undefined means "do not filter on capability" — for signed-out
+ * visitors and applicants, who have no org role at all.
+ */
+export function visibleNavItems(
+  role: NavRole,
+  isAgency: boolean,
+  capabilities?: readonly Capability[]
+): NavItem[] {
   const items = navItemsByRole[role] ?? [];
-  return isAgency ? items : items.filter((item) => !item.agencyOnly);
+  return items.filter((item) => {
+    if (item.agencyOnly && !isAgency) return false;
+    if (item.capability && capabilities && !capabilities.includes(item.capability))
+      return false;
+    return true;
+  });
 }
 
 export const navItemsByRole: Record<NavRole, NavItem[]> = {
@@ -83,6 +101,7 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Candidates",
       icon: Search,
       matches: ["/dashboard/candidates"],
+      capability: "candidate:read",
     },
     {
       href: "/dashboard/pipeline",
@@ -95,6 +114,7 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Clients",
       icon: Handshake,
       matches: ["/dashboard/clients"],
+      capability: "client:read",
       agencyOnly: true,
     },
     {
@@ -102,6 +122,7 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Placements",
       icon: BadgeCheck,
       matches: ["/dashboard/placements"],
+      capability: "placement:read",
       agencyOnly: true,
     },
     {
@@ -109,6 +130,7 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Compliance",
       icon: ShieldCheck,
       matches: ["/dashboard/compliance"],
+      capability: "compliance:read",
       agencyOnly: true,
     },
     {

@@ -9,7 +9,7 @@ import { logAudit } from "@/lib/audit";
 
 /** Candidates the org can attach documents to, for the form's picker. */
 export async function GET() {
-  const gate = await requireAgency();
+  const gate = await requireAgency("compliance:read");
   if (!gate.ok) return gate.response;
 
   const rows = await getDb()
@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("compliance:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
 
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
 
 /** Correct a document in place (a typo in the number, a wrong issuer). */
 export async function PATCH(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("compliance:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
 

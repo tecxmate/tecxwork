@@ -9,7 +9,7 @@ import { logAudit } from "@/lib/audit";
 
 /** List the org's clients (id + name), for the pickers on the job-order and placement forms. */
 export async function GET() {
-  const gate = await requireAgency();
+  const gate = await requireAgency("client:read");
   if (!gate.ok) return gate.response;
 
   const rows = await getDb()
@@ -22,7 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("client:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
 

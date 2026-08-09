@@ -19,6 +19,7 @@ export default async function RecruiterReportsPage() {
     <RecruiterLocaleProvider initialLocale={data.locale}>
       <RecruiterDashboard
         recruiter={data.recruiter}
+        capabilities={data.capabilities}
         bookings={data.bookings}
         section="reports"
         showApplicants={data.showApplicants}

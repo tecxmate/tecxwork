@@ -12,7 +12,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("client:read");
   if (!gate.ok) return gate.response;
   const id = Number((await params).id);
   if (!Number.isInteger(id)) return NextResponse.json({ error: "Bad id" }, { status: 400 });
@@ -39,7 +39,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("client:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
   const id = Number((await params).id);

@@ -19,7 +19,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("compliance:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
 

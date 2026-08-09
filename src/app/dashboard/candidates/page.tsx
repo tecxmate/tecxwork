@@ -3,6 +3,7 @@ import { RecruiterLocaleProvider } from "@/components/recruiter-locale-provider"
 import { RecruiterDashboard } from "../recruiter-dashboard";
 import { getRecruiterDashboardData } from "../recruiter-data";
 import { searchCandidates } from "@/lib/candidate-search";
+import { getAgencyActor } from "@/lib/agency-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,12 @@ export default async function RecruiterCandidatesPage({
   const data = await getRecruiterDashboardData();
   if (!data.recruiter) redirect("/login");
 
+  // The candidate pool is the agency's own asset and is full of PII. Being a signed-in
+  // recruiter is not enough to read it — a client company's recruiter sees only the
+  // candidates submitted to their own jobs, never the searchable database behind them.
+  const actor = await getAgencyActor("candidate:read");
+  if (!actor) redirect("/dashboard");
+
   const docs = one("docs");
   const result = await searchCandidates({
     q: one("q"),
@@ -39,6 +46,7 @@ export default async function RecruiterCandidatesPage({
     <RecruiterLocaleProvider initialLocale={data.locale}>
       <RecruiterDashboard
         recruiter={data.recruiter}
+        capabilities={data.capabilities}
         bookings={data.bookings}
         section="candidates"
         showApplicants={data.showApplicants}

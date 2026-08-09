@@ -15,7 +15,7 @@ import { logAudit } from "@/lib/audit";
  * on the Clients screen, and there is no reason to let the browser assert it.
  */
 export async function POST(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("placement:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
 

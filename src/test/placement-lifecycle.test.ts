@@ -6,6 +6,7 @@ import {
   clients,
   complianceDocuments,
   jobOrders,
+  memberships,
   orgs,
   placements,
   recruiters,
@@ -33,6 +34,8 @@ async function seedAgency() {
     .update(recruiters)
     .set({ orgId: org.id, clientKind: "agency" })
     .where(eq(recruiters.id, rec.recruiterId));
+  // Authorization reads the membership, not the session.
+  await db.insert(memberships).values({ orgId: org.id, userId: rec.userId, role: "admin" });
   const [client] = await db
     .insert(clients)
     .values({ orgId: org.id, name: "Lee Ming", industry: "Construction" })

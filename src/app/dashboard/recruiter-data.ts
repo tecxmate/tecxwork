@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth";
 import { db, recruiters, bookings, eventConfig, slots, applicantSlots } from "@/lib/db";
 import { normalizeSalaryCurrencyOptions } from "@/lib/job-posting";
 import { getRecruiterLocale } from "@/lib/recruiter-locale.server";
+import { getAgencyActor } from "@/lib/agency-auth";
+import { capabilitiesFor } from "@/lib/permissions";
 
 export type RecruiterDashboardSection =
   | "interviews"
@@ -78,9 +80,15 @@ export async function getRecruiterDashboardData() {
   const showApplicants =
     eventMode === "recruiter_books_applicant" || eventMode === "both";
 
+  // Shape the UI to match what the API will actually allow. A non-agency recruiter has no
+  // org capabilities here, which is correct — the capability-gated tabs are agency tabs.
+  const actor = await getAgencyActor();
+  const capabilities = actor ? capabilitiesFor(actor.role) : [];
+
   return {
     locale,
     recruiter,
+    capabilities,
     bookings: allBookings,
     showApplicants,
     jobModerationEnabled: config?.jobModerationEnabled ?? true,

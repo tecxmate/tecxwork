@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useStudentI18n } from "@/components/student-locale-provider";
 
 import { isNavItemActive, visibleNavItems, type NavRole } from "@/lib/navigation";
+import type { Capability } from "@/lib/permissions";
 
 function getStandaloneDisplayMode() {
   if (typeof window === "undefined") return false;
@@ -19,16 +20,18 @@ function getStandaloneDisplayMode() {
 export function MobileBottomNav({
   role,
   isAgency = false,
+  capabilities,
 }: {
   role: NavRole;
   isAgency?: boolean;
+  capabilities?: readonly Capability[];
 }) {
   const router = useRouter();
   const { messages } = useStudentI18n();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
-  const items = visibleNavItems(role, isAgency);
+  const items = visibleNavItems(role, isAgency, capabilities);
   function getLabel(href: string, fallback: string) {
     if (role === "guest" || role === "applicant") {
       if (href === "/") return messages.nav.home;

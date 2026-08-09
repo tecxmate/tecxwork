@@ -9,7 +9,7 @@ import { logAudit } from "@/lib/audit";
 
 /** Open job orders for the org, for the placement form's picker. */
 export async function GET(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("client:read");
   if (!gate.ok) return gate.response;
 
   const clientId = Number(new URL(req.url).searchParams.get("clientId"));
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("job_order:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId, recruiterId } = gate.actor;
 

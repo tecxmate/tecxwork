@@ -10,19 +10,22 @@ import {
   visibleNavItems,
   type NavRole,
 } from "@/lib/navigation";
+import type { Capability } from "@/lib/permissions";
 
 export function DesktopTopNav({
   role,
   currentPath,
   isAgency = false,
+  capabilities,
 }: {
   role: NavRole;
   currentPath?: string;
   isAgency?: boolean;
+  capabilities?: readonly Capability[];
 }) {
   const router = useRouter();
   const { messages } = useStudentI18n();
-  const items = visibleNavItems(role, isAgency);
+  const items = visibleNavItems(role, isAgency, capabilities);
 
   function getLabel(href: string, fallback: string) {
     if (role === "guest" || role === "applicant") {

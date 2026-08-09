@@ -1412,3 +1412,21 @@ attributed_to: [claude]   belongs_to: [tecxwork, testing]
 - `beforeEach` truncates ~25 tables, which needs ACCESS EXCLUSIVE on every one of them, and `afterAll` never closed the DB pool. Each test file therefore left idle Neon connections behind, and Postgres waits **forever** for a blocked TRUNCATE by default, so the hang looked like a slow test.
 - Two fixes: `closeDb()` (new, test-only export) releases the pool in `afterAll`, and `set lock_timeout = '15s'` makes a blocked truncate fail fast and loudly instead of hanging.
 - Result: 6 files / 48 tests green in 192s, down from 759s with a failure.
+
+## [2026-08-09] security | Candidate database was readable by client-company recruiters
+attributed_to: [claude]   belongs_to: [tecxwork, permissions]
+- Found while implementing RBAC, and more serious than the gap being fixed: `/dashboard/candidates` called `searchCandidates()` after checking only that *a* recruiter was signed in. `searchCandidates` performs no authorization of its own — it is a pure query.
+- Verified live: logging in as `co-chiafu@yangluck.demo` (a **client-company** recruiter, not the agency) rendered **22 candidate names** with contact details and document status. The agency's candidate pool is its own asset and is full of PII subject to PIPA.
+- Cause is a shape worth remembering: the API route was guarded, and the **page that renders the same rows** was not. Server components load data directly and bypass route guards entirely.
+- Fixed by gating the page on `getAgencyActor("candidate:read")`. Re-verified: 0 names for the client-company recruiter, 22 still for the agency admin.
+
+## [2026-08-09] ingest | Role-based access control on the agency surface (audit #4)
+attributed_to: [niko]   belongs_to: [tecxwork, permissions]
+- `member_role` has had seven roles since the ATS tenancy migration, but only the **tenant** boundary was ever enforced. Any member of an agency org could create clients, end placements (which triggers a fee clawback) and read the whole candidate database. An interviewer brought in for one afternoon had the authority of the account manager.
+- `src/lib/permissions.ts` is a **capability matrix**, not role checks at call sites: `role === "admin" || role === "account_manager"` scattered around is exactly what lets a new role silently inherit powers nobody intended. Adding a role is now one deliberate edit to one table.
+- Notable policy calls: only admin/account_manager may write clients (owning an account is commercial); interviewers hold **no** org-wide capability at all and reach candidates only through applications assigned to them; viewers read the commercial picture but never the candidate database — an observer with no operational need does not get PII.
+- Enforcement goes through the gate that already existed: `requireAgency(capability)` for the 14 API routes, plus a new `getAgencyActor(capability)` for server components, which is what closes the page-vs-route gap above.
+- The role is read from the **membership scoped to the org being acted in**, not the session — a user with memberships in several orgs must not carry one tenant's admin rights into another. Tested.
+- Missing membership = denied. Inferring a role from the recruiter row would hand out authority by accident.
+- The nav filters on capability too, so a role is never shown a tab that would only redirect it. Verified live by demoting the agency admin to `viewer`: writes 403, reads 200, candidate PII gone, and the Candidates tab disappeared while Clients/Placements/Compliance stayed. Role restored afterwards.
+- **Test-helper note:** `seedAgency` did not create a membership, so deny-by-default correctly broke all 22 existing agency tests. Production has a membership for every recruiter (verified), so the helpers were fixed rather than adding a permissive fallback.

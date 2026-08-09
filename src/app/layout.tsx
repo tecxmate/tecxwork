@@ -10,9 +10,9 @@ import { PwaFirstRunSplash } from "@/components/pwa-first-run-splash";
 import { RouteLoadingSignal } from "@/components/route-loading-signal";
 import { StudentLocaleProvider } from "@/components/student-locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
-import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { db, recruiters } from "@/lib/db";
+import { getAgencyActor } from "@/lib/agency-auth";
+import { capabilitiesFor, type Capability } from "@/lib/permissions";
 import { getEventBranding } from "@/lib/event-branding";
 import { getStudentLocale } from "@/lib/student-locale.server";
 
@@ -230,21 +230,25 @@ async function MobileBottomNavServer({
   sessionPromise: ReturnType<typeof getSession>;
 }) {
   const session = await sessionPromise;
-  // Agency-only tabs (Clients / Compliance) are hidden for normal recruiters.
+  // Agency-only tabs (Clients / Compliance) are hidden for normal recruiters, and
+  // capability-gated tabs are hidden for org roles that would only be redirected away.
+  // Resolved through the same gate the pages use, so the nav cannot drift from it.
   let isAgency = false;
+  let capabilities: readonly Capability[] = [];
   if (session?.role === "recruiter") {
     try {
-      const [r] = await db
-        .select({ clientKind: recruiters.clientKind })
-        .from(recruiters)
-        .where(eq(recruiters.userId, session.userId))
-        .limit(1);
-      isAgency = r?.clientKind === "agency";
+      const actor = await getAgencyActor();
+      isAgency = actor !== null;
+      capabilities = actor ? capabilitiesFor(actor.role) : [];
     } catch {
       isAgency = false;
     }
   }
   return (
-    <MobileBottomNavClient role={session?.role ?? "guest"} isAgency={isAgency} />
+    <MobileBottomNavClient
+      role={session?.role ?? "guest"}
+      isAgency={isAgency}
+      capabilities={capabilities}
+    />
   );
 }

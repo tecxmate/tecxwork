@@ -15,6 +15,7 @@ export default async function RecruiterPipelinePage() {
     <RecruiterLocaleProvider initialLocale={data.locale}>
       <RecruiterDashboard
         recruiter={data.recruiter}
+        capabilities={data.capabilities}
         bookings={data.bookings}
         section="pipeline"
         showApplicants={data.showApplicants}

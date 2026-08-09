@@ -8,7 +8,7 @@ import { createContactSchema } from "@/lib/validation-agency";
 import { logAudit } from "@/lib/audit";
 
 export async function POST(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("client:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
 
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const gate = await requireAgency();
+  const gate = await requireAgency("client:write");
   if (!gate.ok) return gate.response;
   const { orgId, userId } = gate.actor;
 

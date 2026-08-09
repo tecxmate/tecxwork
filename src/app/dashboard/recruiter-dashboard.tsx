@@ -30,6 +30,7 @@ import type { AgencyCrm } from "@/lib/agency-crm";
 import type { CandidateSearchResult } from "@/lib/candidate-search";
 import type { PlacementLifecycle } from "@/lib/placement-lifecycle";
 import type { PipelineReport } from "@/lib/pipeline-report";
+import type { Capability } from "@/lib/permissions";
 
 // ... existing Booking/Recruiter types ...
 
@@ -128,6 +129,7 @@ const PipelineReportView = dynamic(
 
 export function RecruiterDashboard({
   recruiter,
+  capabilities = [],
   bookings,
   section,
   jobModerationEnabled,
@@ -139,6 +141,8 @@ export function RecruiterDashboard({
   pipelineReport = null,
 }: {
   recruiter: Recruiter;
+  /** What this member's org role permits — used to hide tabs that would only redirect. */
+  capabilities?: readonly Capability[];
   bookings: Booking[];
   section: Section;
   showApplicants: boolean;
@@ -227,6 +231,7 @@ export function RecruiterDashboard({
         navRole="recruiter"
         currentPath={currentPath}
         isAgency={recruiter.clientKind === "agency"}
+        capabilities={capabilities}
         mobileActions={<RecruiterLanguageSwitcher />}
         showActionsOnMobile
         accountLabels={{

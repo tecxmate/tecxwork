@@ -7,8 +7,10 @@ import {
   orgs,
   placements,
   recruiters,
+  memberships,
 } from "@/lib/db/schema";
 import { jsonRequest, seedApplicant, seedRecruiter, withSession } from "./helpers";
+import type { MemberRole } from "@/lib/ats-auth";
 
 import { POST as createClient } from "@/app/api/agency/clients/route";
 import { POST as createContact } from "@/app/api/agency/contacts/route";
@@ -18,14 +20,17 @@ import { POST as createDoc } from "@/app/api/agency/compliance/route";
 import { POST as renewDoc } from "@/app/api/agency/compliance/[id]/renew/route";
 
 /** An agency recruiter in its own org — the only shape allowed to write CRM rows. */
-async function seedAgency(name: string) {
+async function seedAgency(name: string, role: MemberRole = "admin") {
   const [org] = await db.insert(orgs).values({ name, slug: `${name}-${Date.now()}` }).returning();
   const rec = await seedRecruiter({ company: name });
   await db
     .update(recruiters)
     .set({ orgId: org.id, clientKind: "agency" })
     .where(eq(recruiters.id, rec.recruiterId));
-  return { orgId: org.id, ...rec };
+  // Authorization reads the membership, not the session — production has one for every
+  // recruiter, so a test without one would be exercising a state that cannot occur.
+  await db.insert(memberships).values({ orgId: org.id, userId: rec.userId, role });
+  return { orgId: org.id, role, ...rec };
 }
 
 const body = (url: string, payload: unknown) =>
