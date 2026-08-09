@@ -21,7 +21,7 @@ function isUniqueViolation(err: unknown, constraint: string): boolean {
 
 /** GET — every offer in the org, newest first. */
 export async function GET() {
-  const gate = await requireAgency("offer:write");
+  const gate = await requireAgency("offer:read");
   if (!gate.ok) return gate.response;
 
   const rows = await db

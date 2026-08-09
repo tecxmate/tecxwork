@@ -100,6 +100,7 @@ beforeEach(async () => {
   await db.execute(/* sql */ `
     truncate table
       audit_log,
+      credit_notes,
       invoice_lines,
       invoices,
       documents,

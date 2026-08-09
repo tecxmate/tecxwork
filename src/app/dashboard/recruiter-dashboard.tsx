@@ -26,6 +26,7 @@ import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switc
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import type { PipelineBoard } from "@/lib/pipeline-types";
 import type { AgencyCrm } from "@/lib/agency-crm";
 import type { CandidateSearchResult } from "@/lib/candidate-search";
@@ -240,14 +241,22 @@ export function RecruiterDashboard({
     }
   }
 
+  const isAgency = recruiter.clientKind === "agency";
+
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    // The rail sits beside the whole workspace, so it stays put while the page changes.
+    <div className="flex min-h-full flex-1">
+      <DashboardSidebar isAgency={isAgency} capabilities={capabilities} />
+
+      <div className="flex min-w-0 flex-1 flex-col">
       <AppTopBar
         href="/"
         navRole="recruiter"
         currentPath={currentPath}
-        isAgency={recruiter.clientKind === "agency"}
+        isAgency={isAgency}
         capabilities={capabilities}
+        // The rail carries navigation on desktop; the bar keeps it for small screens.
+        hideDesktopNav
         mobileActions={<RecruiterLanguageSwitcher />}
         showActionsOnMobile
         accountLabels={{
@@ -375,6 +384,7 @@ export function RecruiterDashboard({
         </div>
       ) : null}
       <SiteFooter />
+      </div>
     </div>
   );
 }

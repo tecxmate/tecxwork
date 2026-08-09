@@ -14,12 +14,19 @@ import {
 } from "@/lib/db/schema";
 import { jsonRequest, seedRecruiter, withSession } from "./helpers";
 import type { MemberRole } from "@/lib/ats-auth";
-import { computeTotals, getBillingData, nextInvoiceNumber } from "@/lib/billing";
+import {
+  computeTotals,
+  creditableRemaining,
+  getBillingData,
+  nextCreditNoteNumber,
+  nextInvoiceNumber,
+} from "@/lib/billing";
 import {
   GET as listBilling,
   POST as createInvoice,
 } from "@/app/api/agency/invoices/route";
 import { POST as invoiceAction } from "@/app/api/agency/invoices/[id]/route";
+import { POST as createCreditNote } from "@/app/api/agency/invoices/[id]/credit-notes/route";
 
 let seq = 0;
 
@@ -338,5 +345,110 @@ describe("billing — who may bill", () => {
     const a = await seedAgency("account_manager");
     const { clientId, placementId } = await seedPlacement(a.orgId, 45600);
     expect((await createInvoice(post({ clientId, placementIds: [placementId] }))).status).toBe(201);
+  });
+});
+
+describe("billing — credit notes", () => {
+  async function issuedInvoice() {
+    const a = await seedAgency();
+    const { clientId, placementId, candidateName } = await seedPlacement(a.orgId, 45600);
+    const { invoice } = await (
+      await createInvoice(post({ clientId, placementIds: [placementId] }))
+    ).json();
+    await act(invoice.id, { action: "issue" });
+    return { ...a, invoiceId: invoice.id as number, placementId, candidateName };
+  }
+
+  const credit = (invoiceId: number, payload: unknown) =>
+    createCreditNote(
+      jsonRequest(`http://localhost/api/agency/invoices/${invoiceId}/credit-notes`, {
+        method: "POST",
+        body: payload,
+      }),
+      ctx(invoiceId)
+    );
+
+  it("credits an issued invoice and nets off what is owed", async () => {
+    const { invoiceId, orgId } = await issuedInvoice();
+
+    const res = await credit(invoiceId, { subtotal: 45600, reason: "Fell off in week 3" });
+    expect(res.status).toBe(201);
+    const { creditNote } = await res.json();
+    // tax follows the invoice's rate, so the credit reverses exactly what was charged
+    expect(creditNote.total).toBe(47880);
+    expect(creditNote.number).toMatch(/^CN-\d{4}-0001$/);
+
+    const data = await getBillingData(orgId);
+    const row = data.invoices.find((i) => i.id === invoiceId)!;
+    expect(row.netTotal).toBe(0);
+    expect(row.credits[0].reason).toBe("Fell off in week 3");
+    // a fully credited invoice is not money anyone is waiting for
+    expect(data.totals.outstanding).toBe(0);
+  });
+
+  it("supports a partial credit", async () => {
+    const { invoiceId, orgId } = await issuedInvoice();
+    await credit(invoiceId, { subtotal: 22800, reason: "Half the fee, goodwill" });
+
+    const row = (await getBillingData(orgId)).invoices.find((i) => i.id === invoiceId)!;
+    expect(row.netTotal).toBe(47880 - 23940);
+  });
+
+  it("refuses to credit more than was billed", async () => {
+    const { invoiceId } = await issuedInvoice();
+    const res = await credit(invoiceId, { subtotal: 50000, reason: "too much" });
+    expect(res.status).toBe(409);
+    // crediting past the invoice would turn it into money owed to the client
+    expect((await res.json()).error).toMatch(/more than remains/i);
+  });
+
+  it("refuses a second credit that would exceed the remainder", async () => {
+    const { invoiceId } = await issuedInvoice();
+    expect((await credit(invoiceId, { subtotal: 40000, reason: "most of it" })).status).toBe(201);
+    expect((await credit(invoiceId, { subtotal: 10000, reason: "the rest" })).status).toBe(409);
+  });
+
+  it("requires a reason", async () => {
+    const { invoiceId } = await issuedInvoice();
+    expect((await credit(invoiceId, { subtotal: 1000, reason: "   " })).status).toBe(400);
+  });
+
+  it("refuses to credit a draft — that is what voiding is for", async () => {
+    const a = await seedAgency();
+    const { clientId, placementId } = await seedPlacement(a.orgId, 45600);
+    const { invoice } = await (
+      await createInvoice(post({ clientId, placementIds: [placementId] }))
+    ).json();
+
+    const res = await credit(invoice.id, { subtotal: 1000, reason: "wrong" });
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/void it instead/i);
+  });
+
+  it("can credit a PAID invoice, which is the case voiding cannot handle", async () => {
+    const { invoiceId } = await issuedInvoice();
+    await act(invoiceId, { action: "pay" });
+    expect((await credit(invoiceId, { subtotal: 45600, reason: "Left in guarantee" })).status).toBe(201);
+  });
+
+  it("uses its own number sequence, separate from invoices", async () => {
+    const { orgId } = await issuedInvoice();
+    expect(await nextCreditNoteNumber(orgId, 2026)).toBe("CN-2026-0001");
+    // the invoice sequence is untouched by credit notes
+    expect(await nextInvoiceNumber(orgId, new Date().getUTCFullYear())).toMatch(/-0002$/);
+  });
+
+  it("reports what is still creditable", async () => {
+    const { invoiceId } = await issuedInvoice();
+    expect(await creditableRemaining(invoiceId)).toBe(47880);
+    await credit(invoiceId, { subtotal: 20000, reason: "partial" });
+    expect(await creditableRemaining(invoiceId)).toBe(47880 - 21000);
+  });
+
+  it("cannot credit another org's invoice", async () => {
+    const { invoiceId } = await issuedInvoice();
+    const other = await seedAgency();
+    await withSession({ userId: other.userId, email: other.email, role: "recruiter" });
+    expect((await credit(invoiceId, { subtotal: 1000, reason: "nope" })).status).toBe(404);
   });
 });

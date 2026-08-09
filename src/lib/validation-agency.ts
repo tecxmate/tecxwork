@@ -218,3 +218,17 @@ export const invoiceActionSchema = z.object({
   paidAmount: z.number().int().positive().optional(),
   voidReason: optionalText(500),
 });
+
+/**
+ * A credit note names its amount explicitly.
+ *
+ * There is no clawback schedule in this product — how much to credit when a placement
+ * falls off is a commercial judgement, not a computation — so the amount is entered and
+ * the screen shows the guarantee context to inform it.
+ */
+export const createCreditNoteSchema = z.object({
+  /** Net amount before tax; tax is added at the invoice's own rate. */
+  subtotal: z.number().int().positive("Enter the amount to credit"),
+  reason: z.string().trim().min(1, "A reason is required").max(500),
+  issueDate: isoDate.optional().nullable(),
+});

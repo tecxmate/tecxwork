@@ -482,6 +482,8 @@ export const documents = pgTable(
 
 
 
+
+
 // Append-only PII/access audit trail. Stores field NAMES + non-PII metadata,
 // never raw PII values, so candidate erasure never has to touch this table.
 // Grant the app DB role INSERT+SELECT only (no UPDATE/DELETE) once RLS lands.
@@ -888,6 +890,47 @@ export const invoiceLines = pgTable(
     uniqueIndex("invoice_lines_one_live_per_placement")
       .on(table.placementId)
       .where(sql`placement_id IS NOT NULL AND voided = false`),
+  ]
+);
+/**
+ * A credit note against an issued invoice.
+ *
+ * Its own numbered document rather than an edit to the invoice: once a bill has gone to a
+ * client, the correction is a separate record both sides can reconcile. The common case
+ * here is a placement that fell off inside its guarantee after the fee was already billed.
+ *
+ * Created issued and immutable. The amount is entered explicitly — there is no clawback
+ * schedule in this product, so a credit is a commercial judgement, not a computation.
+ */
+export const creditNotes = pgTable(
+  "credit_notes",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    invoiceId: integer("invoice_id")
+      .notNull()
+      .references(() => invoices.id),
+    /** Own sequence, CN-YYYY-NNNN — never shares numbering with invoices. */
+    number: text("number").notNull(),
+    issueDate: text("issue_date").notNull(),
+
+    /** Positive amounts, understood as a credit. Tax mirrors the invoice's rate. */
+    subtotal: integer("subtotal").notNull(),
+    taxRateBp: integer("tax_rate_bp").notNull().default(500),
+    taxAmount: integer("tax_amount").notNull(),
+    total: integer("total").notNull(),
+
+    /** Required. An unexplained credit is indistinguishable from a mistake. */
+    reason: text("reason").notNull(),
+
+    createdByUserId: integer("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("credit_notes_invoice_idx").on(table.invoiceId),
+    uniqueIndex("credit_notes_org_number").on(table.orgId, table.number),
   ]
 );
 

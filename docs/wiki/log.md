@@ -1533,3 +1533,24 @@ attributed_to: [niko]   belongs_to: [tecxwork, billing]
 - **Migration gotcha worth remembering:** the first run created `invoice_lines` and then failed on the index, so `CREATE TABLE IF NOT EXISTS` skipped the new column on the retry. Idempotent migrations need a separate `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for anything added after the table's first version.
 - Verified: 21/21 unit tests, plus live against the demo data — 45,600 + 5% = 47,880, duplicate billing refused by name, pay-before-issue 409, void-a-paid-invoice 409. Probe data removed afterwards.
 - **Not done:** credit notes. Flagged rather than half-built — a credit note is its own numbered document and deserves the same care as an invoice.
+
+## [2026-08-09] answer | What TECXWORK charges today
+attributed_to: [claude]   belongs_to: [tecxwork, billing]
+- Asked directly by niko. The honest answer from the code: **a per-placement fee that a human types in. There is no rate card anywhere in the system.**
+- `placements.fee_amount` is a plain optional integer set by hand. Nothing computes or validates it.
+- The demo data uses **1.2× one month's salary** (45,600 on 38,000; 40,800 on 34,000) — a pattern *in the data*, not a rule in the code.
+- The invoice adds **5% 營業稅**, which *is* in the code (`DEFAULT_TAX_RATE_BP`).
+- `placements.guarantee_until` records when clawback exposure ends, but nothing calculates what a clawback is worth.
+- **Decision (niko):** keep the credit amount a manual judgement with the guarantee context shown, rather than inventing a sliding scale. A rate card and a clawback schedule remain open options.
+
+## [2026-08-09] ingest | Credit notes, and a left sidebar for the employer workspace
+attributed_to: [niko]   belongs_to: [tecxwork, billing, navigation]
+- **Credit notes** close the gap the invoice work deliberately left: a paid invoice cannot be voided, so the correction has to be its own numbered document (`CN-YYYY-NNNN`, its own sequence) that both sides can reconcile.
+- Created issued and immutable. Tax follows **the invoice's own rate**, so the credit reverses what was actually charged rather than today's default. Crediting more than remains is refused — that would turn an invoice into money owed to the client. A draft cannot be credited: void it instead.
+- Outstanding is now **net of credits**; a fully credited invoice is not money anyone is waiting for.
+- **A real bug the permissions invariant caught**, not a timeout: `offer:write` had no matching `offer:read`, and the offers list was gated on write — so a **hiring manager, whose entire job is approving offers, could not see them**. Added `offer:read`; reads now use it. Regression test pins it. This is the invariant test earning its place.
+- **Left sidebar** replaces the horizontal nav on desktop for the employer workspace: twelve destinations had outgrown a top bar, and a rail gives each a stable position that does not reflow as labels change length. Grouped Hiring / Clients / Company; ungrouped items fall into "Workspace" so a new nav entry can never silently vanish.
+- Collapse state is read with **`useSyncExternalStore`, not an effect** — localStorage is external state React does not own, and effect-then-setState triggers the cascading render the lint rule exists to prevent. Subscribing to `storage` keeps two tabs in step for free.
+- The collapse control sits at the **top** of the rail: at the bottom it collided with the floating account widget.
+- Mobile is untouched — the top bar and bottom nav still serve small screens, where a persistent rail costs more width than it earns.
+- Verified: 31/31 billing tests · credit against a **paid** invoice 201, over-credit 409 with the remaining amount named, net 47,880 → 0 · sidebar 12 destinations in 3 groups, collapse persists across navigation, horizontal nav suppressed on desktop only.

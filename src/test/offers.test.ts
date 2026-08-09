@@ -306,6 +306,23 @@ describe("offers — withdrawal", () => {
   });
 });
 
+describe("offers — an approver must be able to see what they approve", () => {
+  it("a hiring manager can list offers even though they cannot draft one", async () => {
+    // Regression: reads were gated on offer:write, so the one role whose whole job is
+    // authorising terms could not open the screen showing them.
+    const a = await seedAgency("hiring_manager");
+    expect((await listOffers()).status).toBe(200);
+
+    const { applicationId } = await seedApplication(a.orgId, a.recruiterId);
+    expect((await createOffer(post({ applicationId, salary: 45000 }))).status).toBe(403);
+  });
+
+  it("a coordinator, who has no part in offers, cannot", async () => {
+    await seedAgency("coordinator");
+    expect((await listOffers()).status).toBe(403);
+  });
+});
+
 describe("offers — the lifecycle rules on their own", () => {
   it("only a draft is editable", () => {
     expect(isEditable("draft")).toBe(true);

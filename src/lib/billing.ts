@@ -2,6 +2,7 @@ import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import {
   applicantProfiles,
   clients,
+  creditNotes,
   db,
   invoiceLines,
   invoices,
@@ -44,19 +45,53 @@ export function computeTotals(lineAmounts: number[], taxRateBp: number): Invoice
  * Sequential within the year and derived from what already exists, so a gap never appears
  * silently — accountants read a gap in an invoice sequence as a missing document.
  */
+function nextInSequence(existing: string[], prefix: string): string {
+  const highest = existing.reduce((max, value) => {
+    const parsed = Number.parseInt(value.slice(prefix.length), 10);
+    return Number.isFinite(parsed) && parsed > max ? parsed : max;
+  }, 0);
+  return `${prefix}${String(highest + 1).padStart(4, "0")}`;
+}
+
 export async function nextInvoiceNumber(orgId: number, year: number): Promise<string> {
   const prefix = `INV-${year}-`;
   const rows = await db
     .select({ number: invoices.number })
     .from(invoices)
     .where(and(eq(invoices.orgId, orgId), sql`${invoices.number} LIKE ${prefix + "%"}`));
+  return nextInSequence(rows.map((r) => r.number), prefix);
+}
 
-  const highest = rows.reduce((max, row) => {
-    const parsed = Number.parseInt(row.number.slice(prefix.length), 10);
-    return Number.isFinite(parsed) && parsed > max ? parsed : max;
-  }, 0);
+/** Credit notes have their own sequence — sharing one with invoices would confuse both. */
+export async function nextCreditNoteNumber(orgId: number, year: number): Promise<string> {
+  const prefix = `CN-${year}-`;
+  const rows = await db
+    .select({ number: creditNotes.number })
+    .from(creditNotes)
+    .where(and(eq(creditNotes.orgId, orgId), sql`${creditNotes.number} LIKE ${prefix + "%"}`));
+  return nextInSequence(rows.map((r) => r.number), prefix);
+}
 
-  return `${prefix}${String(highest + 1).padStart(4, "0")}`;
+/**
+ * How much of an invoice has not yet been credited.
+ *
+ * The ceiling on a new credit note: crediting more than was billed would turn an invoice
+ * into a payment owed to the client.
+ */
+export async function creditableRemaining(invoiceId: number): Promise<number> {
+  const [invoice] = await db
+    .select({ total: invoices.total })
+    .from(invoices)
+    .where(eq(invoices.id, invoiceId))
+    .limit(1);
+  if (!invoice) return 0;
+
+  const credited = await db
+    .select({ total: creditNotes.total })
+    .from(creditNotes)
+    .where(eq(creditNotes.invoiceId, invoiceId));
+
+  return invoice.total - credited.reduce((sum, c) => sum + c.total, 0);
 }
 
 export type BillablePlacement = {
@@ -123,6 +158,10 @@ export type InvoiceRow = {
   lines: { description: string; amount: number; placementId: number | null }[];
   /** Placements on this invoice that have since fallen off — the clawback exposure. */
   fellOffAfterBilling: string[];
+  /** Credit notes raised against this invoice. */
+  credits: { number: string; total: number; reason: string; issueDate: string }[];
+  /** Billed minus credited — what the client actually owes. */
+  netTotal: number;
 };
 
 export type BillingData = {
@@ -168,13 +207,33 @@ export async function getBillingData(orgId: number, today = new Date()): Promise
     .leftJoin(applicantProfiles, eq(placements.candidateId, applicantProfiles.id))
     .where(and(eq(invoices.orgId, orgId), eq(invoiceLines.voided, false)));
 
+  const creditRows = await db
+    .select({
+      invoiceId: creditNotes.invoiceId,
+      number: creditNotes.number,
+      total: creditNotes.total,
+      reason: creditNotes.reason,
+      issueDate: creditNotes.issueDate,
+    })
+    .from(creditNotes)
+    .where(eq(creditNotes.orgId, orgId));
+
   const iso = today.toISOString().slice(0, 10);
   const year = today.getUTCFullYear();
 
   const rows: InvoiceRow[] = invoiceRows.map((invoice) => {
     const lines = lineRows.filter((line) => line.invoiceId === invoice.id);
+    const credits = creditRows.filter((credit) => credit.invoiceId === invoice.id);
+    const credited = credits.reduce((sum, credit) => sum + credit.total, 0);
     return {
       ...invoice,
+      credits: credits.map(({ number, total, reason, issueDate }) => ({
+        number,
+        total,
+        reason,
+        issueDate,
+      })),
+      netTotal: invoice.total - credited,
       lines: lines.map((line) => ({
         description: line.description,
         amount: line.amount,
@@ -187,13 +246,14 @@ export async function getBillingData(orgId: number, today = new Date()): Promise
     };
   });
 
+  // Net of credits: a fully credited invoice is not money anyone is waiting for.
   const outstanding = rows
     .filter((row) => row.status === "issued")
-    .reduce((sum, row) => sum + row.total, 0);
+    .reduce((sum, row) => sum + row.netTotal, 0);
 
   const overdue = rows
     .filter((row) => row.status === "issued" && row.dueDate && row.dueDate < iso)
-    .reduce((sum, row) => sum + row.total, 0);
+    .reduce((sum, row) => sum + row.netTotal, 0);
 
   const paidThisYear = invoiceRows
     .filter((row) => row.status === "paid" && row.paidAt?.getUTCFullYear() === year)

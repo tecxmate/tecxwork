@@ -117,7 +117,7 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       icon: FileSignature,
       matches: ["/dashboard/offers"],
       agencyOnly: true,
-      capability: "offer:write",
+      capability: "offer:read",
     },
     {
       href: "/dashboard/clients",

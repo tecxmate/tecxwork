@@ -20,6 +20,7 @@ export function AppTopBar({
   currentPath,
   isAgency = false,
   capabilities,
+  hideDesktopNav = false,
   desktopActions,
   mobileActions,
   showActionsOnMobile = false,
@@ -32,6 +33,8 @@ export function AppTopBar({
   currentPath?: string;
   isAgency?: boolean;
   capabilities?: readonly Capability[];
+  /** Suppress the horizontal nav when a sidebar is already showing it. */
+  hideDesktopNav?: boolean;
   desktopActions?: React.ReactNode;
   mobileActions?: React.ReactNode;
   showActionsOnMobile?: boolean;
@@ -56,7 +59,7 @@ export function AppTopBar({
           <div className="flex items-center md:justify-self-start">
             <BrandLink href={brandHref} />
           </div>
-          {navItems.length > 0 ? (
+          {navItems.length > 0 && !hideDesktopNav ? (
             <div className="hidden md:flex md:justify-self-center">
               <DesktopTopNav
                 role={navRole!}

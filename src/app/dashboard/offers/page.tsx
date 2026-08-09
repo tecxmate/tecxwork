@@ -10,10 +10,10 @@ export const dynamic = "force-dynamic";
 export default async function RecruiterOffersPage() {
   const [data, actor] = await Promise.all([
     getRecruiterDashboardData(),
-    getAgencyActor("offer:write"),
+    getAgencyActor("offer:read"),
   ]);
-  // A hiring manager can approve but not draft, so they reach offers from the pipeline
-  // rather than this screen; anyone without offer:write is sent back to the board.
+  // Read, not write: a hiring manager approves offers without drafting them, and
+  // approving something you cannot see is not a control.
   if (!actor) redirect("/dashboard/pipeline");
 
   const offers = await getOffersData(actor.orgId);

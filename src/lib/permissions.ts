@@ -34,6 +34,8 @@ export type Capability =
   | "stage:move"
   /** Change the hiring process itself — add, rename, reorder or retire a stage. */
   | "pipeline:configure"
+  /** See the offers made and their outcomes. */
+  | "offer:read"
   /** Draft an offer and record what the candidate said. */
   | "offer:write"
   /** Authorise the terms — the control that stops money being promised unilaterally. */
@@ -60,6 +62,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "compliance:write",
     "stage:move",
     "pipeline:configure",
+    "offer:read",
     "offer:write",
     "offer:approve",
     "invoice:read",
@@ -81,6 +84,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     // Changing the process everyone else works inside is a manager's call, not a
     // recruiter's — this is the line between using the pipeline and redefining it.
     "pipeline:configure",
+    "offer:read",
     "offer:write",
     "offer:approve",
     // Billing the client is part of owning the account.
@@ -100,6 +104,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "compliance:write",
     "stage:move",
     // Drafts the offer, but cannot authorise its terms. Someone else signs off on money.
+    "offer:read",
     "offer:write",
     // Can see whether their placements have been billed; billing itself is commercial.
     "invoice:read",
@@ -114,6 +119,8 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "placement:read",
     "stage:move",
     // The client-side decision maker: signs off on the terms without drafting them.
+    // Needs to READ them to do that — approving something you cannot see is not a control.
+    "offer:read",
     "offer:approve",
   ],
 
@@ -135,7 +142,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
 
   // Reporting and oversight. Reads the commercial picture, never the raw candidate
   // database — an observer with no operational need does not get PII.
-  viewer: ["client:read", "placement:read", "compliance:read", "invoice:read"],
+  viewer: ["client:read", "placement:read", "compliance:read", "offer:read", "invoice:read"],
 };
 
 export function can(role: MemberRole, capability: Capability): boolean {

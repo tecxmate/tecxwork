@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Ban, CircleDollarSign, Clock, FileText, Loader2, Receipt } from "lucide-react";
+import { AlertTriangle, Ban, CircleDollarSign, Clock, FileText, Loader2, Receipt, Undo2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { BillingData, BillablePlacement, InvoiceRow } from "@/lib/billing";
@@ -74,6 +74,28 @@ export function BillingView({
       }),
     });
     if (ok) setSelected(new Set());
+  }
+
+  async function raiseCredit(invoice: InvoiceRow) {
+    const creditable = invoice.netTotal;
+    const amount = window.prompt(
+      `Credit against ${invoice.number}.\n\n` +
+        `Billed ${money(invoice.total, invoice.currency)}, ` +
+        `${money(creditable, invoice.currency)} still creditable.\n` +
+        (invoice.fellOffAfterBilling.length > 0
+          ? `${invoice.fellOffAfterBilling.join(", ")} left inside the guarantee.\n`
+          : "") +
+        `\nNet amount to credit (tax is added at the invoice's rate):`,
+      String(invoice.subtotal)
+    );
+    if (!amount || !Number(amount)) return;
+    const reason = window.prompt("Reason for the credit:");
+    if (!reason?.trim()) return;
+
+    await call(`/api/agency/invoices/${invoice.id}/credit-notes`, {
+      method: "POST",
+      body: JSON.stringify({ subtotal: Number(amount), reason: reason.trim() }),
+    });
   }
 
   async function act(invoiceId: number, action: string) {
@@ -219,6 +241,12 @@ export function BillingView({
                   {invoice.lines.length === 1 ? "line" : "lines"}
                   {invoice.dueDate ? ` · due ${invoice.dueDate}` : ""}
                 </p>
+                {invoice.credits.map((credit) => (
+                  <p key={credit.number} className="mt-0.5 text-[11px] text-muted-foreground">
+                    <span className="font-mono">{credit.number}</span> credited{" "}
+                    {money(credit.total, invoice.currency)} — {credit.reason}
+                  </p>
+                ))}
                 {invoice.fellOffAfterBilling.length > 0 ? (
                   // Billed, then they left. Whoever handles the money needs to know.
                   <p className="mt-0.5 text-[11px] text-destructive">
@@ -229,9 +257,21 @@ export function BillingView({
               </div>
 
               <div className="shrink-0 text-right">
-                <p className="text-sm font-semibold tabular-nums text-foreground">
+                <p
+                  className={`text-sm font-semibold tabular-nums ${
+                    invoice.credits.length > 0
+                      ? "text-muted-foreground line-through"
+                      : "text-foreground"
+                  }`}
+                >
                   {money(invoice.total, invoice.currency)}
                 </p>
+                {invoice.credits.length > 0 ? (
+                  // What the client actually owes after the credit — the number that matters.
+                  <p className="text-sm font-semibold tabular-nums text-foreground">
+                    {money(invoice.netTotal, invoice.currency)}
+                  </p>
+                ) : null}
                 <p className="text-[11px] tabular-nums text-muted-foreground">
                   net {invoice.subtotal.toLocaleString()} + tax{" "}
                   {invoice.taxAmount.toLocaleString()}
@@ -259,6 +299,21 @@ export function BillingView({
                       onClick={() => void act(invoice.id, "pay")}
                     >
                       Mark paid
+                    </Button>
+                  ) : null}
+                  {(invoice.status === "issued" || invoice.status === "paid") &&
+                  invoice.netTotal > 0 ? (
+                    // The case voiding cannot handle: the bill has been sent, so the
+                    // correction is its own document.
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      disabled={busy}
+                      onClick={() => void raiseCredit(invoice)}
+                    >
+                      <Undo2 className="mr-1 h-3 w-3" />
+                      Credit
                     </Button>
                   ) : null}
                   {invoice.status === "draft" || invoice.status === "issued" ? (
