@@ -1470,3 +1470,28 @@ attributed_to: [niko]   belongs_to: [tecxwork, pipeline]
 - The template is created on demand, so a brand-new org is never stageless.
 - UI is up/down buttons rather than drag-and-drop: a pipeline has a handful of stages and is rearranged rarely, so a drag library and its pointer/touch edge cases cost far more than they return — and buttons work with a keyboard and a screen reader. Remove is disabled (not just server-refused) for occupied stages, so the reason is visible before the click.
 - Verified live: add → reorder to position 4 → board shows the new column → rename → retire → board restored, archived row intact with its name and id. Probe stage removed afterwards.
+
+## [2026-08-09] ingest | Document custody — CVs and permits held, not linked (audit #6)
+attributed_to: [niko]   belongs_to: [tecxwork, documents]
+- **The gap, measured:** 37 of 38 CVs were Google Drive URLs. A link is not custody — the candidate owns that file and can delete or revoke it, taking the agency's record of what it submitted with it. Worse, the product *instructed* candidates to set "anyone with the link can view", so every CV was readable by anyone holding the URL. And `compliance_documents.file_id` was a dead column: the tracker knew an ARC existed and when it expired but never held the scan an inspection asks to see.
+- **Why the existing `/api/upload` could not be reused:** it is images-only, and `uploadToR2` returns a **public, immutable, edge-cached** URL. Correct for a logo; catastrophic for an ARC scan — uploading one there publishes it permanently.
+- **Decision (niko):** build storage-agnostic now, add the hosted driver later. R2 is not configured in this environment, so a verified-end-to-end hosted implementation was not possible this session.
+- `DocumentStorage` is three methods — put/get/remove. Everything that makes documents *safe* (capability check, tenant scoping, audit) lives in the route above it, so adding R2/S3/Blob later is one file plus one line in `getDocumentStorage`.
+- **Documents are streamed through the app, never linked to.** A presigned URL is a bearer token that keeps working for whoever it is forwarded to, and URLs get pasted into chat threads. Proxying costs a little bandwidth and buys a permission check *and* an audit row on every single read.
+- **A permit is not a CV.** `capabilityForKind` routes ARC/work-permit/passport to `compliance:read`/`compliance:write` and everything else to `candidate:read`. Tested: a hiring manager can open a CV and is refused an ARC scan.
+- Storage keys are 24 random bytes, never derived from the filename or the candidate — a key must not leak whose document it is, and two people uploading "cv.pdf" must not collide.
+- Upload allow-list (PDF/JPEG/PNG/WebP) rather than a deny-list; SVG and HTML are absent on purpose because they render as active content.
+- Deletion is soft. A document relied on during a placement is part of the record even after it is superseded; PIPA erasure is a separate deliberate act that also clears bytes.
+- `getDocumentStorage()` **throws** when unconfigured rather than falling back to a temp directory: an upload that appears to succeed and writes to a container filesystem that vanishes on the next deploy is worse than a clear 503.
+- **Config:** set `DOCUMENT_STORAGE_PATH` for local disk. (`.env.example` is gitignored in this repo, hence recorded here.)
+- Verified live with storage configured: 90-byte PDF uploaded → written under an unguessable key → downloaded **byte-identical** with `Cache-Control: private, no-store` and `nosniff` → client-company recruiter refused 403, unauthenticated 401 → SVG refused 415 → audit rows recorded upload and view with kind/candidate/size and no content. Attaching to compliance record #46 flipped that row from "Attach" to "Scan". All probe data removed afterwards.
+- **Not done:** a general per-candidate document manager on the candidate screen. The compliance attach/view flow is wired because that is where the dead column was and where an inspection happens.
+
+## [2026-08-09] note | Test-suite flakiness is network-bound, not a product defect
+attributed_to: [claude]   belongs_to: [tecxwork, testing]
+- Two consecutive full runs each failed **one** test — a different test each time, always a timeout, never an assertion. Every file passes in isolation on retry (agency-crm 12/12, documents 18/18, pipeline-config 18/18, placement-lifecycle 10/10 in 50s after a run where the same file took 441s).
+- Measured the database directly to rule it out: `select 1` 778ms cold, `count(*)` 226ms, the 30-table `TRUNCATE` **523ms**. The DB is healthy — 125 tests' worth of truncates is about 65s, nowhere near the 1400s+ a full run now takes.
+- The cost is **network round-trips to a remote Neon branch at 0.25 CU**: each test makes 10–20 queries at ~200–400ms RTT, so ~4–6s per test is the floor and an occasional stall pushes one test past the timeout.
+- Two changes this session raised the per-test query count on purpose: revocable sessions add a session lookup to **every** authenticated request, and `withSession` now writes a real session row. Correct designs; they simply cost round-trips against a remote DB.
+- `testTimeout`/`hookTimeout` raised 20s → 60s so honest slowness stops being reported as failure while still bounding a genuine hang.
+- **Recommendation for CI:** run the suite against a **local Postgres** (container or service) rather than a remote Neon branch. That removes the RTT floor entirely and should take the suite from ~25 minutes to a couple. Left as a decision for niko — it changes how CI is provisioned.

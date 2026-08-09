@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, ShieldAlert, ShieldCheck, Plus, RefreshCw } from "lucide-react";
+import { Download, FileText, Paperclip, ShieldAlert, ShieldCheck, Plus, RefreshCw } from "lucide-react";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -266,6 +266,7 @@ export function ComplianceView({ compliance }: { compliance: AgencyCrm["complian
                         <Badge className="text-white" style={{ background: STATUS_STYLE[d.status].bg }}>
                           {STATUS_STYLE[d.status].label[loc]}
                         </Badge>
+                        <ScanControl doc={d} />
                         <Button
                           size="sm"
                           variant="outline"
@@ -287,5 +288,79 @@ export function ComplianceView({ compliance }: { compliance: AgencyCrm["complian
         <p className="text-sm text-muted-foreground">{t.allValid}</p>
       )}
     </section>
+  );
+}
+
+/**
+ * The scan behind a tracked document.
+ *
+ * Recording that an ARC exists and when it expires was never enough: an inspection asks to
+ * see the document. Viewing streams through the app so the access is permission-checked
+ * and audited — it is deliberately not a link to a file host.
+ */
+function ScanControl({ doc }: { doc: ComplianceDocRow }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (doc.documentId) {
+    return (
+      <a
+        href={`/api/agency/documents/${doc.documentId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="View the stored scan"
+        className="inline-flex h-7 items-center gap-1 rounded-md border border-border px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <FileText className="h-3 w-3" />
+        Scan
+      </a>
+    );
+  }
+
+  async function attach(file: File) {
+    setBusy(true);
+    setError(null);
+    const form = new FormData();
+    form.set("file", file);
+    form.set("kind", doc.docType);
+    form.set("candidateId", String(doc.candidateId));
+    form.set("complianceDocumentId", String(doc.id));
+    try {
+      const res = await fetch("/api/agency/documents", { method: "POST", body: form });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? "Upload failed.");
+        return;
+      }
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <label
+      title={error ?? "Attach the scanned document"}
+      className={`inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border px-2 text-xs font-medium transition-colors ${
+        error
+          ? "border-destructive/40 text-destructive"
+          : "border-dashed border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+      }`}
+    >
+      <Paperclip className="h-3 w-3" />
+      {busy ? "Uploading…" : error ? "Failed" : "Attach"}
+      <input
+        type="file"
+        accept="application/pdf,image/jpeg,image/png,image/webp"
+        className="sr-only"
+        disabled={busy}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void attach(file);
+          e.target.value = "";
+        }}
+      />
+    </label>
   );
 }

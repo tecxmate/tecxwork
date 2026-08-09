@@ -9,8 +9,11 @@ export default defineConfig({
     // execution at the file level — within a file, individual tests
     // still run sequentially via beforeEach truncate.
     fileParallelism: false,
-    testTimeout: 20000,
-    hookTimeout: 20000,
+    // The shared Neon test branch runs at 0.25 CU and every test truncates ~30 tables,
+    // so a correct-but-slow setup hook was failing at 20s once the suite passed a hundred
+    // tests. These bound a genuine hang without failing honest slowness.
+    testTimeout: 60000,
+    hookTimeout: 60000,
     env: {
       // JWT_SECRET is required at module load by lib/auth.ts. Set a
       // deterministic value before any test imports run.

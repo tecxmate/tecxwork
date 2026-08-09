@@ -23,6 +23,8 @@ export type ComplianceDocRow = {
   issuingAuthority: string | null;
   expiryDate: string | null;
   status: ComplianceStatus;
+  /** The stored scan, when one has been collected. */
+  documentId: number | null;
 };
 
 export type CrmClientRow = {
@@ -128,6 +130,7 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
       docNumber: complianceDocuments.docNumber,
       issuingAuthority: complianceDocuments.issuingAuthority,
       expiryDate: complianceDocuments.expiryDate,
+      documentId: complianceDocuments.documentId,
     })
     .from(complianceDocuments)
     .innerJoin(
@@ -162,6 +165,7 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
     issuingAuthority: r.issuingAuthority,
     expiryDate: r.expiryDate,
     status: docStatus(r.expiryDate),
+    documentId: r.documentId,
   }));
   const attention = docsWithStatus
     .filter((d) => d.status !== "valid")

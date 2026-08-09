@@ -52,6 +52,16 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "system",
 ]);
 
+export const documentKindEnum = pgEnum("document_kind", [
+  "cv",
+  "arc",
+  "work_permit",
+  "passport",
+  "diploma",
+  "contract",
+  "other",
+]);
+
 // ---- Users (admin + recruiter only) ----
 
 export const users = pgTable("users", {
@@ -406,6 +416,53 @@ export const memberships = pgTable(
   (table) => [uniqueIndex("unique_org_member").on(table.orgId, table.userId)]
 );
 
+/**
+ * Documents held on behalf of a candidate — CVs, ARCs, work permits, contracts.
+ *
+ * Until now a CV was a Google Drive URL the candidate owned: they could revoke or delete
+ * it and the agency's record of what it actually submitted would disappear, and the
+ * sharing setting the product asked for ("anyone with the link") made every CV readable by
+ * anyone holding the URL. Compliance was worse — the tracker knew an ARC existed and when
+ * it expired, but never held the scan an inspection asks to see.
+ *
+ * The bytes live in object storage under `storageKey`; this table is the index, the access
+ * boundary and the thing an auditor reads. Nothing here is ever served directly — every
+ * read goes through the app so it can be permission-checked and logged.
+ */
+export const documents = pgTable(
+  "documents",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    /** Whose document this is. Every document in this product belongs to a person. */
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    kind: documentKindEnum("kind").notNull(),
+    /** The candidate's own filename, kept for display only — never used as a storage key. */
+    filename: text("filename").notNull(),
+    contentType: text("content_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    /** Opaque key in the storage backend. Unguessable, and never exposed to a client. */
+    storageKey: text("storage_key").notNull().unique(),
+    uploadedByUserId: integer("uploaded_by_user_id").references(() => users.id),
+    /**
+     * Soft delete. A document that was relied on during a placement is part of the
+     * record even after it is superseded, so removal hides it rather than erasing it.
+     * PIPA erasure is a separate, deliberate operation that also clears the bytes.
+     */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("documents_candidate_idx").on(table.orgId, table.candidateId, table.kind),
+  ]
+);
+
 // Append-only PII/access audit trail. Stores field NAMES + non-PII metadata,
 // never raw PII values, so candidate erasure never has to touch this table.
 // Grant the app DB role INSERT+SELECT only (no UPDATE/DELETE) once RLS lands.
@@ -704,6 +761,8 @@ export const complianceDocuments = pgTable(
     expiryDate: text("expiry_date"), // YYYY-MM-DD
     status: text("status").notNull().default("valid"),
     fileId: text("file_id"),
+    /** The scan itself. Null while a document is recorded but not yet collected. */
+    documentId: integer("document_id").references(() => documents.id),
     verifiedByUserId: integer("verified_by_user_id").references(() => users.id),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     notes: text("notes"),
