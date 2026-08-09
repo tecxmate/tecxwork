@@ -1382,3 +1382,13 @@ attributed_to: [niko]   belongs_to: [recruitment-workflows]
 - Rules enforced server-side: ending a placement requires an end date; `fell_off` also requires a reason; the response returns `insideGuarantee` computed **at the moment of the decision** rather than recomputed later from dates that may since have been edited. `updatePlacementSchema` deliberately cannot change candidate/job order/client — those are facts about what happened and feed the client-level counts.
 - Also: an ended placement is never counted as "in guarantee" or as document risk (they are gone; it is not live exposure), and superseded documents are ignored so a renewal clears the flag.
 - Verification note: the Playwright script for this MUTATES data (marks a placement fell_off), so re-runs are not idempotent and gave a false failure. The committed regression tests (10 cases) are the deterministic version. Suite now 5 files / 36 tests.
+
+## [2026-08-09] ingest | Error reporting + error boundaries (audit #14)
+attributed_to: [niko]   belongs_to: [tecxwork, load-readiness]
+- There was no error monitoring and **no error boundaries at all** — an unhandled error rendered Next's own error screen and nobody was told. On event day that means a recruiter hits a 500 mid-booking and the first you hear of it is a phone call.
+- `src/instrumentation.ts` implements Next's `onRequestError`, the one hook that sees every uncaught server error. Two transports, neither needing an account: a structured single-line JSON log (Vercel indexes it, so you can alert on `level:"error"` with zero integration), and an optional POST to `ERROR_WEBHOOK_URL` (Slack/Discord/anything).
+- **Deliberately not wired to Sentry.** An unconfigured vendor SDK is dead weight, and no DSN was available; the webhook covers "tell someone" today and a DSN can be added later without changing the shape.
+- Query strings are stripped from reported paths — this app puts search terms and ids in them, and the path alone is enough to locate a bug.
+- `app/error.tsx` + `app/global-error.tsx`: friendly copy, a retry, a link to /feedback, and the Next `digest` shown as a reference so a support message ties back to the server stack trace. The raw error text is deliberately NOT shown to the user. global-error styles itself inline because the design system may be exactly what failed.
+- Verified by temporarily adding a throwing route: onRequestError emitted the structured log with path/method/routeType, and the boundary rendered. Route removed afterwards.
+- Gotcha: a folder named `__errtest` is not routable — Next treats a leading underscore as a private folder.
