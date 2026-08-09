@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, passwordResetCodes } from "@/lib/db";
 import { and, eq, gte } from "drizzle-orm";
-import { hashPassword } from "@/lib/auth";
+import { hashPassword, revokeAllSessions } from "@/lib/auth";
 import { parseJsonBody, resetPasswordSchema } from "@/lib/validation";
 
 /**
@@ -75,6 +75,11 @@ export async function POST(req: NextRequest) {
   await db
     .delete(passwordResetCodes)
     .where(eq(passwordResetCodes.email, email));
+
+  // Evict every existing session. Resetting a password is usually a response to losing
+  // control of the account, and leaving live tokens alone would let whoever prompted the
+  // reset keep the access the reset was meant to take away.
+  await revokeAllSessions(updated.id);
 
   return NextResponse.json({ ok: true });
 }

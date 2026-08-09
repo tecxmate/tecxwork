@@ -25,7 +25,7 @@ async function seedAgencyMember(role: MemberRole) {
     .set({ orgId: org.id, clientKind: "agency" })
     .where(eq(recruiters.id, rec.recruiterId));
   await db.insert(memberships).values({ orgId: org.id, userId: rec.userId, role });
-  withSession({ userId: rec.userId, email: rec.email, role: "recruiter" });
+  await withSession({ userId: rec.userId, email: rec.email, role: "recruiter" });
   return { orgId: org.id, ...rec };
 }
 
@@ -80,7 +80,7 @@ describe("RBAC — the gate itself", () => {
       .update(recruiters)
       .set({ orgId: org.id, clientKind: "agency" })
       .where(eq(recruiters.id, rec.recruiterId));
-    withSession({ userId: rec.userId, email: rec.email, role: "recruiter" });
+    await withSession({ userId: rec.userId, email: rec.email, role: "recruiter" });
 
     const res = await listClients();
     expect(res.status).toBe(403);

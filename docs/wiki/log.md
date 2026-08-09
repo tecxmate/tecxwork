@@ -1430,3 +1430,17 @@ attributed_to: [niko]   belongs_to: [tecxwork, permissions]
 - Missing membership = denied. Inferring a role from the recruiter row would hand out authority by accident.
 - The nav filters on capability too, so a role is never shown a tab that would only redirect it. Verified live by demoting the agency admin to `viewer`: writes 403, reads 200, candidate PII gone, and the Candidates tab disappeared while Clients/Placements/Compliance stayed. Role restored afterwards.
 - **Test-helper note:** `seedAgency` did not create a membership, so deny-by-default correctly broke all 22 existing agency tests. Production has a membership for every recruiter (verified), so the helpers were fixed rather than adding a permissive fallback.
+
+## [2026-08-09] security | Revocable sessions — logout and password reset now actually end access (audit #15)
+attributed_to: [niko]   belongs_to: [tecxwork, auth]
+- The JWT was stateless with a 24h expiry and **no revocation of any kind**. Two consequences, both verified live before the fix:
+  - **Signing out did not sign you out.** `/api/auth/logout` cleared the cookie; a token captured beforehand kept working for the rest of its 24 hours. This matters here specifically because candidates sign in from shared campus and library machines.
+  - **A password reset did not evict anyone.** Reset set `passwordHash` and nothing else, so someone already holding a token kept full access — the reset did not undo the compromise it was performed in response to.
+- Fixed with a `sessions` table: one row per signed-in device, id = the JWT's `jti`. `getSession` verifies the signature and then checks the row still exists and has not expired.
+- **Why a table rather than a `token_version` / epoch column:** an epoch forces all-or-nothing revocation, so signing out on your phone would sign out your laptop. A row per device gives correct per-device semantics for the same one indexed lookup per request.
+- Revocation points: logout deletes **that one** row; password reset deletes **all** rows for the user. Both tested.
+- **Tokens without a `jti` are refused**, not grandfathered — an unrevocable token is exactly what was being removed. Everyone signed in at deploy time is asked to log in once more. Intended.
+- Expired rows are swept opportunistically on sign-in, scoped to that user. Bounded work on a path already writing, so no cron.
+- `getSession` is deliberately **not** memoized with React `cache()`: the test helpers swap sessions mid-test, and a per-request memo would have returned a stale session and hidden real failures.
+- Verified live end to end: token captured → works (200) → logout → replay 401. And: stolen token live (200) → victim resets password → same token 401 → victim signs in fine. All three published demo logins still work.
+- **Test-helper note:** `withSession` had to become async (it now creates a real session row); hand-signing a token would test a state the app can no longer produce. 19 call sites updated.

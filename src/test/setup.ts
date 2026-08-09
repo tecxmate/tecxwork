@@ -124,6 +124,7 @@ beforeEach(async () => {
       notifications,
       push_subscriptions,
       email_logs,
+      sessions,
       recruiter_email_approvals,
       users
     restart identity cascade

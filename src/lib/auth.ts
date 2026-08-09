@@ -1,8 +1,9 @@
+import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { db, applicantProfiles, recruiters, users } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { db, applicantProfiles, recruiters, sessions, users } from "@/lib/db";
+import { and, eq, lt } from "drizzle-orm";
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -29,7 +30,12 @@ export type SessionPayload = {
   userId: number;
   email: string;
   role: UserRole;
+  /** Session row id. Absent only on tokens issued before sessions existed. */
+  jti?: string;
 };
+
+/** Must match the JWT lifetime below, so the swept row and the token die together. */
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -54,11 +60,67 @@ export function verifyToken(token: string): SessionPayload | null {
   }
 }
 
+/**
+ * Issue a token backed by a revocable session row.
+ *
+ * Every sign-in path must go through this rather than `createToken`, or it mints a token
+ * that cannot be revoked and that `getSession` will reject anyway.
+ */
+export async function createSession(
+  payload: Omit<SessionPayload, "jti">
+): Promise<string> {
+  const jti = randomUUID();
+  const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+
+  await db.insert(sessions).values({ id: jti, userId: payload.userId, expiresAt });
+
+  // Opportunistic cleanup: this user's own dead rows, on a path that is already writing.
+  // Bounded work, no cron needed, and it keeps the table from growing without limit.
+  await db
+    .delete(sessions)
+    .where(and(eq(sessions.userId, payload.userId), lt(sessions.expiresAt, new Date())))
+    .catch(() => {
+      // Losing the sweep must never cost someone their login.
+    });
+
+  return createToken({ ...payload, jti });
+}
+
+/** Revoke one device's session. */
+export async function revokeSession(jti: string): Promise<void> {
+  await db.delete(sessions).where(eq(sessions.id, jti));
+}
+
+/**
+ * Revoke every session for a user — the thing a password reset has to do to be worth
+ * anything. Changing the password while an attacker holds a live token is not a recovery.
+ */
+export async function revokeAllSessions(userId: number): Promise<void> {
+  await db.delete(sessions).where(eq(sessions.userId, userId));
+}
+
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
-  return verifyToken(token);
+
+  const payload = verifyToken(token);
+  if (!payload) return null;
+
+  // A token with no jti predates revocable sessions. It cannot be revoked by definition,
+  // so it is refused rather than trusted; the holder simply signs in again.
+  if (!payload.jti) return null;
+
+  const [row] = await db
+    .select({ expiresAt: sessions.expiresAt })
+    .from(sessions)
+    .where(eq(sessions.id, payload.jti))
+    .limit(1);
+
+  // Deleted (signed out, password reset, account closed) or past its expiry.
+  if (!row || row.expiresAt.getTime() <= Date.now()) return null;
+
+  return payload;
 }
 
 export async function requireSession(): Promise<SessionPayload> {
@@ -155,7 +217,7 @@ export async function login(
     role: user.role,
   };
 
-  return { ok: true, token: createToken(payload), user: payload };
+  return { ok: true, token: await createSession(payload), user: payload };
 }
 
 export { COOKIE_NAME };

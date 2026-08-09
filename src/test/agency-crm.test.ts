@@ -45,7 +45,7 @@ describe("agency CRM — access control", () => {
   it("rejects a client-company recruiter (only agencies may write CRM rows)", async () => {
     const rec = await seedRecruiter({ company: "Lee Ming Construction" });
     // clientKind defaults to a non-agency value and orgId is null
-    withSession({ userId: rec.userId, email: rec.email, role: "recruiter" });
+    await withSession({ userId: rec.userId, email: rec.email, role: "recruiter" });
 
     const res = await createClient(body("/api/agency/clients", { name: "Acme" }));
     expect(res.status).toBe(403);
@@ -56,12 +56,12 @@ describe("agency CRM — access control", () => {
     const a = await seedAgency("AgencyA");
     const b = await seedAgency("AgencyB");
 
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
     const created = await createClient(body("/api/agency/clients", { name: "A's client" }));
     const { client } = await created.json();
 
     // B is a perfectly valid agency — it just must not see A's rows.
-    withSession({ userId: b.userId, email: b.email, role: "recruiter" });
+    await withSession({ userId: b.userId, email: b.email, role: "recruiter" });
     const res = await createContact(
       body("/api/agency/contacts", { clientId: client.id, name: "Mallory" })
     );
@@ -74,7 +74,7 @@ describe("agency CRM — access control", () => {
 describe("agency CRM — data integrity", () => {
   it("refuses a duplicate client name within the org", async () => {
     const a = await seedAgency("AgencyA");
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
 
     expect((await createClient(body("/api/agency/clients", { name: "Giant" }))).status).toBe(201);
     const second = await createClient(body("/api/agency/clients", { name: "Giant" }));
@@ -87,9 +87,9 @@ describe("agency CRM — data integrity", () => {
     const a = await seedAgency("AgencyA");
     const b = await seedAgency("AgencyB");
 
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
     expect((await createClient(body("/api/agency/clients", { name: "Giant" }))).status).toBe(201);
-    withSession({ userId: b.userId, email: b.email, role: "recruiter" });
+    await withSession({ userId: b.userId, email: b.email, role: "recruiter" });
     expect((await createClient(body("/api/agency/clients", { name: "Giant" }))).status).toBe(201);
 
     expect(await db.select().from(clients)).toHaveLength(2);
@@ -97,7 +97,7 @@ describe("agency CRM — data integrity", () => {
 
   it("a client order requires a client", async () => {
     const a = await seedAgency("AgencyA");
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
 
     const res = await createJobOrder(
       body("/api/agency/job-orders", { title: "Site Engineer", type: "client_order" })
@@ -107,7 +107,7 @@ describe("agency CRM — data integrity", () => {
 
   it("derives a placement's client from its job order, ignoring anything the caller sends", async () => {
     const a = await seedAgency("AgencyA");
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
 
     const real = await (await createClient(body("/api/agency/clients", { name: "Real client" }))).json();
     const decoy = await (await createClient(body("/api/agency/clients", { name: "Decoy" }))).json();
@@ -134,7 +134,7 @@ describe("agency CRM — data integrity", () => {
 
   it("refuses to place the same candidate on the same job order twice", async () => {
     const a = await seedAgency("AgencyA");
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
 
     const client = await (await createClient(body("/api/agency/clients", { name: "C" }))).json();
     const order = await (
@@ -152,7 +152,7 @@ describe("agency CRM — data integrity", () => {
 describe("compliance documents — renewal keeps history", () => {
   async function seedDoc() {
     const a = await seedAgency("AgencyA");
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
     const cand = await seedApplicant({ name: "Le Van Duc" });
     const res = await createDoc(
       body("/api/agency/compliance", {
@@ -210,7 +210,7 @@ describe("compliance documents — renewal keeps history", () => {
   it("cannot renew another org's document", async () => {
     const { docId } = await seedDoc();
     const b = await seedAgency("AgencyB");
-    withSession({ userId: b.userId, email: b.email, role: "recruiter" });
+    await withSession({ userId: b.userId, email: b.email, role: "recruiter" });
 
     const res = await renewDoc(
       body(`/api/agency/compliance/${docId}/renew`, { expiryDate: "2030-01-01" }),

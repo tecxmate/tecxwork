@@ -36,7 +36,7 @@ describe("POST /api/bookings/review — accept races", () => {
       bookingIds.push(id);
     }
 
-    withSession({
+    await withSession({
       userId: recruiter.userId,
       email: recruiter.email,
       role: "recruiter",
@@ -89,7 +89,7 @@ describe("POST /api/bookings/review — accept races", () => {
       requestedTime: slotTime,
     });
 
-    withSession({
+    await withSession({
       userId: intruder.userId,
       email: intruder.email,
       role: "recruiter",

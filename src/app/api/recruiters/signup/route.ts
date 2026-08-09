@@ -6,7 +6,7 @@ import {
   allowedDomains,
   recruiterEmailApprovals,
 } from "@/lib/db";
-import { COOKIE_NAME, createToken, hashPassword } from "@/lib/auth";
+import { COOKIE_NAME, createSession, hashPassword } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
 import { ensureDefaultRecruiterSlots } from "@/lib/recruiter-onboarding";
 import { parseJsonBody, recruiterSignupSchema } from "@/lib/validation";
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
       .where(eq(recruiterEmailApprovals.email, normalizedEmail));
 
     // Auto-login
-    const token = createToken({
+    const token = await createSession({
       userId: user.id,
       email: user.email,
       role: "recruiter",

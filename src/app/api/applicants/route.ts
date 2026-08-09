@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, applicantProfiles, eventConfig, users, emailVerificationCodes } from "@/lib/db";
-import { COOKIE_NAME, createToken, getSession, hashPassword } from "@/lib/auth";
+import { COOKIE_NAME, createSession, getSession, hashPassword } from "@/lib/auth";
 import { sanitizeWorkExperiences } from "@/lib/student-profile";
 import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
 import { applicantSignupSchema, parseJsonBody } from "@/lib/validation";
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
       .returning();
 
     // Auto-login
-    const token = createToken({
+    const token = await createSession({
       userId: user.id,
       email: user.email,
       role: "applicant",

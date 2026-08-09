@@ -185,7 +185,7 @@ describe("placement lifecycle — ending a placement", () => {
   it("requires an end date before a placement can be closed", async () => {
     const a = await seedAgency();
     const pl = await seedPlacement(a, "Ending", { guaranteeUntil: iso(30) });
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
 
     const res = await patch(pl.id, { status: "completed" });
     expect(res.status).toBe(400);
@@ -197,7 +197,7 @@ describe("placement lifecycle — ending a placement", () => {
   it("requires a reason when a placement falls off", async () => {
     const a = await seedAgency();
     const pl = await seedPlacement(a, "Leaving", { guaranteeUntil: iso(30) });
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
 
     expect((await patch(pl.id, { status: "fell_off", endDate: iso(-1) })).status).toBe(400);
 
@@ -214,7 +214,7 @@ describe("placement lifecycle — ending a placement", () => {
   it("does not flag a clawback when they leave after the guarantee expired", async () => {
     const a = await seedAgency();
     const pl = await seedPlacement(a, "Stayed", { guaranteeUntil: iso(-60) });
-    withSession({ userId: a.userId, email: a.email, role: "recruiter" });
+    await withSession({ userId: a.userId, email: a.email, role: "recruiter" });
 
     const res = await patch(pl.id, {
       status: "fell_off",
@@ -229,7 +229,7 @@ describe("placement lifecycle — ending a placement", () => {
     const a = await seedAgency();
     const b = await seedAgency();
     const pl = await seedPlacement(a, "Ours", { guaranteeUntil: iso(10) });
-    withSession({ userId: b.userId, email: b.email, role: "recruiter" });
+    await withSession({ userId: b.userId, email: b.email, role: "recruiter" });
 
     expect((await patch(pl.id, { status: "started" })).status).toBe(404);
   });

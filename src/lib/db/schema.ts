@@ -65,6 +65,38 @@ export const users = pgTable("users", {
     .defaultNow(),
 });
 
+/**
+ * Live login sessions — one row per signed-in device.
+ *
+ * The JWT alone could not be revoked: signing out cleared the cookie but left the token
+ * valid for the rest of its 24 hours, and resetting a password did not evict someone who
+ * already held one. Giving each token a row here makes "is this session still allowed?" a
+ * question with an answer, at the cost of one primary-key lookup per authenticated request.
+ *
+ * The id IS the token's `jti` claim, so revoking a single device means deleting one row.
+ */
+export const sessions = pgTable(
+  "sessions",
+  {
+    /** Random opaque id, also carried in the JWT as `jti`. */
+    id: text("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    /** Mirrors the JWT expiry, so expired rows can be swept without decoding tokens. */
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    // "sign out everywhere" and password reset both delete by user
+    index("sessions_user_idx").on(table.userId),
+    // the periodic sweep deletes by expiry
+    index("sessions_expires_idx").on(table.expiresAt),
+  ]
+);
+
 // ---- Recruiters (profile linked to a user) ----
 
 export const recruiters = pgTable("recruiters", {

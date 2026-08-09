@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import {
   COOKIE_NAME,
   type SessionPayload,
-  createToken,
+  createSession,
   hashPassword,
 } from "@/lib/auth";
 import {
@@ -20,8 +20,10 @@ import { __testCookieStore } from "./setup";
  * route-handler calls inside the same test will see this session via the
  * mocked next/headers cookies().
  */
-export function withSession(payload: SessionPayload): void {
-  const token = createToken(payload);
+export async function withSession(payload: SessionPayload): Promise<void> {
+  // A real session row, because getSession now refuses a token without one. Signing a
+  // token by hand here would test a state the app can no longer produce.
+  const token = await createSession(payload);
   __testCookieStore.set(COOKIE_NAME, { name: COOKIE_NAME, value: token });
 }
 
