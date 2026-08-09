@@ -195,3 +195,26 @@ export const offerActionSchema = z.object({
   /** Required when declining — the most useful field in the table for the next offer. */
   declineReason: optionalText(500),
 });
+
+/* ---------- invoicing ---------- */
+
+/**
+ * An invoice is raised FROM placements, not typed by hand: the caller names which
+ * placements to bill and the amounts come from their recorded fees. That is what stops an
+ * invoice and a placement disagreeing about what was charged.
+ */
+export const createInvoiceSchema = z.object({
+  clientId: z.number().int().positive(),
+  placementIds: z.array(z.number().int().positive()).min(1, "Select at least one placement"),
+  dueDate: isoDate.optional().nullable(),
+  notes: optionalText(1000),
+});
+
+export const invoiceActionSchema = z.object({
+  action: z.enum(["issue", "pay", "void"]),
+  /** Issue date, defaulting to today when omitted. */
+  issueDate: isoDate.optional().nullable(),
+  /** For a part payment; defaults to the invoice total. */
+  paidAmount: z.number().int().positive().optional(),
+  voidReason: optionalText(500),
+});

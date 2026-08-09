@@ -52,6 +52,12 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "system",
 ]);
 
+export const invoiceStatusEnum = pgEnum("invoice_status", [
+  "draft",
+  "issued",
+  "paid",
+  "void",
+]);
 export const offerStatusEnum = pgEnum("offer_status", [
   "draft",
   "approved",
@@ -474,6 +480,8 @@ export const documents = pgTable(
 
 
 
+
+
 // Append-only PII/access audit trail. Stores field NAMES + non-PII metadata,
 // never raw PII values, so candidate erasure never has to touch this table.
 // Grant the app DB role INSERT+SELECT only (no UPDATE/DELETE) once RLS lands.
@@ -732,7 +740,7 @@ export const offers = pgTable(
 
     status: offerStatusEnum("status").notNull().default("draft"),
 
-    /** Terms. Salary is minor units of the currency to avoid float drift on money. */
+    /** Terms. Whole currency units (TWD has no subunit in practice), as placements store. */
     salary: integer("salary").notNull(),
     currency: text("currency").notNull().default("TWD"),
     salaryPeriod: text("salary_period").notNull().default("month"),
@@ -797,6 +805,90 @@ export const placements = pgTable(
       .defaultNow(),
   },
   (table) => [uniqueIndex("unique_placement_submission").on(table.submissionId)]
+);
+
+/**
+ * Client invoices.
+ *
+ * The agency's entire revenue lived in `placements.fee_amount` — a number with no bill
+ * behind it, so nothing recorded what had actually been charged, when it was sent, or
+ * whether it had been paid. "How much is outstanding?" had no answer in the product.
+ *
+ * Amounts are whole TWD, matching placements. Tax is stored in basis points so a 5%
+ * 營業稅 is exact integer arithmetic rather than a float that drifts by a cent per line.
+ */
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    clientId: integer("client_id")
+      .notNull()
+      .references(() => clients.id),
+    /** Human-facing document number. Unique within the org — it is what a client quotes. */
+    number: text("number").notNull(),
+    status: invoiceStatusEnum("status").notNull().default("draft"),
+
+    issueDate: text("issue_date"),
+    dueDate: text("due_date"),
+    currency: text("currency").notNull().default("TWD"),
+
+    /** Derived from the lines and stored, so a paid invoice still reads as it was sent. */
+    subtotal: integer("subtotal").notNull().default(0),
+    /** Basis points: 500 = 5%, Taiwan business tax. */
+    taxRateBp: integer("tax_rate_bp").notNull().default(500),
+    taxAmount: integer("tax_amount").notNull().default(0),
+    total: integer("total").notNull().default(0),
+
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    paidAmount: integer("paid_amount"),
+    voidReason: text("void_reason"),
+    notes: text("notes"),
+
+    createdByUserId: integer("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("invoices_org_status_idx").on(table.orgId, table.status),
+    uniqueIndex("invoices_org_number").on(table.orgId, table.number),
+  ]
+);
+
+/**
+ * One billable thing on an invoice, normally a placement fee.
+ *
+ * The placement link is what stops the same fee being billed twice — a partial unique
+ * index ignores voided invoices, so a mistake can be voided and re-raised.
+ */
+export const invoiceLines = pgTable(
+  "invoice_lines",
+  {
+    id: serial("id").primaryKey(),
+    invoiceId: integer("invoice_id")
+      .notNull()
+      .references(() => invoices.id, { onDelete: "cascade" }),
+    placementId: integer("placement_id").references(() => placements.id),
+    description: text("description").notNull(),
+    amount: integer("amount").notNull(),
+    /**
+     * Mirrors the parent invoice being voided.
+     *
+     * Denormalised on purpose: Postgres cannot reference another table from an index
+     * predicate, and a duplicate-billing guarantee this important belongs in the database
+     * rather than in whichever code path remembers to check. It is written in the same
+     * transaction as the void, which is the only place it can change.
+     */
+    voided: boolean("voided").notNull().default(false),
+  },
+  (table) => [
+    index("invoice_lines_invoice_idx").on(table.invoiceId),
+    // A placement's fee is billed once. Voiding frees it to be re-raised on a correction.
+    uniqueIndex("invoice_lines_one_live_per_placement")
+      .on(table.placementId)
+      .where(sql`placement_id IS NOT NULL AND voided = false`),
+  ]
 );
 
 // ---- Migrant-labor compliance documents (Phase 3) ----

@@ -37,7 +37,11 @@ export type Capability =
   /** Draft an offer and record what the candidate said. */
   | "offer:write"
   /** Authorise the terms — the control that stops money being promised unilaterally. */
-  | "offer:approve";
+  | "offer:approve"
+  /** See what has been billed and what is outstanding. */
+  | "invoice:read"
+  /** Raise, issue, void an invoice, or record a payment against one. */
+  | "invoice:write";
 
 /**
  * The matrix. Each row is a job, not a rank — a coordinator is not "less than" a recruiter,
@@ -58,6 +62,8 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "pipeline:configure",
     "offer:write",
     "offer:approve",
+    "invoice:read",
+    "invoice:write",
   ],
 
   // Owns the client relationship end to end, which is why this is the only other role
@@ -77,6 +83,9 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "pipeline:configure",
     "offer:write",
     "offer:approve",
+    // Billing the client is part of owning the account.
+    "invoice:read",
+    "invoice:write",
   ],
 
   // Does the recruiting: sources candidates, opens vacancies, makes placements. Reads
@@ -92,6 +101,8 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "stage:move",
     // Drafts the offer, but cannot authorise its terms. Someone else signs off on money.
     "offer:write",
+    // Can see whether their placements have been billed; billing itself is commercial.
+    "invoice:read",
   ],
 
   // Sits on the client side of the decision: judges candidates and moves them forward,
@@ -124,7 +135,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
 
   // Reporting and oversight. Reads the commercial picture, never the raw candidate
   // database — an observer with no operational need does not get PII.
-  viewer: ["client:read", "placement:read", "compliance:read"],
+  viewer: ["client:read", "placement:read", "compliance:read", "invoice:read"],
 };
 
 export function can(role: MemberRole, capability: Capability): boolean {

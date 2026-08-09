@@ -9,6 +9,7 @@ import {
   Handshake,
   Home,
   KanbanSquare,
+  Receipt,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -141,6 +142,14 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       matches: ["/dashboard/compliance"],
       capability: "compliance:read",
       agencyOnly: true,
+    },
+    {
+      href: "/dashboard/billing",
+      label: "Billing",
+      icon: Receipt,
+      matches: ["/dashboard/billing"],
+      agencyOnly: true,
+      capability: "invoice:read",
     },
     {
       href: "/dashboard/reports",
