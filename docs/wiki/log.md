@@ -1582,3 +1582,11 @@ attributed_to: [niko]   belongs_to: [tecxwork, billing]
 - Clawback is still a manual judgement per niko's earlier decision; a schedule could now be layered on the same rate.
 - Verified: 41/41 billing tests, plus live — a rate of 1.2 months on a client produced 45,600 from a 38,000 salary with no fee supplied.
 - **Housekeeping:** removed three `Playwright Test Co` clients (and a dependent job order and placement) left in the demo database by an earlier verification run this session.
+
+## [2026-08-10] fix | Defect sweep over the session's work
+attributed_to: [claude]   belongs_to: [tecxwork, billing]
+- Ran a targeted sweep over the thirteen features shipped this session, looking for the classes of defect most likely to hide: unguarded routes, float arithmetic on money, non-idempotent migrations, and unscoped tenant queries.
+- **Clean on three of four.** No float anywhere on a money path; every migration's guards match or exceed its statements; the only two bare `requireAgency()` gates are the deliberate row-dependent cases (`documents/[id]`, `offers/[id]`) where the capability cannot be known until the row is read. Helpers taking a bare id (`creditableRemaining`, `stageOccupancy`, `activeStageCount`) are each called only after their route has already scoped by org.
+- **Found: `refreshInvoiceTotals` was dead code** — written, never called. Invoice lines are only inserted at creation and flagged on void; there is no endpoint that adds or removes one, so nothing ever needs totals recomputed. Removed.
+- **Found while tracing it: a voided invoice reported "0 lines".** `getBillingData` filtered lines on `voided = false`, but that flag exists so the partial unique index frees a placement to be re-billed — not to erase what the document said. An invoice that was voided still shows the lines it was raised with; its status already communicates the void. Fixed, with a regression test.
+- 42/42 billing tests after the change.

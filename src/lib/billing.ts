@@ -247,7 +247,10 @@ export async function getBillingData(orgId: number, today = new Date()): Promise
     .innerJoin(invoices, eq(invoiceLines.invoiceId, invoices.id))
     .leftJoin(placements, eq(invoiceLines.placementId, placements.id))
     .leftJoin(applicantProfiles, eq(placements.candidateId, applicantProfiles.id))
-    .where(and(eq(invoices.orgId, orgId), eq(invoiceLines.voided, false)));
+    // Not filtered on `voided`: that flag exists so the partial unique index frees a
+    // placement to be re-billed, not to hide history. An invoice that was voided still
+    // shows the lines it was raised with — its status already says it was voided.
+    .where(eq(invoices.orgId, orgId));
 
   const creditRows = await db
     .select({
@@ -308,27 +311,6 @@ export async function getBillingData(orgId: number, today = new Date()): Promise
   };
 }
 
-/** Recompute and persist an invoice's stored totals from its live lines. */
-export async function refreshInvoiceTotals(invoiceId: number): Promise<InvoiceTotals> {
-  const [invoice] = await db
-    .select({ taxRateBp: invoices.taxRateBp })
-    .from(invoices)
-    .where(eq(invoices.id, invoiceId))
-    .limit(1);
-
-  const lines = await db
-    .select({ amount: invoiceLines.amount })
-    .from(invoiceLines)
-    .where(and(eq(invoiceLines.invoiceId, invoiceId), eq(invoiceLines.voided, false)));
-
-  const totals = computeTotals(
-    lines.map((line) => line.amount),
-    invoice?.taxRateBp ?? DEFAULT_TAX_RATE_BP
-  );
-
-  await db.update(invoices).set(totals).where(eq(invoices.id, invoiceId));
-  return totals;
-}
 
 /** Statuses an invoice can still be edited in. */
 export function isInvoiceEditable(status: string): boolean {

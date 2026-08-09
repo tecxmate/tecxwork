@@ -255,6 +255,18 @@ describe("billing — the lifecycle", () => {
     expect((await res.json()).error).toMatch(/credit note/i);
   });
 
+  it("a voided invoice still shows the lines it was raised with", async () => {
+    const { invoiceId, orgId } = await draft();
+    await act(invoiceId, { action: "void", voidReason: "wrong client" });
+
+    const row = (await getBillingData(orgId)).invoices.find((i) => i.id === invoiceId)!;
+    expect(row.status).toBe("void");
+    // The voided flag on a line exists so the placement can be re-billed, not to erase
+    // what the invoice said. Reporting "0 lines" on a document that had one is a lie.
+    expect(row.lines).toHaveLength(1);
+    expect(row.total).toBe(47880);
+  });
+
   it("voiding frees the placement to be billed again", async () => {
     const { invoiceId, clientId, placementId } = await draft();
     expect(
