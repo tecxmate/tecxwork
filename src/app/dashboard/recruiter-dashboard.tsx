@@ -28,6 +28,7 @@ import { AppTopBar } from "@/components/app-topbar";
 import type { PipelineBoard } from "@/lib/pipeline-types";
 import type { AgencyCrm } from "@/lib/agency-crm";
 import type { CandidateSearchResult } from "@/lib/candidate-search";
+import type { PlacementLifecycle } from "@/lib/placement-lifecycle";
 import type { PipelineReport } from "@/lib/pipeline-report";
 
 // ... existing Booking/Recruiter types ...
@@ -73,6 +74,7 @@ type Section =
   | "candidates"
   | "pipeline"
   | "clients"
+  | "placements"
   | "compliance"
   | "reports"
   | "jobs"
@@ -102,6 +104,11 @@ const CandidateSearchView = dynamic(
   { loading: () => <DashboardTabLoader /> }
 );
 
+const PlacementsView = dynamic(
+  () => import("@/components/placements-view").then((m) => m.PlacementsView),
+  { loading: () => <DashboardTabLoader /> }
+);
+
 const ClientsCrmView = dynamic(
   () => import("@/components/clients-crm-view").then((m) => m.ClientsCrmView),
   { loading: () => <DashboardTabLoader /> }
@@ -128,6 +135,7 @@ export function RecruiterDashboard({
   pipelineBoard = null,
   agencyCrm = null,
   candidateSearch = null,
+  placements = null,
   pipelineReport = null,
 }: {
   recruiter: Recruiter;
@@ -139,6 +147,7 @@ export function RecruiterDashboard({
   pipelineBoard?: PipelineBoard | null;
   agencyCrm?: AgencyCrm | null;
   candidateSearch?: CandidateSearchResult | null;
+  placements?: PlacementLifecycle | null;
   pipelineReport?: PipelineReport | null;
 }) {
   const router = useRouter();
@@ -168,6 +177,8 @@ export function RecruiterDashboard({
           ? "/dashboard/pipeline"
           : section === "clients"
             ? "/dashboard/clients"
+            : section === "placements"
+              ? "/dashboard/placements"
             : section === "compliance"
               ? "/dashboard/compliance"
               : section === "reports"
@@ -188,6 +199,7 @@ export function RecruiterDashboard({
       "/dashboard/candidates",
       "/dashboard/pipeline",
       "/dashboard/clients",
+      "/dashboard/placements",
       "/dashboard/compliance",
       "/dashboard/reports",
       "/dashboard/jobs",
@@ -265,6 +277,8 @@ export function RecruiterDashboard({
                 Clients are available for agency accounts.
               </p>
             )
+          ) : section === "placements" ? (
+            placements ? <PlacementsView data={placements} /> : null
           ) : section === "compliance" ? (
             agencyCrm ? (
               <ComplianceView compliance={agencyCrm.compliance} />

@@ -69,6 +69,8 @@ export async function POST(req: NextRequest) {
       clientId: order.clientId,
       status: body.status,
       startDate: body.startDate ?? null,
+      probationUntil: body.probationUntil ?? null,
+      guaranteeUntil: body.guaranteeUntil ?? null,
       salary: body.salary ?? null,
       feeAmount: body.feeAmount ?? null,
     })

@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import {
+  BadgeCheck,
   BarChart3,
   BriefcaseBusiness,
   Building2,
@@ -94,6 +95,13 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Clients",
       icon: Handshake,
       matches: ["/dashboard/clients"],
+      agencyOnly: true,
+    },
+    {
+      href: "/dashboard/placements",
+      label: "Placements",
+      icon: BadgeCheck,
+      matches: ["/dashboard/placements"],
       agencyOnly: true,
     },
     {

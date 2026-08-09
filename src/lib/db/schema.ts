@@ -608,8 +608,15 @@ export const placements = pgTable(
       .notNull()
       .references(() => jobOrders.id),
     clientId: integer("client_id").references(() => clients.id),
+    // placed -> started -> completed, or fell_off if they left inside the guarantee
     status: text("status").notNull().default("placed"),
     startDate: text("start_date"),
+    // 試用期 end. Separate from the guarantee: probation is the employer's right to end the
+    // contract, the guarantee is the agency's exposure to a clawback. They usually differ.
+    probationUntil: text("probation_until"),
+    guaranteeUntil: text("guarantee_until"),
+    endDate: text("end_date"),
+    endReason: text("end_reason"),
     salary: integer("salary"),
     feeAmount: integer("fee_amount"),
     createdAt: timestamp("created_at", { withTimezone: true })

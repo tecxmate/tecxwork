@@ -54,6 +54,13 @@ export const createJobOrderSchema = z.object({
   status: z.enum(["open", "on_hold", "filled", "closed"]).default("open"),
 });
 
+export const PLACEMENT_STATUSES = [
+  "placed",
+  "started",
+  "completed",
+  "fell_off",
+] as const;
+
 export const createPlacementSchema = z.object({
   candidateId: z.coerce.number().int().positive(),
   jobOrderId: z.coerce.number().int().positive(),
@@ -61,7 +68,25 @@ export const createPlacementSchema = z.object({
   startDate: isoDate.optional().nullable(),
   salary: z.coerce.number().int().min(0).max(100_000_000).optional().nullable(),
   feeAmount: z.coerce.number().int().min(0).max(100_000_000).optional().nullable(),
-  status: z.enum(["placed", "started", "guarantee", "fallen_off"]).default("placed"),
+  probationUntil: isoDate.optional().nullable(),
+  guaranteeUntil: isoDate.optional().nullable(),
+  status: z.enum(PLACEMENT_STATUSES).default("placed"),
+});
+
+/**
+ * Lifecycle updates. Deliberately narrower than the create schema — a placement's candidate,
+ * job order and client are facts about what happened and must not be edited afterwards, or
+ * the client-level counts they feed become unreliable.
+ */
+export const updatePlacementSchema = z.object({
+  status: z.enum(PLACEMENT_STATUSES).optional(),
+  startDate: isoDate.optional().nullable(),
+  probationUntil: isoDate.optional().nullable(),
+  guaranteeUntil: isoDate.optional().nullable(),
+  endDate: isoDate.optional().nullable(),
+  endReason: optionalText(300),
+  salary: z.coerce.number().int().min(0).max(100_000_000).optional().nullable(),
+  feeAmount: z.coerce.number().int().min(0).max(100_000_000).optional().nullable(),
 });
 
 // Must stay in step with docTypeEnum in schema.ts — Postgres rejects anything else.
