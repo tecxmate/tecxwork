@@ -78,12 +78,33 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+/**
+ * Run a setup statement, retrying once if the connection itself failed.
+ *
+ * The suite talks to a remote Neon branch over a WebSocket pool, and across a run of ~180
+ * tests that socket occasionally drops. The pooled client surfaces it as a failed query on
+ * the *next* statement, which turned a healthy test into a red one. Retrying once after
+ * dropping the dead pool distinguishes "the connection blinked" from "the query is wrong":
+ * a genuinely bad statement fails again immediately and still reports.
+ */
+async function withReconnect(run: () => Promise<unknown>): Promise<void> {
+  try {
+    await run();
+  } catch (err) {
+    const { closeDb } = await import("@/lib/db");
+    await closeDb().catch(() => {});
+    console.warn(
+      `test setup: reconnecting after a failed statement (${String(err).slice(0, 120)})`
+    );
+    await run();
+  }
+}
+
 beforeAll(async () => {
-  // Confirm we can talk to the test DB.
+  // Confirm we can talk to the test DB. Same reconnect treatment: a socket that drops on
+  // the very first statement would otherwise skip an entire file's worth of tests.
   const { db } = await import("@/lib/db");
-  await db.execute(
-    /* sql */ `select 1`
-  );
+  await withReconnect(() => db.execute(/* sql */ `select 1`));
 });
 
 beforeEach(async () => {
@@ -94,10 +115,11 @@ beforeEach(async () => {
   // idle-in-transaction by an earlier file blocks it — and Postgres waits forever by
   // default, which surfaced as one test hanging for ten minutes instead of failing.
   // Fail fast and loudly instead; the message points at the real cause.
-  await db.execute(/* sql */ `set lock_timeout = '15s'`);
+  await withReconnect(() => db.execute(/* sql */ `set lock_timeout = '15s'`));
 
   // Truncate all mutable tables. CASCADE handles FKs.
-  await db.execute(/* sql */ `
+  await withReconnect(() =>
+    db.execute(/* sql */ `
     truncate table
       audit_log,
       credit_notes,
@@ -133,7 +155,8 @@ beforeEach(async () => {
       recruiter_email_approvals,
       users
     restart identity cascade
-  `);
+  `)
+  );
 });
 
 afterAll(async () => {

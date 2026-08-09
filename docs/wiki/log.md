@@ -1554,3 +1554,16 @@ attributed_to: [niko]   belongs_to: [tecxwork, billing, navigation]
 - The collapse control sits at the **top** of the rail: at the bottom it collided with the floating account widget.
 - Mobile is untouched — the top bar and bottom nav still serve small screens, where a persistent rail costs more width than it earns.
 - Verified: 31/31 billing tests · credit against a **paid** invoice 201, over-credit 409 with the remaining amount named, net 47,880 → 0 · sidebar 12 destinations in 3 groups, collapse persists across navigation, horizontal nav suppressed on desktop only.
+
+## [2026-08-09] fix | The last failing test was a dropped socket, not a bug
+attributed_to: [claude]   belongs_to: [tecxwork, testing]
+- Full run: **180/181**. The single failure was `Failed query: set lock_timeout` inside `beforeEach` — the WebSocket to the remote Neon branch dropping mid-run, surfacing as a failed statement on a healthy test. (I initially read the 10.5s duration as an assertion failure; the log shows otherwise.)
+- `withReconnect` now wraps the setup statements: on failure it closes the dead pool, logs, and retries **once**. That distinguishes "the connection blinked" from "the query is wrong" — a genuinely bad statement fails again immediately and still reports.
+- Applied to `beforeAll` as well: a socket dropping on the first statement previously skipped an entire file (seen once — 25 tests skipped, then 25/25 on a rerun with no code change).
+- This is mitigation, not a cure. The cure is the local Postgres move, still pending installation.
+
+## [2026-08-09] note | The published manual is out of date
+attributed_to: [niko]   belongs_to: [tecxwork, documentation]
+- `/documentation` is linked in the site footer and no longer matches the product. Measured: **Billing, invoices, credit notes and candidate search are not covered at all**; Offers, Documents and pipeline-stage editing get passing mentions only; and **all 11 recruiter screenshots show the old horizontal nav** replaced by the sidebar.
+- Regenerating means re-shooting those screens, writing five new sections, re-translating to 繁中 and Vietnamese, and rebuilding both the HTML and the PPTX from `docs/manual/src/`.
+- **Decision (niko): leave it for now.** Recorded here so it is a known debt rather than a surprise.
