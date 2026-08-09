@@ -29,6 +29,7 @@
     "db:update:offers": "npx tsx src/lib/db/add-offers.ts",
     "db:update:invoices": "npx tsx src/lib/db/add-invoices.ts",
     "db:update:credit-notes": "npx tsx src/lib/db/add-credit-notes.ts",
+    "db:update:fee-schedule": "npx tsx src/lib/db/add-fee-schedule.ts",
     "test:setup": "./scripts/setup-test-db.sh",
     "db:update:event-location-mcut": "npx tsx src/lib/db/update-event-location-mcut.ts",
     "db:update:onboarding-mode": "npx tsx src/lib/db/add-onboarding-mode-column.ts",

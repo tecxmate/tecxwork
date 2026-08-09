@@ -1567,3 +1567,18 @@ attributed_to: [niko]   belongs_to: [tecxwork, documentation]
 - `/documentation` is linked in the site footer and no longer matches the product. Measured: **Billing, invoices, credit notes and candidate search are not covered at all**; Offers, Documents and pipeline-stage editing get passing mentions only; and **all 11 recruiter screenshots show the old horizontal nav** replaced by the sidebar.
 - Regenerating means re-shooting those screens, writing five new sections, re-translating to 繁中 and Vietnamese, and rebuilding both the HTML and the PPTX from `docs/manual/src/`.
 - **Decision (niko): leave it for now.** Recorded here so it is a known debt rather than a surprise.
+
+## [2026-08-09] ingest | Fee rates — placement fees computed, not guessed
+attributed_to: [niko]   belongs_to: [tecxwork, billing]
+- Follows directly from "what are we charging?": the answer was **a number a human types in**, and nothing computed or checked it.
+- **A half-built rate card already existed.** `clients.default_fee_pct` was in the schema *and offered in the CRM form* — and it computed nothing, was read nowhere, and was null for all 28 clients. Its flaw was conceptual: a bare "%" never said what it was a percentage *of*.
+- Replaced by `fee_basis` + `fee_value`, where the basis says what the number means:
+  - `months_salary` — hundredths of a month (120 = 1.2 months). The Taiwan convention, and what **every existing fee in the data already follows** (45,600 on 38,000; 40,800 on 34,000).
+  - `percent_annual` — whole percent of the first year.
+- `default_fee_pct` is kept rather than dropped (dropping a column is irreversible and it costs nothing), with its non-null values migrated across as `percent_annual`. Now marked superseded in the schema.
+- A placement takes its fee from the client's rate **only when none was given** — an explicit fee still wins, because not every deal follows the rate. With no rate agreed, the fee stays empty: a wrong fee that looks computed is worse than a blank field.
+- The audit trail records `feeSource` (`rate` | `explicit` | `none`) — *whether* the rate applied, never the amount, keeping the trail value-free.
+- Rounding is to whole currency at the point of calculation: 1.15 months of 33,333 is 38,332.95, and a fee is a whole number of dollars.
+- Clawback is still a manual judgement per niko's earlier decision; a schedule could now be layered on the same rate.
+- Verified: 41/41 billing tests, plus live — a rate of 1.2 months on a client produced 45,600 from a 38,000 salary with no fee supplied.
+- **Housekeeping:** removed three `Playwright Test Co` clients (and a dependent job order and placement) left in the demo database by an earlier verification run this session.

@@ -18,6 +18,48 @@ import {
  * trusts.
  */
 
+/**
+ * How a client's placement fee is calculated.
+ *
+ * Whole units, no floats: a fee is money, and a rate expressed as 1.2 stored as a float
+ * eventually produces a fee ending in .00000001.
+ */
+export const FEE_BASES = ["months_salary", "percent_annual"] as const;
+export type FeeBasis = (typeof FEE_BASES)[number];
+
+export type FeeRate = { basis: FeeBasis; value: number };
+
+/**
+ * The fee for a placement at the client's agreed rate.
+ *
+ * - `months_salary`: value is hundredths of a month, so 120 means 1.2 months' salary —
+ *   the Taiwan convention and what every existing fee in the data follows.
+ * - `percent_annual`: value is whole percent of the first year, so 20 means 20% of
+ *   twelve months.
+ *
+ * Returns null when no rate is agreed, which keeps the fee a manual number rather than
+ * inventing one — a wrong fee that looks computed is worse than an empty field.
+ */
+export function computeFee(monthlySalary: number, rate: FeeRate | null): number | null {
+  if (!rate || !Number.isFinite(monthlySalary) || monthlySalary <= 0) return null;
+  if (!Number.isFinite(rate.value) || rate.value <= 0) return null;
+
+  if (rate.basis === "months_salary") {
+    return Math.round((monthlySalary * rate.value) / 100);
+  }
+  return Math.round((monthlySalary * 12 * rate.value) / 100);
+}
+
+/** Plain-language description of a rate, so the number on screen is explainable. */
+export function describeFeeRate(rate: FeeRate | null): string | null {
+  if (!rate?.value) return null;
+  if (rate.basis === "months_salary") {
+    const months = rate.value / 100;
+    return `${months} ${months === 1 ? "month" : "months"} of salary`;
+  }
+  return `${rate.value}% of first-year salary`;
+}
+
 /** Taiwan business tax. */
 export const DEFAULT_TAX_RATE_BP = 500;
 

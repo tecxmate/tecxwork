@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
       city: body.city,
       unifiedBusinessNo: body.unifiedBusinessNo,
       defaultFeePct: body.defaultFeePct ?? null,
+      feeBasis: body.feeBasis ?? null,
+      feeValue: body.feeValue ?? null,
       status: body.status,
       ownerUserId: userId,
     })

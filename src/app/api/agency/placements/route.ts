@@ -1,11 +1,12 @@
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { applicantProfiles, jobOrders, placements } from "@/lib/db/schema";
+import { applicantProfiles, clients, jobOrders, placements } from "@/lib/db/schema";
 import { requireAgency, clientIp } from "@/lib/agency-auth";
 import { parseJsonBody } from "@/lib/validation";
 import { createPlacementSchema } from "@/lib/validation-agency";
 import { logAudit } from "@/lib/audit";
+import { computeFee, type FeeBasis } from "@/lib/billing";
 
 /**
  * Record a placement — the event the agency actually gets paid on.
@@ -59,6 +60,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // The fee comes from the client's agreed rate unless one was given explicitly. A fee
+  // that has always been typed from memory is how an agency bills the wrong amount; an
+  // explicit value still wins, because a rate is a default and not every deal follows it.
+  let feeAmount = body.feeAmount ?? null;
+  let feeSource: "explicit" | "rate" | "none" = feeAmount == null ? "none" : "explicit";
+
+  // A job order without a client has no rate to look up.
+  if (feeAmount == null && body.salary && order.clientId != null) {
+    const [client] = await db
+      .select({ feeBasis: clients.feeBasis, feeValue: clients.feeValue })
+      .from(clients)
+      .where(and(eq(clients.id, order.clientId), eq(clients.orgId, orgId)))
+      .limit(1);
+
+    const computed = computeFee(
+      body.salary,
+      client?.feeBasis && client.feeValue
+        ? { basis: client.feeBasis as FeeBasis, value: client.feeValue }
+        : null
+    );
+    if (computed != null) {
+      feeAmount = computed;
+      feeSource = "rate";
+    }
+  }
+
   const [row] = await db
     .insert(placements)
     .values({
@@ -72,7 +99,7 @@ export async function POST(req: NextRequest) {
       probationUntil: body.probationUntil ?? null,
       guaranteeUntil: body.guaranteeUntil ?? null,
       salary: body.salary ?? null,
-      feeAmount: body.feeAmount ?? null,
+      feeAmount,
     })
     .returning({ id: placements.id });
 
@@ -85,7 +112,8 @@ export async function POST(req: NextRequest) {
     // field NAMES only — salary and fee are commercially sensitive and the audit trail is
     // deliberately PII/value-free so candidate erasure never has to touch it.
     fieldNames: Object.keys(body),
-    metadata: { jobOrderId: body.jobOrderId, clientId: order.clientId },
+    // feeSource records WHETHER the rate was applied, never the amount.
+    metadata: { jobOrderId: body.jobOrderId, clientId: order.clientId, feeSource },
     ip: clientIp(req),
   });
 

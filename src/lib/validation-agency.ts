@@ -29,7 +29,11 @@ export const createClientSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((v) => v || null),
+  /** Superseded by feeBasis/feeValue; still accepted so older callers do not break. */
   defaultFeePct: z.coerce.number().int().min(0).max(100).optional().nullable(),
+  feeBasis: z.enum(["months_salary", "percent_annual"]).optional().nullable(),
+  /** Hundredths of a month for months_salary (120 = 1.2 months), whole percent otherwise. */
+  feeValue: z.coerce.number().int().min(0).max(100_000).optional().nullable(),
   status: z.enum(["active", "paused", "closed"]).default("active"),
 });
 

@@ -625,7 +625,23 @@ export const clients = pgTable(
     city: text("city"),
     unifiedBusinessNo: text("unified_business_no"), // 統一編號
     ownerUserId: integer("owner_user_id").references(() => users.id),
+    /**
+     * Superseded by feeBasis/feeValue below, which say what the number *means*.
+     * Null for every client; kept rather than dropped because dropping a column is
+     * irreversible and this one costs nothing.
+     */
     defaultFeePct: integer("default_fee_pct"),
+    /**
+     * How this client's placement fee is calculated.
+     *
+     * "months_salary" — the Taiwan convention, and what the existing fees follow: a
+     * multiple of one month's salary, held in hundredths (120 = 1.2 months).
+     * "percent_annual" — a percentage of the first year's salary, held as whole percent.
+     *
+     * Null means no rate has been agreed, and the fee stays a manual number.
+     */
+    feeBasis: text("fee_basis"),
+    feeValue: integer("fee_value"),
     status: text("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

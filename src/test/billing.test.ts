@@ -15,7 +15,9 @@ import {
 import { jsonRequest, seedRecruiter, withSession } from "./helpers";
 import type { MemberRole } from "@/lib/ats-auth";
 import {
+  computeFee,
   computeTotals,
+  describeFeeRate,
   creditableRemaining,
   getBillingData,
   nextCreditNoteNumber,
@@ -27,6 +29,7 @@ import {
 } from "@/app/api/agency/invoices/route";
 import { POST as invoiceAction } from "@/app/api/agency/invoices/[id]/route";
 import { POST as createCreditNote } from "@/app/api/agency/invoices/[id]/credit-notes/route";
+import { POST as createPlacement } from "@/app/api/agency/placements/route";
 
 let seq = 0;
 
@@ -450,5 +453,120 @@ describe("billing — credit notes", () => {
     const other = await seedAgency();
     await withSession({ userId: other.userId, email: other.email, role: "recruiter" });
     expect((await credit(invoiceId, { subtotal: 1000, reason: "nope" })).status).toBe(404);
+  });
+});
+
+describe("billing — the fee rate", () => {
+  it("computes a multiple of monthly salary, the Taiwan convention", () => {
+    // 1.2 months on a 38,000 salary is the 45,600 already in the data.
+    expect(computeFee(38000, { basis: "months_salary", value: 120 })).toBe(45600);
+    expect(computeFee(34000, { basis: "months_salary", value: 120 })).toBe(40800);
+  });
+
+  it("computes a percentage of the first year", () => {
+    expect(computeFee(38000, { basis: "percent_annual", value: 20 })).toBe(91200);
+  });
+
+  it("rounds to whole currency rather than carrying a fraction", () => {
+    // 1.15 months of 33,333 is 38,332.95 — a fee must be a whole number of dollars.
+    expect(computeFee(33333, { basis: "months_salary", value: 115 })).toBe(38333);
+  });
+
+  it("returns null when no rate is agreed, rather than inventing one", () => {
+    // A wrong fee that looks computed is worse than an empty field.
+    expect(computeFee(38000, null)).toBeNull();
+    expect(computeFee(38000, { basis: "months_salary", value: 0 })).toBeNull();
+  });
+
+  it("returns null for a missing or nonsensical salary", () => {
+    expect(computeFee(0, { basis: "months_salary", value: 120 })).toBeNull();
+    expect(computeFee(-5000, { basis: "months_salary", value: 120 })).toBeNull();
+  });
+
+  it("describes the rate in words, so the number on screen is explainable", () => {
+    expect(describeFeeRate({ basis: "months_salary", value: 120 })).toBe("1.2 months of salary");
+    expect(describeFeeRate({ basis: "months_salary", value: 100 })).toBe("1 month of salary");
+    expect(describeFeeRate({ basis: "percent_annual", value: 20 })).toBe(
+      "20% of first-year salary"
+    );
+    expect(describeFeeRate(null)).toBeNull();
+  });
+});
+
+describe("billing — a placement picks up the client's rate", () => {
+  async function agencyWithRate(basis: string | null, value: number | null) {
+    const a = await seedAgency();
+    const [client] = await db
+      .insert(clients)
+      .values({
+        orgId: a.orgId,
+        name: `Rated${seq++}`,
+        industry: "Construction",
+        feeBasis: basis,
+        feeValue: value,
+      })
+      .returning();
+    const [order] = await db
+      .insert(jobOrders)
+      .values({ orgId: a.orgId, clientId: client.id, title: "Site Engineer" })
+      .returning();
+    const [candidate] = await db
+      .insert(applicantProfiles)
+      .values({
+        name: "Rate Test",
+        email: `r-${seq++}-${Date.now()}@test.dev`,
+        cvLink: "https://example.com/cv",
+        pipaConsent: true,
+      })
+      .returning({ id: applicantProfiles.id });
+    return { ...a, clientId: client.id, jobOrderId: order.id, candidateId: candidate.id };
+  }
+
+  const place = (payload: unknown) =>
+    createPlacement(
+      jsonRequest("http://localhost/api/agency/placements", { method: "POST", body: payload })
+    );
+
+  it("computes the fee from the rate when none is given", async () => {
+    const a = await agencyWithRate("months_salary", 120);
+    const res = await place({
+      candidateId: a.candidateId,
+      jobOrderId: a.jobOrderId,
+      salary: 38000,
+    });
+    expect(res.status).toBe(201);
+
+    const [row] = await db.select().from(placements).where(eq(placements.orgId, a.orgId));
+    expect(row.feeAmount).toBe(45600);
+  });
+
+  it("an explicit fee still wins, because not every deal follows the rate", async () => {
+    const a = await agencyWithRate("months_salary", 120);
+    await place({
+      candidateId: a.candidateId,
+      jobOrderId: a.jobOrderId,
+      salary: 38000,
+      feeAmount: 30000,
+    });
+
+    const [row] = await db.select().from(placements).where(eq(placements.orgId, a.orgId));
+    expect(row.feeAmount).toBe(30000);
+  });
+
+  it("leaves the fee empty when the client has no agreed rate", async () => {
+    const a = await agencyWithRate(null, null);
+    await place({ candidateId: a.candidateId, jobOrderId: a.jobOrderId, salary: 38000 });
+
+    const [row] = await db.select().from(placements).where(eq(placements.orgId, a.orgId));
+    // Better an empty field than a fee nobody agreed to.
+    expect(row.feeAmount).toBeNull();
+  });
+
+  it("leaves the fee empty when there is no salary to compute from", async () => {
+    const a = await agencyWithRate("months_salary", 120);
+    await place({ candidateId: a.candidateId, jobOrderId: a.jobOrderId });
+
+    const [row] = await db.select().from(placements).where(eq(placements.orgId, a.orgId));
+    expect(row.feeAmount).toBeNull();
   });
 });
