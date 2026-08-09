@@ -1495,3 +1495,11 @@ attributed_to: [claude]   belongs_to: [tecxwork, testing]
 - Two changes this session raised the per-test query count on purpose: revocable sessions add a session lookup to **every** authenticated request, and `withSession` now writes a real session row. Correct designs; they simply cost round-trips against a remote DB.
 - `testTimeout`/`hookTimeout` raised 20s → 60s so honest slowness stops being reported as failure while still bounding a genuine hang.
 - **Recommendation for CI:** run the suite against a **local Postgres** (container or service) rather than a remote Neon branch. That removes the RTT floor entirely and should take the suite from ~25 minutes to a couple. Left as a decision for niko — it changes how CI is provisioned.
+
+## [2026-08-09] decision | Tests move to a local Postgres
+attributed_to: [niko]   belongs_to: [tecxwork, testing]
+- Chosen after three full runs each failed a **different** file on timeouts while every file passed in isolation. The database was measured and is healthy (30-table TRUNCATE = 523ms); the cost is 10–20 network round trips per test at ~200–400ms each against a remote Neon branch. The pooler was ruled out too (direct endpoint: 144s vs 159s for the same file).
+- **Blocker found and solved:** the app uses `@neondatabase/serverless`, whose `Pool` talks WebSocket to Neon's proxy and **cannot reach a plain local Postgres**. `getDb()` now picks the driver from the URL — `node-postgres` for localhost, Neon otherwise. `pg` is a devDependency and is `require`d lazily inside the local branch, so it never enters a serverless bundle.
+- `./scripts/setup-test-db.sh` (`npm run test:setup`) drops, recreates and schema-pushes `tecxwork_test`. It exits with instructions if Postgres is missing or not running rather than failing obscurely.
+- **One-time step for niko:** `brew install postgresql@17 && brew services start postgresql@17`, then `npm run test:setup`. Claude did not install it — that is a machine-level change to make deliberately.
+- **Unverified until then:** the local driver branch has not been exercised, because there is no Postgres on this machine. The Neon path is confirmed unaffected (37 tests across 3 files green after the change).

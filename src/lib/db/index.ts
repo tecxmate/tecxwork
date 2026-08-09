@@ -13,12 +13,43 @@ if (typeof WebSocket === "undefined") {
 let _db: NeonDatabase<typeof schema> | null = null;
 let _pool: Pool | null = null;
 
+/**
+ * A local Postgres speaks the plain wire protocol; Neon's driver speaks WebSocket to
+ * Neon's proxy and cannot reach one. Tests run against a local database (no network round
+ * trip per query), production runs against Neon — so the driver follows the URL.
+ */
+function isLocalPostgres(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
 export function getDb(): NeonDatabase<typeof schema> {
   if (!_db) {
     const url = process.env.DATABASE_URL;
     if (!url) {
       throw new Error("DATABASE_URL environment variable is not set");
     }
+
+    if (isLocalPostgres(url)) {
+      // Loaded lazily and only for a local URL, so neither `pg` nor this branch is ever
+      // pulled into a serverless bundle.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { Pool: PgPool } = require("pg");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { drizzle: pgDrizzle } = require("drizzle-orm/node-postgres");
+      const pgPool = new PgPool({ connectionString: url });
+      pgPool.on("error", (err: Error) => {
+        console.error("Postgres pool error (ignored):", err);
+      });
+      _pool = pgPool as unknown as Pool;
+      _db = pgDrizzle(pgPool, { schema }) as unknown as NeonDatabase<typeof schema>;
+      return _db;
+    }
+
     _pool = new Pool({ connectionString: url });
     // Without this listener, an error on an idle pooled client (e.g. Neon
     // dropping the WebSocket when the control plane is overloaded) is emitted
