@@ -52,6 +52,15 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "system",
 ]);
 
+export const offerStatusEnum = pgEnum("offer_status", [
+  "draft",
+  "approved",
+  "sent",
+  "accepted",
+  "declined",
+  "withdrawn",
+  "expired",
+]);
 export const documentKindEnum = pgEnum("document_kind", [
   "cv",
   "arc",
@@ -463,6 +472,8 @@ export const documents = pgTable(
   ]
 );
 
+
+
 // Append-only PII/access audit trail. Stores field NAMES + non-PII metadata,
 // never raw PII values, so candidate erasure never has to touch this table.
 // Grant the app DB role INSERT+SELECT only (no UPDATE/DELETE) once RLS lands.
@@ -693,6 +704,66 @@ export const submissions = pgTable(
 );
 
 // A confirmed hire, created from a winning submission.
+/**
+ * What was actually offered, who signed it off, and what came back.
+ *
+ * "Offer" existed only as a column on the board: a candidate sat in it, and nothing
+ * recorded the salary, the start date, who authorised those terms, or whether the person
+ * said yes. When a placement was later created, its salary was typed in again from memory.
+ *
+ * The row is the record. It is deliberately immutable once approved — an approval that can
+ * be edited afterwards authorises nothing.
+ */
+export const offers = pgTable(
+  "offers",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    candidateId: integer("candidate_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+    /** The vacancy this is against, when the offer came through the agency CRM. */
+    jobOrderId: integer("job_order_id").references(() => jobOrders.id),
+
+    status: offerStatusEnum("status").notNull().default("draft"),
+
+    /** Terms. Salary is minor units of the currency to avoid float drift on money. */
+    salary: integer("salary").notNull(),
+    currency: text("currency").notNull().default("TWD"),
+    salaryPeriod: text("salary_period").notNull().default("month"),
+    startDate: text("start_date"),
+    probationMonths: integer("probation_months"),
+    notes: text("notes"),
+
+    /** The last day the candidate can accept. An offer left open forever is not an offer. */
+    expiresAt: text("expires_at"),
+
+    createdByUserId: integer("created_by_user_id").references(() => users.id),
+    /** Who authorised these terms. Null until approved — the audit answer to "who agreed to this?" */
+    approvedByUserId: integer("approved_by_user_id").references(() => users.id),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+    /** Why they said no. The most useful field in the table for fixing the next offer. */
+    declineReason: text("decline_reason"),
+
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("offers_org_status_idx").on(table.orgId, table.status),
+    // One live offer per application. Superseded outcomes stay for history, so the
+    // partial index lets a declined offer be followed by a fresh one.
+    uniqueIndex("offers_one_live_per_application")
+      .on(table.applicationId)
+      .where(sql`status in ('draft','approved','sent')`),
+  ]
+);
+
 export const placements = pgTable(
   "placements",
   {
@@ -701,6 +772,8 @@ export const placements = pgTable(
       .notNull()
       .references(() => orgs.id),
     submissionId: integer("submission_id").references(() => submissions.id),
+    /** The accepted offer this placement came from, so the terms are not retyped. */
+    offerId: integer("offer_id").references(() => offers.id),
     candidateId: integer("candidate_id")
       .notNull()
       .references(() => applicantProfiles.id),

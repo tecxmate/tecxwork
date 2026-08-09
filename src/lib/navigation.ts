@@ -3,6 +3,7 @@ import {
   BadgeCheck,
   BarChart3,
   BriefcaseBusiness,
+  FileSignature,
   Building2,
   CalendarClock,
   Handshake,
@@ -108,6 +109,14 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Pipeline",
       icon: KanbanSquare,
       matches: ["/dashboard/pipeline"],
+    },
+    {
+      href: "/dashboard/offers",
+      label: "Offers",
+      icon: FileSignature,
+      matches: ["/dashboard/offers"],
+      agencyOnly: true,
+      capability: "offer:write",
     },
     {
       href: "/dashboard/clients",

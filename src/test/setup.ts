@@ -103,6 +103,7 @@ beforeEach(async () => {
       documents,
       compliance_documents,
       placements,
+      offers,
       submissions,
       job_orders,
       contacts,

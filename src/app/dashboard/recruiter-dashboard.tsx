@@ -32,6 +32,8 @@ import type { CandidateSearchResult } from "@/lib/candidate-search";
 import type { PlacementLifecycle } from "@/lib/placement-lifecycle";
 import type { PipelineReport } from "@/lib/pipeline-report";
 import type { StageRow } from "@/lib/pipeline-config";
+import type { OffersData } from "@/lib/offers-data";
+import { OffersView } from "@/components/offers-view";
 import { PipelineSettingsView } from "@/components/pipeline-settings-view";
 import type { Capability } from "@/lib/permissions";
 
@@ -78,6 +80,7 @@ type Section =
   | "candidates"
   | "pipeline"
   | "pipelineSettings"
+  | "offers"
   | "clients"
   | "placements"
   | "compliance"
@@ -144,6 +147,7 @@ export function RecruiterDashboard({
   placements = null,
   pipelineReport = null,
   pipelineStages = null,
+  offers = null,
 }: {
   recruiter: Recruiter;
   /** What this member's org role permits — used to hide tabs that would only redirect. */
@@ -159,6 +163,7 @@ export function RecruiterDashboard({
   placements?: PlacementLifecycle | null;
   pipelineReport?: PipelineReport | null;
   pipelineStages?: StageRow[] | null;
+  offers?: OffersData | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -295,6 +300,8 @@ export function RecruiterDashboard({
             candidateSearch ? <CandidateSearchView result={candidateSearch} /> : null
           ) : section === "pipelineSettings" ? (
             pipelineStages ? <PipelineSettingsView initialStages={pipelineStages} /> : null
+          ) : section === "offers" ? (
+            offers ? <OffersView data={offers} capabilities={capabilities} /> : null
           ) : section === "clients" ? (
             agencyCrm ? (
               <ClientsCrmView crm={agencyCrm} />

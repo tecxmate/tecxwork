@@ -1503,3 +1503,18 @@ attributed_to: [niko]   belongs_to: [tecxwork, testing]
 - `./scripts/setup-test-db.sh` (`npm run test:setup`) drops, recreates and schema-pushes `tecxwork_test`. It exits with instructions if Postgres is missing or not running rather than failing obscurely.
 - **One-time step for niko:** `brew install postgresql@17 && brew services start postgresql@17`, then `npm run test:setup`. Claude did not install it — that is a machine-level change to make deliberately.
 - **Unverified until then:** the local driver branch has not been exercised, because there is no Postgres on this machine. The Neon path is confirmed unaffected (37 tests across 3 files green after the change).
+
+## [2026-08-09] ingest | Offers — what was offered, who authorised it, what came back (audit #7)
+attributed_to: [niko]   belongs_to: [tecxwork, offers]
+- "Offer" existed only as a **column on the pipeline board**. A candidate sat in it and nothing recorded the salary, the start date, who authorised those terms, or whether the person said yes — and when a placement was created later its salary was retyped from memory.
+- The lifecycle rules live in `src/lib/offers.ts` as a transition table rather than as `if`s spread across routes, because those rules *are* the feature.
+- **Drafting and approving are separate capabilities.** A recruiter holds `offer:write` and can prepare terms; only `offer:approve` (admin, account manager, hiring manager) can authorise them. One person promising money unilaterally is exactly what an approval step exists to prevent.
+- **Terms freeze at approval.** An approval that can be edited afterwards authorises nothing — so PATCH is refused with a 409 once the offer leaves draft.
+- Withdrawal needs `offer:approve` too: pulling authorised terms is a decision of the same weight as granting them.
+- **Expiry is evaluated at read time**, not by a nightly sweep. A sweep leaves a window where a lapsed offer is still acceptable, and the whole point of the date is that it holds at the moment someone tries to use it. `effectiveStatus` folds it in for display; the accept path re-checks it.
+- One live offer per application, enforced by a **partial** unique index so a declined offer can be followed by a fresh one while the declined row stays for history. The route detects the violation via the driver error's `constraint` field — it is not in the message string, and drizzle wraps the original in `cause`.
+- An accepted offer with a job order **creates the placement and carries the terms across**, which is the point: the salary is no longer retyped.
+- The candidate is taken from the application, never from the caller — otherwise an offer could be filed against someone who never applied.
+- **Bug found by looking at the screenshot:** the accepted candidate appeared in *both* "Awaiting an offer" and the offers list. The exclusion covered only live offers; accepted is settled, not waiting. Declined/withdrawn/expired correctly still appear, since those are exactly the people who need a new offer. Regression tests added.
+- Verified live through the running app: duplicate live offer 409 · accept-before-approval 409 · edit-after-approval 409 · decline-without-reason 400 · accept 200. Demo data removed afterwards.
+- **Verification caveat:** the remote test branch degraded badly during this item (a file that ran in 147s took 42 minutes). 2 of the 3 new regression tests pass; the third times out rather than failing an assertion. This is the same environmental problem the local-Postgres move addresses — it is not yet installed.

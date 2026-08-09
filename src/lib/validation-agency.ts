@@ -164,3 +164,34 @@ export const updateStageSchema = z
 export const reorderStagesSchema = z.object({
   order: z.array(z.number().int().positive()).min(1),
 });
+
+/* ---------- offers ---------- */
+
+export const createOfferSchema = z.object({
+  applicationId: z.number().int().positive(),
+  /** Minor units of the currency, so money never rides on a float. */
+  salary: z.number().int().positive("Salary is required"),
+  currency: z.string().trim().min(1).max(8).default("TWD"),
+  salaryPeriod: z.enum(["hour", "month", "year"]).default("month"),
+  startDate: isoDate.optional().nullable(),
+  probationMonths: z.number().int().min(0).max(24).optional().nullable(),
+  expiresAt: isoDate.optional().nullable(),
+  notes: optionalText(1000),
+});
+
+/** Only the terms, and only while the offer is still a draft. */
+export const updateOfferSchema = z.object({
+  salary: z.number().int().positive().optional(),
+  currency: z.string().trim().min(1).max(8).optional(),
+  salaryPeriod: z.enum(["hour", "month", "year"]).optional(),
+  startDate: isoDate.optional().nullable(),
+  probationMonths: z.number().int().min(0).max(24).optional().nullable(),
+  expiresAt: isoDate.optional().nullable(),
+  notes: optionalText(1000),
+});
+
+export const offerActionSchema = z.object({
+  action: z.enum(["approve", "send", "accept", "decline", "withdraw"]),
+  /** Required when declining — the most useful field in the table for the next offer. */
+  declineReason: optionalText(500),
+});
