@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, bookings, slots, applicantSlots, recruiters } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { csvResponse, datedFilename, toCsv } from "@/lib/csv";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
@@ -42,50 +43,36 @@ export async function GET() {
       (b.slotStart ? new Date(b.slotStart).getTime() : 0)
     );
 
-  // Build CSV
-  const headers = [
-    "Booking ID",
-    "Direction",
-    "Applicant Name",
-    "Applicant Email",
-    "Company",
-    "Recruiter Contact",
-    "Interview Start",
-    "Interview End",
-    "CV Link",
-    "Status",
-    "Booked At",
-  ];
+  // Built through the shared helper, which adds the UTF-8 BOM this file was missing —
+  // without it Excel on Windows renders every Vietnamese and Chinese name as mojibake.
+  const csv = toCsv(
+    [
+      "Booking ID",
+      "Direction",
+      "Applicant Name",
+      "Applicant Email",
+      "Company",
+      "Recruiter Contact",
+      "Interview Start",
+      "Interview End",
+      "CV Link",
+      "Status",
+      "Booked At",
+    ],
+    all.map((b) => [
+      b.id,
+      b.direction,
+      b.applicantName,
+      b.applicantEmail,
+      b.company,
+      b.contactEmail,
+      b.slotStart ? new Date(b.slotStart) : null,
+      b.slotEnd ? new Date(b.slotEnd) : null,
+      b.cvLink,
+      b.status,
+      b.createdAt ? new Date(b.createdAt) : null,
+    ])
+  );
 
-  // CSV-escape and neutralize spreadsheet formula prefixes (=, +, -, @, tab, CR).
-  // Without this, a value like `=cmd|'/c calc'!A1` would execute when the CSV
-  // is opened in Excel/Sheets.
-  const escape = (v: string) => {
-    const s = String(v ?? "");
-    const neutralized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
-    return `"${neutralized.replace(/"/g, '""')}"`;
-  };
-
-  const rows = all.map((b) => [
-    b.id,
-    b.direction,
-    escape(b.applicantName),
-    escape(b.applicantEmail),
-    escape(b.company),
-    escape(b.contactEmail),
-    b.slotStart ? new Date(b.slotStart).toISOString() : "",
-    b.slotEnd ? new Date(b.slotEnd).toISOString() : "",
-    escape(b.cvLink),
-    b.status,
-    b.createdAt ? new Date(b.createdAt).toISOString() : "",
-  ]);
-
-  const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-
-  return new NextResponse(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="vgen-bookings-${new Date().toISOString().slice(0, 10)}.csv"`,
-    },
-  });
+  return csvResponse(datedFilename("vgen-bookings"), csv);
 }

@@ -15,6 +15,11 @@ export type CandidateFilters = {
   /** "valid" = every tracked document in date; "attention" = something expired or expiring. */
   docs?: "any" | "valid" | "attention";
   page?: number;
+  /**
+   * Rows to return. Defaults to one screen; the export asks for EXPORT_LIMIT so a
+   * recruiter gets the whole filtered set rather than whatever happened to be on page 1.
+   */
+  pageSize?: number;
 };
 
 export type CandidateHit = {
@@ -50,6 +55,13 @@ export type CandidateSearchResult = {
 export const PAGE_SIZE = 24;
 
 /**
+ * Hard ceiling for an export. Far above any realistic agency pool, so it never truncates
+ * in practice — but an unbounded query on a user-triggered download is how one click
+ * takes the database down.
+ */
+export const EXPORT_LIMIT = 10_000;
+
+/**
  * Search the candidate pool.
  *
  * Filtering happens in SQL rather than in JS over a full table read: the demo has 37
@@ -65,6 +77,7 @@ export async function searchCandidates(
 ): Promise<CandidateSearchResult> {
   const db = getDb();
   const page = Math.max(1, filters.page ?? 1);
+  const size = Math.min(filters.pageSize ?? PAGE_SIZE, EXPORT_LIMIT);
 
   const notErased = isNull(applicantProfiles.anonymizedAt);
   const conditions = [notErased];
@@ -121,8 +134,8 @@ export async function searchCandidates(
     .from(applicantProfiles)
     .where(where)
     .orderBy(desc(applicantProfiles.createdAt))
-    .limit(PAGE_SIZE)
-    .offset((page - 1) * PAGE_SIZE);
+    .limit(size)
+    .offset((page - 1) * size);
 
   const ids = rows.map((r) => r.id);
 
@@ -199,7 +212,7 @@ export async function searchCandidates(
 
   const facets = await buildFacets(notErased);
 
-  return { hits, total: count, page, pageSize: PAGE_SIZE, facets };
+  return { hits, total: count, page, pageSize: size, facets };
 }
 
 /** Facet counts over the whole (non-erased) pool, so the chips show real totals. */

@@ -1444,3 +1444,15 @@ attributed_to: [niko]   belongs_to: [tecxwork, auth]
 - `getSession` is deliberately **not** memoized with React `cache()`: the test helpers swap sessions mid-test, and a per-request memo would have returned a stale session and hidden real failures.
 - Verified live end to end: token captured → works (200) → logout → replay 401. And: stolen token live (200) → victim resets password → same token 401 → victim signs in fine. All three published demo logins still work.
 - **Test-helper note:** `withSession` had to become async (it now creates a real session row); hand-signing a token would test a state the app can no longer produce. 19 call sites updated.
+
+## [2026-08-09] ingest | CSV exports for the agency surface (audit #12)
+attributed_to: [niko]   belongs_to: [tecxwork, exports]
+- Before: exactly one export — admin-only, bookings only. A recruiter or agency could get **nothing** out of the system. HR teams generally want data out before they will trust putting data in.
+- **Bug found and fixed in the existing export: no UTF-8 BOM.** Excel on Windows ignores the charset in the HTTP header when opening a downloaded file and guesses the local codepage, so "阮文測試" arrived as mojibake. In this product *every* candidate name is Vietnamese or Chinese, so the old export was effectively unusable in the tool people actually open CSVs with. Verified before (BOM absent) and after (present).
+- `src/lib/csv.ts` centralises the three things that must be right: the BOM, formula neutralisation (`=`, `+`, `-`, `@`, tab, CR — candidate-supplied text lands in these files, so it is an injection sink), and CRLF endings per RFC 4180.
+- Deliberate detail: **numbers are not neutralised**. Prefixing `-500` into `'-500` would turn a negative fee into text and break every sum in the sheet. Only strings get the guard.
+- Three new exports, each gated by the capability that already guards the matching screen: candidates (`candidate:read`), placements (`placement:read`), compliance (`compliance:read`).
+- The candidate export **takes the same query parameters as the search page**, so "export" means "export what I am looking at". Verified: unfiltered 38 rows, `docs=attention` 12, `q=BIM` 6.
+- Compliance exports **every** document, not the dashboard's `attention` subset — an inspection asks to see the whole file, and handing over only the problems answers a question nobody asked. Superseded revisions are excluded so one person never appears to hold two conflicting permits.
+- Placements carries a separate numeric "Fee At Risk" column so finance can sum the clawback exposure directly instead of rebuilding it with a formula.
+- `EXPORT_LIMIT = 10_000` caps the candidate query — far above any realistic pool, but an unbounded query on a user-triggered download is how one click takes the database down. Truncation is logged, never silent.

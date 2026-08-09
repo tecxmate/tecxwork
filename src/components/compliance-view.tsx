@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, ShieldCheck, Plus, RefreshCw } from "lucide-react";
+import { Download, ShieldAlert, ShieldCheck, Plus, RefreshCw } from "lucide-react";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -184,10 +184,22 @@ export function ComplianceView({ compliance }: { compliance: AgencyCrm["complian
           </h1>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
-        <Button size="sm" onClick={() => setAdding(true)}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          {t.addDoc}
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Every tracked document, not just the ones needing attention — an inspection
+              asks to see the whole file. Plain anchor: this is a file download. */}
+          <a
+            href="/api/agency/export/compliance"
+            download
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </a>
+          <Button size="sm" onClick={() => setAdding(true)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            {t.addDoc}
+          </Button>
+        </div>
       </div>
 
       <AgencyFormDialog

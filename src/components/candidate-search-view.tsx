@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 import {
+  Download,
   ExternalLink,
   GraduationCap,
   Loader2,
@@ -107,6 +108,17 @@ export function CandidateSearchView({ result }: { result: CandidateSearchResult 
   );
 
   const selectedSkills = (params.get("skills") ?? "").split(",").filter(Boolean);
+
+  /**
+   * The export reuses the URL filters so the file matches the screen. `page` is dropped —
+   * an export of "page 2 of my search" is never what anyone means.
+   */
+  const exportQuery = (() => {
+    const next = new URLSearchParams(params.toString());
+    next.delete("page");
+    const qs = next.toString();
+    return qs ? `?${qs}` : "";
+  })();
   const toggleSkill = (s: string) => {
     const next = selectedSkills.includes(s)
       ? selectedSkills.filter((x) => x !== s)
@@ -211,10 +223,24 @@ export function CandidateSearchView({ result }: { result: CandidateSearchResult 
         />
       </div>
 
-      <p className="mb-3 text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground tabular-nums">{result.total}</span>{" "}
-        {t.results}
-      </p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground tabular-nums">{result.total}</span>{" "}
+          {t.results}
+        </p>
+        {result.total > 0 ? (
+          // The export carries the current filters, so it matches what is on screen.
+          // A plain anchor because this is a file download, not a route change.
+          <a
+            href={`/api/agency/export/candidates${exportQuery}`}
+            download
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </a>
+        ) : null}
+      </div>
 
       {result.hits.length === 0 ? (
         <Card className="p-10 text-center">

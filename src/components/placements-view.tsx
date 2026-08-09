@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   BadgeCheck,
   CircleDollarSign,
+  Download,
   ShieldAlert,
   UserMinus,
   Users,
@@ -162,11 +163,24 @@ export function PlacementsView({ data }: { data: PlacementLifecycle }) {
 
   return (
     <section aria-label={t.title}>
-      <div className="mb-4">
-        <h1 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-          {t.title}
-        </h1>
-        <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            {t.title}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+        </div>
+        {data.rows.length > 0 ? (
+          // File download, so a plain anchor rather than a Link.
+          <a
+            href="/api/agency/export/placements"
+            download
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </a>
+        ) : null}
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
