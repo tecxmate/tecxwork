@@ -69,7 +69,7 @@ Ranked by strategic leverage, not effort:
 
 ## Open questions
 
-- Revenue split between Taiwan-side employer service fees and any Vietnam-side fee component. Asked, unanswered. Gates how aggressively fee transparency can be used publicly and whether item 4 is viable.
+- Revenue split between Taiwan-side employer service fees and any Vietnam-side fee component. Asked, unanswered. Gates how aggressively fee transparency can be used publicly and whether item 4 is viable. — **Reworded 2026-08-11:** [niko] ruled that the platform must not assume Vietnam supplies and Taiwan hires, so this question is now asked in roles rather than countries. See [2026-08-11-corridor-agnostic-positioning](2026-08-11-corridor-agnostic-positioning.md).
 - Yang Luck's current MOL evaluation grade (A/B/C) — sets urgency on item 3.
 
 ## Provenance
