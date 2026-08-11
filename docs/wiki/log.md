@@ -1635,3 +1635,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - **Jurisdiction ≠ direction, and is deliberately NOT genericised:** the 5% 營業稅, ESA/私立就業服務機構 licensing, and ARC/work-permit tracking follow from where the operator is *licensed*, not from who supplies candidates. Any Taiwan-licensed operator needs them whatever the corridor. `months_salary` is the local convention but already sits beside `percent_annual`, so it is parameterised.
 - Yang Luck's stakeholder page keeps its VN→TW description — a true fact about that client, not a claim about the platform.
 - New: [decisions/2026-08-11-corridor-agnostic-positioning.md](decisions/2026-08-11-corridor-agnostic-positioning.md). Updated: the 07-27 decision's open question, index.md.
+
+## [2026-08-11] feat | Recruiter-side Vietnamese (item 5)
+attributed_to: [claude-code]   belongs_to: [tecxwork, recruitment-workflows]
+- `src/messages/recruiter/vi.ts` — full translation of the recruiter message tree (signup, bookings/stage review, applicant browsing, company/job form, notifications, slot picker). `RecruiterLocale` is now `en | zh-TW | vi`; `accept-language` starting `vi` resolves to it; the switcher is a mapped 3-way toggle (EN / 中 / VI) instead of two hardcoded buttons.
+- Typed as `RecruiterMessages` (derived from en.ts), so a missing or extra key is a compile error, not a silent English fallback. Two local helpers in recruiter-dashboard-company.tsx had narrowed the parser's locale to `en | zh-TW`; widened — `parseLanguageRequirementTokens` itself was already trilingual.
+- **Known limitation, deliberately out of scope:** the newer agency views (pipeline, clients CRM, compliance, placements, candidate search) carry their own inline `en | zh` dictionaries and map `vi → en`. Making the ATS layer trilingual is per-view translation work, not wiring. Item 5's `src/messages/recruiter/` gap is closed; the ATS-view gap is now the honest remainder.
