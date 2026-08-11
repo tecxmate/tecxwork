@@ -55,3 +55,32 @@ Casting `created_at::date` returns a JS `Date`; `toISOString().slice(0,10)` give
 
 ## Testing habit that caught these
 A throwaway tsx script that loads `.env.local` into `process.env`, then `await import("./src/lib/db/index.ts")` and runs the **exact** query via `db.execute` — reproduces prod behavior locally (importing `* as schema` standalone did NOT work; use the app's `db`). Always reset any test mutations (`UPDATE ... SET pinned_rank = NULL`).
+
+## 3. Columns inside a `sql\`\`` fragment render UNQUALIFIED — correlated subqueries silently collapse (2026-08-11)
+
+**Symptom:** none. That is the danger. A correlated subquery in a projection returns wrong
+numbers that can look right on fresh test data.
+
+**Bad:**
+```ts
+db.select({
+  credited: sql`coalesce((select sum(${creditNotes.total}) from ${creditNotes}
+    where ${creditNotes.invoiceId} = ${invoices.id}), 0)`,
+}).from(placements).leftJoin(invoices, ...);
+```
+Renders as `where "invoice_id" = "id"` — **both unqualified**, both resolving inside
+`credit_notes`. The correlation to the outer `invoices.id` is gone; the predicate compares a
+credit note's own `invoice_id` to its own `id`. On a freshly truncated test DB, serial IDs
+coincide (invoice 1 ↔ credit note 1) and the assertion **passes by coincidence**. Caught
+2026-08-11 building the fees export only because a second-invoice test existed.
+
+**Fix — don't correlate inside a projection fragment.** Either run the aggregate as its own
+grouped query and join in JS:
+```ts
+const credits = await db.select({ invoiceId: creditNotes.invoiceId,
+    total: sql`sum(${creditNotes.total})`.mapWith(Number) })
+  .from(creditNotes).where(...).groupBy(creditNotes.invoiceId);
+```
+or use a real join + `countDistinct()`/`sum()` helpers, whose column refs qualify correctly.
+Single-table fragments (`count(*) filter (where ${t.col} is not null)` with one `FROM`) are
+safe — the unqualified name is unambiguous. Anything cross-table inside `sql\`\`` is suspect.
