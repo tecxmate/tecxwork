@@ -8,7 +8,7 @@
  *
  *   DATABASE_URL="<demo>" npm run db:update:ats-compliance
  */
-import { neon } from "@neondatabase/serverless";
+import { seedSql } from "./seed-sql";
 
 const DDL: string[] = [
   `DO $$ BEGIN
@@ -50,7 +50,7 @@ async function main() {
   if (/delicate-lab|bitter-hill/.test(url)) {
     throw new Error("Refusing: PROD host. Use the demo DB.");
   }
-  const sql = neon(url);
+  const sql = seedSql(url);
   for (const stmt of DDL) await sql.query(stmt);
 
   // In-process candidates: those with a submission at interview/offer/placed.
@@ -79,7 +79,7 @@ async function main() {
       const res = await sql`
         INSERT INTO compliance_documents (org_id, candidate_id, doc_type, doc_number, issuing_authority, expiry_date, status)
         VALUES (${c.org_id}, ${c.id}, ${d.type}::doc_type, ${d.num}, ${d.auth}, ${d.expiry}, 'valid')
-        ON CONFLICT (candidate_id, doc_type) DO NOTHING
+        ON CONFLICT (candidate_id, doc_type) WHERE status <> 'superseded' DO NOTHING
         RETURNING id`;
       made += (res as unknown[]).length;
     }

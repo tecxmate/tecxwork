@@ -10,16 +10,17 @@
  * scroll lock is always released -- a drawer that leaves `overflow:hidden` behind makes the
  * whole document unscrollable.
  */
-import { webkit } from '/Users/niko/antigravity/tecxwork/node_modules/playwright-core/index.mjs';
+import { webkit, chromium } from 'playwright-core';
 import path from 'node:path';
 import os from 'node:os';
 
-const WEBKIT = '/Users/niko/Library/Caches/ms-playwright/webkit_mac14_arm64_special-2251/pw_run.sh';
+const WEBKIT = process.env.WEBKIT_PATH; // unset -> fall back to chromium (weaker: see README)
+const EXEC = process.env.CHROMIUM_PATH || undefined;
 const target = process.argv[2];
 if (!target) { console.error('usage: node check-mobile-nav.mjs <built-html>'); process.exit(2); }
 const FILE = 'file://' + path.resolve(target);
 
-const browser = await webkit.launch({ executablePath: WEBKIT });
+const browser = await (WEBKIT ? webkit.launch({ executablePath: WEBKIT }) : chromium.launch(EXEC ? { executablePath: EXEC } : {}));
 const ctx = await browser.newContext({
   viewport: { width: 390, height: 844 },      // iPhone 14
   deviceScaleFactor: 3,

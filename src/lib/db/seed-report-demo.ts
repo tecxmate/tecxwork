@@ -5,13 +5,13 @@
  *
  *   DATABASE_URL="<demo>" npm run db:seed:report-demo
  */
-import { neon } from "@neondatabase/serverless";
+import { seedSql } from "./seed-sql";
 
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL not set");
   if (/delicate-lab|bitter-hill/.test(url)) throw new Error("Refusing: PROD host.");
-  const sql = neon(url);
+  const sql = seedSql(url);
 
   // Spread application created_at over the past ~8 weeks by id.
   await sql`

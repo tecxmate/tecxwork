@@ -3,7 +3,7 @@ title: Platform Manual (screens & functions)
 type: topic
 slug: platform-manual
 date: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-11
 attributed_to: [niko]
 belongs_to: [tecxwork, recruitment-workflows]
 source: chat
@@ -97,3 +97,36 @@ not in one status field.
   WebP is worth it for the artifact's 16 MB budget.) Final page 3.53 MB with 51 embedded.
 
 See [[demo-db-manual-capture]] for the database work this required.
+
+## 2026-08-11 refresh — the stale-manual debt paid
+
+The 08-09 log flagged the published manual as out of date (billing, credit notes, candidate
+search absent; all recruiter screenshots showing the pre-sidebar nav). This refresh:
+
+- **Act 3 grew from 6 to 11 screens**: candidate search, offers, placements, billing and the
+  stage editor added; compliance gained the stored-artifact story; reports became "Reports &
+  exports" documenting the Employer-Pays and 評鑑 exports. Screen map +5 routes. 56 screens.
+- **Every screenshot re-captured** (62 shot, 56 used) from a **fully local demo world**:
+  local Postgres + the seeds + a new `seed-yang-luck-billing.ts` covering fee rates, offers,
+  invoices and a credit note — the layer the 08-09 sessions had only created by hand.
+- **Decks regenerated**: 48 slides × en/zh/vi (was 43), new sections flowing in from the
+  shared markup. 79 new strings translated into 繁中 and Tiếng Việt.
+- **The capture/check tooling is now portable** — the Playwright scripts carried one
+  machine's absolute paths; they now resolve browser, output and playwright from env, and
+  check-lightbox derives the gallery count instead of hardcoding 51.
+
+Verified: build.py clean (8.42 MB, i18n 1144×3 enforced), all four checkers pass. Caveat:
+WebKit cannot be downloaded in the CCR container, so check-anchors and check-mobile-nav ran
+under Chromium — the README notes the anchor check passes vacuously there. Re-run both on a
+machine with WebKit before treating those two as fully verified.
+
+**Capture gotchas that cost time (so the next run doesn't pay them):**
+1. `EVENT_CONFIG.date` in `src/lib/data.ts` is **hardcoded** (June 6) and the applicant slot
+   picker keys on it — not on the admin-configured `event_config` row. Demo slots must sit
+   on that date for the apply flow to capture. This is the manual's own known-gaps bug,
+   still live.
+2. `seed-yang-luck.ts` reset **fails against a billing-seeded world**: offers/invoices FK
+   applications, and the seed's deletes predate the ATS tables. Reset order needs the ATS
+   layer cleared first — or drop/recreate the schema.
+3. The event-config runtime cache survives a dev-server restart; a SQL date change alone
+   does not reach the picker.

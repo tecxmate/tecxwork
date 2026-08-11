@@ -12,9 +12,21 @@
  *   DATABASE_URL="<demo>" npx tsx src/lib/db/seed-yang-luck.ts
  */
 import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle as drizzleNeon } from "drizzle-orm/neon-http";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import bcrypt from "bcryptjs";
 import * as schema from "./schema";
+
+/** Neon speaks HTTP to Neon's proxy; a local Postgres speaks the plain wire protocol.
+ *  Same URL-based switch as src/lib/db, so the demo world can be seeded locally too. */
+function connect(url: string) {
+  const host = new URL(url).hostname;
+  const isLocal = host === "localhost" || host === "127.0.0.1" || host === "::1";
+  return isLocal
+    ? drizzlePg(new Pool({ connectionString: url }), { schema })
+    : drizzleNeon(neon(url), { schema });
+}
 
 type Stage = "applied" | "screening" | "interview" | "offer" | "hired";
 type Kind = "subsidiary" | "client";
@@ -172,7 +184,7 @@ async function seed() {
   if (url.includes("delicate-lab") || url.includes("bitter-hill")) {
     throw new Error("Refusing to seed: DATABASE_URL points at a PROD host. Use the demo DB.");
   }
-  const db = drizzle(neon(url), { schema });
+  const db = connect(url);
 
   console.log("Resetting demo data…");
   await db.delete(schema.applications);

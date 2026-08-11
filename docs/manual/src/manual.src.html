@@ -365,11 +365,11 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
     Contents
   </button>
 <span class="nav-bar-title" data-t="3">TECXWORK User Manual</span>
-  <div class="lang-switch lang-switch-bar" role="group" aria-label="Language">
-    <button type="button" data-lang="en" aria-pressed="true">EN</button>
-    <button type="button" data-lang="zh" aria-pressed="false">繁中</button>
-    <button type="button" data-lang="vi" aria-pressed="false">VN</button>
-  </div>
+<div aria-label="Language" class="lang-switch lang-switch-bar" role="group">
+<button aria-pressed="true" data-lang="en" type="button">EN</button>
+<button aria-pressed="false" data-lang="zh" type="button">繁中</button>
+<button aria-pressed="false" data-lang="vi" type="button">VN</button>
+</div>
 </header>
 <div aria-hidden="true" class="nav-scrim"></div>
 <div aria-label="Screenshot viewer" aria-modal="true" class="lightbox" id="lightbox" role="dialog">
@@ -398,11 +398,11 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <button aria-label="Close contents" class="rail-close" data-ta="a1035" type="button">✕</button>
 <p class="rail-brand" data-t="5">TECXWORK</p>
 <p class="rail-sub" data-t="6">User Manual · Yang Luck 揚運 build</p>
-  <div class="lang-switch" role="group" aria-label="Language">
-    <button type="button" data-lang="en" aria-pressed="true">EN</button>
-    <button type="button" data-lang="zh" aria-pressed="false">繁中</button>
-    <button type="button" data-lang="vi" aria-pressed="false">VN</button>
-  </div>
+<div aria-label="Language" class="lang-switch" role="group">
+<button aria-pressed="true" data-lang="en" type="button">EN</button>
+<button aria-pressed="false" data-lang="zh" type="button">繁中</button>
+<button aria-pressed="false" data-lang="vi" type="button">VN</button>
+</div>
 <h4 data-t="7">Start here</h4>
 <ol>
 <li data-t="8"><a href="#start">How to read this manual</a></li>
@@ -445,8 +445,13 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <li data-t="39"><a href="#g-drawer">3.2 The candidate drawer</a></li>
 <li data-t="40"><a href="#g-switch">3.3 Switching clients</a></li>
 <li data-t="41"><a href="#g-clients">3.4 Client accounts</a></li>
-<li data-t="42"><a href="#g-compliance">3.5 Compliance</a></li>
-<li data-t="43"><a href="#g-reports">3.6 Reports</a></li>
+<li data-t="1035"><a href="#g-candidates">3.5 Candidate search</a></li>
+<li data-t="1036"><a href="#g-offers">3.6 Offers</a></li>
+<li data-t="42"><a href="#g-compliance">3.7 Compliance &amp; documents</a></li>
+<li data-t="1037"><a href="#g-placements">3.8 Placements</a></li>
+<li data-t="1038"><a href="#g-billing">3.9 Billing</a></li>
+<li data-t="1039"><a href="#g-stages">3.10 Editing the stages</a></li>
+<li data-t="43"><a href="#g-reports">3.11 Reports &amp; exports</a></li>
 </ol>
 <h4 data-t="44">Act 4 · Admin</h4>
 <ol>
@@ -461,7 +466,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <ol>
 <li data-t="52"><a href="#x-common">Everywhere on the app</a></li>
 <li data-t="53"><a href="#x-public">Public &amp; legal pages</a></li>
-<li data-internal data-t="54"><a href="#x-notes">Notes &amp; known gaps</a></li>
+<li data-internal="" data-t="54"><a href="#x-notes">Notes &amp; known gaps</a></li>
 </ol>
 </nav>
 <main>
@@ -485,7 +490,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <b>Already know the platform?</b> Go straight to <a href="#act1">Applicant</a>,
   <a href="#act2">Employer</a>, <a href="#act3">Agency</a> or <a href="#act4">Admin</a>.</p>
 <ul class="facts">
-<li data-t="60"><b>51</b> annotated screens</li>
+<li data-t="60"><b>56</b> annotated screens</li>
 <li data-t="61"><b>4</b> roles</li>
 <li data-t="62"><b>25</b> client companies</li>
 <li data-t="63"><b>35</b> live positions</li>
@@ -524,7 +529,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <li data-t="79"><a href="#lifecycle">How a placement happens</a></li>
 <li data-t="80"><a href="#jobfair">How a live job fair runs</a></li>
 <li data-t="81"><a href="#g-pipeline">3.1 The pipeline board</a> — the core of the product</li>
-<li data-t="82"><a href="#g-clients">3.4 Clients</a> and <a href="#g-compliance">3.5 Compliance</a> — what a generic job board can't do</li>
+<li data-t="82"><a href="#g-clients">3.4 Clients</a> and <a href="#g-compliance">3.7 Compliance</a> — what a generic job board can't do</li>
 </ol>
 </div>
 </div>
@@ -545,7 +550,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <a class="role-jump" href="#act3" style="--pc:var(--r-agency)">
 <span class="rj-role" data-t="91">I'm an agency recruiter</span>
 <span class="rj-who" data-t="92">Placing candidates into client companies and running the pipeline.</span>
-<span class="rj-go" data-t="93">Act 3 · 6 screens →</span>
+<span class="rj-go" data-t="93">Act 3 · 11 screens →</span>
 </a>
 <a class="role-jump" href="#act4" style="--pc:var(--r-admin)">
 <span class="rj-role" data-t="94">I'm an admin</span>
@@ -993,6 +998,11 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <tr><td data-t="368"><code>/dashboard/pipeline</code></td><td data-t="369">ATS pipeline board</td><td data-t="370">—</td><td data-t="371">✓</td><td data-t="372">✓</td><td data-t="373">—</td></tr>
 <tr><td data-t="374"><code>/dashboard/clients</code></td><td data-t="375">Client accounts</td><td data-t="376">—</td><td data-t="377">—</td><td data-t="378">✓</td><td data-t="379">—</td></tr>
 <tr><td data-t="380"><code>/dashboard/compliance</code></td><td data-t="381">Document expiry</td><td data-t="382">—</td><td data-t="383">—</td><td data-t="384">✓</td><td data-t="385">—</td></tr>
+<tr><td data-t="1040"><code>/dashboard/candidates</code></td><td data-t="1041">Candidate search</td><td data-t="1042">—</td><td data-t="1043">—</td><td data-t="1044">✓</td><td data-t="1045">—</td></tr>
+<tr><td data-t="1046"><code>/dashboard/offers</code></td><td data-t="1047">Offers &amp; approval</td><td data-t="1048">—</td><td data-t="1049">—</td><td data-t="1050">✓</td><td data-t="1051">—</td></tr>
+<tr><td data-t="1052"><code>/dashboard/placements</code></td><td data-t="1053">Placements &amp; guarantees</td><td data-t="1054">—</td><td data-t="1055">—</td><td data-t="1056">✓</td><td data-t="1057">—</td></tr>
+<tr><td data-t="1058"><code>/dashboard/billing</code></td><td data-t="1059">Invoices &amp; credit notes</td><td data-t="1060">—</td><td data-t="1061">—</td><td data-t="1062">✓</td><td data-t="1063">—</td></tr>
+<tr><td data-t="1064"><code>/dashboard/pipeline/settings</code></td><td data-t="1065">Stage editor</td><td data-t="1066">—</td><td data-t="1067">—</td><td data-t="1068">✓</td><td data-t="1069">—</td></tr>
 <tr><td data-t="386"><code>/dashboard/reports</code></td><td data-t="387">Funnel &amp; time-in-stage</td><td data-t="388">—</td><td data-t="389">—</td><td data-t="390">✓</td><td data-t="391">—</td></tr>
 <tr><td data-t="392"><code>/dashboard/jobs</code></td><td data-t="393">Job openings + create form</td><td data-t="394">—</td><td data-t="395">✓</td><td data-t="396">✓</td><td data-t="397">—</td></tr>
 <tr><td data-t="398"><code>/dashboard/company</code></td><td data-t="399">Company profile editor</td><td data-t="400">—</td><td data-t="401">✓</td><td data-t="402">✓</td><td data-t="403">—</td></tr>
@@ -1602,15 +1612,15 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="step">3.1</div>
 <div>
 <h3 data-t="780">The pipeline board</h3>
-<p class="route">/dashboard/pipeline <span class="pill n">/pipeline redirects here</span></p>
+<p class="route">/dashboard/pipeline <span class="pill n">standalone board at /pipeline</span></p>
 <p class="purpose" data-t="781">The centre of the product. A five-stage kanban board of every
-      candidate for one client company, moved by dragging. It is a native tab inside the
-      recruiter dashboard — same top bar, same language switcher, same components — not a
-      separate tool.</p>
+      candidate for one client company, moved by dragging. It lives inside the recruiter
+      workspace — since the dashboard outgrew its top bar, a collapsible left sidebar
+      carries all twelve destinations, and the board is one of them — not a separate tool.</p>
 </div>
 </div>
   {{IMG:rec-01-pipeline-board}}
-  <figcaption data-t="782">/dashboard/pipeline — 麗明營造, 13 candidates across five stages</figcaption>
+  <figcaption data-t="782">/dashboard/pipeline — 麗明營造, 12 candidates across five stages</figcaption>
 <div class="body">
 <h4 data-t="783">The five stages</h4>
 <ul class="stages">
@@ -1623,7 +1633,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <h4 data-t="789">Controls</h4>
 <dl class="controls">
 <dt data-t="790">CLIENT selector</dt><dd data-t="791">All 25 client accounts as tabs, each with its live candidate count. Subsidiaries of the group carry a <code>Group</code> badge, distinguishing them from external clients.</dd>
-<dt data-t="792">Board context line</dt><dd data-t="793"><em>"麗明營造 Lee Ming Construction · 13 candidates · Drag a card to change stage."</em></dd>
+<dt data-t="792">Board context line</dt><dd data-t="793"><em>"麗明營造 Lee Ming Construction · 12 candidates · Drag a card to change stage."</em></dd>
 <dt data-t="794">Stage column</dt><dd data-t="795">Header with a live count; cards stack beneath.</dd>
 <dt data-t="796"><b>Drag to change stage</b></dt><dd data-t="797">Dragging a card to another column updates the candidate's stage and <em>persists</em> — a refresh keeps the new position. Each move is written as a stage transition, which is what makes time-in-stage reporting possible (step 6).</dd>
 <dt data-t="798">Candidate card</dt><dd data-t="799">Name in Latin and Chinese, school · major, the position applied for, a nationality flag, study level, and skill chips.</dd>
@@ -1711,9 +1721,63 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
     the pattern worth acting on.</div>
 </div>
 </section>
-<section class="screen" id="g-compliance" style="--role:var(--r-agency)">
+<section class="screen" id="g-candidates" style="--role:var(--r-agency)">
 <div class="screen-head">
 <div class="step">3.5</div>
+<div>
+<h3 data-t="1070">Candidate search</h3>
+<p class="route">/dashboard/candidates</p>
+<p class="purpose" data-t="1071">The whole candidate database, searchable — by name, school, major or skill,
+      filtered by nationality, study level, and whether the person's documents are in order.
+      The pipeline shows one client's candidates; this answers "who do we already know?"
+      before sourcing anyone new.</p>
+</div>
+</div>
+  {{IMG:rec-13-candidates-search}}
+  <figcaption data-t="1072">/dashboard/candidates — a skill search with filters and live document status</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="1073">Search box</dt><dd data-t="1074">Matches name, school, major and skills together — <code>Python</code> finds every candidate carrying the skill, whatever they applied for.</dd>
+<dt data-t="1075">Filters</dt><dd data-t="1076">Nationality, study level, and a <b>documents</b> filter with two positions: <em>valid</em> and <em>needs attention</em> — so "who could legally start on Monday" is one click.</dd>
+<dt data-t="1077">Result card</dt><dd data-t="1078">Name, school · major, skills, current applications, and a document-status pill drawn from the compliance register (step 3.7).</dd>
+<dt data-t="1079"><code>Export CSV</code></dt><dd data-t="1080">Downloads exactly the current search, not the whole table — export means "export what I am looking at".</dd>
+</dl>
+<div class="note" data-t="1081"><b>Who can see this.</b> The candidate database is PII. Only roles holding
+    <code>candidate:read</code> reach this screen — an interviewer, for example, sees the
+    specific candidates assigned to them and never this page.</div>
+</div>
+</section>
+<section class="screen" id="g-offers" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.6</div>
+<div>
+<h3 data-t="1082">Offers — what was offered, who authorised it, and the answer</h3>
+<p class="route">/dashboard/offers</p>
+<p class="purpose" data-t="1083">The step between "interviewing well" and "placed" where money is promised.
+      An offer records the exact terms — salary, start date, probation — and cannot be sent
+      until someone with authority approves it, so no candidate is promised terms one
+      recruiter invented.</p>
+</div>
+</div>
+  {{IMG:rec-14-offers}}
+  <figcaption data-t="1084">/dashboard/offers — six offers across the lifecycle, from draft to declined</figcaption>
+<div class="body">
+<h4 data-t="1085">The lifecycle</h4>
+<dl class="controls">
+<dt data-t="1086">Draft</dt><dd data-t="1087">A recruiter has written terms. Nothing has been promised to anyone.</dd>
+<dt data-t="1088">Approved</dt><dd data-t="1089">Someone holding <code>offer:approve</code> — an admin, account manager, or the client's hiring manager — has signed off on the money.</dd>
+<dt data-t="1090">Sent</dt><dd data-t="1091">The terms are with the candidate.</dd>
+<dt data-t="1092">Accepted / Declined</dt><dd data-t="1093">The answer, with a recorded reason on a decline. An accepted offer is what a placement (step 3.8) is created from, so terms are never retyped.</dd>
+</dl>
+<div class="note" data-t="1094"><b>Drafting and authorising are different capabilities.</b> A recruiter can
+    write an offer but not approve it; a hiring manager approves terms without drafting them.
+    Approving something you cannot see is not a control — which is why approvers also hold
+    read access, and the audit log records both signatures.</div>
+</div>
+</section>
+<section class="screen" id="g-compliance" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.7</div>
 <div>
 <h3 data-t="850">Compliance — document expiry</h3>
 <p class="route">/dashboard/compliance</p>
@@ -1739,16 +1803,88 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <dt data-t="865">NO.</dt><dd data-t="866">The document number, for cross-checking against the physical document.</dd>
 <dt data-t="867">ISSUER</dt><dd data-t="868">The issuing authority — <code>NIA 移民署</code> for ARCs, <code>MOL/WDA 勞動部</code> for work permits.</dd>
 <dt data-t="869">EXPIRY</dt><dd data-t="870">The date, with an <span class="pill crit">Expired</span> or <span class="pill warn">Expiring</span> flag.</dd>
+<dt data-t="1095">Attach / view scan</dt><dd data-t="1096">Each row can carry the document itself — the uploaded scan is stored by the platform and streamed back through a permission check, and every single view leaves an audit entry. An expiry date with a clickable artifact behind it is what makes this register auditable rather than self-declared.</dd>
 </dl>
 <div class="note warn" data-t="871"><b>Sorted by urgency, not alphabetically.</b> The list leads with
     the earliest expiry, so the top of the table is always the next thing to fix.</div>
 </div>
 </section>
+<section class="screen" id="g-placements" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.8</div>
+<div>
+<h3 data-t="1097">Placements — the guarantee window</h3>
+<p class="route">/dashboard/placements</p>
+<p class="purpose" data-t="1098">A hire is not the end: Taiwanese placement contracts carry a guarantee
+      period, and if the person leaves inside it the fee is exposed to a clawback. This
+      screen tracks every placement from start date through probation and guarantee to
+      completed — or fell-off.</p>
+</div>
+</div>
+  {{IMG:rec-15-placements}}
+  <figcaption data-t="1099">/dashboard/placements — two started placements, both inside their guarantee window</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="1100">Lifecycle</dt><dd data-t="1101"><code>placed → started → completed</code>, or <code>fell_off</code> if the candidate leaves inside the guarantee.</dd>
+<dt data-t="1102">Probation vs guarantee</dt><dd data-t="1103">Two different dates on purpose: probation is the <em>employer's</em> right to end the contract; the guarantee is the <em>agency's</em> clawback exposure. They usually differ.</dd>
+<dt data-t="1104">Fee at risk</dt><dd data-t="1105">While a placement is inside its guarantee window, its fee is not yet safely earned — the screen shows how many days remain and what money is still exposed.</dd>
+<dt data-t="1106">Document status</dt><dd data-t="1107">The compliance register's verdict for this person, inline — a placement whose work permit lapses is a problem this row surfaces first.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="g-billing" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.9</div>
+<div>
+<h3 data-t="1108">Billing — invoices, credit notes, and what is still unbilled</h3>
+<p class="route">/dashboard/billing</p>
+<p class="purpose" data-t="1109">The money side of a placement. Each fee becomes a numbered invoice with 5%
+      營業稅 computed exactly; payments and corrections are their own recorded documents; and
+      the screen always shows which placements have not been billed yet — the list that is
+      otherwise forgotten.</p>
+</div>
+</div>
+  {{IMG:rec-16-billing}}
+  <figcaption data-t="1110">/dashboard/billing — one paid invoice with a credit note, one outstanding</figcaption>
+<div class="body">
+<h4 data-t="1111">The rules the screen enforces</h4>
+<dl class="controls">
+<dt data-t="1112">Numbered documents</dt><dd data-t="1113">Invoices are <code>INV-YYYY-NNNN</code>, credit notes <code>CN-YYYY-NNNN</code> — separate sequences, no silent gaps. An accountant reads a gap as a missing document.</dd>
+<dt data-t="1114">One live line per fee</dt><dd data-t="1115">A placement's fee can be billed exactly once — the database itself refuses a duplicate. Voiding an invoice frees the fee to be re-raised on a correction.</dd>
+<dt data-t="1116">Paid is immutable</dt><dd data-t="1117">A paid invoice cannot be voided or edited. The correction is a <b>credit note</b>: its own numbered document both sides can reconcile, with tax at the <em>invoice's</em> rate, so it reverses what was actually charged.</dd>
+<dt data-t="1118">Outstanding, net of credits</dt><dd data-t="1119">The outstanding figure subtracts credit notes — a fully credited invoice is not money anyone is waiting for.</dd>
+<dt data-t="1120">Client fee rates</dt><dd data-t="1121">A client can carry an agreed rate — e.g. <em>1.2 months of salary</em>, the Taiwan convention. A new placement takes its fee from the rate only when no explicit fee was agreed; a blank fee stays blank rather than looking computed.</dd>
+</dl>
+</div>
+</section>
+<section class="screen" id="g-stages" style="--role:var(--r-agency)">
+<div class="screen-head">
+<div class="step">3.10</div>
+<div>
+<h3 data-t="1122">Editing the hiring stages</h3>
+<p class="route">/dashboard/pipeline/settings</p>
+<p class="purpose" data-t="1123">The five stages of the board are rows in a table, not code. An agency whose
+      process has six steps renames, reorders or adds stages here, and the board follows —
+      while reporting stays comparable because every stage declares what <em>kind</em> of
+      step it is.</p>
+</div>
+</div>
+  {{IMG:rec-18-pipeline-settings}}
+  <figcaption data-t="1124">/dashboard/pipeline/settings — the stage table behind the kanban board</figcaption>
+<div class="body">
+<dl class="controls">
+<dt data-t="1125">Rename / reorder / add</dt><dd data-t="1126">Immediate, per organisation. The board reflects it on next load.</dd>
+<dt data-t="1127">Stage kind</dt><dd data-t="1128">Each stage maps to one of the canonical kinds — sourced, screened, interview, offer, placed — which is what keeps the funnel report meaningful after the names change.</dd>
+<dt data-t="1129">Retire, not delete</dt><dd data-t="1130">A stage that has ever held candidates is archived rather than erased, so historical transitions keep pointing at a real row.</dd>
+<dt data-t="1131">Who may do this</dt><dd data-t="1132">Changing the process everyone works inside is a manager's call — it needs <code>pipeline:configure</code>, which recruiters do not hold.</dd>
+</dl>
+</div>
+</section>
 <section class="screen" id="g-reports" style="--role:var(--r-agency)">
 <div class="screen-head">
-<div class="step">3.6</div>
+<div class="step">3.11</div>
 <div>
-<h3 data-t="872">Reports</h3>
+<h3 data-t="872">Reports &amp; exports</h3>
 <p class="route">/dashboard/reports</p>
 <p class="purpose" data-t="873">Where the pipeline is leaking and who is stuck. Built from the
       stage transitions recorded every time a card is dragged, which is why time-in-stage is
@@ -1760,9 +1896,9 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <div class="body">
 <h4 data-t="875">Headline metrics</h4>
 <dl class="controls">
-<dt data-t="876">Candidates</dt><dd data-t="877">Total in the pipeline across all clients — 37.</dd>
+<dt data-t="876">Candidates</dt><dd data-t="877">Total in the pipeline across all clients — 36.</dd>
 <dt data-t="878">Placements</dt><dd data-t="879">Hired — 2.</dd>
-<dt data-t="880">Placement rate</dt><dd data-t="881">Placements over candidates — 5%.</dd>
+<dt data-t="880">Placement rate</dt><dd data-t="881">Placements over candidates — 6%.</dd>
 <dt data-t="882">Avg days in stage</dt><dd data-t="883">Mean time a candidate sits before moving — 19 days.</dd>
 </dl>
 <h4 data-t="884">Pipeline funnel</h4>
@@ -1772,6 +1908,12 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <h4 data-t="887">Longest in stage</h4>
 <dl class="controls">
 <dt data-t="888">CANDIDATE · POSITION · STAGE · DAYS IN STAGE</dt><dd data-t="889">The individuals waiting longest, ranked. This converts the funnel into a to-do list — a candidate 20 days in Offer is a specific call to make today.</dd>
+</dl>
+<h4 data-t="1133">Exports — the audit-facing files</h4>
+<dl class="controls">
+<dt data-t="1134">Candidates / Placements / Compliance</dt><dd data-t="1135">Each list screen exports what it shows as CSV — Excel-safe (UTF-8 for Chinese and Vietnamese names, formula injection defused).</dd>
+<dt data-t="1136">Employer-Pays fee trail</dt><dd data-t="1137"><code>/api/agency/export/fees</code> — one row per placement: salary, fee, <em>fee in months of salary</em>, and the invoice/credit chain down to net billed. Built for RBA-style audits, whose first question is whether any worker paid a fee: fees in this system attach to client invoices only, and the export states exactly that.</dd>
+<dt data-t="1138">評鑑 evidence summary</dt><dd data-t="1139"><code>/api/agency/export/evidence</code> — a dated aggregate sheet (service records, fee transparency, document management, accountability) assembled from data the system captures as a side effect of the work. No names, no per-row amounts — the detail exports above are the itemised evidence behind it.</dd>
 </dl>
 </div>
 </section>
@@ -2016,12 +2158,12 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
     {{IMG_BARE:pub-14-terms}}
   </div>
 </section>
-<div class="act" id="x-notes" data-internal style="--role:var(--accent)">
+<div class="act" data-internal="" id="x-notes" style="--role:var(--accent)">
 <p class="act-no" data-t="1025">Reference</p>
 <h2 data-t="1026">Notes &amp; known gaps</h2>
 <p data-t="1027">Recorded so the manual isn't read as claiming more than the build does.</p>
 </div>
-<section data-internal>
+<section data-internal="">
 <div class="note warn" data-t="1028"><b>The AI score is simulated.</b> Every candidate card and the
   drawer show an <em>AI score</em>, labelled <code>(demo)</code> in the drawer. It is a
   seeded placeholder for CV screening, not a live model. Treat it as a slot in the design,
@@ -2046,7 +2188,7 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 </section>
 <footer>
 <p data-t="1033"><b>TECXWORK User Manual</b> · Yang Luck 揚運 build · captured August 2026 from the
-  running application. 51 annotated screens across four roles.</p>
+  running application. 56 annotated screens across four roles.</p>
 <p data-t="1034">Demo accounts — applicant <code>student@yangluck.demo</code> · employer
   <code>co-yanghong@yangluck.demo</code> · agency <code>hr@yangluck.demo</code> · admin
   <code>admin@yangluck.demo</code> · password <code>demo1234</code></p>

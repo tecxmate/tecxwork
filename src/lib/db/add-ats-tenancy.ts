@@ -9,7 +9,7 @@
  * Run with DATABASE_URL pointing at the target (demo = lingering-sun):
  *   DATABASE_URL="<target>" npm run db:update:ats-tenancy
  */
-import { neon } from "@neondatabase/serverless";
+import { seedSql } from "./seed-sql";
 
 const DDL: string[] = [
   // member_role enum (CREATE TYPE has no IF NOT EXISTS)
@@ -92,7 +92,7 @@ async function main() {
   if (/delicate-lab|bitter-hill/.test(url)) {
     throw new Error("Refusing: DATABASE_URL points at a PROD host. Use the demo DB.");
   }
-  const sql = neon(url);
+  const sql = seedSql(url);
 
   for (const stmt of [...DDL, ...BACKFILL]) {
     await sql.query(stmt);

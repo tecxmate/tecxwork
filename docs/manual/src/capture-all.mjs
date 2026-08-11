@@ -1,9 +1,10 @@
-import { chromium } from '/Users/niko/antigravity/tecxwork/node_modules/playwright-core/index.mjs';
+// Portable: resolve playwright + browser + output dir from the environment, not one machine.
+import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 
 const BASE = 'http://localhost:3000';
-const OUT = '/private/tmp/claude-501/-Users-niko-antigravity-tecxwork/3e6bbf8e-16b2-4b16-8eca-90293216b4b7/scratchpad/shots';
-const EXEC = '/Users/niko/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
+const OUT = process.env.SHOTS_DIR || '/tmp/manual-shots';
+const EXEC = process.env.CHROMIUM_PATH || undefined; // undefined -> playwright's own resolution
 fs.mkdirSync(OUT, { recursive: true });
 
 const log = [];
@@ -64,7 +65,7 @@ async function publicPass() {
     ['/forgot-password', 'pub-06-forgot-password'],
     ['/browse', 'pub-07-browse-companies'],
     ['/jobs', 'pub-08-jobs-board'],
-    ['/jobs/43', 'pub-09-job-detail'],
+    ['/jobs/' + (process.env.DEMO_JOB_ID || '1'), 'pub-09-job-detail'],
     ['/recruiter/10', 'pub-10-company-profile'],
     ['/about', 'pub-11-about'],
     ['/tutorial', 'pub-12-tutorial'],
@@ -110,15 +111,22 @@ async function applicantPass() {
   } catch {}
 
   await go(page, '/jobs', 'app-11-jobs-search');
-  await go(page, '/jobs/43', 'app-12-job-detail');
+  await go(page, '/jobs/' + (process.env.DEMO_JOB_ID || '1'), 'app-12-job-detail');
 
   // Apply flow on a company that still has free slots
   try {
-    await page.goto(`${BASE}/recruiter/16`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${BASE}/recruiter/8`, { waitUntil: 'domcontentloaded' });
     await settle(page);
     await shot(page, 'app-13-apply-company');
     await page.getByRole('button', { name: 'Apply', exact: true }).first().click();
     await page.waitForTimeout(2800);
+    // advance to the first day that actually has slots (max 8 tries)
+    for (let d = 0; d < 8; d++) {
+      const any = await page.locator('button', { hasText: /^\d{1,2}:\d{2}$/ }).count();
+      if (any > 0) break;
+      await page.getByRole('button', { name: /next day/i }).first().click().catch(() => {});
+      await page.waitForTimeout(1400);
+    }
     await shot(page, 'app-14-apply-pick-slot');
     const btns = page.locator('button:not([disabled])');
     const n = await btns.count();
@@ -183,6 +191,23 @@ async function agencyPass() {
     await shot(page, 'rec-08-jobs-create-form');
   } catch (e) { console.log(`  ✗ add job: ${e.message.slice(0,70)}`); }
   await go(page, '/dashboard/company', 'rec-09-company-profile');
+
+  // --- screens added after the 08-08 manual: search, offers, placements, billing, stages
+  await go(page, '/dashboard/candidates', 'rec-12-candidates', 3000);
+  try {
+    const s2 = page.locator('input[type=search], input[placeholder*="earch"]').first();
+    await s2.fill('Python'); await page.waitForTimeout(2400);
+    await shot(page, 'rec-13-candidates-search');
+  } catch (e) { console.log(`  ✗ candidate search: ${e.message.slice(0,70)}`); }
+  await go(page, '/dashboard/offers', 'rec-14-offers', 3000);
+  await go(page, '/dashboard/placements', 'rec-15-placements', 3000);
+  await go(page, '/dashboard/billing', 'rec-16-billing', 3200);
+  try {
+    await page.getByText(/INV-2026-0001/).first().click();
+    await page.waitForTimeout(2200);
+    await shot(page, 'rec-17-billing-invoice');
+  } catch (e) { console.log(`  ✗ invoice detail: ${e.message.slice(0,70)}`); }
+  await go(page, '/dashboard/pipeline/settings', 'rec-18-pipeline-settings', 3000);
   await ctx.close();
 }
 
@@ -210,7 +235,7 @@ async function adminPass() {
   } catch (e) { console.log(`  ✗ all tab: ${e.message.slice(0,70)}`); }
 
   await go(page, '/admin/jobs', 'adm-03-job-moderation');
-  await go(page, '/admin/jobs/43', 'adm-04-job-moderation-detail');
+  await go(page, '/admin/jobs/' + (process.env.DEMO_JOB_ID || '1'), 'adm-04-job-moderation-detail');
   await go(page, '/admin/applicants', 'adm-05-applicants');
   await go(page, '/admin/recruiters', 'adm-06-recruiters');
 
@@ -229,7 +254,7 @@ async function adminPass() {
 }
 
 async function run() {
-  browser = await chromium.launch({ executablePath: EXEC });
+  browser = await chromium.launch(EXEC ? { executablePath: EXEC } : {});
   await publicPass();
   await applicantPass();
   await agencyPass();

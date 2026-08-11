@@ -19,10 +19,11 @@
  *
  * Keep width/height on every image in build.py and this stays green.
  */
-import { webkit } from '/Users/niko/antigravity/tecxwork/node_modules/playwright-core/index.mjs';
+import { webkit, chromium } from 'playwright-core';
 import path from 'node:path';
 
-const WEBKIT = '/Users/niko/Library/Caches/ms-playwright/webkit_mac14_arm64_special-2251/pw_run.sh';
+const WEBKIT = process.env.WEBKIT_PATH; // unset -> fall back to chromium (weaker: see README)
+const EXEC = process.env.CHROMIUM_PATH || undefined;
 const TOLERANCE_PX = 90;   // section top should sit at the viewport top, give or take
 
 const target = process.argv[2];
@@ -32,7 +33,7 @@ if (!target) {
 }
 const FILE = 'file://' + path.resolve(target);
 
-const browser = await webkit.launch({ executablePath: WEBKIT });
+const browser = await (WEBKIT ? webkit.launch({ executablePath: WEBKIT }) : chromium.launch(EXEC ? { executablePath: EXEC } : {}));
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 950 } });
 const page = await ctx.newPage();
 
