@@ -15,8 +15,10 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Tecxmate Company Limited](stakeholders/tecxmate.md) — the software consultancy developing tecxwork
 - [VSA Taiwan](stakeholders/vsatw.md) — Vietnamese Student Association in Taiwan (event partner)
 - [Taiwan Ministry of Labor (MOL)](stakeholders/taiwan-mol.md) — regulatory body for labor and employment in Taiwan
+- [Yang Luck 揚運國際](stakeholders/yang-luck.md) — client; the ESA licensee operating the Vietnam→Taiwan corridor
 
 ## Decisions
+- [2026-07-27 — Yang Luck is the ESA licensee; moat is the client-facing compliance clock](decisions/2026-07-27-yang-luck-licensee-positioning.md) — rivals all fight on discovery; client portal promoted from deferred to next major build. Carries a 2026-08-11 status addendum: document storage and the fee ledger have since shipped; client portal, RBA export and recruiter-side Vietnamese still open
 - [2026-07-18 — Yang Luck ATS-kanban pitch demo](decisions/2026-07-18-yang-luck-demo.md) — clickable pipeline demo on branch demo/yang-luck; isolated demo Neon DB; not merged to main
 - [2026-07-26 — CBtalent competitive audit → directory-quality fixes](decisions/2026-07-26-competitive-audit-cbtalent.md) — ntut.cbtalent.tw is not a copy; shipped empty-state gating, dedup, verified-employer badge; fixed unmigrated demo DB
 - [2026-07-26 — ATS production hardening (roadmap)](decisions/2026-07-26-ats-production-hardening.md) — de-demo the pipeline into a real, secure, multi-tenant-ready ATS; Phase 0 done+verified
