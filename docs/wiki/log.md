@@ -1608,3 +1608,20 @@ attributed_to: [claude-code]   belongs_to: [yang-luck, saas-strategy]
 - **(1) Client portal and (5) recruiter-side Vietnamese — unchanged.** `member_role` has no client-facing seat (all seven roles are agency-side), and `src/messages/recruiter/` is still en + zh-TW only. Item 1 remains the ranked #1.
 - The decision page's **open question on the revenue split is now half-answered** by the 08-09 fee-rate work (Taiwan side explicit; Vietnam-side component still unknown), so item 4 is gated on a narrower question than when written.
 - Recorded as a dated addendum on the decision page rather than by editing the 07-27 text — a decision record should read as what was decided when it was decided.
+
+## [2026-08-11] ops | CI, and the first lint run this repo has had
+attributed_to: [claude-code]   belongs_to: [tecxwork, testing]
+- Health check of `demo/yang-luck` @ `435e3a2` (82 ahead of `main`, 0 behind): build clean, typecheck clean, **192/192 tests**.
+- **The local-Postgres move is done.** Ran the suite twice against a local Postgres 16 — 192/192 both times, `withReconnect` never fired. The 180/181 recorded on 08-09 was the Neon socket, as diagnosed. `withReconnect` stays for Neon-targeted runs; local is now the cure. Recipe in `topics/testing.md`.
+- **There was no CI in this repository** — no `.github/` at all. Added `.github/workflows/ci.yml`: lint → schema push → build → typecheck → test, on a `postgres:16` service container.
+- **Order matters and is not obvious.** `next-env.d.ts` is gitignored and emitted by `next build`, so `tsc --noEmit` on a clean checkout reports ~25 phantom `Cannot find module 'next/server'` errors. Build before typecheck. Recorded in `topics/testing.md` so the next agent doesn't chase them.
+- **One real lint error, found because nothing had ever run lint:** `react-hooks/set-state-in-effect` in `src/app/pipeline/pipeline-board.tsx` — `useEffect(() => setMounted(true), [])` guarding dnd-kit against hydration. Exactly the cascade the 08-09 sidebar work avoided with `useSyncExternalStore`; this one predated it. Replaced with the same idiom already used in `theme-toggle.tsx`. `next build` does not run ESLint, which is why a build-only check never saw it.
+- Deleted `src/components/job-directory.tsx` — unreferenced anywhere since the jobs page was rebuilt into `jobs-list-page.tsx`. (Its former sibling `/api/external-jobs` also has no in-app caller now; left in place, flagged not fixed.)
+- Lint is now **0 errors, 37 warnings** (warnings are pre-existing `<img>`-vs-`next/image` and unused-var noise; CI fails on errors only).
+
+## [2026-08-11] finding | PRs #4 and #5 sit on orphaned pre-rebuild history
+attributed_to: [claude-code]   belongs_to: [tecxwork]
+- `main`'s history was rebuilt on 2026-06-01 — its root is `6695209` ("Add admin booking time controls"), while PR #4 and PR #5 descend from the original root `4e59575` ("Initial commit from Create Next App", 2026-04-08). `git merge-base` between them returns **empty**: zero shared commits, so GitHub cannot merge either one and both diffs are computed against base commits no longer reachable from `main`.
+- Both are also obsolete on the merits. #4's recruiter-jobs query already ships in `jobs-list-page.tsx` with the same `moderationStatus = "approved"` filter and more fields; #5 was the self-described "Approach A, graduate to B if valuable" prototype, and Approach B shipped here as the full ATS (`applications`, `application_stage_transitions`, `offers`, `placements`).
+- Closed both with that explanation. `demo/yang-luck` shares `main`'s post-rebuild root and is unaffected.
+- PR #10 (docs-only, Yang Luck licensee positioning) was open with its base 29 commits ahead of it — **since rebased, corrected and merged** (`29a713a`); see the 08-11 note above. The stakeholder page and decision record now exist on `demo/yang-luck`.

@@ -73,6 +73,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Architecture Overview](topics/architecture-overview.md) — tech stack, concurrency, data isolation, Neon/Vercel
 - [Neon account topology & MCP wiring](topics/neon-account-topology.md) — Neon MCP is authed to org "Tecxmate" (dental-ai/alphatecx), NOT the live app DBs (delicate-lab/bitter-hill, a different login); how to re-auth
 - [Drizzle + Postgres gotchas](topics/drizzle-sql-gotchas.md) — query pitfalls (reused sql in select+groupBy, all-parameter CASE, ::date slicing) + fixes
+- [Testing & CI](topics/testing.md) — 192-test vitest suite against a real Postgres, how to run it locally, and the GitHub Actions pipeline
 - [Tecxmate Design System](topics/design-system.md) — visual language, typography, components, brand colors
 - [Recruitment Workflows & Booking Engine](topics/recruitment-workflows.md) — admin, recruiter, and student flows; booking modes
 - [Data Privacy & CV Sharing](topics/data-privacy.md) — Google Drive targeted sharing, PIPA consent, cross-border transfer
