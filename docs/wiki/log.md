@@ -1635,3 +1635,9 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - **Jurisdiction ≠ direction, and is deliberately NOT genericised:** the 5% 營業稅, ESA/私立就業服務機構 licensing, and ARC/work-permit tracking follow from where the operator is *licensed*, not from who supplies candidates. Any Taiwan-licensed operator needs them whatever the corridor. `months_salary` is the local convention but already sits beside `percent_annual`, so it is parameterised.
 - Yang Luck's stakeholder page keeps its VN→TW description — a true fact about that client, not a claim about the platform.
 - New: [decisions/2026-08-11-corridor-agnostic-positioning.md](decisions/2026-08-11-corridor-agnostic-positioning.md). Updated: the 07-27 decision's open question, index.md.
+
+## [2026-08-11] decision | Client portal design written (item 1) — proposed, not ratified
+attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy, taiwan-compliance]
+- The ranked-#1 moat item is too large to build safely in a shared session, so the deliverable is the build-ready design: [decisions/2026-08-11-client-portal-design.md](decisions/2026-08-11-client-portal-design.md).
+- Key calls made in it: a client contact is a **different species of principal**, not a member_role — separate `portal_invites`/`portal_sessions` tables, magic-link auth (agency invites, email proves, no passwords), its own cookie, every query double-scoped org+client from the session row. Phase 1 is the read-only worker permit clock — the screen that creates the switching cost; documents and invoices are phase 2; interaction is phase 3 and explicitly where scope creep lives.
+- Flagged for niko before any build: ratify the auth model, confirm the PIPA basis against the actual consent text, and decide whether phase 1 must include invoices for clients to bother logging in.
