@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -206,8 +206,15 @@ function PipelineBoardBody({ board, locale }: { board: Board; locale: Locale }) 
   const [cards, setCards] = useState<PipelineCard[]>(board.cards);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [selected, setSelected] = useState<PipelineCard | null>(null);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // dnd-kit must not arm until the client has hydrated. "Has mounted" is a fact about
+  // the render environment, not React state — reading it through useSyncExternalStore
+  // (server snapshot false, client snapshot true) avoids the effect-then-setState
+  // cascade the react-hooks/set-state-in-effect rule exists to prevent.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   // On desktop the detail panel docks beside the board (push layout); below lg
   // it opens as a full-screen overlay. Pick one so the panel mounts only once.
   const [isDesktop, setIsDesktop] = useState(false);
