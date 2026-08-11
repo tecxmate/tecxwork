@@ -1655,3 +1655,10 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy, taiwan-comp
 - The ranked-#1 moat item is too large to build safely in a shared session, so the deliverable is the build-ready design: [decisions/2026-08-11-client-portal-design.md](decisions/2026-08-11-client-portal-design.md).
 - Key calls made in it: a client contact is a **different species of principal**, not a member_role — separate `portal_invites`/`portal_sessions` tables, magic-link auth (agency invites, email proves, no passwords), its own cookie, every query double-scoped org+client from the session row. Phase 1 is the read-only worker permit clock — the screen that creates the switching cost; documents and invoices are phase 2; interaction is phase 3 and explicitly where scope creep lives.
 - Flagged for niko before any build: ratify the auth model, confirm the PIPA basis against the actual consent text, and decide whether phase 1 must include invoices for clients to bother logging in.
+
+## [2026-08-11] chore | External-jobs crawler removed (decision-by-PR)
+attributed_to: [claude-code]   belongs_to: [tecxwork]
+- The corridor-agnostic decision left one open question: whether to delete the dead external-jobs subsystem — the 104/1111 crawler, its tables, and `/api/external-jobs`, caller-less since the jobs page moved to recruiter-posted openings, and home to the only hardcoded corridor assumption in the schema (`is_vietnamese_job`).
+- Removed: `src/lib/crawler/` (5 files), `/api/external-jobs` + `/api/external-jobs/crawl`, `/api/cron/crawl-jobs` (not in vercel.json crons — nothing schedules it), `external_jobs`/`crawl_logs` tables + `job_source`/crawler `job_type` enums from schema.ts, and `getCachedExternalJobs` from cache.ts (recruiter caching untouched). ~1,200 lines.
+- **Prod tables are NOT dropped** — schema.ts removal never drops live tables; `external_jobs`/`crawl_logs` rows linger harmlessly in prod until someone runs a manual DROP. Recorded so nobody mistakes them for live surface.
+- The merge of this PR is the decision; closing it unmerged is also a decision. Verified: build, tsc, lint, 201/201.

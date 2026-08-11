@@ -1,5 +1,4 @@
 import { getCache } from "@vercel/functions";
-import { getExternalJobs, type GetExternalJobsOptions } from "./crawler";
 import { db, recruiters, users, jobOpenings } from "./db";
 import { eq, ne } from "drizzle-orm";
 
@@ -9,22 +8,6 @@ const CACHE_TTL = 300; // 5 minutes
 /** Invalidate the cached company directory (call after admin edits/pins). */
 export async function invalidateRecruitersCache() {
   await cache.expireTag("recruiters");
-}
-
-/**
- * Cached external jobs - 5 minute TTL
- */
-export async function getCachedExternalJobs(options: GetExternalJobsOptions) {
-  const key = `jobs:${JSON.stringify(options)}`;
-  const cached = await cache.get(key);
-
-  if (cached) {
-    return cached as Awaited<ReturnType<typeof getExternalJobs>>;
-  }
-
-  const jobs = await getExternalJobs(options);
-  await cache.set(key, jobs, { ttl: CACHE_TTL, tags: ["external-jobs"] });
-  return jobs;
 }
 
 /**

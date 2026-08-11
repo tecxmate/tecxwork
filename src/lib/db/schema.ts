@@ -1205,45 +1205,6 @@ export const eventConfig = pgTable("event_config", {
     .default(["TWD", "VND", "USD"]),
 });
 
-// ---- External job listings (crawled from 104/1111) ----
-
-export const jobSourceEnum = pgEnum("job_source", ["104", "1111"]);
-export const jobTypeEnum = pgEnum("job_type", ["full_time", "part_time", "internship", "contract"]);
-
-export const externalJobs = pgTable(
-  "external_jobs",
-  {
-    id: serial("id").primaryKey(),
-    source: jobSourceEnum("source").notNull(),
-    externalId: text("external_id").notNull(),
-    title: text("title").notNull(),
-    company: text("company").notNull(),
-    location: text("location").notNull(),
-    snippet: text("snippet").notNull().default(""),
-    jobType: jobTypeEnum("job_type"),
-    salary: text("salary"),
-    externalUrl: text("external_url").notNull(),
-    isVietnameseJob: boolean("is_vietnamese_job").notNull().default(true),
-    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("unique_external_job").on(table.source, table.externalId),
-  ]
-);
-
-export const crawlLogs = pgTable("crawl_logs", {
-  id: serial("id").primaryKey(),
-  source: jobSourceEnum("source").notNull(),
-  status: text("status").notNull(),
-  jobsFound: integer("jobs_found").notNull().default(0),
-  jobsInserted: integer("jobs_inserted").notNull().default(0),
-  jobsUpdated: integer("jobs_updated").notNull().default(0),
-  errorMessage: text("error_message"),
-  durationMs: integer("duration_ms"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
 // ---- Booking reschedule audit trail ----
 
 export const bookingRescheduleLogs = pgTable("booking_reschedule_logs", {
