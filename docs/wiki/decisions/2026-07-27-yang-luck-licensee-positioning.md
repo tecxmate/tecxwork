@@ -3,6 +3,7 @@ title: Yang Luck is the ESA licensee — the moat is the client-facing complianc
 type: decision
 slug: 2026-07-27-yang-luck-licensee-positioning
 date: 2026-07-27
+updated: 2026-08-11
 attributed_to: [niko]
 belongs_to: [yang-luck, saas-strategy, taiwan-compliance]
 source: chat
@@ -77,3 +78,64 @@ Ranked by strategic leverage, not effort:
 - Competitor pages read via WebFetch; Crossbond business model supplied directly by [niko].
 - Corrected against `origin/demo/yang-luck` @ `6ffdc42` after an initial survey of a stale local base.
 - No implementing commits — direction only.
+
+---
+
+## Status as of 2026-08-11 (addendum)
+
+This decision was opened as a PR on 2026-07-26 and sat unmerged while `demo/yang-luck`
+advanced 29 commits. The strategic content above stands as written on 07-27 and is left
+intact. What follows is the state of the ranked list at merge time — recorded here rather
+than by editing the original, so the decision reads as what was decided when it was decided.
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Client portal | **Still open** |
+| 2 | Real document storage | **Done** (`de9fee6`) |
+| 3 | MOL 評鑑 evidence pack | **Partly** — inputs exportable, no pack |
+| 4 | Fee ledger / RBA export | **Split** — ledger done, RBA export open |
+| 5 | Recruiter-side Vietnamese | **Still open** |
+
+**1 — Client portal. Unchanged, and still the ranked #1.** `memberRoleEnum` is
+`admin | account_manager | recruiter | hiring_manager | interviewer | coordinator | viewer`
+— every role is an agency-side seat. `dashboard/clients` is Yang Luck's own CRM view of its
+clients, not a surface a client logs into. Factory HR still cannot see their own workers'
+permit expiries, so the switching cost this decision identified has not yet been created.
+
+**2 — Real document storage. Done, by a deliberately different mechanism.** `de9fee6`
+("hold CVs and permits instead of linking to them") added a `documents` table holding real
+bytes: an opaque unguessable `storageKey` never exposed to a client, `contentType`,
+`sizeBytes`, and a soft delete so a document relied on during a placement survives being
+superseded. `compliance_documents` still tracks expiry; the artifact is now attached to it.
+
+The original ask was "signed-URL R2 storage." That is **not** what shipped, on purpose:
+`GET /api/agency/documents/[id]` proxies the bytes rather than redirecting to a storage
+URL, so the permission check runs on every single read and every read leaves an audit row.
+A presigned URL would escape both. For an ARC scan under audit, that is the stronger
+answer — the item is closed, not deferred.
+
+**3 — MOL 評鑑 evidence pack. Partly addressed; the pack itself is still unbuilt.**
+`ecd1219` added `/api/agency/export/{candidates,placements,compliance}` as CSV, so a
+meaningful share of the derivable evidence can now leave the system. What does not exist is
+an evidence *pack* — a single assembled artifact mapped to the evaluation's own criteria.
+The "small build, outsized commercial value" judgement is unchanged and now smaller.
+
+**4 — Fee ledger / RBA Employer-Pays export. The two halves separated.**
+The fee ledger exists: `invoices`, `invoice_lines` and `credit_notes` (`177d47d`, `d9bbe9d`),
+a rate card on `clients` as `fee_basis` + `fee_value` (`78fec0c`), and `placements.fee_amount`
+carrying a `fee_source` (`rate` | `explicit` | `none`) audit trail. **"No schema exists" is no
+longer true.** The **RBA Employer-Pays export** specifically — the per-worker itemised
+zero-worker-paid-fee trail that wins the tier-1 electronics segment — is still absent, and
+that is the part still worth ranking.
+
+**5 — Recruiter-side Vietnamese. Unchanged.** `src/messages/recruiter/` is still `en.ts`
+and `zh-TW.ts` only.
+
+**Open question, partly answered.** "Revenue split between Taiwan-side employer service fees
+and any Vietnam-side fee component" was asked here and gated item 4. The 2026-08-09 work
+answered the Taiwan side: the fee basis is now explicit (`months_salary` in hundredths, or
+`percent_annual`), 1.2 months is the convention every existing fee in the data follows, and
+the 5% 營業稅 is in code. The **Vietnam-side component remains unanswered**, so item 4's
+viability is still gated — on a narrower question than before.
+
+Verified against `origin/demo/yang-luck` @ `435e3a2`, per this page's own process note.

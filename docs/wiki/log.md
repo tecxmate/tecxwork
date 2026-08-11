@@ -1598,3 +1598,13 @@ attributed_to: [claude]   belongs_to: [tecxwork, billing]
 - **Found: `refreshInvoiceTotals` was dead code** — written, never called. Invoice lines are only inserted at creation and flagged on void; there is no endpoint that adds or removes one, so nothing ever needs totals recomputed. Removed.
 - **Found while tracing it: a voided invoice reported "0 lines".** `getBillingData` filtered lines on `voided = false`, but that flag exists so the partial unique index frees a placement to be re-billed — not to erase what the document said. An invoice that was voided still shows the lines it was raised with; its status already communicates the void. Fixed, with a regression test.
 - 42/42 billing tests after the change.
+
+## [2026-08-11] note | Yang Luck positioning decision merged — two of its five open items had shipped
+attributed_to: [claude-code]   belongs_to: [yang-luck, saas-strategy]
+- The 07-27 licensee-positioning decision sat unmerged for 29 commits of `demo/yang-luck`. Before merging, checked its ranked "genuinely still open" list against the branch — the strategic core held, the status list had decayed.
+- **(2) Real document storage — done** (`de9fee6`). `documents` holds real bytes (opaque `storage_key` never exposed to a client, content type, size, soft delete). Notably it did **not** ship as the requested signed-URL storage: `GET /api/agency/documents/[id]` proxies the bytes so the permission check runs on every read and every read leaves an audit row, which a presigned URL would escape. Stronger answer for an audited ARC scan.
+- **(4) Fee ledger — done**, "no schema exists" no longer true: `invoices`/`invoice_lines`/`credit_notes`, `clients.fee_basis`+`fee_value`, `placements.fee_amount` with a `fee_source` trail. The **RBA Employer-Pays export** half is still genuinely open and keeps its ranking.
+- **(3) MOL 評鑑 — partly**: `ecd1219` exports candidates/placements/compliance as CSV, so the inputs can leave the system; no assembled evidence pack mapped to the evaluation criteria.
+- **(1) Client portal and (5) recruiter-side Vietnamese — unchanged.** `member_role` has no client-facing seat (all seven roles are agency-side), and `src/messages/recruiter/` is still en + zh-TW only. Item 1 remains the ranked #1.
+- The decision page's **open question on the revenue split is now half-answered** by the 08-09 fee-rate work (Taiwan side explicit; Vietnam-side component still unknown), so item 4 is gated on a narrower question than when written.
+- Recorded as a dated addendum on the decision page rather than by editing the 07-27 text — a decision record should read as what was decided when it was decided.
