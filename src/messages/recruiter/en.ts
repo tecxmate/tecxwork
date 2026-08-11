@@ -22,6 +22,7 @@ export const recruiterEnMessages = {
   language: {
     english: "EN",
     traditionalChinese: "繁中",
+    vietnamese: "VI",
     switchLabel: "Recruiter language",
   },
   signup: {

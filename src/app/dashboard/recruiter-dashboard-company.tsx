@@ -204,13 +204,13 @@ function serializeCompanyDraft({
   });
 }
 
-function getSelectedLanguageValues(value: string, locale: "en" | "zh-TW") {
+function getSelectedLanguageValues(value: string, locale: "en" | "zh-TW" | "vi") {
   return parseLanguageRequirementTokens(value, locale)
     .filter((item) => item.preset && LANGUAGE_REQUIREMENT_VALUES.has(item.key))
     .map((item) => item.key);
 }
 
-function getCustomLanguageText(value: string, locale: "en" | "zh-TW") {
+function getCustomLanguageText(value: string, locale: "en" | "zh-TW" | "vi") {
   return parseLanguageRequirementTokens(value, locale)
     .filter((item) => !item.preset)
     .map((item) => item.label)

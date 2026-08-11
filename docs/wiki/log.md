@@ -1636,6 +1636,20 @@ attributed_to: [niko]   belongs_to: [tecxwork, saas-strategy]
 - Yang Luck's stakeholder page keeps its VN→TW description — a true fact about that client, not a claim about the platform.
 - New: [decisions/2026-08-11-corridor-agnostic-positioning.md](decisions/2026-08-11-corridor-agnostic-positioning.md). Updated: the 07-27 decision's open question, index.md.
 
+## [2026-08-11] feat | Employer-Pays fee trail + 評鑑 evidence exports (items 3 & 4)
+attributed_to: [claude-code]   belongs_to: [tecxwork, billing, taiwan-compliance]
+- Closes the export half of the 07-27 decision's item 4 and most of item 3, on the schema the billing work already built.
+- **`GET /api/agency/export/fees`** (invoice:read) — the RBA Employer-Pays trail: one row per placement with salary, fee, **fee-in-months-of-salary** (the number auditors benchmark), client agreed rate, the invoice/credit chain and net billed. Two structural columns worded precisely: "Fee Charged To" = employer (client) — no schema path bills a candidate — and "Worker-Charged Fees Recorded" = 0, *recorded*, because the export proves what the system holds, not what happened outside it.
+- **`GET /api/agency/export/evidence`** (compliance:read AND invoice:read — the pack spans both domains) — dated 評鑑 summary: placements by status, stage transitions, offers, fee/invoice/credit counts, document expiry buckets, audit-log coverage, PIPA consent among placed candidates. Aggregates only, no names; the itemised evidence is the existing detail exports.
+- **New drizzle gotcha #3 recorded:** columns inside a `sql``` fragment render unqualified, so a correlated subquery in a projection silently self-compares — and passes tests when fresh serial IDs coincide. Caught only by a two-invoice attribution test; both routes now use separate grouped queries. See topics/drizzle-sql-gotchas.md.
+- Verified: 9 new tests (org scoping, RBAC 403s for hiring_manager/coordinator, credit attribution, voided-line exclusion, no-PII-in-aggregates), full suite green.
+
+## [2026-08-11] feat | Recruiter-side Vietnamese (item 5)
+attributed_to: [claude-code]   belongs_to: [tecxwork, recruitment-workflows]
+- `src/messages/recruiter/vi.ts` — full translation of the recruiter message tree (signup, bookings/stage review, applicant browsing, company/job form, notifications, slot picker). `RecruiterLocale` is now `en | zh-TW | vi`; `accept-language` starting `vi` resolves to it; the switcher is a mapped 3-way toggle (EN / 中 / VI) instead of two hardcoded buttons.
+- Typed as `RecruiterMessages` (derived from en.ts), so a missing or extra key is a compile error, not a silent English fallback. Two local helpers in recruiter-dashboard-company.tsx had narrowed the parser's locale to `en | zh-TW`; widened — `parseLanguageRequirementTokens` itself was already trilingual.
+- **Known limitation, deliberately out of scope:** the newer agency views (pipeline, clients CRM, compliance, placements, candidate search) carry their own inline `en | zh` dictionaries and map `vi → en`. Making the ATS layer trilingual is per-view translation work, not wiring. Item 5's `src/messages/recruiter/` gap is closed; the ATS-view gap is now the honest remainder.
+
 ## [2026-08-11] decision | Client portal design written (item 1) — proposed, not ratified
 attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy, taiwan-compliance]
 - The ranked-#1 moat item is too large to build safely in a shared session, so the deliverable is the build-ready design: [decisions/2026-08-11-client-portal-design.md](decisions/2026-08-11-client-portal-design.md).

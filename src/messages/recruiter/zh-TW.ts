@@ -22,6 +22,7 @@ export const recruiterZhTwMessages = {
   language: {
     english: "EN",
     traditionalChinese: "繁中",
+    vietnamese: "越南文",
     switchLabel: "招募端語言",
   },
   signup: {
