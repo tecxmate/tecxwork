@@ -33,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "manual.src.html")
 SHOTS = os.path.join(HERE, "screenshots")
 STRINGS = os.path.join(HERE, "strings")
-DIAGRAMS = "/tmp/deck-assets"
+DIAGRAMS = os.environ.get("DECK_ASSETS", "/tmp/deck-assets")
 OUTDIR = os.path.normpath(os.path.join(HERE, "..", "..", "..", "public"))
 
 # 16:9

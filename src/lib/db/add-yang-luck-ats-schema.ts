@@ -17,7 +17,7 @@
  *   - enum pipeline_stage (applied|screening|interview|offer|hired)
  *   - table applications (+ unique + lookup index)
  */
-import { neon } from "@neondatabase/serverless";
+import { seedSql } from "./seed-sql";
 
 const STATEMENTS: string[] = [
   // 1) recruiters columns
@@ -57,7 +57,7 @@ const STATEMENTS: string[] = [
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL environment variable is not set");
-  const sql = neon(url);
+  const sql = seedSql(url);
 
   for (const stmt of STATEMENTS) {
     await sql.query(stmt);

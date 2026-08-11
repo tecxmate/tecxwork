@@ -5,7 +5,7 @@
  * Idempotent. Demo DB only.
  *   DATABASE_URL="<demo>" npx tsx src/lib/db/seed-demo-applicant.ts
  */
-import { neon } from "@neondatabase/serverless";
+import { seedSql } from "./seed-sql";
 import bcrypt from "bcryptjs";
 
 async function main() {
@@ -14,7 +14,7 @@ async function main() {
   if (/delicate-lab|bitter-hill/.test(url)) {
     throw new Error("Refusing: PROD host. Use the demo DB.");
   }
-  const sql = neon(url);
+  const sql = seedSql(url);
   const pw = await bcrypt.hash("demo1234", 12);
 
   // Applicant user

@@ -6,7 +6,7 @@
  *
  *   DATABASE_URL="<demo>" npm run db:update:ats-collab
  */
-import { neon } from "@neondatabase/serverless";
+import { seedSql } from "./seed-sql";
 
 const DDL: string[] = [
   `CREATE TABLE IF NOT EXISTS activity (
@@ -52,7 +52,7 @@ async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL not set");
   if (/delicate-lab|bitter-hill/.test(url)) throw new Error("Refusing: PROD host.");
-  const sql = neon(url);
+  const sql = seedSql(url);
   for (const stmt of DDL) await sql.query(stmt);
 
   const [hr] = (await sql`SELECT id FROM users WHERE email='hr@yangluck.demo'`) as { id: number }[];

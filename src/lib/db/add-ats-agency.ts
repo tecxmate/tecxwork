@@ -6,7 +6,7 @@
  *
  *   DATABASE_URL="<demo>" npm run db:update:ats-agency
  */
-import { neon } from "@neondatabase/serverless";
+import { seedSql } from "./seed-sql";
 
 const DDL: string[] = [
   `DO $$ BEGIN
@@ -131,7 +131,7 @@ async function main() {
   if (/delicate-lab|bitter-hill/.test(url)) {
     throw new Error("Refusing: PROD host. Use the demo DB.");
   }
-  const sql = neon(url);
+  const sql = seedSql(url);
   for (const stmt of [...DDL, ...BACKFILL]) await sql.query(stmt);
 
   const [c] = (await sql`SELECT count(*)::int AS n FROM clients`) as { n: number }[];

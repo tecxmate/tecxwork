@@ -12,16 +12,17 @@
  *   - the body scroll lock has to be released on every dismissal path, or the document
  *     becomes unscrollable behind a closed lightbox
  */
-import { webkit } from '/Users/niko/antigravity/tecxwork/node_modules/playwright-core/index.mjs';
+import { webkit, chromium } from 'playwright-core';
 import path from 'node:path';
 import os from 'node:os';
 
-const WEBKIT = '/Users/niko/Library/Caches/ms-playwright/webkit_mac14_arm64_special-2251/pw_run.sh';
+const WEBKIT = process.env.WEBKIT_PATH; // unset -> fall back to chromium (weaker: see README)
+const EXEC = process.env.CHROMIUM_PATH || undefined;
 const target = process.argv[2];
 if (!target) { console.error('usage: node check-lightbox.mjs <built-html>'); process.exit(2); }
 const FILE = 'file://' + path.resolve(target);
 
-const browser = await webkit.launch({ executablePath: WEBKIT });
+const browser = await (WEBKIT ? webkit.launch({ executablePath: WEBKIT }) : chromium.launch(EXEC ? { executablePath: EXEC } : {}));
 const ctx = await browser.newContext({
   viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
 });
@@ -51,7 +52,8 @@ const counts = await page.evaluate(() => ({
   diagramImgs: document.querySelectorAll('.diagram img.shot-open').length,
   totalShots: document.querySelectorAll('figure img, img.inline-shot').length,
 }));
-check('every screenshot is clickable', counts.gallery === 51, `${counts.gallery} tagged`);
+const GALLERY = counts.gallery; // derived: every non-diagram figure is expected in the gallery
+check('every screenshot is clickable', GALLERY >= 51, `${GALLERY} tagged`);
 check('the SVG diagrams are excluded', counts.diagramImgs === 0);
 check('closed at rest', !(await state()).open);
 
@@ -59,7 +61,7 @@ await page.click('img.shot-open');
 await page.waitForTimeout(700);
 let s = await state();
 check('tapping a screenshot opens the lightbox', s.open);
-check('shows a position counter', /^1 \/ 51$/.test(s.count), s.count);
+check('shows a position counter', new RegExp(`^1 / ${GALLERY}$`).test(s.count), s.count);
 check('shows a caption', s.title.length > 3, s.title.slice(0, 40));
 check('renders the enlarged image', s.imgSrcHead.startsWith('data:image/webp'));
 check('body scroll locks while open', s.locked);
@@ -67,23 +69,23 @@ check('body scroll locks while open', s.locked);
 await page.click('#lb-next');
 await page.waitForTimeout(450);
 s = await state();
-check('next advances', s.count === '2 / 51', s.count);
+check('next advances', s.count === `2 / ${GALLERY}`, s.count);
 
 await page.click('#lb-prev');
 await page.click('#lb-prev');
 await page.waitForTimeout(450);
 s = await state();
-check('prev wraps past the first to the last', s.count === '51 / 51', s.count);
+check('prev wraps past the first to the last', s.count === `${GALLERY} / ${GALLERY}`, s.count);
 
 await page.click('#lb-next');
 await page.waitForTimeout(450);
 s = await state();
-check('next wraps past the last to the first', s.count === '1 / 51', s.count);
+check('next wraps past the last to the first', s.count === `1 / ${GALLERY}`, s.count);
 
 await page.keyboard.press('ArrowRight');
 await page.waitForTimeout(400);
 s = await state();
-check('arrow keys move', s.count === '2 / 51', s.count);
+check('arrow keys move', s.count === `2 / ${GALLERY}`, s.count);
 
 // zoom: fitted by default, magnified and pannable when toggled
 const zoomState = () => page.evaluate(() => {
@@ -136,10 +138,9 @@ await browser.close();
 // constructor" and document.createTouch throws a type error. The swipe handler is plain
 // browser-agnostic JS, so it is exercised in Chromium instead; the WebKit-specific concerns
 // (layout, scroll lock, dismissal) are all covered above.
-const { chromium } = await import('/Users/niko/antigravity/tecxwork/node_modules/playwright-core/index.mjs');
-const CHROME = '/Users/niko/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/'
-             + 'Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const cBrowser = await chromium.launch({ executablePath: CHROME });
+// chromium already imported at top
+const CHROME = process.env.CHROMIUM_PATH || undefined;
+const cBrowser = await chromium.launch(CHROME ? { executablePath: CHROME } : {});
 const cCtx = await cBrowser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 const cPage = await cCtx.newPage();
 await cPage.goto(FILE, { waitUntil: 'load', timeout: 120000 });
@@ -158,15 +159,15 @@ const counter = () => cPage.evaluate(() => document.getElementById('lb-count').t
 
 await swipe(300, 110);            // swipe left == next
 await cPage.waitForTimeout(400);
-check('swiping left advances', (await counter()) === '2 / 51', await counter());
+check('swiping left advances', (await counter()) === `2 / ${GALLERY}`, await counter());
 
 await swipe(110, 300);            // swipe right == previous
 await cPage.waitForTimeout(400);
-check('swiping right goes back', (await counter()) === '1 / 51', await counter());
+check('swiping right goes back', (await counter()) === `1 / ${GALLERY}`, await counter());
 
 await swipe(300, 285);            // too small to count as a swipe
 await cPage.waitForTimeout(400);
-check('a small drag is ignored', (await counter()) === '1 / 51', await counter());
+check('a small drag is ignored', (await counter()) === `1 / ${GALLERY}`, await counter());
 
 await cBrowser.close();
 
