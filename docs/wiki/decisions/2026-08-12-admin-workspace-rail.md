@@ -5,11 +5,11 @@ slug: 2026-08-12-admin-workspace-rail
 date: 2026-08-12
 updated: 2026-08-12
 attributed_to: [claude-code]
-belongs_to: [tecxwork, ui-navigation]
+belongs_to: [admin-panel, design-system]
 source: request
 status: accepted
 tags: [ui, navigation, admin, sidebar, consistency]
-related: [tecxwork]
+related: [admin-panel, recruiter-dashboard, design-system]
 ---
 
 ## The ask

@@ -4,7 +4,7 @@ type: topic
 slug: admin-panel
 role: area
 date: 2026-05-04
-updated: 2026-06-28
+updated: 2026-08-12
 attributed_to: [claude-code]
 belongs_to: [tecxwork]
 source: code
@@ -37,3 +37,4 @@ Admin-only area for configuring the event: branding, time frame, slots, homepage
 - 2026-05-15: `/admin/settings` now shows a sticky save-status strip (`All changes saved`, `Saving changes...`, `Changes saved`, or `Some changes failed`) and platform setting controls now show explicit saving/saved/error feedback with rollback on failed saves.
 - 2026-05-28: Admins can edit a recruiter's company profile on their behalf from the Recruiters tab (Pencil icon → modal): company, industry, contact email, website, description, and logo upload. Backed by `PATCH /api/admin/recruiters?id=<id>`. Excludes `interviewerCount` to avoid the slot-regeneration side-effect that lives in the recruiter's own profile editor. No recruiter notification in v1.
 - 2026-06-28: Added **Export Excel** (`GET /api/admin/export/stats`) — a 6-sheet `.xlsx` stats workbook for the business team, alongside the existing Export CSV. New i18n key `qr.exportExcel` (en/vi/zh-TW). Added `exceljs` dependency. Replaces the prior one-off script-based export.
+- 2026-08-12: The workspace gained a **persistent left rail** (`src/components/admin-sidebar.tsx`), matching the recruiter workspace — groups Moderation / Registry / Configuration, collapsible, desktop only, with the top bar and bottom nav still carrying navigation below `lg`. Kept as its own component rather than sharing one parameterised rail with `dashboard-sidebar.tsx`; the collapse preference (`tecxwork_sidebar_collapsed`) *is* shared. See [decisions/2026-08-12-admin-workspace-rail.md](../decisions/2026-08-12-admin-workspace-rail.md).

@@ -35,7 +35,7 @@ TAGS = {"h1", "h2", "h3", "h4", "h5", "p", "li", "dt", "dd", "th", "td",
 # ...plus these, which are prose but not in the tag list above.
 EXTRA_SELECTORS = [".who", ".mins", ".rj-role", ".rj-who", ".rj-go", ".lb-hint",
                    ".nav-bar-title", ".nav-toggle", ".legend-row > div", ".note",
-                   "nav.rail a"]
+                   "nav.rail a", ".theme-switch button"]
 # Never translate: literal routes, code, and anything machine-readable.
 SKIP_CLASSES = {"route"}
 SKIP_TAGS = {"script", "style", "code"}

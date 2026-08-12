@@ -1680,7 +1680,16 @@ attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 - **Half the fix is data and is NOT in this change.** `event_config.event_name` is `揚運 Yang Luck 人才媒合平台`, and it renders in 12 places — page title, homepage, jobs pages, legal pages, calendar invites and outbound email. Caught only by building and curling the rendered HTML; the code diff alone looked complete. Prod's row must be updated separately.
 - work.tecxmate.com unparked (the #20 redirect removed) in the same change. Verified: rendered homepage serves `icon.svg` + `tecxwork`, no client logo; tsc, lint, 201/201.
 
+## [2026-08-11] fix | Manual: language + theme controls into the rail, uncramped mobile bar
+attributed_to: [niko]   belongs_to: [platform-manual, design-system]
+- niko, from a phone screenshot: the mobile bar held the 目錄 toggle, the title *and* a duplicate language switcher, so the title rendered as "TECXWORK 使用手…". Move the switcher into the left panel, add a theme toggle there, stop the bar being cramped.
+- The switcher existed **twice** — once in the rail, once cloned into the bar behind `.lang-switch-bar` for ≤1080px. Deleted the clone rather than shrinking it; the rail is one tap away and already held the original. Bar is now toggle + title, and the title no longer ellipsises (measured: `scrollWidth === clientWidth`).
+- **The dark and light `data-theme` token blocks already existed and nothing ever set the attribute** — the manual could only follow the OS. Added an Auto/Light/Dark control beside the language switcher; `auto` removes the attribute and hands control back to `prefers-color-scheme`, so the existing media query stays the fallback rather than being replaced.
+- Theme labels are real prose, so `.theme-switch button` was added to `i18n_extract.py`'s selectors and the three strings translated (自動/淺色/深色 · Tự động/Sáng/Tối). The language buttons stay untranslated on purpose — EN/繁中/VN name themselves.
+- Verified in a 390px WebKit-sized viewport: bar has 2 children and an untruncated title, both controls present and visible in the drawer, Dark repaints (`rgb(20,18,22)`) and sets `aria-pressed`, Auto clears the attribute. All four checkers pass.
+
 ## [2026-08-12] feat | Admin workspace gets the recruiter workspace's left rail
+attributed_to: [niko]   belongs_to: [admin-panel, design-system]
 - niko: *"the admin panel also need to redesign to match the nicely done left side bar of the recruiter panel."* New `src/components/admin-sidebar.tsx`, wired beside the whole admin workspace so the rail stays put while the section changes; `hideDesktopNav` on `AppTopBar` because the bar still carries navigation on small screens.
 - **Two components, not one parameterised rail** — the two differ in grouping and in capability filtering (recruiter filters by plan, admin does not), and one component threading both reads worse than two stating their own case. ~150 lines of mostly-markup each; revisit if a third workspace appears.
 - The collapse preference is **shared on purpose** (`tecxwork_sidebar_collapsed`): an admin who is also a recruiter should not find one workspace collapsed and the other expanded. Moves via `useSyncExternalStore` over a `tecxwork:sidebar` event — `storage` does not fire in the tab that wrote the value.
