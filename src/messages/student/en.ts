@@ -148,7 +148,7 @@ export const studentEnMessages = {
     verified: "Verified employer",
   },
   getStarted: {
-    title: "Sign Up for Yang Luck 揚運",
+    title: "Sign Up for TECXWORK",
     subtitle: "Choose your role to get started",
     studentTitle: "I'm a Student",
     studentDescription:
@@ -163,7 +163,7 @@ export const studentEnMessages = {
   },
   login: {
     welcomeBack: "Welcome back",
-    subtitle: "Log in to Yang Luck 揚運",
+    subtitle: "Log in to TECXWORK",
     email: "Email",
     password: "Password",
     forgotPassword: "Forgot password?",
@@ -176,7 +176,7 @@ export const studentEnMessages = {
     signUpAsStudent: "Sign up as Student",
     signUpAsRecruiter: "Sign up as Recruiter",
     signingIn: "Signing in...",
-    newToTecxwork: "New to Yang Luck 揚運?",
+    newToTecxwork: "New to TECXWORK?",
   },
   forgotPassword: {
     backToLogin: "Back to Login",
@@ -347,7 +347,7 @@ export const studentEnMessages = {
     certIssueDate: "Issue Date",
     noCertifications: "No certifications added yet.",
     cvExportTitle: "Export CV",
-    cvExportSubtitle: "Generate a polished CV from your Yang Luck 揚運 profile data.",
+    cvExportSubtitle: "Generate a polished CV from your TECXWORK profile data.",
     cvExportButton: "Export PDF",
     cvExportHint: "Your browser will open the print dialog. Choose Save as PDF to export.",
     cvExportSummary: "Summary",
