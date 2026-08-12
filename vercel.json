@@ -2,6 +2,12 @@
   "regions": ["sin1"],
   "redirects": [
     {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "work.tecxmate.com" }],
+      "destination": "https://tecxmate.com",
+      "permanent": false
+    },
+    {
       "source": "/event-pulse.html",
       "destination": "/",
       "permanent": false
