@@ -1,8 +1,10 @@
 import "server-only";
 import { cache } from "react";
+import { eq, isNull, type SQL } from "drizzle-orm";
 import { getCache } from "@vercel/functions";
 import { db, eventConfig } from "@/lib/db";
 import { EVENT_CONFIG } from "@/lib/data";
+import { getTenant } from "@/lib/tenant";
 
 const runtimeCache = getCache({ namespace: "app" });
 const EVENT_CONFIG_KEY = "event-config:row:v1";
@@ -52,7 +54,39 @@ export type EventBranding = {
  */
 type EventConfigRow = Awaited<ReturnType<typeof queryEventConfigRow>>;
 
-async function queryEventConfigRow() {
+/**
+ * Which tenant's branding to serve, or null for the platform default.
+ *
+ * Defensive on purpose: this runs from `generateMetadata`, from the sitemap, and from
+ * statically prerendered routes, and `headers()` is not available in all of them. A
+ * prerendered page is by definition not tenant-specific, so the platform default is the
+ * correct answer there rather than an error.
+ */
+async function currentOrgId(): Promise<number | null> {
+  try {
+    const tenant = await getTenant();
+    return tenant?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The tenant's own row, falling back to the platform default.
+ *
+ * The fallback is what lets a workspace exist before anyone has customised its branding —
+ * and it is why this query is two steps rather than one `IN` with an ordering trick: the
+ * intent ("mine, else the platform's") should be readable.
+ */
+async function queryEventConfigRow(orgId: number | null) {
+  if (orgId !== null) {
+    const own = await selectEventConfigRow(eq(eventConfig.orgId, orgId));
+    if (own) return own;
+  }
+  return selectEventConfigRow(isNull(eventConfig.orgId));
+}
+
+async function selectEventConfigRow(where: SQL | undefined) {
   const [row] = await db
     .select({
       eventName: eventConfig.eventName,
@@ -76,21 +110,25 @@ async function queryEventConfigRow() {
       bufferMinutes: eventConfig.bufferMinutes,
     })
     .from(eventConfig)
+    .where(where)
     .limit(1);
   return row ?? null;
 }
 
-async function fetchEventConfigRow(): Promise<EventConfigRow> {
+async function fetchEventConfigRow(orgId: number | null): Promise<EventConfigRow> {
+  // The cache key carries the tenant. Without it every workspace would share one entry and
+  // the first one to warm the cache would brand the whole platform.
+  const cacheKey = `${EVENT_CONFIG_KEY}:${orgId ?? "platform"}`;
   try {
-    const cached = await runtimeCache.get(EVENT_CONFIG_KEY);
+    const cached = await runtimeCache.get(cacheKey);
     if (cached) return cached as EventConfigRow;
   } catch {
     // cache unavailable (e.g. build) — fall through to a direct query
   }
-  const row = await queryEventConfigRow();
+  const row = await queryEventConfigRow(orgId);
   if (row) {
     try {
-      await runtimeCache.set(EVENT_CONFIG_KEY, row, {
+      await runtimeCache.set(cacheKey, row, {
         ttl: EVENT_CONFIG_TTL,
         tags: [EVENT_CONFIG_TAG],
       });
@@ -119,7 +157,7 @@ const staticFallback = (): EventBranding => ({
  */
 export const getEventBranding = cache(async (): Promise<EventBranding> => {
   try {
-    const row = await fetchEventConfigRow();
+    const row = await fetchEventConfigRow(await currentOrgId());
     if (!row) {
       return staticFallback();
     }

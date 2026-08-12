@@ -5,12 +5,16 @@ import { getRecruiterFromSession } from "@/lib/auth";
 import { memberships, recruiters } from "@/lib/db/schema";
 import type { MemberRole } from "@/lib/ats-auth";
 import { can, type Capability } from "@/lib/permissions";
+import { planAllows } from "@/lib/plans";
+import { getTenant, getTenantById, tenantBlock } from "@/lib/tenant";
 
 export type AgencyActor = {
   orgId: number;
   recruiterId: number;
   userId: number;
   role: MemberRole;
+  /** The tenant's plan, so a caller can shape the UI to what was actually bought. */
+  plan: string;
 };
 
 /**
@@ -76,6 +80,28 @@ async function resolveAgencyActor(capability?: Capability): Promise<Resolution> 
     };
   }
 
+  // The host, when it names a tenant, decides which workspace this request is for — and a
+  // signed-in user reaching a workspace they do not belong to is refused rather than
+  // silently served their own. On the apex domain (and in tests) no tenant is named and the
+  // user's own org stands, which is what keeps single-domain access working.
+  const tenant = await getTenant();
+  if (tenant && tenant.id !== me.orgId) {
+    return {
+      ok: false,
+      error: "You do not have access to this workspace.",
+      status: 403,
+    };
+  }
+
+  // Commercial state gates everything before role does. A suspended tenant or a lapsed
+  // trial is not a permissions problem, and answering "your role does not allow this" when
+  // the real answer is "the subscription ended" sends people to the wrong person.
+  const org = tenant ?? (await getTenantById(me.orgId));
+  if (!org) return { ok: false, error: "Workspace not found.", status: 403 };
+
+  const blocked = tenantBlock(org);
+  if (blocked) return { ok: false, error: blocked.message, status: 403 };
+
   // The membership — not the session — carries the org role. Scope the lookup to the org we
   // just resolved: a user could hold memberships in several orgs, and the role that matters
   // is the one for the tenant they are acting in.
@@ -99,6 +125,18 @@ async function resolveAgencyActor(capability?: Capability): Promise<Resolution> 
 
   const role = membership.role as MemberRole;
 
+  // Entitlement before permission, for the same reason: "not on your plan" and "not your
+  // job" are different problems with different fixes. Deriving the feature from the
+  // capability the route already declares means every existing route gained plan
+  // enforcement without being edited.
+  if (capability && !planAllows(org.plan, capability)) {
+    return {
+      ok: false,
+      error: "This feature is not included in your current plan.",
+      status: 403,
+    };
+  }
+
   if (capability && !can(role, capability)) {
     return { ok: false, error: "Your role does not allow this action.", status: 403 };
   }
@@ -110,6 +148,7 @@ async function resolveAgencyActor(capability?: Capability): Promise<Resolution> 
       recruiterId: auth.recruiterId,
       userId: auth.session.userId,
       role,
+      plan: org.plan,
     },
   };
 }

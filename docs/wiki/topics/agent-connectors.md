@@ -115,6 +115,18 @@ scopes, refresh tokens, and per-grant revocation. Scopes are the existing capabi
 **Phase 4 — SaaS completion (orthogonal).** Self-serve org provisioning and invites,
 multi-org membership, plans/entitlements/metering, versioned public API + docs, webhooks.
 
+## Status update — 2026-08-12
+
+niko chose to do **Phase 4 first**. Gaps 3 (not self-serve) and 4 (no subscription layer)
+above are now closed, and gap 6 (single-org-per-user) is still open. See
+`decisions/2026-08-12-saas-tenancy-and-commercial-model.md`.
+
+What that changes for connectors: `orgs` now carries commercial state, the gate already
+refuses suspended tenants and off-plan features, and `api_access` exists as a plan feature
+on `scale` — so when machine auth arrives it has a tenant to belong to and a flag to gate
+on. Phase 0 (actor decoupling) is still the next step and is still the prerequisite; the
+provisioning module was written actor-free from the start as a down payment on it.
+
 ## Open questions
 
 - **PIPA basis for agent access.** A connector streams candidate names, schools, ARC and

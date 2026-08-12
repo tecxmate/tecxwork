@@ -18,6 +18,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Yang Luck 揚運國際](stakeholders/yang-luck.md) — client; the ESA licensee operating the Vietnam→Taiwan corridor
 
 ## Decisions
+- [2026-08-12 — SaaS tenancy and the commercial model](decisions/2026-08-12-saas-tenancy-and-commercial-model.md) — ACCEPTED: per-seat tiers, no payment processor (統一發票), sales-led provisioning, subdomain per tenant; entitlement derived from capabilities so all 84 routes gained plan enforcement unedited
 - [2026-08-11 — Client portal design: the compliance clock in the client's hands](decisions/2026-08-11-client-portal-design.md) — PROPOSED: magic-link auth for agency-invited contacts, portal sessions separate from org memberships, phase 1 = read-only worker permit clock; PIPA basis + phasing await niko
 - [2026-08-11 — The platform is corridor-agnostic; VN→TW is the first corridor, not the model](decisions/2026-08-11-corridor-agnostic-positioning.md) — niko: don't assume Vietnam supplies and Taiwan hires; revenue-split question reframed in roles (employer / supply-side / candidate). Jurisdiction (營業稅, ESA, ARC) is deliberately not genericised
 - [2026-07-27 — Yang Luck is the ESA licensee; moat is the client-facing compliance clock](decisions/2026-07-27-yang-luck-licensee-positioning.md) — rivals all fight on discovery; client portal promoted from deferred to next major build. Carries a 2026-08-11 status addendum: document storage and the fee ledger have since shipped; client portal, RBA export and recruiter-side Vietnamese still open
