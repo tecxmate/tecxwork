@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND } from "@/lib/brand";
+
 import { useEffect, useState } from "react";
 
 const VISIBLE_MS = 1100;
@@ -51,13 +53,15 @@ export function PwaFirstRunSplash() {
         .tw-first-run-pop { animation: tw-first-run-pop 220ms cubic-bezier(.4,1.4,.5,1) both; }
       `}</style>
       <img
-        src="/yang-luck-logo.png"
-        alt="Yang Luck 揚運國際"
+        src={BRAND.logoSrc}
+        alt={BRAND.alt}
         className="tw-first-run-pop h-28 w-28 rounded-3xl bg-white object-contain p-4 ring-1 ring-black/5"
       />
       <span className="flex items-baseline gap-2 text-primary">
-        <span className="font-wordmark text-3xl italic">Yang Luck</span>
-        <span className="font-heading text-3xl font-semibold">揚運</span>
+        <span className="font-wordmark text-3xl italic">{BRAND.wordmark}</span>
+        {BRAND.wordmarkCjk ? (
+          <span className="font-heading text-3xl font-semibold">{BRAND.wordmarkCjk}</span>
+        ) : null}
       </span>
     </div>
   );
