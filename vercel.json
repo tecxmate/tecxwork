@@ -2,6 +2,13 @@
   "regions": ["sin1"],
   "redirects": [
     {
+      "//": "work.tecxmate.com is parked. main now serves the agency/ATS codebase, and that host was the VSATW event site — it should not present the Yang Luck deployment to the public. Host-scoped so yangluck.tecxmate.com is untouched, and 307 (not permanent) so browsers do not cache it: delete this block to bring the host back.",
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "work.tecxmate.com" }],
+      "destination": "https://tecxmate.com",
+      "permanent": false
+    },
+    {
       "source": "/event-pulse.html",
       "destination": "/",
       "permanent": false
