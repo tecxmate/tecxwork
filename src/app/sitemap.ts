@@ -32,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { ...withAlternates("/browse"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { ...withAlternates("/jobs"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { ...withAlternates("/about"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { ...withAlternates("/how-it-works"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { ...withAlternates("/get-started"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { ...withAlternates("/tutorial"), lastModified: now, changeFrequency: "monthly", priority: 0.4 },
     { ...withAlternates("/privacy-policy"), lastModified: now, changeFrequency: "yearly", priority: 0.2 },

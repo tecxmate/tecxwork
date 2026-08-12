@@ -27,6 +27,10 @@ export function SiteFooter() {
               Privacy
             </Link>
             <span className="opacity-40">&middot;</span>
+            <Link href="/how-it-works" className="underline hover:text-primary">
+              How it works
+            </Link>
+            <span className="opacity-40">&middot;</span>
             <Link href="/tutorial" className="underline hover:text-primary">
               Tutorial
             </Link>
