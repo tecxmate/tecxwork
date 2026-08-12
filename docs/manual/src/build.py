@@ -3,12 +3,18 @@
 
 Two outputs, from one source:
 
-  public/documentation.html          standalone document -- has <!doctype>, <meta charset>
-                                     and a viewport tag, so it renders correctly both when
-                                     served by the app at /documentation and when opened
+  docs/manual/dist/documentation.html
+                                     standalone document -- has <!doctype>, <meta charset>
+                                     and a viewport tag, so it renders correctly when opened
                                      straight off disk (file://). Without the charset a
                                      browser guesses Latin-1 and every em dash, middot and
                                      CJK character turns into mojibake.
+
+                                     It builds OUTSIDE public/ on purpose. The manual inlines
+                                     every screenshot of a live workspace, and anything under
+                                     public/ is served at a guessable URL whether or not the
+                                     app links to it -- so publishing has to be a deliberate
+                                     copy, never a side effect of running the build.
 
   artifact-fragment.html             bare fragment -- no doctype/html/head/body, because the
                                      Artifact publisher wraps it in its own skeleton (and
@@ -26,10 +32,10 @@ import struct
 HERE = os.path.dirname(os.path.abspath(__file__))            # docs/manual/src
 IMGDIR = os.path.join(HERE, "screenshots")
 SRC = os.path.join(HERE, "manual.src.html")
-# Served by the app at /documentation (rewritten to /documentation.html in
-# next.config.ts) and equally openable straight off disk. One copy, not two.
-OUT_STANDALONE = os.path.normpath(os.path.join(HERE, "..", "..", "..",
-                                               "public", "documentation.html"))
+# Deliberately not public/ — see the module docstring. Serving the manual is a
+# separate, conscious step: copy this file into public/ and add the rewrite back.
+OUT_STANDALONE = os.path.normpath(os.path.join(HERE, "..", "dist",
+                                               "documentation.html"))
 OUT_FRAGMENT = os.path.join(HERE, "artifact-fragment.html")
 
 MAX_MB = 15  # the Artifact publisher's ceiling is 16 MB; leave headroom
@@ -247,6 +253,7 @@ def main() -> None:
     artifact = i18n_payload() + fragment
 
     for path, content in ((OUT_STANDALONE, standalone), (OUT_FRAGMENT, artifact)):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(content)
         size_mb = os.path.getsize(path) / 1024 / 1024
