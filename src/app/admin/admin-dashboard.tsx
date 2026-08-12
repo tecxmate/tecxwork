@@ -63,6 +63,8 @@ const OverviewCharts = dynamic(() => import("@/components/overview-charts"), {
 import type { AdminAnalytics } from "@/app/admin/admin-data";
 import { ImageUpload } from "@/components/image-upload";
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
+import { BRAND } from "@/lib/brand";
 import { AppTopBar } from "@/components/app-topbar";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
@@ -1052,7 +1054,15 @@ export function AdminDashboard({
   return (
     // The rail sits beside the whole workspace, so it stays put while the section changes.
     <div className="flex min-h-full flex-1">
-      <AdminSidebar />
+      <AdminSidebar
+        // The admin's workspace is the platform, so the account block names the platform.
+        accountName={BRAND.displayName}
+        accountRole="Administrator"
+        logoutLabel={messages.common.logout}
+        // The admin bundle carries no notification strings; the bell falls back to its
+        // own defaults, as it did when this lived in the top bar.
+        accountMenuExtra={<StudentLanguageSwitcher />}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
       <AppTopBar
@@ -1060,6 +1070,9 @@ export function AdminDashboard({
         navRole="admin"
         // The rail carries navigation on desktop; the bar keeps it for small screens.
         hideDesktopNav
+        // Brand, notifications and account all live in the rail now, so on desktop this
+        // bar would be an empty strip.
+        hideOnDesktop
         currentPath={
           section === "settings"
             ? "/admin/settings"

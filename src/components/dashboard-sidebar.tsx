@@ -4,6 +4,12 @@ import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { BrandLink } from "@/components/brand-link";
+import {
+  NotificationBell,
+  type NotificationBellLabels,
+} from "@/components/notification-bell";
+import { SidebarAccount } from "@/components/sidebar-account";
 import { isNavItemActive, visibleNavItems } from "@/lib/navigation";
 import type { Capability } from "@/lib/permissions";
 
@@ -80,9 +86,21 @@ const GROUPS: { title: string; hrefs: string[] }[] = [
 export function DashboardSidebar({
   isAgency,
   capabilities,
+  accountName,
+  accountRole,
+  logoutLabel,
+  notificationLabels,
+  accountMenuExtra,
 }: {
   isAgency: boolean;
   capabilities?: readonly Capability[];
+  /** The organisation this member is acting in — the account block's primary line. */
+  accountName: string;
+  accountRole: string;
+  logoutLabel: string;
+  notificationLabels?: NotificationBellLabels;
+  /** Extra controls for the account menu, e.g. the language switcher. */
+  accountMenuExtra?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -120,25 +138,9 @@ export function DashboardSidebar({
         collapsed ? "w-[4.25rem]" : "w-56"
       }`}
     >
+      <SidebarBrand collapsed={collapsed} onToggle={toggle} />
 
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={!collapsed}
-        aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
-        className="mx-2 mt-3 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        {collapsed ? (
-          <PanelLeftOpen className="h-4 w-4 shrink-0" />
-        ) : (
-          <>
-            <PanelLeftClose className="h-4 w-4 shrink-0" />
-            <span>Collapse</span>
-          </>
-        )}
-      </button>
-
-      <div className="flex-1 overflow-y-auto px-2 pb-4 pt-2">
+      <div className="flex-1 overflow-y-auto px-2 pb-4 pt-3">
         {grouped.map((group) => (
           <div key={group.title} className="mb-4">
             {!collapsed ? (
@@ -180,6 +182,101 @@ export function DashboardSidebar({
         ))}
       </div>
 
+      <SidebarFooter
+        collapsed={collapsed}
+        accountName={accountName}
+        accountRole={accountRole}
+        logoutLabel={logoutLabel}
+        notificationLabels={notificationLabels}
+        accountMenuExtra={accountMenuExtra}
+      />
     </aside>
+  );
+}
+
+/**
+ * Brand lockup and the collapse control, shared by both rails.
+ *
+ * Expanded they share a row — the toggle has no business taking a whole row of its own.
+ * Collapsed they stack, because 4rem does not hold a logo and a button side by side.
+ */
+export function SidebarBrand({
+  collapsed,
+  onToggle,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  const toggleButton = (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={!collapsed}
+      aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+      title={collapsed ? "Expand navigation" : "Collapse navigation"}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      {collapsed ? (
+        <PanelLeftOpen className="h-4 w-4" />
+      ) : (
+        <PanelLeftClose className="h-4 w-4" />
+      )}
+    </button>
+  );
+
+  return (
+    <div className="border-b border-border/60 px-2 py-3">
+      {collapsed ? (
+        <div className="flex flex-col items-center gap-2">
+          <BrandLink href="/" hideWordmark className="flex items-center" />
+          {toggleButton}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <BrandLink href="/" className="flex min-w-0 items-center gap-2" />
+          <div className="ml-auto">{toggleButton}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Notifications sitting directly above the account block, both pinned to the bottom.
+ *
+ * `mt-auto` rather than absolute positioning: the nav list above already scrolls, so the
+ * footer is simply the last flex child and cannot overlap the list when it grows.
+ */
+export function SidebarFooter({
+  collapsed,
+  accountName,
+  accountRole,
+  logoutLabel,
+  notificationLabels,
+  accountMenuExtra,
+}: {
+  collapsed: boolean;
+  accountName: string;
+  accountRole: string;
+  logoutLabel: string;
+  notificationLabels?: NotificationBellLabels;
+  accountMenuExtra?: React.ReactNode;
+}) {
+  return (
+    <div className="mt-auto space-y-1 border-t border-border/60 px-2 py-2">
+      <NotificationBell
+        variant="rail"
+        collapsed={collapsed}
+        labels={notificationLabels}
+      />
+      <SidebarAccount
+        name={accountName}
+        role={accountRole}
+        collapsed={collapsed}
+        logoutLabel={logoutLabel}
+      >
+        {accountMenuExtra}
+      </SidebarAccount>
+    </div>
   );
 }
