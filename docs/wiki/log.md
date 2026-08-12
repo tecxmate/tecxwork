@@ -1731,3 +1731,12 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy, design-syst
 - Not urgent (the default is TECXWORK, so nothing leaks) and deliberately **not** unpicked here — PR #21 shipped two days ago and the resolution is niko's call. Likely shape recorded in the decision page: `brand.ts` becomes the fallback for single-tenant deployments, per-tenant brand fields resolve from the host.
 - Verified after merge: 272 tests, lint 0 errors, build clean.
 - updated decisions/2026-08-12-saas-tenancy-and-commercial-model.md
+
+## [2026-08-12] note | Handoff written for Codex — and a correction on the migration target
+attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy]
+- niko asked for a handoff to Codex, which has local repo + database access that this remote session does not. Written to `docs/handoff-codex.md`.
+- **Correction recorded.** I had told niko to run `db:update:saas-tenancy` against production. While writing the handoff I found that **21 migration scripts refuse prod hosts** (`delicate-lab`/`bitter-hill`) with "Use the demo DB" — including `add-ats-tenancy.ts`, the script that *created* `orgs`/`memberships`/`audit_log`. So the ATS schema may exist only on the demo database and production may never have had `orgs` at all.
+- Consequences if so: `add-saas-tenancy.ts` fails at its first `ALTER TABLE orgs` (not destructive — statements run singly outside a transaction, so only the preceding `CREATE TYPE` lands, and re-running is idempotent); and more importantly the agency layer would **already** be broken on prod's current `main`, meaning prod serves only the public/event side. Unverified from here — no production credentials in this container.
+- Handoff leads with this as the thing to settle before running anything (`\d orgs` decides it), then covers Neon topology (incl. the MCP being authed to the wrong Neon account), migration/test conventions, the `brand.ts` collision, the proxy near-miss as a generalisable lesson, and the open-work order ending at connectors.
+- `add-saas-tenancy.ts` deliberately has **no** prod guard, unlike the other 21 — it is the one migration meant to be runnable against a live DB. Recorded so nobody "fixes" that inconsistency without deciding the above.
+- created docs/handoff-codex.md
