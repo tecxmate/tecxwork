@@ -62,6 +62,7 @@ const OverviewCharts = dynamic(() => import("@/components/overview-charts"), {
 });
 import type { AdminAnalytics } from "@/app/admin/admin-data";
 import { ImageUpload } from "@/components/image-upload";
+import { AdminSidebar } from "@/components/admin-sidebar";
 import { AppTopBar } from "@/components/app-topbar";
 import { useStudentI18n } from "@/components/student-locale-provider";
 import { interpolate } from "@/lib/student-messages";
@@ -1049,10 +1050,16 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="flex min-h-full w-full min-w-0 max-w-full flex-1 flex-col">
+    // The rail sits beside the whole workspace, so it stays put while the section changes.
+    <div className="flex min-h-full flex-1">
+      <AdminSidebar />
+
+      <div className="flex min-w-0 flex-1 flex-col">
       <AppTopBar
         href="/"
         navRole="admin"
+        // The rail carries navigation on desktop; the bar keeps it for small screens.
+        hideDesktopNav
         currentPath={
           section === "settings"
             ? "/admin/settings"
@@ -1965,6 +1972,7 @@ export function AdminDashboard({
         </div>
       </main>
       <SiteFooter />
+      </div>
     </div>
   );
 }
