@@ -131,12 +131,39 @@ Two guards matter more than the UI:
   org would permanently strand the account — a later invitation elsewhere would be refused
   as "already belongs to another workspace".
 
+## Collision found on merge: two branding mechanisms
+
+`main` gained `src/lib/brand.ts` (PR #21) while this branch was open — the visible brand
+(header lockup, splash, footer, page title) is now chosen **per deployment** by
+`NEXT_PUBLIC_BRAND`, from a closed union of `BrandKey`s, defaulting to TECXWORK.
+
+That was the right fix for its problem (a client's name had reached the public site) and it
+merges cleanly. But it and this branch now answer the same question two ways:
+
+| | Mechanism | Varies by | Set at |
+|---|---|---|---|
+| Visible brand | `NEXT_PUBLIC_BRAND` → `brand.ts` | deployment | build time |
+| Event name, tagline, organiser, imagery | `event_config` row | tenant | runtime |
+
+**The tension is real and unresolved.** Subdomain tenancy exists precisely so many tenants
+share one deployment — and a build-time env var cannot vary per subdomain. As things stand,
+onboarding a customer who wants their own logo needs a new `BrandKey`, a code change and a
+redeploy, which is the opposite of what a per-seat SaaS wants. It is not urgent (the default
+is our own brand, so nothing leaks), and it is not something to unpick unilaterally two days
+after PR #21 shipped.
+
+The likely resolution is to make `brand.ts` the *fallback* and move the per-tenant fields
+onto the org (or `event_config`), so `NEXT_PUBLIC_BRAND` keeps serving single-tenant
+deployments like the Yang Luck demo while multi-tenant hosts resolve brand from the host.
+That is a decision for niko, not a merge conflict to fix.
+
 ## Still open
 
 - Wildcard DNS and per-tenant custom domains are unconfigured; `PLATFORM_ROOT_DOMAIN` must
   be set or every host resolves to the apex site (deliberate — a missing variable must not
   let a Host header pick a tenant).
-- Per-tenant **branding UI**: `event_config` is tenant-scoped in the schema and in the
-  reader, but the admin branding editor still writes the platform-default row.
+- Per-tenant **branding**: `event_config` is tenant-scoped in the schema and in the reader,
+  but the admin editor still writes the platform-default row — and the visible brand is a
+  separate per-deployment mechanism entirely (see the collision above).
 - Multi-org-per-user still unresolved: `getMember()` takes `limit(1)`.
 - The PIPA question from the connector audit is untouched and still niko's call.

@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND } from "@/lib/brand";
+
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -88,9 +90,11 @@ export function BrandSplash() {
         .tw-pop { animation: tw-pop 180ms cubic-bezier(.4,1.4,.5,1) both; }
       `}</style>
       <img
-        src="/yang-luck-logo.png"
-        alt="Yang Luck 揚運國際"
-        className="tw-pop h-28 w-28 rounded-3xl bg-white object-contain p-4 ring-1 ring-black/5"
+        src={BRAND.logoSrc}
+        alt={BRAND.alt}
+        className={`tw-pop h-28 w-28 rounded-3xl object-contain ${
+          BRAND.logoNeedsPlate ? "bg-white p-4 ring-1 ring-black/5" : ""
+        }`}
         style={
           isCompact
             ? { boxShadow: "0 0 60px 30px rgba(255,255,255,0.95), 0 8px 32px rgba(0,0,0,0.18)" }
@@ -99,8 +103,10 @@ export function BrandSplash() {
       />
       {isCompact ? null : (
         <span className="flex items-baseline gap-2 text-primary">
-          <span className="font-wordmark text-3xl italic">Yang Luck</span>
-          <span className="font-heading text-3xl font-semibold">揚運</span>
+          <span className="font-wordmark text-3xl italic">{BRAND.wordmark}</span>
+          {BRAND.wordmarkCjk ? (
+            <span className="font-heading text-3xl font-semibold">{BRAND.wordmarkCjk}</span>
+          ) : null}
         </span>
       )}
     </div>

@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
@@ -9,13 +10,15 @@ export default function Loading() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <img
-                src="/yang-luck-logo.png"
-                alt="Yang Luck 揚運國際"
+                src={BRAND.logoSrc}
+                alt={BRAND.alt}
                 className="h-8 w-8 rounded-md bg-white object-contain p-1 ring-1 ring-black/5"
               />
               <span className="flex items-baseline gap-1.5 text-primary">
-                <span className="font-wordmark text-xl italic">Yang Luck</span>
-                <span className="font-heading text-xl font-semibold">揚運</span>
+                <span className="font-wordmark text-xl italic">{BRAND.wordmark}</span>
+                {BRAND.wordmarkCjk ? (
+                  <span className="font-heading text-xl font-semibold">{BRAND.wordmarkCjk}</span>
+                ) : null}
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2">

@@ -1670,6 +1670,16 @@ attributed_to: [claude-code]   belongs_to: [platform-manual, tecxwork]
 - **Two real bugs found by the tooling on the way:** `add-ats-compliance.ts`'s ON CONFLICT predates the partial unique index (fails on any current-schema DB — fixed); and confirmation that the applicant slot picker still keys on the hardcoded `EVENT_CONFIG.date`, not the admin row — the known-gaps bug, now with a reproduction recorded in topics/platform-manual.md.
 - Verified: build.py clean, i18n 1144 keys × 3 enforced, all four checkers green (anchors/mobile-nav under Chromium — WebKit undownloadable in CCR; re-run there before calling those two fully verified). tsc + lint clean.
 
+## [2026-08-11] fix | Client branding removed from the public site; brand made per-deployment
+attributed_to: [niko]   belongs_to: [tecxwork, design-system]
+- niko: *"remove any yangluck branding i dont want to expose our customer now."* Moving `main` onto this codebase put a **client's name and logo on the public site** — the header, splash, footer, page title and several copy strings were hardcoded to Yang Luck.
+- **I had this wrong twice before checking.** I told niko the branding was data (`event_config`, editable in admin settings). The visible brand was *hardcoded markup*; `getEventBranding()` is a separate, genuinely data-driven path. Both are true, which is why a partial answer looked right.
+- New `src/lib/brand.ts`: one brand record per deployment, selected by `NEXT_PUBLIC_BRAND`, **defaulting to TECXWORK**. An unset or misspelled env var falls back to our own brand — a deployment can only expose a client by explicitly opting in. Yang Luck's demo keeps its branding with `NEXT_PUBLIC_BRAND=yang-luck`.
+- Rewired: `brand-link`, `brand-splash`, `pwa-first-run-splash`, `site-footer`, `layout` metadata, `register`, `browse/loading`. New `brand-mark.tsx` for the header lockup — the same markup had been copy-pasted into four files, which is how a rebrand previously meant editing five and missing two. The splashes keep their own sizing/animation and read only the brand values.
+- Copy restored to main's original wording (`Sign Up for TECXWORK`, etc.) across en/vi/zh-TW, and the zh-TW verified badge de-branded 揚運認證企業 → 認證企業 (en/vi already said plain "verified employer").
+- **Half the fix is data and is NOT in this change.** `event_config.event_name` is `揚運 Yang Luck 人才媒合平台`, and it renders in 12 places — page title, homepage, jobs pages, legal pages, calendar invites and outbound email. Caught only by building and curling the rendered HTML; the code diff alone looked complete. Prod's row must be updated separately.
+- work.tecxmate.com unparked (the #20 redirect removed) in the same change. Verified: rendered homepage serves `icon.svg` + `tecxwork`, no client logo; tsc, lint, 201/201.
+
 ## [2026-08-12] ingest | Agent-connector & SaaS readiness audit
 attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
 - niko: expose connectors to Claude the way Apollo.io and Buffer do; how far from full SaaS, and what does connector-readiness take? Audit only — nothing implemented, nothing decided.
@@ -1712,4 +1722,12 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
 - Seat budget is stated at the top of the screen rather than only surfacing as an error when an invitation is refused; the invite button disables at zero seats. When the invite email fails, the UI shows the fallback link the API returns — which is what makes that fallback worth having.
 - Verified: 272 tests (was 263), lint 0 errors, build clean, `/dashboard/team` + `/api/org/members` in the manifest.
 - **Still open:** per-tenant branding UI (schema + reader are tenant-scoped, the admin editor still writes the platform-default row); wildcard DNS + `PLATFORM_ROOT_DOMAIN`; multi-org-per-user; the PIPA question.
+- updated decisions/2026-08-12-saas-tenancy-and-commercial-model.md
+
+## [2026-08-12] note | Merge of main into the SaaS branch — two branding mechanisms now collide
+attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy, design-system]
+- `main` moved while PR #23 was open (PR #21, per-deployment branding). Merged in; the only textual conflict was this log — both sides appended, resolved chronologically (main's 08-11 entry precedes the 08-12 ones, per the append-only newest-at-bottom rule).
+- **Semantic finding, no code conflict:** the visible brand is now chosen **per deployment** by `NEXT_PUBLIC_BRAND` from a closed union of `BrandKey`s, while `event_config` (event name, tagline, organiser, imagery) is now **per tenant** by subdomain. Subdomain tenancy exists so many tenants share ONE deployment, and a build-time env var cannot vary per subdomain — so onboarding a customer who wants their own logo currently needs a new `BrandKey`, a code change and a redeploy.
+- Not urgent (the default is TECXWORK, so nothing leaks) and deliberately **not** unpicked here — PR #21 shipped two days ago and the resolution is niko's call. Likely shape recorded in the decision page: `brand.ts` becomes the fallback for single-tenant deployments, per-tenant brand fields resolve from the host.
+- Verified after merge: 272 tests, lint 0 errors, build clean.
 - updated decisions/2026-08-12-saas-tenancy-and-commercial-model.md
