@@ -5,7 +5,15 @@ import { type MouseEvent } from "react";
 import { BRAND_SPLASH_EVENT, type BrandSplashDetail } from "@/components/brand-splash";
 import { BrandMark } from "@/components/brand-mark";
 
-export function BrandLink({ href = "/" }: { href?: string }) {
+export function BrandLink({
+  href = "/",
+  hideWordmark = false,
+  className = "flex items-center gap-2",
+}: {
+  href?: string;
+  hideWordmark?: boolean;
+  className?: string;
+}) {
   const router = useRouter();
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
@@ -18,8 +26,8 @@ export function BrandLink({ href = "/" }: { href?: string }) {
   }
 
   return (
-    <a href={href} onClick={handleClick} className="flex items-center gap-2">
-      <BrandMark />
+    <a href={href} onClick={handleClick} className={className}>
+      <BrandMark hideWordmark={hideWordmark} />
     </a>
   );
 }

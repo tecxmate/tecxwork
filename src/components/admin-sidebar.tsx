@@ -3,7 +3,8 @@
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { SidebarBrand, SidebarFooter } from "@/components/dashboard-sidebar";
+import type { NotificationBellLabels } from "@/components/notification-bell";
 import { isNavItemActive, visibleNavItems } from "@/lib/navigation";
 
 /**
@@ -62,7 +63,20 @@ const GROUPS: { title: string; hrefs: string[] }[] = [
  * Desktop only. The top bar and bottom nav still serve small screens, where a persistent
  * rail costs more width than it earns.
  */
-export function AdminSidebar() {
+export function AdminSidebar({
+  accountName,
+  accountRole,
+  logoutLabel,
+  notificationLabels,
+  accountMenuExtra,
+}: {
+  /** The admin's workspace is the platform itself, so this is the platform's name. */
+  accountName: string;
+  accountRole: string;
+  logoutLabel: string;
+  notificationLabels?: NotificationBellLabels;
+  accountMenuExtra?: React.ReactNode;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
@@ -98,24 +112,9 @@ export function AdminSidebar() {
         collapsed ? "w-[4.25rem]" : "w-56"
       }`}
     >
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={!collapsed}
-        aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
-        className="mx-2 mt-3 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        {collapsed ? (
-          <PanelLeftOpen className="h-4 w-4 shrink-0" />
-        ) : (
-          <>
-            <PanelLeftClose className="h-4 w-4 shrink-0" />
-            <span>Collapse</span>
-          </>
-        )}
-      </button>
+      <SidebarBrand collapsed={collapsed} onToggle={toggle} />
 
-      <div className="flex-1 overflow-y-auto px-2 pb-4 pt-2">
+      <div className="flex-1 overflow-y-auto px-2 pb-4 pt-3">
         {grouped.map((group) => (
           <div key={group.title} className="mb-4">
             {!collapsed ? (
@@ -156,6 +155,15 @@ export function AdminSidebar() {
           </div>
         ))}
       </div>
+
+      <SidebarFooter
+        collapsed={collapsed}
+        accountName={accountName}
+        accountRole={accountRole}
+        logoutLabel={logoutLabel}
+        notificationLabels={notificationLabels}
+        accountMenuExtra={accountMenuExtra}
+      />
     </aside>
   );
 }

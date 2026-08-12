@@ -11,9 +11,12 @@ import { cn } from "@/lib/utils";
 export function BrandMark({
   size = "sm",
   className,
+  hideWordmark = false,
 }: {
   size?: "sm" | "lg";
   className?: string;
+  /** Logo only. For a collapsed rail, where the wordmark has no room. */
+  hideWordmark?: boolean;
 }) {
   const lg = size === "lg";
   return (
@@ -27,16 +30,18 @@ export function BrandMark({
           BRAND.logoNeedsPlate && "bg-white p-1 ring-1 ring-black/5"
         )}
       />
-      <span className="flex items-baseline gap-1.5 text-primary">
-        <span className={cn("font-wordmark italic", lg ? "text-3xl" : "text-xl")}>
-          {BRAND.wordmark}
-        </span>
-        {BRAND.wordmarkCjk ? (
-          <span className={cn("font-heading font-semibold", lg ? "text-3xl" : "text-xl")}>
-            {BRAND.wordmarkCjk}
+      {hideWordmark ? null : (
+        <span className="flex items-baseline gap-1.5 text-primary">
+          <span className={cn("font-wordmark italic", lg ? "text-3xl" : "text-xl")}>
+            {BRAND.wordmark}
           </span>
-        ) : null}
-      </span>
+          {BRAND.wordmarkCjk ? (
+            <span className={cn("font-heading font-semibold", lg ? "text-3xl" : "text-xl")}>
+              {BRAND.wordmarkCjk}
+            </span>
+          ) : null}
+        </span>
+      )}
     </span>
   );
 }

@@ -21,6 +21,7 @@ export function AppTopBar({
   isAgency = false,
   capabilities,
   hideDesktopNav = false,
+  hideOnDesktop = false,
   desktopActions,
   mobileActions,
   showActionsOnMobile = false,
@@ -35,6 +36,12 @@ export function AppTopBar({
   capabilities?: readonly Capability[];
   /** Suppress the horizontal nav when a sidebar is already showing it. */
   hideDesktopNav?: boolean;
+  /**
+   * Hide the bar entirely at the breakpoint where the rail appears. Brand, notifications
+   * and the account menu now live in the rail, so on desktop this bar would be an empty
+   * strip. Small screens have no rail and still need it.
+   */
+  hideOnDesktop?: boolean;
   desktopActions?: React.ReactNode;
   mobileActions?: React.ReactNode;
   showActionsOnMobile?: boolean;
@@ -52,7 +59,11 @@ export function AppTopBar({
     navRole === "admin" ? "/" : navItems[0]?.href ?? href;
 
   return (
-    <header className="app-header sticky top-0 z-10 border-b bg-white dark:bg-card">
+    <header
+      className={`app-header sticky top-0 z-10 border-b bg-white dark:bg-card${
+        hideOnDesktop ? " lg:hidden" : ""
+      }`}
+    >
       <div className="h-[env(safe-area-inset-top)] bg-primary md:hidden" />
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
         <div className="flex items-center gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
