@@ -56,6 +56,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 *Areas, products, events, and synthesised concepts. Topics don't make decisions; stakeholders do.*
 
 - [tecxwork web app](topics/tecxwork.md) — the product itself (area: full stack)
+- [Agent Connectors & SaaS Readiness Audit](topics/agent-connectors.md) — what MCP/OAuth connectors need: tenancy + capability RBAC + audit already exist; machine auth, injectable actors, self-serve orgs and a subscription layer do not
 - [Event-Day Load Readiness](topics/load-readiness.md) — verified prod capacity (max_conn 901, pooled), slot-concurrency protections, and the per-IP venue-NAT rate-limit risk
 - [V-GEN TRIDENT 2026](topics/v-gen-trident-2026.md) — flagship career fair event
 - [Platform Manual (screens & functions)](topics/platform-manual.md) — workflow-driven manual of every screen/function across all 4 roles; published artifact
