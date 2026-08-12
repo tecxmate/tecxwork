@@ -5,10 +5,10 @@
  * properties, so `fill="var(--primary)"` themes light/dark for free — the alternative
  * was two copies of the markup that drift.
  *
- * Its single claim is the one the prose cannot make as quickly: **one Apply creates two
- * records**. An interview booking (the employer's, over in an afternoon) and a pipeline
- * card (the agency's, alive for weeks), joined by the same candidate and no shared status
- * field. Everything downstream hangs off the pipeline card.
+ * Its single claim is the one the prose cannot make as quickly: **one application creates
+ * two records**. An interview booking (the employer's, done after the interview) and a
+ * pipeline card (the agency's, alive for weeks), sharing a candidate and nothing else.
+ * Everything downstream hangs off the pipeline card.
  *
  * `text-anchor` is set with inline `style`, never a class: a CSS `text-anchor` in a class
  * beats the SVG presentation attribute, which silently re-centres labels that were meant
@@ -114,7 +114,7 @@ export function LifecycleDiagram() {
             letterSpacing="0.08em"
             fill="var(--muted-foreground)"
           >
-            THE EMPLOYER&rsquo;S BOOKING &mdash; ENDS IN AN AFTERNOON
+            EMPLOYER&rsquo;S BOOKING &mdash; DONE AFTER THE INTERVIEW
           </text>
 
           {[
@@ -178,7 +178,7 @@ export function LifecycleDiagram() {
             letterSpacing="0.08em"
             fill="var(--muted-foreground)"
           >
-            THE AGENCY&rsquo;S PIPELINE CARD &mdash; RUNS FOR WEEKS
+            YOUR PIPELINE CARD &mdash; RUNS FOR WEEKS
           </text>
 
           {[
@@ -233,7 +233,7 @@ export function LifecycleDiagram() {
             fontSize="11.5"
             fill="var(--primary)"
           >
-            joined only by the candidate &mdash; no shared status field
+            same candidate, separate records
           </text>
 
           {/* every move is written down */}
@@ -244,7 +244,7 @@ export function LifecycleDiagram() {
             fontSize="11.5"
             fill="var(--muted-foreground)"
           >
-            Every stage move appends a row that is never edited or deleted.
+            Every move adds a row. Nothing is overwritten.
           </text>
           <text
             x="214"
@@ -253,13 +253,13 @@ export function LifecycleDiagram() {
             fontSize="11.5"
             fill="var(--muted-foreground)"
           >
-            The board shows where a candidate is; the history shows how they got there.
+            The board shows where they are. The history shows how they got there.
           </text>
         </svg>
       </div>
       <figcaption className="mx-auto mt-5 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground">
-        The booking answers &ldquo;who is in the room at two o&rsquo;clock&rdquo;. The pipeline
-        card is what the fee, the invoice and the guarantee all hang from.
+        The booking is done after the interview. The pipeline card is what your fee, invoice
+        and guarantee hang from.
       </figcaption>
     </figure>
   );

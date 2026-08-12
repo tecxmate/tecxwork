@@ -24,86 +24,87 @@ export const metadata: Metadata = {
 /**
  * The employer- and agency-facing explainer.
  *
- * Deliberately not a feature list. An agency evaluating this already knows what a kanban
- * board is; what they cannot tell from a screenshot is whether the record survives an
- * audit. So each section leads with the mechanism and names the guarantee behind it.
+ * Written plainly on purpose: short sentences, second person, headings that name the
+ * thing rather than making a point about it. An earlier draft was more literary
+ * ("What holds when nobody is watching") and read as advertising; the audience here is
+ * an agency owner deciding whether this survives an audit, and they want to be told.
  *
- * Every claim here is checked against the code. Things the product does not do — the
- * client portal, AI screening — are absent rather than softened, and the one honest
- * limitation on the Employer-Pays export is stated on the page rather than buried.
+ * Every claim is checked against the code. What the product does not do — the client
+ * portal, AI screening — is absent rather than softened, and the one real limitation on
+ * the Employer-Pays export is stated on the page rather than buried.
  */
 
 const STEPS = [
   {
     icon: ClipboardList,
-    title: "A job order, against a client",
-    body: "Vacancies belong to a client company and carry a headcount, so the same role for two clients never blurs into one queue. Internal requisitions use the same object, marked as your own.",
+    title: "Open a job order",
+    body: "Every vacancy belongs to a client and has a headcount. The same role for two clients stays in two queues, not one. Your own internal roles work the same way.",
   },
   {
     icon: Layers,
-    title: "A pipeline you shape",
-    body: "Five stages out of the box — Applied, Screening, Interview, Offer, Hired — which you rename, reorder or extend. Retired stages are archived, never deleted, so last year's history still reads correctly.",
+    title: "Work the pipeline",
+    body: "Five stages to start: Applied, Screening, Interview, Offer, Hired. Rename them, reorder them, add your own. Old stages are archived rather than deleted, so last year's reports still read correctly.",
   },
   {
     icon: BadgeCheck,
-    title: "An offer two people touch",
-    body: "Drafting an offer and approving it are separate permissions, so the person who negotiates terms is not the person who authorises them. One live offer per candidate; a declined offer frees the slot for a fresh one.",
+    title: "Send an offer",
+    body: "One person writes the offer, another approves it. A candidate can only have one live offer at a time. If they decline, you can write a new one.",
   },
   {
     icon: ShieldCheck,
-    title: "A placement that carries forward",
-    body: "Accepting an offer creates the placement with the salary and start date already on it. Probation and guarantee are tracked separately — one is the employer's right to end the contract, the other is your exposure to a clawback.",
+    title: "Record the placement",
+    body: "When the candidate accepts, the placement is created with the salary and start date already filled in. Probation and guarantee are tracked separately — one is the employer's right to end the contract, the other is your exposure if the fee is clawed back.",
   },
   {
     icon: Receipt,
-    title: "An invoice you cannot raise twice",
-    body: "Select unbilled placements and raise an invoice. Fees come from the client's agreed rate — months of salary or a percentage of the first year — and business tax is applied to the whole subtotal, the way the client's own accounts will do it.",
+    title: "Bill the client",
+    body: "Pick the placements you haven’t billed yet and raise an invoice. The fee comes from the rate you agreed with that client — months of salary, or a percentage of the first year. Tax is added to the total.",
   },
 ];
 
 const GUARANTEES = [
   {
-    title: "The stage history is append-only",
-    body: "Moving a card writes a new row rather than overwriting the last one. The board tells you where a candidate is; the history tells you how they got there, and how long each step took. Funnel and time-in-stage are read from that history, not re-derived from the current state.",
+    title: "Stage history is never overwritten",
+    body: "Moving a card adds a row. The board shows you where a candidate is. The history shows how they got there and how long each step took. Your funnel and time-in-stage numbers are read from that history.",
   },
   {
-    title: "Double-billing is blocked in the database",
-    body: "The rule that a placement fee cannot appear on two live invoice lines is a constraint in Postgres, not a check in application code. It holds even if two people click at the same moment, and it keeps holding when someone writes a new script against the same tables.",
+    title: "You can’t bill the same placement twice",
+    body: "That rule lives in the database, not in the app. It holds even if two people click at the same second, and it keeps holding if someone later writes a new script against the same tables.",
   },
   {
-    title: "Numbering never gaps silently",
-    body: "Invoices run INV-YYYY-NNNN and credit notes CN-YYYY-NNNN on their own sequences, derived from what already exists. Accountants read a gap in an invoice sequence as a missing document, so the system does not create one.",
+    title: "Invoice numbers never skip",
+    body: "Invoices run INV-YYYY-NNNN and credit notes CN-YYYY-NNNN. An accountant reads a missing number as a missing document, so the system doesn’t create one.",
   },
   {
-    title: "Money is whole numbers",
-    body: "Amounts are stored as integers and tax as basis points. Nothing rounds twice, and no total drifts by a dollar between the screen, the export and the invoice.",
+    title: "Money is stored as whole numbers",
+    body: "Nothing rounds twice. The total on screen matches the export and matches the invoice.",
   },
   {
-    title: "A renewal supersedes, it does not overwrite",
-    body: "Renewing a work permit keeps the previous record marked superseded. Months later an inspector can still ask whether a worker was covered on a specific date and get a truthful answer.",
+    title: "Renewing a permit keeps the old one",
+    body: "The previous record is marked superseded, not replaced. Months later you can still answer “was this worker covered in August?” and be sure the answer is right.",
   },
   {
-    title: "Reading a document is an event",
-    body: "Scans are served through the application, never as a public file link, so every view is permission-checked and recorded. The audit log stores which fields changed and who changed them — never the personal data itself.",
+    title: "Every document view is recorded",
+    body: "Scans open through the app, never a public link, so each view is permission-checked and logged. The audit log stores what changed and who changed it — not the personal data itself.",
   },
 ];
 
 const ROLE_NOTES = [
   {
     role: "Interviewer",
-    body: "Holds no capabilities at all. Reaches a candidate only through an application assigned to them, and never the searchable database. Under PIPA that distinction is the entire point of the role.",
+    body: "Gets no permissions at all. They see the candidates assigned to them and never the candidate database. Under PIPA, that is the point of the role.",
   },
   {
     role: "Recruiter",
-    body: "Moves candidates, drafts offers, works the board. Cannot approve the offer they wrote.",
+    body: "Moves candidates, writes offers, works the board. Can’t approve their own offer.",
   },
   {
     role: "Hiring manager",
-    body: "The client-side decision maker, seated inside your workspace. Approves offers; sees no compliance file and no invoices.",
+    body: "Your client's decision maker, working inside your account. Approves offers. Sees no documents and no invoices.",
   },
   {
     role: "Account manager",
-    body: "Owns the client relationship, the commercial terms and the billing that follows from them.",
+    body: "Owns the client, the agreed rates and the billing that follows.",
   },
 ];
 
@@ -119,17 +120,16 @@ export default async function HowItWorksPage() {
         <section className="border-b px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-              For staffing agencies and the employers they hire for
+              For recruitment agencies and employers
             </p>
             <h1 className="mt-4 font-heading text-3xl font-bold tracking-tight sm:text-5xl">
-              A placement is a paper trail
-              <br className="hidden sm:block" /> that happens to involve people
+              From job order to invoice,
+              <br className="hidden sm:block" /> in one place
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Most hiring tools stop at the offer. The work that decides whether you get paid
-              &mdash; the fee, the invoice, the guarantee period, the permit that expires in
-              three weeks &mdash; lives in a spreadsheet nobody wants to be responsible for.
-              TECXWORK carries the same record from first application to final invoice.
+              Post a job, move candidates through your pipeline, send the offer, record the
+              placement, bill the client. It&rsquo;s the same record all the way through, so
+              nothing has to be rebuilt in a spreadsheet at the end.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
@@ -143,7 +143,7 @@ export default async function HowItWorksPage() {
                 href="/browse"
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-8 text-base font-medium transition-colors hover:bg-secondary sm:w-auto"
               >
-                See who is hiring
+                Browse companies
               </Link>
             </div>
           </div>
@@ -157,13 +157,10 @@ export default async function HowItWorksPage() {
                 One application, two records
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                This is the part worth understanding, because everything else follows from
-                it. A candidate applying to a job creates an interview booking
-                <span className="whitespace-nowrap"> &mdash; </span>
-                the employer&rsquo;s, finished once the interview happens &mdash; and a
-                pipeline card, which is yours and runs for weeks. They are deliberately
-                separate systems that meet on the candidate rather than in one shared status
-                field.
+                A candidate applies once. That creates two things: an interview booking for
+                the employer, and a pipeline card for you. The booking is done after the
+                interview. The pipeline card runs for weeks, and it is what your fee, invoice
+                and guarantee all hang from.
               </p>
             </div>
             <div className="mt-10">
@@ -177,11 +174,11 @@ export default async function HowItWorksPage() {
           <div className="mx-auto max-w-5xl">
             <div className="max-w-2xl">
               <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                From vacancy to invoice
+                The five steps
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Five objects, each one handing the next what it needs so nothing is retyped
-                and nothing is inferred.
+                Each step hands the next one what it needs, so you never retype the same
+                detail twice.
               </p>
             </div>
 
@@ -221,12 +218,11 @@ export default async function HowItWorksPage() {
           <div className="mx-auto max-w-5xl">
             <div className="max-w-2xl">
               <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                What holds when nobody is watching
+                Your records stay correct
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Any system behaves on the demo. These are the properties that still hold on a
-                Friday afternoon, eighteen months in, when two people click at once and the
-                person who set it up has left.
+                Any system looks fine in a demo. These are the things that still hold a year
+                later, when two people click at once and whoever set it up has left.
               </p>
             </div>
 
@@ -251,12 +247,11 @@ export default async function HowItWorksPage() {
           <div className="mx-auto max-w-5xl">
             <div className="max-w-2xl">
               <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                Access is a decision, not a default
+                Control who sees what
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Fifteen capabilities, granted through seven roles inside your workspace. Two
-                of them are worth stating plainly, because they are the ones that get waved
-                through elsewhere.
+                Fifteen permissions, given out through seven roles in your account. Four are
+                worth spelling out.
               </p>
             </div>
 
@@ -278,15 +273,15 @@ export default async function HowItWorksPage() {
           <div className="mx-auto max-w-5xl">
             <div className="max-w-2xl">
               <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                The file an inspection asks for
+                Ready for an inspection
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Nine document types &mdash; passport, visa, ARC, work permit, medical,
-                contract, diploma, criminal record, health insurance &mdash; each with an
-                expiry the system evaluates as you read it, so a date never goes stale waiting
-                for a nightly job. Placements join to that file, which is how you see
-                &ldquo;this worker&rsquo;s permit expires soon <em>and</em> we are still
-                liable for them&rdquo; as one fact rather than two.
+                Nine document types: passport, visa, ARC, work permit, medical, contract,
+                diploma, criminal record and health insurance. Expiry dates are worked out
+                when you look at them, so nothing sits stale waiting for an overnight job.
+                Placements link to those documents, so you see &ldquo;this worker&rsquo;s
+                permit runs out soon <em>and</em>{" "}we are still on the hook&rdquo; as one
+                fact instead of two.
               </p>
             </div>
 
@@ -297,16 +292,16 @@ export default async function HowItWorksPage() {
                   Employer-Pays fee trail
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  One row per placement, twenty-one columns, reconciling every fee to the
-                  client invoice that carried it &mdash; including the fee expressed in months
-                  of salary, which is the unit brand audits actually benchmark against.
+                  One row per placement, 21 columns. Every fee is matched to the client
+                  invoice that carried it, including the fee written as months of salary
+                  &mdash; the number brand audits actually check.
                 </p>
                 <p className="mt-3 border-l-2 border-border pl-3 text-sm leading-relaxed text-muted-foreground">
-                  It reports worker-charged fees as <em>recorded</em>: zero. That wording is
-                  deliberate. The export proves the system holds no fee charged to a worker
-                  &mdash; there is no path in the data model from a fee to a candidate &mdash;
-                  which is not the same claim as proving no cash moved outside the system. We
-                  would rather hand an auditor the narrower true statement.
+                  It reports worker-charged fees as <em>recorded</em>: zero. That word matters.
+                  It shows the system holds no fee charged to a worker, because there is no way
+                  in the data to charge one. It doesn&rsquo;t prove that no cash changed hands
+                  outside the system. We would rather give an auditor the smaller claim that is
+                  true.
                 </p>
               </article>
 
@@ -316,15 +311,14 @@ export default async function HowItWorksPage() {
                   Evaluation evidence summary
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  For the periodic evaluation a licensed agency sits: service records, fee
-                  transparency, document management and accountability, as counts across your
-                  whole book. Aggregates only &mdash; no names, no per-row amounts &mdash;
-                  because the evaluation asks how you operate, not who you placed.
+                  For the periodic evaluation a licensed agency goes through: service records,
+                  fee transparency, document management and accountability, counted across
+                  your whole book. Counts only &mdash; no names, no amounts per row &mdash;
+                  because the evaluation asks how you work, not who you placed.
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  Exports are CSV with a UTF-8 byte-order mark and RFC 4180 line endings, so
-                  Chinese and Vietnamese names survive being opened in Excel on Windows
-                  instead of arriving as mojibake.
+                  Both files are CSV that opens correctly in Excel on Windows, so Chinese and
+                  Vietnamese names don&rsquo;t turn into garbled text.
                 </p>
               </article>
             </div>
@@ -335,21 +329,19 @@ export default async function HowItWorksPage() {
         <section className="border-b px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-3xl">
             <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-              Roles, not countries
+              Works in any hiring corridor
             </h2>
             <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
               <p>
-                The platform describes three parties &mdash; the employer who hires, the
-                supply side who sources, and the candidate &mdash; and nothing in the data
-                model assumes which country each sits in. A corridor is a deployment
-                decision, not an assumption baked into the schema.
+                There are three parties: the employer who hires, the partner who sources, and
+                the candidate. Nothing assumes which country each one is in, so the same
+                system works whichever way people move.
               </p>
               <p>
-                What <em>is</em> jurisdiction-specific follows from where the operator is
-                licensed rather than from an assumed route: business tax, the fee conventions
-                that quote in months of salary, the residence and work-permit document types.
-                Those are deliberately not genericised, because a compliance feature that
-                hedges is a compliance feature that fails an audit.
+                What&rsquo;s country-specific comes from where you&rsquo;re licensed, not from a route
+                we guessed: business tax, fees quoted in months of salary, residence and work
+                permit types. We kept those specific on purpose. A compliance feature that
+                hedges is one that fails an audit.
               </p>
             </div>
           </div>
@@ -359,11 +351,11 @@ export default async function HowItWorksPage() {
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-heading text-2xl font-bold sm:text-4xl">
-              See it against your own desk
+              Try it with one real job
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              The fastest way to judge this is to put one real vacancy through it and see
-              what the record looks like at the other end.
+              The quickest way to judge this is to run one vacancy through and see what the
+              record looks like at the end.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link

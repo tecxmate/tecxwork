@@ -29,6 +29,28 @@ with a mechanism and names the guarantee behind it — append-only stage history
 blocked by a database constraint rather than application code, no silent gaps in invoice
 numbering, integer money, renewals that supersede rather than overwrite.
 
+## Voice: plain, after a rewrite
+
+The first draft was literary — headings like *"A placement is a paper trail that happens to
+involve people"* and *"What holds when nobody is watching"*. niko: *"write in simple direct
+language. try to see how cake resume do it."* Cake (cake.me, the Taiwan incumbent) writes short
+benefit-first sentences in second person, with headings that name the thing: Job Posting,
+Resume Search, Employer Branding. Both cake.me and cakeresume.com are blocked by this
+container's egress proxy, so the pattern came from search results rather than the pages.
+
+Rewritten accordingly: headings became *The five steps*, *Your records stay correct*, *Control
+who sees what*, *Ready for an inspection*. Sentences shortened, contractions used, "you"
+throughout. No claim changed — only the wording. The literary version is worth remembering as
+the failure mode: it read as advertising to an audience that wants to be told plainly.
+
+**Two JSX traps hit during the rewrite**, both invisible to tsc and lint:
+1. `&rsquo;` inside the `STEPS`/`GUARANTEES` **data arrays** is not markup — those strings
+   render through `{step.body}`, so React escapes them and the page shows `haven&rsquo;t`
+   literally. Use the real character in JS strings; entities only work in JSX.
+2. JSX dropped the space after `</em>` mid-sentence, rendering *"soon andwe are still"*.
+   Needs an explicit `{" "}`.
+   Both were caught by grepping the rendered HTML, not by reading the source.
+
 The centrepiece is a hand-authored inline SVG making the one claim prose makes slowly: **one
 application creates two records** — the employer's interview booking (over in an afternoon)
 and the agency's pipeline card (alive for weeks), joined only by the candidate.
