@@ -1703,3 +1703,13 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
 - Verified: 263 tests pass (was 255), lint 0 errors, build clean, `/invite` + `/admin/workspaces` + the three invite APIs all in the route manifest.
 - **Still open:** no members screen inside a workspace (invite API exists, no UI listing current members/roles); wildcard DNS + `PLATFORM_ROOT_DOMAIN` unset; multi-org-per-user; the PIPA question.
 - updated decisions/2026-08-12-saas-tenancy-and-commercial-model.md
+
+## [2026-08-12] feat | Team management — the workspace can now run its own people
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
+- Last gap before the product can be handed to a customer: the invite API existed but no screen listed who was in a workspace, so a tenant admin was calling `/api/org/invites` by hand.
+- Added `lib/members.ts` (actor-free, same discipline as `provisioning.ts`), `/api/org/members` (GET list / PATCH role / DELETE member), and a **Team** tab in the recruiter dashboard gated on `member:invite` — the nav already supports per-capability tabs, so it hides itself for everyone else and the page re-checks server-side.
+- **Two guards matter more than the UI.** (1) The **last administrator** cannot be demoted or removed: a workspace with no admin cannot invite, cannot change roles and cannot recover on its own, and the click that causes it looks entirely ordinary. (2) Removing someone **unlinks the recruiter row from the org but keeps the row** — a departure is not an erasure, so their jobs/candidates/placements stay with the workspace; without the unlink, leaving would permanently strand the account because a later invitation elsewhere is refused as "already belongs to another workspace". Both are tested, including that a removed person can then join a different workspace.
+- Seat budget is stated at the top of the screen rather than only surfacing as an error when an invitation is refused; the invite button disables at zero seats. When the invite email fails, the UI shows the fallback link the API returns — which is what makes that fallback worth having.
+- Verified: 272 tests (was 263), lint 0 errors, build clean, `/dashboard/team` + `/api/org/members` in the manifest.
+- **Still open:** per-tenant branding UI (schema + reader are tenant-scoped, the admin editor still writes the platform-default row); wildcard DNS + `PLATFORM_ROOT_DOMAIN`; multi-org-per-user; the PIPA question.
+- updated decisions/2026-08-12-saas-tenancy-and-commercial-model.md

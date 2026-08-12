@@ -114,12 +114,29 @@ Provisioning existed but a customer could only be onboarded with `curl`. Now:
   is an open redirect. Rejects other origins, `//evil.example` (which a naive
   `startsWith("/")` would allow), the `/\` variant, and control characters.
 
+## Team management — `/dashboard/team`
+
+The invite API existed but no screen listed who was in a workspace. Added `lib/members.ts`
+(actor-free, like `provisioning.ts`), `/api/org/members`, and a Team tab gated on
+`member:invite`.
+
+Two guards matter more than the UI:
+
+- **The last administrator cannot be demoted or removed.** A workspace with no admin cannot
+  invite, cannot change roles and cannot recover on its own — it would need platform support
+  to fix, and the click that causes it looks entirely ordinary.
+- **Removing someone unlinks their recruiter row from the org but keeps the row.** A
+  departure is not an erasure (which is a separate, deliberate PIPA operation), so their
+  jobs, candidates and placements stay with the workspace. Without the unlink, leaving an
+  org would permanently strand the account — a later invitation elsewhere would be refused
+  as "already belongs to another workspace".
+
 ## Still open
 
 - Wildcard DNS and per-tenant custom domains are unconfigured; `PLATFORM_ROOT_DOMAIN` must
   be set or every host resolves to the apex site (deliberate — a missing variable must not
   let a Host header pick a tenant).
-- No **members** screen inside a workspace yet — invitations are sent via `/api/org/invites`
-  and there is no UI listing current members or their roles.
+- Per-tenant **branding UI**: `event_config` is tenant-scoped in the schema and in the
+  reader, but the admin branding editor still writes the platform-default row.
 - Multi-org-per-user still unresolved: `getMember()` takes `limit(1)`.
 - The PIPA question from the connector audit is untouched and still niko's call.

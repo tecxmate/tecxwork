@@ -57,3 +57,12 @@ export const createInviteSchema = z.object({
 export const acceptInviteSchema = z.object({
   token: z.string().trim().min(1, "An invitation token is required"),
 });
+
+export const updateMemberRoleSchema = z.object({
+  userId: z.number().int().positive(),
+  role: z.enum(MEMBER_ROLES),
+});
+
+export const removeMemberSchema = z.object({
+  userId: z.number().int().positive(),
+});
