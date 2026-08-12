@@ -45,3 +45,7 @@ drizzle/
 
 # PowerPoint lock files
 ~$*
+
+# Built manual + decks. They inline screenshots of a live workspace, and this repo is
+# public — the build outputs stay local and are handed over as files, never committed.
+docs/manual/dist/

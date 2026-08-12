@@ -5,14 +5,26 @@ all four roles, in English, 繁體中文 and Tiếng Việt. All 51 screenshots 
 base64 WebP, so the same file works served over the web *and* offline — over email, or from
 a USB stick. No build step, no assets folder, no network access.
 
-**Live:** https://yangluck.tecxmate.com/documentation — linked from the site footer.
-**Locally:** `open public/documentation.html`
+**Not hosted.** `/documentation` was taken down on 2026-08-12: the manual inlines 51
+screenshots of a live workspace — a client's pipeline, candidates and invoices — and the
+route served them to anyone who guessed the URL. It is handed over as a file now.
+
+**Locally:** `open docs/manual/dist/documentation.html` (run the build first).
+
+### If you put it back
+
+Copy the built file into `public/` and restore the rewrite in `next.config.ts`
+(`{ source: "/documentation", destination: "/documentation.html" }`) plus the footer link in
+`src/components/site-footer.tsx`. Do that only once the screenshots are re-captured against
+a demo dataset that names no real client. **Nothing under `public/` is private** — it is
+served at a guessable URL whether or not the app links to it, which is why the build writes
+to `dist/` and publishing is a separate, deliberate step.
 
 ## Two builds from one source
 
 | Output | Where | Internal notes |
 |--------|-------|----------------|
-| `public/documentation.html` | served publicly at `/documentation` | **stripped** |
+| `dist/documentation.html` | handed over as a file; gitignored | **stripped** |
 | `src/artifact-fragment.html` | private Claude artifact | kept |
 
 Anything wrapped in `data-internal` — currently the "Notes & known gaps" section, which names
@@ -55,7 +67,7 @@ screenshot in `src/screenshots/` that no longer appears in the document.
 
 | File | Form | Why |
 |------|------|-----|
-| `tecxwork-platform-manual.html` | full document | has `<!doctype>`, `<meta charset="utf-8">` and a viewport tag |
+| `dist/documentation.html` | full document | has `<!doctype>`, `<meta charset="utf-8">` and a viewport tag |
 | `src/artifact-fragment.html` | bare fragment | the Artifact publisher supplies its own `<head>` |
 
 **The charset tag is load-bearing.** Opened from disk (`file://`) without it, a browser
@@ -94,7 +106,7 @@ python3 docs/manual/src/i18n_extract.py    # tag new/changed prose -> strings/en
 python3 docs/manual/src/i18n_autofill.py   # copy "✓", "—", <code>routes</code> verbatim
 # translate the remaining keys into strings/zh.json and strings/vi.json
 python3 docs/manual/src/build.py
-node docs/manual/src/check-i18n.mjs public/documentation.html
+node docs/manual/src/check-i18n.mjs docs/manual/dist/documentation.html
 ```
 
 Keys live in the source as `data-t="N"` and are reused, so rewording a sentence keeps its
@@ -113,7 +125,7 @@ node /tmp/render-diagrams.mjs                    # SVG diagrams -> PNG (python-p
 python3 docs/manual/src/build_pptx.py en zh vi
 ```
 
-Produces `public/tecxwork-manual{,-zh,-vi}.pptx` — 43 slides each, 16:9, ~4 MB.
+Produces `docs/manual/dist/tecxwork-manual{,-zh,-vi}.pptx` — 43 slides each, 16:9, ~4 MB.
 
 The deck is **parsed out of `manual.src.html`**, not retyped: every screen slide takes its
 step number, title, route, purpose and control list from the same markup the HTML renders,
@@ -138,7 +150,7 @@ a phone viewport is barely larger than the in-page image, which would make "enla
 pointless.
 
 ```bash
-node docs/manual/src/check-lightbox.mjs public/documentation.html
+node docs/manual/src/check-lightbox.mjs docs/manual/dist/documentation.html
 ```
 
 Two things not to undo:
@@ -160,7 +172,7 @@ the whole table of contents. It opens scrolled to the section you are currently 
 closes on link tap, backdrop tap, the close button, or Escape.
 
 ```bash
-node docs/manual/src/check-mobile-nav.mjs public/documentation.html
+node docs/manual/src/check-mobile-nav.mjs docs/manual/dist/documentation.html
 ```
 
 16 checks in WebKit at iPhone size. The one most worth keeping is the body scroll lock:
@@ -170,7 +182,7 @@ it — a single missed path leaves the whole document unscrollable with no obvio
 ## Checking the sidebar links
 
 ```bash
-node docs/manual/src/check-anchors.mjs public/documentation.html
+node docs/manual/src/check-anchors.mjs docs/manual/dist/documentation.html
 ```
 
 Every `<img>` **must** carry `width`/`height` — `build.py` adds them automatically from each
