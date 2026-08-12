@@ -3,11 +3,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAgency, clientIp } from "@/lib/agency-auth";
 import { logAudit } from "@/lib/audit";
 import { getDb } from "@/lib/db";
-import { orgInvites } from "@/lib/db/schema";
+import { orgInvites, users } from "@/lib/db/schema";
+import { buildInviteUrl, sendOrgInviteEmail } from "@/lib/email";
 import { inviteMember, seatsUsed } from "@/lib/provisioning";
 import { getTenantById } from "@/lib/tenant";
 import { parseJsonBody } from "@/lib/validation";
 import { createInviteSchema } from "@/lib/validation-provisioning";
+
+/** Human-readable role names for the invitation email. */
+const ROLE_LABELS: Record<string, string> = {
+  admin: "an administrator",
+  account_manager: "an account manager",
+  recruiter: "a recruiter",
+  hiring_manager: "a hiring manager",
+  interviewer: "an interviewer",
+  coordinator: "a coordinator",
+  viewer: "a viewer",
+};
 
 /**
  * Seat management inside a workspace.
@@ -85,14 +97,34 @@ export async function POST(req: NextRequest) {
     ip: clientIp(req),
   });
 
+  const org = await getTenantById(orgId);
+  const [inviter] = await getDb()
+    .select({ name: users.name })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  const sent = await sendOrgInviteEmail({
+    email: body.email,
+    orgName: org?.name ?? "your workspace",
+    orgSlug: org?.slug ?? "",
+    roleLabel: ROLE_LABELS[body.role] ?? body.role,
+    inviterName: inviter?.name ?? null,
+    token: result.data.token,
+    expiresAt: result.data.expiresAt,
+  });
+
   return NextResponse.json(
     {
       invite: {
         id: result.data.id,
         expiresAt: result.data.expiresAt,
-        // Returned once and never retrievable again: only its hash is stored. The caller
-        // puts this in the invitation link.
-        token: result.data.token,
+        emailSent: sent,
+        // The raw token exists in exactly one place once the email is away, and only its
+        // hash is stored. It is returned here ONLY when the send failed — otherwise an
+        // admin whose mail bounced would have no way to pass the link on, and the
+        // alternative (revoke and re-invite) burns a seat round trip for a mail outage.
+        ...(sent ? {} : { token: result.data.token, url: buildInviteUrl(org?.slug ?? "", result.data.token) }),
       },
     },
     { status: 201 }

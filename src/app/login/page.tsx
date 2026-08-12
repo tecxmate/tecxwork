@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { useStudentI18n } from "@/components/student-locale-provider";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { AppTopBarActions } from "@/components/app-topbar-actions";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 type ErrorState =
   | { code: "NONE" }
@@ -32,6 +33,7 @@ type ErrorState =
 
 export default function LoginPage() {
   const router = useRouter();
+  const nextParam = useSearchParams().get("next");
   const { messages } = useStudentI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,14 +87,17 @@ export default function LoginPage() {
         return;
       }
 
-      // Success — route by role
-      if (data.user.role === "admin") {
-        router.push("/admin");
-      } else if (data.user.role === "recruiter") {
-        router.push("/dashboard/interviews");
-      } else {
-        router.push("/browse");
-      }
+      // Success — honour an explicit destination (an invitation link, say), else route by
+      // role. safeRedirectPath refuses anything that is not a same-site path, so a mailed
+      // `?next=https://evil.example` cannot bounce someone off the site right after they
+      // authenticate.
+      const roleHome =
+        data.user.role === "admin"
+          ? "/admin"
+          : data.user.role === "recruiter"
+            ? "/dashboard/interviews"
+            : "/browse";
+      router.push(safeRedirectPath(nextParam, roleHome));
       router.refresh();
     } catch {
       setErrorState({

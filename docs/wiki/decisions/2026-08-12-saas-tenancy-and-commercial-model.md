@@ -93,13 +93,33 @@ resolution unambiguous.
 - **A `.js`-suffixed path bypasses the proxy matcher.** Safe today because no route resolves
   there, but it is the kind of assumption worth re-checking if the matcher is ever loosened.
 
+## Follow-up shipped the same day — the onboarding loop closes
+
+Provisioning existed but a customer could only be onboarded with `curl`. Now:
+
+- **`sendOrgInviteEmail` + `buildInviteUrl`** — the link points at the tenant's own
+  subdomain so the invitee lands on the workspace they are joining, already branded. The
+  raw token is returned in the API response **only when the send failed**, so a mail outage
+  does not force a revoke-and-re-invite round trip.
+- **`/invite`** — the landing page. It deliberately reveals nothing about the invitation
+  before acceptance (not the invited address, not the role, not whether the token is real):
+  the token travels in a URL, which reaches browser history and referrer headers, so
+  confirming "yes, this is valid for finance@client.com" would leak workspace membership to
+  anyone holding a stale link.
+- **`/admin/workspaces`** — the platform console: provision, change plan, adjust contracted
+  seats, suspend and reactivate. Standalone rather than a section of the 4,000-line admin
+  dashboard, because running an event and deciding which customers exist are different axes.
+- **`?next=` support on login**, guarded by a new `lib/safe-redirect.ts`. An invitation has
+  to survive the sign-in round trip, and a post-login redirect taken from the query string
+  is an open redirect. Rejects other origins, `//evil.example` (which a naive
+  `startsWith("/")` would allow), the `/\` variant, and control characters.
+
 ## Still open
 
 - Wildcard DNS and per-tenant custom domains are unconfigured; `PLATFORM_ROOT_DOMAIN` must
   be set or every host resolves to the apex site (deliberate — a missing variable must not
   let a Host header pick a tenant).
-- No platform-admin **UI** yet; provisioning is API-only (`/api/platform/orgs`).
-- Invitation **emails** are not sent — the API returns the token and the caller is
-  responsible for the link.
+- No **members** screen inside a workspace yet — invitations are sent via `/api/org/invites`
+  and there is no UI listing current members or their roles.
 - Multi-org-per-user still unresolved: `getMember()` takes `limit(1)`.
 - The PIPA question from the connector audit is untouched and still niko's call.
