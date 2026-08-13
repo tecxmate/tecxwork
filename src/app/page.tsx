@@ -12,7 +12,6 @@ import { Card } from "@/components/ui/card";
 import { Countdown } from "@/components/countdown";
 import { InstallPrompt } from "@/components/install-prompt";
 import { RecruiterCard } from "@/components/recruiter-card";
-import { RecruiterJobPostingCard } from "@/components/recruiter-job-posting-card";
 import { SiteFooter } from "@/components/site-footer";
 import { AppTopBar } from "@/components/app-topbar";
 import { HeroCarousel } from "@/components/hero-carousel";
@@ -21,50 +20,20 @@ import { EVENT_CONFIG } from "@/lib/data";
 import { getEventBranding } from "@/lib/event-branding";
 import { getSession } from "@/lib/auth";
 import { getCachedRecruiters } from "@/lib/cache";
-import { db, recruiters, jobOpenings, eventConfig } from "@/lib/db";
+import { db, eventConfig } from "@/lib/db";
 import { getStudentLocale } from "@/lib/student-locale.server";
 import { getStudentMessages } from "@/lib/student-messages";
-import { eq } from "drizzle-orm";
 
 async function getPublicRecruiters() {
   // Reuse the canonical directory order (pinned first, then approved-job
   // count, then A→Z) so the homepage preview matches the Companies tab.
-  return (await getCachedRecruiters()).slice(0, 6);
-}
+  const recruiters = (await getCachedRecruiters()).slice(0, 6);
 
-async function getPublicJobs() {
-  const result = await db
-    .select({
-      id: jobOpenings.id,
-      recruiterId: recruiters.id,
-      title: jobOpenings.title,
-      jobCategory: jobOpenings.jobCategory,
-      jdLink: jobOpenings.jdLink,
-      location: jobOpenings.location,
-      employmentType: jobOpenings.employmentType,
-      workplaceType: jobOpenings.workplaceType,
-      salaryMin: jobOpenings.salaryMin,
-      salaryMax: jobOpenings.salaryMax,
-      salaryCurrency: jobOpenings.salaryCurrency,
-      salaryPeriod: jobOpenings.salaryPeriod,
-      seniority: jobOpenings.seniority,
-      languageRequirement: jobOpenings.languageRequirement,
-      visaSupport: jobOpenings.visaSupport,
-      applicationDeadline: jobOpenings.applicationDeadline,
-      responsibilities: jobOpenings.responsibilities,
-      requirements: jobOpenings.requirements,
-      benefits: jobOpenings.benefits,
-      description: jobOpenings.description,
-      company: recruiters.company,
-      industry: recruiters.industry,
-      logoUrl: recruiters.logoUrl,
-    })
-    .from(jobOpenings)
-    .innerJoin(recruiters, eq(jobOpenings.recruiterId, recruiters.id))
-    .where(eq(jobOpenings.moderationStatus, "approved"))
-    .limit(8);
-
-  return result;
+  // Drop the vacancy titles before they leave the server. The card is a client
+  // component, so anything handed to it is serialised into the page payload —
+  // hiding the badges in JSX still left every open role readable in view-source,
+  // which is not "turned off" in any sense that matters.
+  return recruiters.map((recruiter) => ({ ...recruiter, positions: [] }));
 }
 
 async function getHomepageImages() {
@@ -89,9 +58,8 @@ export default async function LandingPage() {
         : "/browse"
     : null;
 
-  const [publicRecruiters, publicJobs, allHomepageImages, branding] = await Promise.all([
+  const [publicRecruiters, allHomepageImages, branding] = await Promise.all([
     getPublicRecruiters(),
-    getPublicJobs(),
     getHomepageImages(),
     getEventBranding(),
   ]);
@@ -227,7 +195,12 @@ export default async function LandingPage() {
             {publicRecruiters.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {publicRecruiters.map((recruiter) => (
-                  <RecruiterCard key={recruiter.id} recruiter={recruiter} />
+                  <RecruiterCard
+                    key={recruiter.id}
+                    recruiter={recruiter}
+                    // The homepage no longer advertises vacancies publicly.
+                    showPositions={false}
+                  />
                 ))}
               </div>
             ) : (
@@ -247,80 +220,6 @@ export default async function LandingPage() {
               className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
             >
               {messages.landing.viewAllCompanies}
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </section>
-
-        {/* Jobs Section */}
-        <section id="jobs" className="border-b px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-8 flex items-end justify-between">
-              <div>
-                <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                  {messages.landing.jobsTitle}
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                  {messages.landing.jobsSubtitle}
-                </p>
-              </div>
-              <Link
-                href="/get-started"
-                className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline sm:flex"
-              >
-                {messages.landing.viewAll}
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            {publicJobs.length > 0 ? (
-              <div className="stagger-fade-in grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {publicJobs.map((job) => (
-                  <RecruiterJobPostingCard
-                    key={job.id}
-                    job={job}
-                    compact
-                    locale={locale}
-                    labels={{
-                      seniority: messages.jobsPage.card.seniority,
-                      languageRequirement: messages.jobsPage.card.languageRequirement,
-                      visaSupport: messages.jobsPage.card.visaSupport,
-                      applicationDeadline: messages.jobsPage.card.applicationDeadline,
-                      description: messages.jobsPage.card.description,
-                      responsibilities: messages.jobsPage.card.responsibilities,
-                      requirements: messages.jobsPage.card.requirements,
-                      benefits: messages.jobsPage.card.benefits,
-                      viewJd: messages.jobsPage.card.viewJd,
-                      noJd: messages.jobsPage.card.noJd,
-                    }}
-                    action={
-                      <Link
-                        href={`/jobs/${job.id}`}
-                        className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                      >
-                        {messages.jobsPage.viewDetails}
-                      </Link>
-                    }
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="flex flex-col items-center justify-center py-12 text-center">
-                <Briefcase className="h-10 w-10 text-muted-foreground/50" />
-                <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  {messages.landing.positionsComingSoon}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {messages.landing.positionsComingSoonHint}
-                </p>
-              </Card>
-            )}
-
-            <Link
-              href="/get-started"
-              className="mt-6 flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline sm:hidden"
-            >
-              {messages.landing.viewAllPositions}
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
