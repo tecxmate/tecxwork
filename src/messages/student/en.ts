@@ -170,6 +170,7 @@ export const studentEnMessages = {
     invalidPassword: "Invalid password",
     loginFailed: "Login failed",
     networkError: "Network error. Please try again.",
+    serverError: "The server could not complete the request (error {status}). This is not your connection — please try again, or contact support if it continues.",
     noAccountFound: "No account found",
     noAccountFor: "No account exists for",
     wouldLikeSignup: "Would you like to sign up?",

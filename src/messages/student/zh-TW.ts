@@ -176,6 +176,7 @@ export const studentZhTwMessages = {
     invalidPassword: "密碼錯誤",
     loginFailed: "登入失敗",
     networkError: "網路錯誤，請稍後再試。",
+    serverError: "伺服器無法完成請求（錯誤 {status}）。這不是您的連線問題——請稍後再試，若持續發生請聯繫支援。",
     noAccountFound: "找不到帳號",
     noAccountFor: "此 Email 尚未註冊",
     wouldLikeSignup: "要立即註冊嗎？",
