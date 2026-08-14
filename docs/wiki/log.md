@@ -1839,3 +1839,10 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
 - Checklist retires itself at 100%, so an established workspace stops seeing it every morning; home then carries plan, seats, trial, and a compliance-attention card (expired or inside 60 days).
 - `/dashboard` now forwards to `/dashboard/home`, which redirects client-company recruiters straight on to interviews — one entry point, agency-only content. Login and the proxy's signed-in redirect follow the same path; the proxy test was updated with it.
 - Verified: 284 tests (was 273), lint 0 errors, build clean.
+
+## [2026-08-14] feat | Empty states — and a compliance screen that was quietly reassuring
+attributed_to: [claude-code]   belongs_to: [tecxwork, design-system]
+- Continuing the "polished like Lark/Apollo/ClickUp" pass. New shared `src/components/empty-state.tsx`; wired into the two agency screens that rendered bare tables (clients, compliance). Takes strings rather than i18n keys, so the copy lives beside the rest of each screen's `T` record instead of a second place that can drift.
+- **Real bug found, not just cosmetics:** the compliance screen showed **"All valid"** whenever nothing needed attention — including when **zero documents had ever been filed**. A brand-new workspace was told its compliance was fine. `compliance.total` was already on the payload and simply unused; the empty tracker is now its own state ("No documents filed yet" + Add document), and "All valid" is reserved for the case where documents exist and none is expiring. This is the one screen that must never sound confident about paperwork nobody has seen.
+- Copy written in both zh and en to match the existing per-view convention.
+- Verified: 284 tests, lint 0 errors, build clean.
