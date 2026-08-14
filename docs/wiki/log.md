@@ -1846,3 +1846,11 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, design-system]
 - **Real bug found, not just cosmetics:** the compliance screen showed **"All valid"** whenever nothing needed attention — including when **zero documents had ever been filed**. A brand-new workspace was told its compliance was fine. `compliance.total` was already on the payload and simply unused; the empty tracker is now its own state ("No documents filed yet" + Add document), and "All valid" is reserved for the case where documents exist and none is expiring. This is the one screen that must never sound confident about paperwork nobody has seen.
 - Copy written in both zh and en to match the existing per-view convention.
 - Verified: 284 tests, lint 0 errors, build clean.
+
+## [2026-08-14] fix | 404 page, and a pipeline empty state that named the wrong problem
+attributed_to: [claude-code]   belongs_to: [tecxwork, design-system]
+- **`src/app/not-found.tsx` added.** `error.tsx` and `global-error.tsx` already existed, so a page that *threw* was handled while a page that simply did not exist fell through to Next's unbranded default. The two now read the same way: say what happened, don't blame the person, offer somewhere to go. `/dashboard` is deliberately not offered — a signed-out visitor would hit a second dead end at the login redirect.
+- **Second instance of the same bug class as the compliance one.** The pipeline board rendered "No candidates in the pipeline yet" whenever `pipelineBoard.jobs.length === 0` — the condition is *no job openings*, not *no candidates*. A new workspace was told to find candidates when what it needed was an opening to put them in. Now names the actual state and links to Post an opening.
+- Both are the same failure: a message describing a state the code was not actually testing, which sends people to the wrong fix. Worth watching for elsewhere.
+- Pre-existing lint warnings in `recruiter-dashboard.tsx` (3 unused lucide imports left by main's rail refactor) confirmed present on main and deliberately left — cleaning them would churn work someone else may still have in flight.
+- Verified: 284 tests, lint 0 errors, build clean, `/_not-found` in the route manifest.
