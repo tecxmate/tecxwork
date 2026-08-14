@@ -66,7 +66,7 @@ five:
 | AI CV screening | `applications.ai_score` is a **mocked demo badge**, explicitly "not real inference" (`schema.ts:371`) |
 | "Your client logs in and sees permit expiries" | The client portal is `status: proposed`. No `portal_invites`/`portal_sessions` tables exist |
 | "Click Export for your RBA pack" | `export/fees` and `export/evidence` are **API routes with no UI button** |
-| "We warn you 30 days before expiry" | Three windows disagree: dashboard 30d, compliance CSV 60d, evidence pack 90d |
+| "We warn you 30 days before expiry" | ~~Three windows disagree: dashboard 30d, compliance CSV 60d, evidence pack 90d~~ **Resolved 2026-08-14** — one `EXPIRING_SOON_DAYS = 30` in `src/lib/compliance-window.ts`; the evidence pack keeps a separate, self-labelling 90-day evaluation horizon |
 | "30-minute interview slots" | Configurable; the schema default is **15** minutes. The manual's "30-min" is wrong |
 | Plans / tiers / seats | No subscription concept exists anywhere. Access is capability-based only |
 
@@ -83,9 +83,11 @@ countries. The page says jurisdiction-specific behaviour (business tax, months-o
 conventions, ARC and work-permit types) follows from where the operator is licensed, not from
 an assumed route.
 
-**`/about` still contradicts this** — it describes the product as "a career-fair platform
-connecting Vietnamese students in Taiwan." Flagged, not rewritten: that is niko's positioning
-copy to change, not something to fix silently inside an unrelated page.
+~~**`/about` still contradicts this**~~ — **resolved 2026-08-14** on niko's instruction. `/about`
+now describes three parties without assuming countries and carries the same "Where it works"
+framing. The VSATW / V-GEN TRIDENT history stays, reworded as *the first corridor it ran, not
+the shape of the product* — the 08-11 decision says the corridor is the first instance, not the
+model, so deleting the history would have been the opposite error.
 
 ## Known gap
 
