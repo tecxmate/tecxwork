@@ -1742,6 +1742,15 @@ attributed_to: [niko]   belongs_to: [design-system, recruiter-dashboard]
 - **Pre-existing bug this surfaced: the active pill never rendered on a cold load, in any role.** `mounted` gates the component behind a rAF, so the first pass returns `null` — and the measuring effects, keyed `[measure, items.length]`, ran against refs that did not exist yet and never ran again. It only appeared after a client-side navigation changed `measure`'s identity. Adding `mounted` to the deps fixes it. **Shape worth remembering: an effect that reads refs, in a component with a mount gate, needs the gate in its deps** — otherwise it runs exactly once, when there is nothing to read. Caught only because the new scroll-into-view failed identically and the probe printed `directSpans: 0`.
 - Verified at 390px: agency 12 tabs all labelled and scrolling (863/364) with Billing centred at `scrollLeft` 442; guest 4 tabs filling the pill and not scrolling; indicator within 1px of the active tab in every case, including after scrolling by hand. tsc 0, lint 0 errors.
 
+## [2026-08-13] fix | Homepage no longer lists jobs publicly
+attributed_to: [niko]   belongs_to: [public-homepage, data-privacy]
+- niko: *"Turn off the public facing job listing on both homepage of work.tecxmate.com and yangluck.tecxmate.com."* Both domains deploy the same code, so one change covers both.
+- Removed the `#jobs` section (74 lines) and the `getPublicJobs()` query that fed it — no point paying for a query nothing renders.
+- **That alone was not enough, twice over.** First: the company cards on the homepage each listed up to three vacancy titles under "Open Positions" — a job listing by any reading. Gated behind a new `showPositions` prop on `RecruiterCard`, off on the homepage, left on in `/browse` where the question being asked *is* "who is hiring".
+- **Second, and the one worth remembering: hiding the badges in JSX did not remove the data.** `RecruiterCard` is a client component, so everything handed to it is serialised into the RSC payload — every vacancy title was still sitting in view-source with the badges gone. Confirmed by grepping the served HTML, not the rendered text. Fixed by stripping `positions` server-side in `getPublicRecruiters()` before the objects cross the boundary. **Hiding a client component's props hides pixels, not data.**
+- Verified: job titles appear **zero** times in the homepage HTML source (all six `positions` arrays serialise as `[]`); companies still render; no layout break or horizontal scroll at 1440px or 390px. `/browse` untouched. tsc 0, lint 0 errors.
+- **Still public and deliberately untouched:** the `/jobs` page itself, the "Jobs" tab in the guest nav, and the hero's "Find Jobs" button. The ask named the homepage; unpublishing `/jobs` is a larger call with SEO and candidate-flow consequences, and is niko's to make.
+
 ## [2026-08-13] fix | Login reported server faults as "network error"
 attributed_to: [niko]   belongs_to: [tecxwork, data-privacy]
 - niko, unable to sign in to the Yang Luck demo: *"how do I get login on Yang Luck now it's say a network error"*. The message was lying.
