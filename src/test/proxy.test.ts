@@ -71,9 +71,9 @@ describe("proxy — route guards", () => {
 
   it("redirects a signed-in user away from login and signup, by role", () => {
     expect(locationOf(proxy(request("/login", { session: admin })))).toBe("/admin");
-    expect(locationOf(proxy(request("/login", { session: recruiter })))).toBe(
-      "/dashboard/interviews"
-    );
+    // /dashboard is the single entry point; it forwards to the workspace home, which
+    // sends client-company recruiters on to their interviews.
+    expect(locationOf(proxy(request("/login", { session: recruiter })))).toBe("/dashboard");
     expect(locationOf(proxy(request("/login", { session: applicant })))).toBe("/browse");
     expect(locationOf(proxy(request("/recruiter/signup", { session: admin })))).toBe("/admin");
   });

@@ -127,7 +127,7 @@ export default function LoginPage() {
         data.user.role === "admin"
           ? "/admin"
           : data.user.role === "recruiter"
-            ? "/dashboard/interviews"
+            ? "/dashboard"
             : "/browse";
       router.push(safeRedirectPath(nextParam, roleHome));
       router.refresh();

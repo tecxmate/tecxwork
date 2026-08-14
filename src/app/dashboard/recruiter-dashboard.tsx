@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TeamView, type TeamData } from "./team-view";
+import { HomeView, type HomeData } from "./home-view";
 import { cn } from "@/lib/utils";
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
@@ -79,6 +80,7 @@ type Recruiter = {
 };
 
 type Section =
+  | "home"
   | "interviews"
   | "applicants"
   | "candidates"
@@ -156,6 +158,7 @@ export function RecruiterDashboard({
   offers = null,
   billing = null,
   team = null,
+  home = null,
 }: {
   recruiter: Recruiter;
   /** What this member's org role permits — used to hide tabs that would only redirect. */
@@ -174,6 +177,7 @@ export function RecruiterDashboard({
   offers?: OffersData | null;
   billing?: BillingData | null;
   team?: TeamData | null;
+  home?: HomeData | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -192,7 +196,9 @@ export function RecruiterDashboard({
       }
     });
   const currentPath =
-    section === "interviews"
+    section === "home"
+      ? "/dashboard/home"
+      : section === "interviews"
       ? "/dashboard/interviews"
       : section === "applicants"
         ? "/dashboard/applicants"
@@ -362,6 +368,8 @@ export function RecruiterDashboard({
                 Reports are available for agency accounts.
               </p>
             )
+          ) : section === "home" ? (
+            home ? <HomeView data={home} /> : null
           ) : section === "team" ? (
             team ? (
               <TeamView initial={team} />

@@ -16,6 +16,7 @@ import {
   User,
   Users,
   UserCog,
+  LayoutDashboard,
 } from "lucide-react";
 
 import type { UserRole } from "@/lib/auth";
@@ -92,6 +93,15 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "Interviews",
       icon: BriefcaseBusiness,
       matches: ["/dashboard/interviews"],
+    },
+    {
+      href: "/dashboard/home",
+      label: "Home",
+      icon: LayoutDashboard,
+      matches: ["/dashboard/home"],
+      // Agency-only: a client-company recruiter has no clients, job orders or placements,
+      // so the setup path would list things they cannot do.
+      agencyOnly: true,
     },
     {
       href: "/dashboard/applicants",

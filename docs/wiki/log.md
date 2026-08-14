@@ -1828,3 +1828,14 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
 - **Made `getEventBranding` survive a pre-migration database.** The tenant-scoped read hard-depended on `event_config.org_id`; without it every query failed and the whole public site fell back to hardcoded `EVENT_CONFIG`, losing the admin-controlled event name, dates and imagery. Now catches Postgres `42703` (undefined_column) **only** — a genuinely broken query still surfaces — and falls back to the unscoped read. Deploy order no longer matters for the public site.
 - Proved it rather than asserting it: `src/test/event-branding-premigration.test.ts` drops the column, inserts a config row via raw SQL (drizzle would name the dropped column), asserts the DB value is served rather than the static default, and restores the column in `afterAll`.
 - Verified: 273 tests (was 272), lint 0 errors, build clean, schema restored after the DDL-mutating test.
+
+## [2026-08-14] feat | Workspace home + activation checklist — a new tenant now has a way in
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
+- niko: "continue to make this a durable SaaS. and polished like Lark, Apollo.io, ClickUp". PR #23 merged first (36cceda).
+- **The gap this closes:** provisioning could create a workspace, but a new tenant landed on `/dashboard/interviews` — an empty table with no indication of what to do. The product was reachable and not enterable. That is the most visible distance from the products niko named.
+- New `src/lib/activation.ts` (actor-free, takes an orgId): six setup steps **derived from the data**, never from a stored `onboarding_completed` flag. A flag drifts — it reads done after someone deletes their only client, and pending for every tenant provisioned by hand before the feature existed. Deriving costs six counting queries issued in one `Promise.all` and is always true; there is a test that deletes a client and watches the step untick.
+- **Steps are filtered by plan, and the denominator shrinks with them.** "Record a placement" is not a task a starter customer is failing — counting it would put 100% out of reach.
+- **Trial state reuses the gate's own `isTrialExpired`**, so the banner and the refusal cannot disagree. A workspace reading "3 days left" while every request is refused is worse than either message alone.
+- Checklist retires itself at 100%, so an established workspace stops seeing it every morning; home then carries plan, seats, trial, and a compliance-attention card (expired or inside 60 days).
+- `/dashboard` now forwards to `/dashboard/home`, which redirects client-company recruiters straight on to interviews — one entry point, agency-only content. Login and the proxy's signed-in redirect follow the same path; the proxy test was updated with it.
+- Verified: 284 tests (was 273), lint 0 errors, build clean.
