@@ -79,11 +79,37 @@ async function currentOrgId(): Promise<number | null> {
  * intent ("mine, else the platform's") should be readable.
  */
 async function queryEventConfigRow(orgId: number | null) {
-  if (orgId !== null) {
-    const own = await selectEventConfigRow(eq(eventConfig.orgId, orgId));
-    if (own) return own;
+  try {
+    if (orgId !== null) {
+      const own = await selectEventConfigRow(eq(eventConfig.orgId, orgId));
+      if (own) return own;
+    }
+    return await selectEventConfigRow(isNull(eventConfig.orgId));
+  } catch (err) {
+    // `event_config.org_id` is added by the saas-tenancy migration. Between a deploy and
+    // that migration the column does not exist, and every query above fails — which would
+    // drop the whole public site back to the hardcoded EVENT_CONFIG, losing the event name,
+    // dates and imagery the admin panel controls.
+    //
+    // Falling back to the unscoped read (the behaviour before tenancy) keeps branding live
+    // through that window, so deploy order stops mattering. Narrow on purpose: only
+    // undefined_column is caught, so a genuinely broken query still surfaces.
+    if (!isUndefinedColumn(err)) throw err;
+    console.warn(
+      "event_config.org_id is missing — serving unscoped branding. " +
+        "Run `npm run db:update:saas-tenancy` against this database."
+    );
+    return selectEventConfigRow(undefined);
   }
-  return selectEventConfigRow(isNull(eventConfig.orgId));
+}
+
+/** Postgres `undefined_column` (42703) — the one error this fallback is for. */
+function isUndefinedColumn(err: unknown): boolean {
+  const code = (err as { code?: unknown })?.code;
+  if (code === "42703") return true;
+  // Neon's serverless driver wraps the original error rather than re-exposing `code`.
+  const cause = (err as { cause?: { code?: unknown } })?.cause;
+  return cause?.code === "42703";
 }
 
 async function selectEventConfigRow(where: SQL | undefined) {

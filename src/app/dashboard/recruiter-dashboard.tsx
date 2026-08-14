@@ -252,7 +252,16 @@ export function RecruiterDashboard({
   return (
     // The rail sits beside the whole workspace, so it stays put while the page changes.
     <div className="flex min-h-full flex-1">
-      <DashboardSidebar isAgency={isAgency} capabilities={capabilities} />
+      <DashboardSidebar
+        isAgency={isAgency}
+        capabilities={capabilities}
+        // The company, not the role: it says which account you are acting in.
+        accountName={recruiter.company}
+        accountRole={messages.common.recruiter}
+        logoutLabel={messages.common.logout}
+        notificationLabels={messages.notifications}
+        accountMenuExtra={<RecruiterLanguageSwitcher />}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
       <AppTopBar
@@ -263,6 +272,9 @@ export function RecruiterDashboard({
         capabilities={capabilities}
         // The rail carries navigation on desktop; the bar keeps it for small screens.
         hideDesktopNav
+        // Brand, notifications and account all live in the rail now, so on desktop this
+        // bar would be an empty strip.
+        hideOnDesktop
         mobileActions={<RecruiterLanguageSwitcher />}
         showActionsOnMobile
         accountLabels={{

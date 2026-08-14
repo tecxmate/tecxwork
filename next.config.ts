@@ -26,14 +26,6 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns,
   },
-  async rewrites() {
-    return [
-      // The platform manual is a single self-contained HTML file in public/ (every
-      // screenshot is inlined, so it also works offline once downloaded). The rewrite
-      // just gives it a clean URL — /documentation instead of /documentation.html.
-      { source: "/documentation", destination: "/documentation.html" },
-    ];
-  },
 };
 
 export default nextConfig;

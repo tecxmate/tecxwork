@@ -61,4 +61,6 @@ npm run dev                                             # http://localhost:3000/
 No production auth hardening, real emails/payments, real candidate PII, blue-collar migrant-sourcing flows, or marketing/SEO tooling. Not merged to `main`.
 
 ## Screenshots
-`public/demo/kanban-board.png` · `public/demo/candidate-drawer.png` — for dropping into the pitch deck.
+`docs/pitch-assets/kanban-board.png` · `docs/pitch-assets/candidate-drawer.png` — for dropping into the
+pitch deck. Deliberately **not** under `public/`: they show a client's pipeline with real company and
+candidate names, and anything in `public/` is served at a guessable URL whether or not the app links it.

@@ -56,11 +56,11 @@ export function MobileBottomNav({
   const displayActiveHref = pendingHref ?? currentActiveHref;
 
   const itemRefs = useRef(new Map<string, HTMLAnchorElement | null>());
-  const labelMeasureRefs = useRef(new Map<string, HTMLSpanElement | null>());
   const containerRef = useRef<HTMLDivElement | null>(null);
+  /** Whether the pill has already been scrolled once — see the scroll-into-view effect. */
+  const didScrollRef = useRef(false);
   const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
   const [animateIndicator, setAnimateIndicator] = useState(false);
-  const [iconOnlyHrefs, setIconOnlyHrefs] = useState<Set<string>>(() => new Set());
   const [mounted, setMounted] = useState(false);
   const [isAndroid] = useState(
     () => typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent),
@@ -74,35 +74,11 @@ export function MobileBottomNav({
     if (!el) return;
     const cRect = container.getBoundingClientRect();
     const eRect = el.getBoundingClientRect();
-    setIndicator({ x: eRect.left - cRect.left, w: eRect.width });
+    // The pill scrolls, and the indicator is absolutely positioned inside it — so it is
+    // placed in content coordinates and scrolls along with the tabs. Without adding
+    // scrollLeft it would sit under whichever tab happens to be in that viewport slot.
+    setIndicator({ x: eRect.left - cRect.left + container.scrollLeft, w: eRect.width });
   }, [displayActiveHref]);
-  const measureLabelFit = useCallback(() => {
-    const next = new Set<string>();
-
-    for (const item of items) {
-      const link = itemRefs.current.get(item.href);
-      const label = labelMeasureRefs.current.get(item.href);
-      if (!link || !label) continue;
-
-      const computed = window.getComputedStyle(link);
-      const available =
-        link.clientWidth -
-        Number.parseFloat(computed.paddingLeft || "0") -
-        Number.parseFloat(computed.paddingRight || "0");
-
-      if (label.scrollWidth > Math.max(0, available)) {
-        next.add(item.href);
-      }
-    }
-
-    setIconOnlyHrefs((current) => {
-      if (current.size !== next.size) return next;
-      for (const href of current) {
-        if (!next.has(href)) return next;
-      }
-      return current;
-    });
-  }, [items]);
   const shouldHide =
     pathname.startsWith("/api") ||
     pathname === "/terms-of-service" ||
@@ -155,14 +131,45 @@ export function MobileBottomNav({
     };
   }, []);
 
+  // `mounted` gates the whole render, so the first pass has no container and no item refs
+  // to measure. Without it in the deps this never runs again and the active pill never
+  // appears on a cold load — it only showed up after a client-side navigation changed
+  // `measure`'s identity.
   useLayoutEffect(() => {
     measure();
-  }, [measure, items.length]);
+  }, [measure, items.length, mounted]);
 
+  /**
+   * Keep the current tab on screen.
+   *
+   * With twelve destinations the active one is often outside the pill's viewport — an
+   * agency opening Billing would see a row scrolled to Interviews with no sign of where
+   * they are.
+   *
+   * `mounted` is a dependency, not decoration: the component renders null until it flips,
+   * so on the first pass there is no container to scroll and the effect would otherwise
+   * never run again.
+   */
   useEffect(() => {
-    const id = window.requestAnimationFrame(measureLabelFit);
-    return () => window.cancelAnimationFrame(id);
-  }, [measureLabelFit, messages]);
+    const container = containerRef.current;
+    if (!container || !displayActiveHref) return;
+    const el = itemRefs.current.get(displayActiveHref);
+    if (!el) return;
+
+    const target =
+      el.offsetLeft - container.clientWidth / 2 + el.offsetWidth / 2;
+    const max = container.scrollWidth - container.clientWidth;
+    const left = Math.max(0, Math.min(target, max));
+    if (Math.abs(left - container.scrollLeft) < 1) return;
+
+    // First run jumps, later ones glide: on load the row should already be in the right
+    // place rather than visibly sliding there.
+    container.scrollTo({
+      left,
+      behavior: didScrollRef.current ? "smooth" : "auto",
+    });
+    didScrollRef.current = true;
+  }, [displayActiveHref, items.length, mounted]);
 
   useEffect(() => {
     if (indicator && !animateIndicator) {
@@ -184,22 +191,7 @@ export function MobileBottomNav({
       ro.disconnect();
       window.removeEventListener("orientationchange", measure);
     };
-  }, [measure]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const ro = new ResizeObserver(() => measureLabelFit());
-    ro.observe(container);
-    for (const el of itemRefs.current.values()) {
-      if (el) ro.observe(el);
-    }
-    window.addEventListener("orientationchange", measureLabelFit);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("orientationchange", measureLabelFit);
-    };
-  }, [measureLabelFit]);
+  }, [measure, mounted]);
 
   function markPending(href: string) {
     setPendingHref(href);
@@ -225,12 +217,20 @@ export function MobileBottomNav({
           : "max(0.5rem, env(safe-area-inset-bottom))",
       }}
     >
+      {/*
+        A scrolling row rather than a grid of equal columns. The grid divided the pill by
+        item count, so an agency's twelve destinations got about 30px each and the labels
+        were dropped wholesale. Items now take the width their label needs and the row
+        scrolls; `grow` with `shrink-0` means four items still spread across the pill while
+        twelve overflow it.
+
+        Scrolling starts at the left rather than centring the row: `justify-center` on an
+        overflowing flex container puts the first items past the scroll origin, where they
+        cannot be reached.
+      */}
       <div
         ref={containerRef}
-        className="pointer-events-auto relative grid w-full max-w-xl gap-0 rounded-full border border-border/40 bg-background/75 px-1.5 py-1 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.22),0_4px_12px_-4px_rgba(0,0,0,0.10)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-background/65 dark:border-white/10 dark:bg-zinc-800/85 dark:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.55),0_4px_12px_-4px_rgba(0,0,0,0.30)] supports-[backdrop-filter]:dark:bg-zinc-800/70"
-        style={{
-          gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
-        }}
+        className="pointer-events-auto scrollbar-hide relative flex w-full max-w-xl gap-0 overflow-x-auto overscroll-x-contain rounded-full border border-border/40 bg-background/75 px-1.5 py-1 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.22),0_4px_12px_-4px_rgba(0,0,0,0.10)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-background/65 dark:border-white/10 dark:bg-zinc-800/85 dark:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.55),0_4px_12px_-4px_rgba(0,0,0,0.30)] supports-[backdrop-filter]:dark:bg-zinc-800/70"
       >
         {indicator && (
           <span
@@ -252,8 +252,6 @@ export function MobileBottomNav({
           const active = displayActiveHref === item.href;
           const Icon = item.icon;
           const label = getLabel(item.href, item.label);
-          const iconOnly = iconOnlyHrefs.size > 0;
-
           return (
             <Link
               key={item.href}
@@ -288,7 +286,9 @@ export function MobileBottomNav({
                 router.push(item.href);
               }}
               className={[
-                "relative z-10 flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1 text-[11px] font-medium transition-colors",
+                // grow + shrink-0: fill the pill when there are few items, keep the label
+                // legible and overflow into a scroll when there are many.
+                "relative z-10 flex min-h-11 shrink-0 grow flex-col items-center justify-center gap-0.5 rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
                 active
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
@@ -300,20 +300,7 @@ export function MobileBottomNav({
                   active ? "text-primary" : "text-current",
                 ].join(" ")}
               />
-              {!iconOnly && (
-                <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
-                  {label}
-                </span>
-              )}
-              <span
-                ref={(el) => {
-                  labelMeasureRefs.current.set(item.href, el);
-                }}
-                aria-hidden
-                className="pointer-events-none absolute -z-10 whitespace-nowrap opacity-0"
-              >
-                {label}
-              </span>
+              <span className="whitespace-nowrap">{label}</span>
             </Link>
           );
         })}

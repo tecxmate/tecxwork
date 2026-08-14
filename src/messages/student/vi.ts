@@ -175,6 +175,7 @@ export const studentViMessages = {
     invalidPassword: "Mật khẩu không đúng",
     loginFailed: "Đăng nhập thất bại",
     networkError: "Lỗi mạng. Vui lòng thử lại.",
+    serverError: "Máy chủ không thể xử lý yêu cầu (lỗi {status}). Đây không phải lỗi kết nối của bạn — vui lòng thử lại, hoặc liên hệ hỗ trợ nếu vẫn tiếp diễn.",
     noAccountFound: "Không tìm thấy tài khoản",
     noAccountFor: "Không có tài khoản cho",
     wouldLikeSignup: "Bạn muốn đăng ký không?",
