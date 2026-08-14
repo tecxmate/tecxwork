@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   User,
   Users,
+  UserCog,
 } from "lucide-react";
 
 import type { UserRole } from "@/lib/auth";
@@ -169,6 +170,15 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "My Company",
       icon: Building2,
       matches: ["/dashboard/company"],
+    },
+    {
+      href: "/dashboard/team",
+      label: "Team",
+      icon: UserCog,
+      matches: ["/dashboard/team"],
+      // Seats are a line on the customer's bill, so this is admin-only — the same
+      // capability that gates the invite API.
+      capability: "member:invite",
     },
   ],
   admin: [

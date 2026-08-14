@@ -21,6 +21,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { TeamView, type TeamData } from "./team-view";
 import { cn } from "@/lib/utils";
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
@@ -90,6 +91,7 @@ type Section =
   | "compliance"
   | "reports"
   | "jobs"
+  | "team"
   | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
   "recruiter_applicants_compliance_notice_dismissed_v1";
@@ -153,6 +155,7 @@ export function RecruiterDashboard({
   pipelineStages = null,
   offers = null,
   billing = null,
+  team = null,
 }: {
   recruiter: Recruiter;
   /** What this member's org role permits — used to hide tabs that would only redirect. */
@@ -170,6 +173,7 @@ export function RecruiterDashboard({
   pipelineStages?: StageRow[] | null;
   offers?: OffersData | null;
   billing?: BillingData | null;
+  team?: TeamData | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -206,7 +210,9 @@ export function RecruiterDashboard({
                 ? "/dashboard/reports"
                 : section === "jobs"
                   ? "/dashboard/jobs"
-                  : "/dashboard/company";
+                  : section === "team"
+                    ? "/dashboard/team"
+                    : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -354,6 +360,14 @@ export function RecruiterDashboard({
             ) : (
               <p className="py-16 text-center text-sm text-muted-foreground">
                 Reports are available for agency accounts.
+              </p>
+            )
+          ) : section === "team" ? (
+            team ? (
+              <TeamView initial={team} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Team management is available to workspace administrators.
               </p>
             )
           ) : section === "jobs" ? (

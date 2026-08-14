@@ -830,3 +830,89 @@ export async function sendRecruiterReminderEmail(data: RecruiterReminderData) {
     return false;
   }
 }
+
+type OrgInviteEmailData = {
+  email: string;
+  orgName: string;
+  orgSlug: string;
+  roleLabel: string;
+  inviterName?: string | null;
+  token: string;
+  expiresAt: Date;
+};
+
+/**
+ * Where an invitation link points.
+ *
+ * The tenant's own subdomain, not the apex: the invitee should land on the workspace they
+ * are joining, already branded. Falls back to the public base URL when
+ * PLATFORM_ROOT_DOMAIN is unset — the accept endpoint resolves the invitation from the
+ * token alone, so the link still works, it just arrives somewhere less specific.
+ */
+export function buildInviteUrl(orgSlug: string, token: string): string {
+  const root = process.env.PLATFORM_ROOT_DOMAIN?.trim().replace(/^\.+|\.+$/g, "");
+  const base = root ? `https://${orgSlug}.${root}` : getPublicBaseUrl();
+  return `${base}/invite?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * The invitation itself. This carries the only copy of the raw token that will ever exist —
+ * the database holds a SHA-256 of it — so a failed send means revoking and re-inviting
+ * rather than looking the token up again.
+ */
+export async function sendOrgInviteEmail(data: OrgInviteEmailData): Promise<boolean> {
+  const resend = getResend();
+  const subject = `You've been invited to ${data.orgName} on TECXWORK`;
+
+  if (!resend) {
+    console.log("RESEND_API_KEY not set — skipping org invite email");
+    return false;
+  }
+
+  const url = buildInviteUrl(data.orgSlug, data.token);
+  const safeOrg = escapeHtml(data.orgName);
+  const safeRole = escapeHtml(data.roleLabel);
+  const safeInviter = data.inviterName ? escapeHtml(data.inviterName) : null;
+  const expires = data.expiresAt.toISOString().slice(0, 10);
+
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: data.email,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px;">
+          <h2 style="margin: 0 0 8px; font-size: 20px;">Join ${safeOrg}</h2>
+          <p style="color: #666; margin: 0 0 24px; font-size: 14px;">
+            ${safeInviter ? `${safeInviter} has invited you` : "You have been invited"} to join
+            <strong>${safeOrg}</strong> on TECXWORK as <strong>${safeRole}</strong>.
+          </p>
+
+          <div style="margin-bottom: 24px;">
+            <a href="${safeUrl(url)}" target="_blank" style="display: inline-block; background: #8C52FF; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+              Accept Invitation
+            </a>
+          </div>
+
+          <div style="background: #f3eeff; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <p style="margin: 0; font-size: 14px; color: #4c1d95;">
+              Sign in with <strong>${escapeHtml(data.email)}</strong> to accept — the invitation
+              only works for that address. This link expires on ${escapeHtml(expires)}.
+            </p>
+          </div>
+
+          <p style="font-size: 12px; color: #999; margin-top: 32px;">
+            If you were not expecting this, you can ignore this email and nothing will happen.<br>
+            Powered by <a href="https://work.tecxmate.com" style="color: #8C52FF; text-decoration: none; font-weight: 500;">TECXWORK</a>
+          </p>
+        </div>
+      `,
+    });
+    await logEmail("org_invite", data.email, subject, true);
+    return true;
+  } catch (err) {
+    console.error("Failed to send org invite email:", err);
+    await logEmail("org_invite", data.email, subject, false, String(err));
+    return false;
+  }
+}
