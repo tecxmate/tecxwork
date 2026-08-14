@@ -6,6 +6,7 @@ import {
   complianceDocuments,
   jobOpenings,
 } from "@/lib/db/schema";
+import { complianceWindow } from "@/lib/compliance-window";
 
 export type CandidateFilters = {
   q?: string;
@@ -176,10 +177,7 @@ export async function searchCandidates(
     appliedBy.set(a.applicantId, list);
   }
 
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  const soon = new Date(today);
-  soon.setUTCDate(soon.getUTCDate() + 30);
+  const { today, cutoff: soon } = complianceWindow();
 
   const docsBy = new Map<number, CandidateHit["docStatus"]>();
   for (const d of docRows) {
