@@ -17,7 +17,20 @@ export type RecruiterCardData = {
   verified: boolean;
 };
 
-export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
+export function RecruiterCard({
+  recruiter,
+  showPositions = true,
+}: {
+  recruiter: RecruiterCardData;
+  /**
+   * Whether to list the company's open roles on the card.
+   *
+   * The homepage turns this off: it is the public front door, and the badges name actual
+   * vacancies. The companies directory keeps them — someone who has navigated to browse
+   * employers is asking exactly that question.
+   */
+  showPositions?: boolean;
+}) {
   const { messages } = useStudentI18n();
 
   return (
@@ -61,30 +74,32 @@ export function RecruiterCard({ recruiter }: { recruiter: RecruiterCardData }) {
           </div>
         </div>
 
-        <div className="flex-1">
-          <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
-            {messages.recruiterCard.openPositions}
-          </p>
-          <div className="flex min-w-0 max-w-full flex-wrap gap-1">
-            {recruiter.positions.slice(0, 3).map((pos) => (
-              <Badge
-                key={pos}
-                variant="outline"
-                className="min-w-0 max-w-full !shrink text-[10px] font-normal sm:text-xs"
-              >
-                <span className="block truncate">{pos}</span>
-              </Badge>
-            ))}
-            {recruiter.positions.length > 3 && (
-              <Badge
-                variant="outline"
-                className="text-[10px] font-normal sm:text-xs"
-              >
-                +{recruiter.positions.length - 3}
-              </Badge>
-            )}
+        {showPositions ? (
+          <div className="flex-1">
+            <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
+              {messages.recruiterCard.openPositions}
+            </p>
+            <div className="flex min-w-0 max-w-full flex-wrap gap-1">
+              {recruiter.positions.slice(0, 3).map((pos) => (
+                <Badge
+                  key={pos}
+                  variant="outline"
+                  className="min-w-0 max-w-full !shrink text-[10px] font-normal sm:text-xs"
+                >
+                  <span className="block truncate">{pos}</span>
+                </Badge>
+              ))}
+              {recruiter.positions.length > 3 && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-normal sm:text-xs"
+                >
+                  +{recruiter.positions.length - 3}
+                </Badge>
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {recruiter.jdAvailable && (
           <div className="flex items-center gap-1.5 text-xs text-primary">
