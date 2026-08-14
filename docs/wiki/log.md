@@ -1854,3 +1854,12 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, design-system]
 - Both are the same failure: a message describing a state the code was not actually testing, which sends people to the wrong fix. Worth watching for elsewhere.
 - Pre-existing lint warnings in `recruiter-dashboard.tsx` (3 unused lucide imports left by main's rail refactor) confirmed present on main and deliberately left — cleaning them would churn work someone else may still have in flight.
 - Verified: 284 tests, lint 0 errors, build clean, `/_not-found` in the route manifest.
+
+## [2026-08-14] feat | `npm run db:doctor` — the migration question is now one command
+attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy]
+- I had twice told niko the migration blocker was unresolvable from this session (no production credentials) and twice asked someone else to answer it. Better to make answering it trivial than to keep asking.
+- `src/lib/db/doctor.ts` + `npm run db:doctor`: **strictly read-only** — every statement is a SELECT against `information_schema` or a COUNT — so it is safe to point at production, which is the whole point. Prints the **host only**, never the connection string, and flags when the host looks like a prod one.
+- Reports: which of the 8 core ATS tables exist; whether each saas-tenancy column is present; org/membership/invite counts; `event_config` rows including how many are platform-default (warns above 1); then a **verdict** naming the next step.
+- Three verdicts, each **verified against a real database** rather than reasoned about: fully migrated (`tecxwork_test`) → "Ready"; ATS present with columns dropped (`unmigrated_check`) → "tenancy migration outstanding, run db:update:saas-tenancy"; ATS entirely absent (`no_ats_check`) → "the agency product cannot run here … agency routes are already failing on current main, independently of this work."
+- That third verdict is the one that matters: it is the hypothesis raised by 21 migration scripts refusing prod, and it is now checkable in ten seconds instead of being an open question blocking a deploy.
+- `docs/handoff-codex.md` updated to lead with the command instead of `\d orgs`.

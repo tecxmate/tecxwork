@@ -53,8 +53,18 @@ That matters two ways:
    on today's `main`, and prod is serving only the public/event side. That would be worth
    knowing on its own, and it changes what "deploying this" even means.
 
-**So: check `orgs` exists in the database the deployment reads, before running anything.**
-`\d orgs` and `\dt` will settle it in ten seconds. Then decide whether the target is prod, the
+**So: check before running anything.** There is now a read-only diagnostic that answers
+this in one command, safe to point at production:
+
+```bash
+DATABASE_URL="<connection string>" npm run db:doctor
+```
+
+It reports which ATS tables exist, whether the tenancy columns are present, org/membership
+counts, how many platform-default `event_config` rows there are, and a verdict naming the
+next step. Every statement is a SELECT against `information_schema` or a COUNT — it writes
+nothing, and it prints the host only, never the connection string. All three verdicts were
+verified against real databases (migrated, un-migrated, ATS-absent). Then decide whether the target is prod, the
 demo DB, or both.
 
 I have **deliberately not** put a prod guard in `add-saas-tenancy.ts`, because unlike the
