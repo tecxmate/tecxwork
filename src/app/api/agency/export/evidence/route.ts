@@ -16,6 +16,16 @@ import { getAgencyActor } from "@/lib/agency-auth";
 import { can } from "@/lib/permissions";
 import { csvResponse, datedFilename, toCsv, type CsvValue } from "@/lib/csv";
 
+/**
+ * The forward horizon this pack reports document expiries over.
+ *
+ * Deliberately wider than the dashboard's operational "expiring soon" window, and
+ * deliberately not that constant: an evaluation asks how much renewal work is coming, not
+ * what needs doing this month. The row label is built from this number so the figure and
+ * the words describing it cannot drift apart.
+ */
+const EVALUATION_HORIZON_DAYS = 90;
+
 export const dynamic = "force-dynamic";
 
 const count = sql<number>`count(*)`.mapWith(Number);
@@ -44,7 +54,9 @@ export async function GET() {
   const orgId = actor.orgId;
 
   const today = new Date().toISOString().slice(0, 10);
-  const in90 = new Date(Date.now() + 90 * 86_400_000).toISOString().slice(0, 10);
+  const horizon = new Date(Date.now() + EVALUATION_HORIZON_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
 
   const [
     placementsByStatus,
@@ -100,7 +112,7 @@ export async function GET() {
         expired: sql<number>`count(*) filter (where ${complianceDocuments.expiryDate} < ${today})`.mapWith(
           Number
         ),
-        expiring90: sql<number>`count(*) filter (where ${complianceDocuments.expiryDate} >= ${today} and ${complianceDocuments.expiryDate} <= ${in90})`.mapWith(
+        expiring90: sql<number>`count(*) filter (where ${complianceDocuments.expiryDate} >= ${today} and ${complianceDocuments.expiryDate} <= ${horizon})`.mapWith(
           Number
         ),
         noExpiry: sql<number>`count(*) filter (where ${complianceDocuments.expiryDate} is null)`.mapWith(
@@ -157,7 +169,11 @@ export async function GET() {
   add("Document management", "Compliance documents tracked", docsAgg.total);
   add("Document management", "With stored artifact", docsAgg.withArtifact);
   add("Document management", "Expired", docsAgg.expired);
-  add("Document management", "Expiring within 90 days", docsAgg.expiring90);
+  add(
+    "Document management",
+    `Expiring within ${EVALUATION_HORIZON_DAYS} days`,
+    docsAgg.expiring90
+  );
   add("Document management", "No expiry recorded", docsAgg.noExpiry);
 
   add("Accountability", "Audit log entries", auditAgg.entries);

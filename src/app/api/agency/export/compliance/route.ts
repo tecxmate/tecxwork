@@ -3,11 +3,13 @@ import { and, asc, eq, ne } from "drizzle-orm";
 import { applicantProfiles, complianceDocuments, db, users } from "@/lib/db";
 import { getAgencyActor } from "@/lib/agency-auth";
 import { csvResponse, datedFilename, toCsv } from "@/lib/csv";
+import { EXPIRING_SOON_DAYS } from "@/lib/compliance-window";
 
 export const dynamic = "force-dynamic";
 
-/** Matches the dashboard's definition of "needs attention". */
-const EXPIRING_SOON_DAYS = 60;
+// The window now comes from the one place that defines it. This file used to declare 60
+// under a comment claiming it matched the dashboard, which used 30 — so a permit could be
+// "expiring" on screen and "valid" in the spreadsheet handed to an inspector.
 
 /**
  * GET /api/agency/export/compliance — every tracked document, as a spreadsheet.
