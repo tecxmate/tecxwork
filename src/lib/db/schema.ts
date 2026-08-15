@@ -400,15 +400,71 @@ export const memberRoleEnum = pgEnum("member_role", [
 
 // A tenant. An agency (Yang Luck) or a corporate employer. Everything ATS is
 // scoped to one org; the agency's client companies live as data WITHIN its org.
+export const orgStatusEnum = pgEnum("org_status", [
+  "active",
+  "suspended",
+  "cancelled",
+]);
+
 export const orgs = pgTable("orgs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  /**
+   * Also the tenant's subdomain (`<slug>.tecxwork.com`) — see lib/tenant.ts. It is one
+   * column rather than two because a tenant with a slug that does not match its host is a
+   * bug waiting to be found in production, not a feature.
+   */
   slug: text("slug").notNull().unique(),
   kind: text("kind").notNull().default("agency"), // agency | employer
+  // ---- Commercial state. No payment processor: these columns ARE the subscription. ----
+  /** Refuses every authenticated request when not `active`. See lib/agency-auth.ts. */
+  status: orgStatusEnum("status").notNull().default("active"),
+  /** A PlanId (see lib/plans.ts). Text, not an enum, so pricing can change without DDL. */
+  plan: text("plan").notNull().default("trial"),
+  /**
+   * The CONTRACTED seat count, seeded from the plan's default at provisioning and then
+   * owned by whoever agreed the deal. The plan is the list price; this is the invoice.
+   */
+  seatLimit: integer("seat_limit").notNull().default(3),
+  trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  /** Where the invoice goes. Deliberately not a user — people leave, billing contacts stay. */
+  billingEmail: text("billing_email"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
+
+/**
+ * A pending invitation to join an org.
+ *
+ * Sales provisions the org and its first admin; that admin invites everyone else. Only the
+ * SHA-256 of the token is stored — the raw token exists once, in the link that gets emailed,
+ * so a leaked database dump cannot be used to join a tenant. Accepting is what creates the
+ * membership row, which is why `insert(memberships)` had no caller before this table.
+ */
+export const orgInvites = pgTable(
+  "org_invites",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    email: text("email").notNull(),
+    role: memberRoleEnum("role").notNull().default("recruiter"),
+    tokenHash: text("token_hash").notNull(),
+    invitedByUserId: integer("invited_by_user_id").references(() => users.id),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("org_invites_token_hash_idx").on(table.tokenHash),
+    index("org_invites_org_email_idx").on(table.orgId, table.email),
+  ]
+);
 
 // A user's role within an org. Replaces the single recruiters.userId link as the
 // authorization source of truth (a user can belong to one org here; multi-org
@@ -1149,8 +1205,22 @@ export const emailVerificationCodes = pgTable("email_verification_codes", {
 
 // ---- Event config (single-row table for global settings) ----
 
+/**
+ * Per-tenant branding, event timing and policy.
+ *
+ * This table was a singleton — one row, read with `.limit(1)`, applied to the whole
+ * platform. That was the deepest single-tenant assumption in the schema: every org would
+ * have shared one event name, one hero carousel, one moderation policy.
+ *
+ * `orgId` scopes it. Exactly one row may have `org_id IS NULL`; that row is the PLATFORM
+ * DEFAULT, used for the marketing site and as the fallback for any tenant that has not
+ * customised its own. Tenants get at most one row each. Both rules are enforced by partial
+ * unique indexes rather than by convention, because "there should only be one" has already
+ * failed once here.
+ */
 export const eventConfig = pgTable("event_config", {
   id: serial("id").primaryKey(),
+  orgId: integer("org_id").references(() => orgs.id),
   eventName: text("event_name").notNull().default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
   emailEventName: text("email_event_name")
     .notNull()
@@ -1203,7 +1273,16 @@ export const eventConfig = pgTable("event_config", {
     .array()
     .notNull()
     .default(["TWD", "VND", "USD"]),
-});
+}, () => [
+  // One config per tenant, and exactly one platform-default row.
+  //
+  // Indexed on coalesce(org_id, 0) rather than on org_id, because NULL is not equal to
+  // itself in a UNIQUE index: the natural spelling would police tenant rows and let the
+  // platform default — the row every unbranded page falls back to — silently duplicate.
+  // Collapsing NULL to 0 makes one index enforce both rules. No org has id 0 (serial
+  // starts at 1), so the two cases can never collide.
+  uniqueIndex("event_config_org_idx").on(sql`coalesce(org_id, 0)`),
+]);
 
 // ---- Booking reschedule audit trail ----
 

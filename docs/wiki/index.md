@@ -18,6 +18,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Yang Luck 揚運國際](stakeholders/yang-luck.md) — client; the ESA licensee operating the Vietnam→Taiwan corridor
 
 ## Decisions
+- [2026-08-12 — SaaS tenancy and the commercial model](decisions/2026-08-12-saas-tenancy-and-commercial-model.md) — ACCEPTED: per-seat tiers, no payment processor (統一發票), sales-led provisioning, subdomain per tenant; entitlement derived from capabilities so all 84 routes gained plan enforcement unedited
 - [2026-08-11 — Client portal design: the compliance clock in the client's hands](decisions/2026-08-11-client-portal-design.md) — PROPOSED: magic-link auth for agency-invited contacts, portal sessions separate from org memberships, phase 1 = read-only worker permit clock; PIPA basis + phasing await niko
 - [2026-08-11 — The platform is corridor-agnostic; VN→TW is the first corridor, not the model](decisions/2026-08-11-corridor-agnostic-positioning.md) — niko: don't assume Vietnam supplies and Taiwan hires; revenue-split question reframed in roles (employer / supply-side / candidate). Jurisdiction (營業稅, ESA, ARC) is deliberately not genericised
 - [2026-08-12 — Admin workspace gets the same left rail as the recruiter workspace](decisions/2026-08-12-admin-workspace-rail.md) — two components rather than one parameterised rail (different grouping, different capability filtering); collapse preference deliberately shared across both workspaces
@@ -61,6 +62,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 *Areas, products, events, and synthesised concepts. Topics don't make decisions; stakeholders do.*
 
 - [tecxwork web app](topics/tecxwork.md) — the product itself (area: full stack)
+- [Agent Connectors & SaaS Readiness Audit](topics/agent-connectors.md) — what MCP/OAuth connectors need: tenancy + capability RBAC + audit already exist; machine auth, injectable actors, self-serve orgs and a subscription layer do not
 - [Event-Day Load Readiness](topics/load-readiness.md) — verified prod capacity (max_conn 901, pooled), slot-concurrency protections, and the per-IP venue-NAT rate-limit risk
 - [V-GEN TRIDENT 2026](topics/v-gen-trident-2026.md) — flagship career fair event
 - [Platform Manual (screens & functions)](topics/platform-manual.md) — workflow-driven manual of every screen/function across all 4 roles; published artifact
