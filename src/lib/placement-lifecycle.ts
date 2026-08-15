@@ -7,6 +7,7 @@ import {
   jobOrders,
   placements,
 } from "@/lib/db/schema";
+import { complianceWindow } from "@/lib/compliance-window";
 
 /** placed/started are live; completed/fell_off are history. */
 export const ACTIVE_STATUSES = ["placed", "started"] as const;
@@ -101,10 +102,7 @@ export async function getPlacementLifecycle(orgId: number): Promise<PlacementLif
         )
     : [];
 
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  const soon = new Date(today);
-  soon.setUTCDate(soon.getUTCDate() + 30);
+  const { today, cutoff: soon } = complianceWindow();
 
   const rank = { none: -1, valid: 0, expiring: 1, expired: 2 } as const;
   const docBy = new Map<number, { status: PlacementRow["docStatus"]; soonest: string | null }>();
