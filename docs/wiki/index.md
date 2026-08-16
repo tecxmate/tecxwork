@@ -18,6 +18,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Yang Luck 揚運國際](stakeholders/yang-luck.md) — client; the ESA licensee operating the Vietnam→Taiwan corridor
 
 ## Decisions
+- [2026-08-16 — The candidate pool is org-scoped, and AI matching needs its own consent](decisions/2026-08-16-candidate-pool-scope-and-pipa-basis.md) — ACCEPTED: a workspace sees its own pipeline plus the unclaimed pool, so sourcing survives but a competitor's worked pipeline is closed; and the signup consent ("visible to recruiters") does not stretch to a model provider, so AI-assisted matching is a separate optional checkbox
 - [2026-08-16 — OAuth 2.1 for connectors: a "Connect" button instead of a pasted key](decisions/2026-08-16-oauth-for-connectors.md) — ACCEPTED: PKCE S256 required, replayed code revokes the whole grant, rotating refresh, exact-match redirects (http only on loopback), unauthenticated registration on purpose; scopes re-intersected with the granting member's current role. Carries a same-day addendum on connected applications: the revoke gate takes no capability, because revoking access is never a privileged action
 - [2026-08-11 — Production carried an abandoned branch's schema; park it, don't drop it](decisions/2026-08-11-prod-schema-drift-legacy-parking.md) — an unmerged branch's migration sat in prod for 2 months; `memberships` name-collided with the ATS table and would have been silently ALTERed. Orphans parked in a `legacy` schema; a clean prod push must now ask nothing
 

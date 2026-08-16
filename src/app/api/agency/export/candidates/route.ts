@@ -24,6 +24,9 @@ export async function GET(req: NextRequest) {
   const docs = one("docs");
 
   const result = await searchCandidates({
+    // Same pool as the screen. An export that reached further than the page it claims to
+    // mirror would be the most damaging version of this bug — PII, in a file, off-platform.
+    orgId: actor.orgId,
     q: one("q"),
     nationality: one("nationality"),
     studyLevel: one("studyLevel"),

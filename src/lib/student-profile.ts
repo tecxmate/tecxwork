@@ -209,6 +209,8 @@ export type StudentRegistrationDraft = {
   cvLink: string;
   description: string;
   pipaConsent: boolean;
+  /** Separate from pipaConsent, and optional: the wider basis a connector needs. */
+  aiMatchingConsent: boolean;
   wantsNewsletter: boolean;
   phone: string;
   nationality: string;
@@ -240,6 +242,7 @@ export const EMPTY_STUDENT_REGISTRATION_DRAFT: StudentRegistrationDraft = {
   cvLink: "",
   description: "",
   pipaConsent: false,
+  aiMatchingConsent: false,
   wantsNewsletter: false,
   phone: "",
   nationality: "",

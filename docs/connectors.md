@@ -2,8 +2,8 @@
 
 tecxwork exposes a **remote MCP server** at `/api/mcp`. An agent that speaks Model Context
 Protocol — Claude Desktop, Claude Code, or anything built on the MCP SDK — can read a
-workspace's clients, compliance clock, team and audit trail, acting on behalf of a person
-and never beyond what that person's role allows.
+workspace's clients, compliance clock, team, audit trail and consented candidates, acting on
+behalf of a person and never beyond what that person's role allows.
 
 There are two ways to authenticate. **OAuth is the one to offer a customer**; API keys exist
 for scripts and for clients that cannot open a browser.
@@ -20,8 +20,9 @@ almost always one of these:
 | The workspace is on a plan carrying `api_access` | today, `scale` only — `src/lib/plans.ts` |
 | The workspace status is `active` | not `suspended` or `cancelled`, and not a lapsed trial |
 | The connecting person is a member with a role that holds the scope | `src/lib/permissions.ts` |
+| For candidate data only: that candidate consented to AI-assisted matching | `src/lib/pipa.ts` |
 
-The third is the one that surprises people: **a connection can never do more than the person
+The role row is the one that surprises people: **a connection can never do more than the person
 who made it.** An interviewer holds no capabilities at all, so an interviewer who approves a
 connection grants nothing. This is checked again on every single request, not frozen at
 approval time — demote someone and their connection narrows within the same second.
@@ -97,13 +98,14 @@ nothing. Over the limit you get `429` with a reset time.
 
 ## The tools
 
-Five, all read-only.
+Six, all read-only.
 
 | Tool | Scope | Returns |
 |---|---|---|
 | `get_workspace_overview` | `client:read` | headline counts for the workspace |
 | `list_clients` | `client:read` | client companies and their placement counts |
 | `get_compliance_summary` | `compliance:read` | permit/ARC expiry **counts** |
+| `search_candidates` | `candidate:read` **+ candidate consent** | consented candidates: profile, school, skills — no contact details |
 | `list_team` | `member:invite` | members, roles, seat usage |
 | `read_audit_trail` | `audit:read` | recent activity — who changed what, and when |
 
@@ -117,10 +119,14 @@ called — an agent can name a tool it never saw in the list, and naming it does
    customer's data.
 2. **Nothing destructive or financial.** No stage moves, no offer approvals, no invoice
    issue or void, no candidate erasure. v1 reads.
-3. **No candidate PII.** There is no candidate search tool, and the compliance tool returns
-   totals rather than the rows behind them, because those rows carry names. The lawful basis
-   under PIPA for streaming candidate data to a model provider is the customer's decision to
-   make, and v1 does not make it for them by default.
+3. **Candidate PII only where that candidate agreed to exactly this.** The signup consent
+   says, in all three languages, that the profile is "visible to **recruiters** for this
+   recruitment event". That covers your staff. It does not stretch to a third-party model
+   provider outside Taiwan, so AI-assisted matching is a **separate, optional checkbox** at
+   signup. `search_candidates` returns only candidates who ticked it — and never their
+   email, phone or CV link, because consent to being *matched* by an assistant is not
+   consent to having contact details read out by one. The compliance tool still returns
+   totals rather than rows, since those rows carry names and no consent check runs there.
 
 ---
 
@@ -130,6 +136,7 @@ called — an agent can name a tool it never saw in the list, and naming it does
 |---|---|
 | `401` with a `WWW-Authenticate` header | No credential, or one that no longer resolves. The header points at discovery, so a client that understands OAuth turns this into a sign-in. |
 | Connected, but **no tools appear** | The credential's scopes are empty. Usually the granting member's role holds none of them — check their role, not the client. |
+| `search_candidates` returns **nothing at all** | Almost always correct, not broken: it only reaches candidates who ticked the optional AI-matching box at signup, so it stays empty until people opt in. It is also scoped to your own pool. |
 | `429` | Over 300/min on one credential. The response carries the reset time. |
 | Consent screen says the application "asked for nothing your role can grant" | Correct behaviour, not a bug. Connect as someone whose role holds the scopes. |
 | Everything 403s after a plan change | `api_access` is a plan feature. Off-plan, every credential stops resolving. |

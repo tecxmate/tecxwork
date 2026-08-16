@@ -17,6 +17,8 @@ const SCOPE_COPY: Record<string, string> = {
   "compliance:read": "See how many work permits and ARCs are expiring — counts only, not who",
   "audit:read": "See your workspace's activity log — who changed what, and when",
   "member:invite": "See who is in your workspace and how many seats are used",
+  "candidate:read":
+    "Search candidates who have agreed to AI-assisted matching \u2014 their profile, school and skills, but not their contact details",
 };
 
 export function ConsentForm({
@@ -47,8 +49,7 @@ export function ConsentForm({
           Connect {clientName} to {workspaceName}?
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          It will be able to read the following on your behalf. It cannot change anything,
-          and it cannot see candidates&apos; personal details.
+          It will be able to read the following on your behalf, and it cannot change anything.
         </p>
 
         {scopes.length === 0 ? (

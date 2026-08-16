@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
-import { clients, memberships, recruiters } from "@/lib/db/schema";
+import { applicantProfiles, clients, memberships, recruiters } from "@/lib/db/schema";
 import { createApiKey } from "@/lib/api-keys";
 import { createOrg } from "@/lib/provisioning";
 import { MCP_TOOLS, findTool, inputShapeFor, toolsForScopes } from "@/lib/mcp-tools";
@@ -195,13 +195,35 @@ describe("mcp — the rules that keep it safe", () => {
     }
   });
 
-  it("no tool is gated on candidate:read, so none can return candidate PII", async () => {
-    // The PIPA basis for streaming candidate data to a model provider is unresolved and is
-    // the customer's decision, so v1 does not make it for them.
-    for (const tool of MCP_TOOLS) {
-      expect(tool.capability, `${tool.name}`).not.toBe("candidate:read");
-    }
-    expect(findTool("search_candidates")).toBeUndefined();
+  it("the only tool touching candidate PII is gated on candidate:read AND a consent", async () => {
+    // The PIPA basis was settled rather than avoided: the signup consent says "visible to
+    // recruiters", which does not stretch to a model provider, so AI-assisted matching is a
+    // separate opt-in. Any tool returning candidate data must sit behind both gates.
+    const pii = MCP_TOOLS.filter((tool) => tool.capability === "candidate:read");
+    expect(pii.map((t) => t.name)).toEqual(["search_candidates"]);
+
+    // The scope alone must not be the whole story — the tool has to name the narrower basis.
+    const source = pii[0].run.toString();
+    expect(source).toContain("AI_ASSISTED");
+    expect(source).toContain("orgId");
+  });
+
+  it("search_candidates returns nobody until a candidate has opted in", async () => {
+    // The expected first-run behaviour, and the reason it is worth asserting: an empty
+    // result here is the consent gate working, and would otherwise read as a broken tool.
+    const org = await newOrg();
+    const rec = await seedRecruiter({ email: `pii-${seq++}-${Date.now()}@example.com` });
+    await db
+      .update(applicantProfiles)
+      .set({ consentPurpose: "recruitment_placement" })
+      .where(eq(applicantProfiles.email, rec.email));
+
+    const tool = findTool("search_candidates");
+    const result = (await tool!.run(
+      { orgId: org.id, recruiterId: 0, userId: 0, role: "admin", plan: "scale" },
+      {}
+    )) as { candidates: unknown[] };
+    expect(result.candidates).toHaveLength(0);
   });
 
   it("the compliance tool returns counts, not the people behind them", async () => {

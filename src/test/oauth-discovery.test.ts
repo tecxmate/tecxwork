@@ -103,6 +103,9 @@ describe("oauth discovery — the documents themselves", () => {
     // A consent screen should never show a permission that grants nothing.
     const meta = authorizationServerMetadata("tecxwork.com");
     expect(meta.scopes_supported).not.toContain("invoice:write");
-    expect(meta.scopes_supported).not.toContain("candidate:read");
+    expect(meta.scopes_supported).not.toContain("placement:write");
+    // candidate:read IS advertised, because search_candidates exercises it — but granting it
+    // still reaches only candidates who separately consented to AI-assisted matching.
+    expect(meta.scopes_supported).toContain("candidate:read");
   });
 });

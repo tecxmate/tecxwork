@@ -97,6 +97,10 @@ export const SUPPORTED_SCOPES = [
   "compliance:read",
   "audit:read",
   "member:invite",
+  // Personal data, and the only scope here that is narrowed a second time after it is
+  // granted: it reaches candidates who separately consented to AI-assisted matching, and
+  // nobody else. Granting it is necessary for `search_candidates` and not sufficient.
+  "candidate:read",
 ] as const;
 
 export type SupportedScope = (typeof SUPPORTED_SCOPES)[number];

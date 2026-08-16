@@ -19,6 +19,7 @@ import {
   Check,
   BriefcaseBusiness,
   Plus,
+  Sparkles,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -599,6 +600,9 @@ export default function RegisterPage() {
           portfolioUrl: draft.portfolioUrl.trim(),
           description: draft.description.trim(),
           pipaConsent: true,
+          // Sent as-ticked, never forced true like pipaConsent above. This one is genuinely
+          // optional, and a candidate who declines it must still be able to register.
+          aiMatchingConsent: draft.aiMatchingConsent,
           wantsNewsletter: draft.wantsNewsletter,
         }),
       });
@@ -1507,6 +1511,23 @@ export default function RegisterPage() {
                 </div>
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
                   {messages.register.legalNotice}
+                </div>
+
+                <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                  <input
+                    id="ai-matching"
+                    type="checkbox"
+                    checked={draft.aiMatchingConsent}
+                    onChange={(e) => setField("aiMatchingConsent", e.target.checked)}
+                    className="mt-0.5 h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                  />
+                  <label
+                    htmlFor="ai-matching"
+                    className="cursor-pointer text-xs leading-relaxed text-muted-foreground"
+                  >
+                    <Sparkles className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-muted-foreground" />
+                    {messages.register.aiMatchingConsent}
+                  </label>
                 </div>
 
                 {EVENT_CONFIG.enableNewsletterOptIn && (

@@ -4,6 +4,8 @@ import { getAgencyCrm } from "@/lib/agency-crm";
 import { getActivation } from "@/lib/activation";
 import { getAuditPage } from "@/lib/audit-log";
 import { getTeam } from "@/lib/members";
+import { searchCandidates } from "@/lib/candidate-search";
+import { PIPA_PURPOSE } from "@/lib/pipa";
 import type { Capability } from "@/lib/permissions";
 
 /**
@@ -21,22 +23,22 @@ import type { Capability } from "@/lib/permissions";
  *      no erasure. Everything here reads. A model that has been talked into calling a tool
  *      must not be able to move money or lose a record.
  *
- *   3. **No candidate PII in v1.** Not a squeamishness about names — a live open question.
- *      The lawful basis for streaming candidate data (names, schools, ARC and work-permit
- *      details) to a third-party model provider is unresolved and belongs to the customer,
- *      not to this file. Until it is answered, the tools return counts, companies, staff and
- *      metadata, and no tool returns a candidate's details.
+ *   3. **Candidate PII only where a candidate said yes to exactly this.** The original open
+ *      question — what lawful basis covers streaming candidate data to a third-party model
+ *      provider — has been answered rather than avoided: it needs its own consent, because
+ *      the signup form's wording, in all three languages, is "visible to **recruiters** for
+ *      this recruitment event". That covers an agency's staff. It does not stretch to a
+ *      model provider outside Taiwan, and stretching it would have been the easy, wrong move.
  *
- *      Two concrete things follow from that rule, both worth knowing:
- *        - `search_candidates` is **deliberately absent**. Beyond the PIPA question,
- *          `searchCandidates()` carries no org filter at all — access rests entirely on the
- *          `candidate:read` capability, so the pool it searches is platform-wide rather than
- *          per-tenant. That may well be intended for a marketplace where students register
- *          once; it is not something to hand an agent while the question is open.
- *        - `get_compliance_summary` returns **counts, not rows**. The underlying
- *          `AgencyCrm.compliance.attention` carries candidate names, so the tool
- *          deliberately reads past it to the totals, preserving the compliance clock's value
- *          without its PII.
+ *      So `search_candidates` exists and is gated twice over: the `candidate:read`
+ *      capability as usual, and `PIPA_PURPOSE.AI_ASSISTED`, which only candidates who ticked
+ *      the separate optional box carry. Expect it to return **nothing at first** — that is
+ *      the mechanism working, not a bug. It fills as candidates opt in.
+ *
+ *      `get_compliance_summary` still returns **counts, not rows**. The underlying
+ *      `AgencyCrm.compliance.attention` carries candidate names and no consent check runs
+ *      there, so the tool reads past it to the totals — preserving the compliance clock's
+ *      value without its PII.
  *
  * Each tool declares the capability it needs and the transport checks it against the key's
  * scopes, so an agent is bounded by the same matrix a person is rather than a parallel one.
@@ -100,6 +102,61 @@ export const MCP_TOOLS: readonly McpTool[] = [
     capability: "member:invite",
     schema: noArgs,
     run: async (actor) => getTeam(actor.orgId),
+  },
+  {
+    name: "search_candidates",
+    description:
+      "Search this workspace's candidate pool by keyword, nationality, study level or skills. " +
+      "Returns ONLY candidates who separately consented to AI-assisted matching, so the " +
+      "result is a subset of what the workspace itself can see — an empty result usually " +
+      "means nobody has opted in yet, not that nobody matches. Contains personal data: " +
+      "handle it as such and do not copy it elsewhere.",
+    capability: "candidate:read",
+    schema: z.object({
+      q: z.string().optional().describe("name, school, major, skill or free text"),
+      nationality: z.string().optional(),
+      studyLevel: z.string().optional(),
+      skills: z.array(z.string()).optional().describe("every skill listed must be present"),
+      page: z.number().int().positive().optional(),
+    }),
+    run: async (actor, args) => {
+      const result = await searchCandidates({
+        // Both bounds are passed here rather than defaulted inside, so that reading this
+        // call tells you the whole story: this workspace's pool, this lawful basis.
+        orgId: actor.orgId,
+        purpose: PIPA_PURPOSE.AI_ASSISTED,
+        q: args.q as string | undefined,
+        nationality: args.nationality as string | undefined,
+        studyLevel: args.studyLevel as string | undefined,
+        skills: args.skills as string[] | undefined,
+        page: args.page as number | undefined,
+      });
+
+      return {
+        total: result.total,
+        page: result.page,
+        // Facets are dropped: they describe the consented subset, and a chip reading
+        // "Vietnam 3" next to a pool of hundreds invites exactly the wrong conclusion.
+        candidates: result.hits.map((hit) => ({
+          id: hit.id,
+          name: hit.name,
+          nationality: hit.nationality,
+          schoolName: hit.schoolName,
+          major: hit.major,
+          studyLevel: hit.studyLevel,
+          expectedGraduation: hit.expectedGraduation,
+          skills: hit.skills,
+          description: hit.description,
+          docStatus: hit.docStatus,
+          appliedTo: hit.appliedTo,
+          // Email, phone and CV link are held back even here. Consent to being *matched* by
+          // an assistant is not consent to having contact details read out by one, and an
+          // agent that can name a candidate can look them up in the workspace to reach them.
+        })),
+        note:
+          "Consented candidates only. Others may match and are visible in the workspace.",
+      };
+    },
   },
   {
     name: "read_audit_trail",

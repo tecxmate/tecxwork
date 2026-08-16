@@ -24,6 +24,7 @@ const SCOPE_COPY: Record<string, string> = {
   "compliance:read": "Permit and ARC expiry counts",
   "audit:read": "Workspace activity log",
   "member:invite": "Who is in the workspace, and seat usage",
+  "candidate:read": "Candidates who opted in to AI-assisted matching (no contact details)",
 };
 
 export type ConnectionDto = {
