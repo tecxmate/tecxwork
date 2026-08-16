@@ -7,7 +7,7 @@ import { getSession } from "@/lib/auth";
 export const metadata: Metadata = {
   title: "About TECXWORK | TECXWORK",
   description:
-    "TECXWORK is a career-fair platform connecting Vietnamese students in Taiwan with companies hiring international talent.",
+    "TECXWORK is a hiring platform for employers, recruitment agencies and candidates — running hiring events end to end and carrying the same record through to placement.",
 };
 
 export default async function AboutPage() {
@@ -18,19 +18,27 @@ export default async function AboutPage() {
       <main className="flex-1 max-w-3xl mx-auto px-4 py-12 w-full">
         <h1 className="text-3xl font-bold mb-2">About TECXWORK</h1>
         <p className="text-muted-foreground mb-8">
-          A purpose-built platform for student–recruiter career events.
+          A purpose-built platform for hiring events and the work that follows them.
         </p>
 
         <div className="space-y-6 text-sm leading-relaxed">
           <section>
             <h2 className="text-xl font-semibold mb-2">What TECXWORK is</h2>
             <p>
-              TECXWORK is a web platform that powers in-person and online career fairs
-              for international students. It pairs job-seeking students with recruiters
-              from participating companies and runs the entire event flow end-to-end:
-              browsing companies, viewing open positions, applying for an interview at a
-              specific time slot, and confirming the booking with both sides via email
-              and in-app notifications.
+              TECXWORK is a web platform that powers in-person and online hiring events.
+              It pairs candidates with recruiters from participating companies and runs
+              the whole event end to end: browsing companies, viewing open positions,
+              applying for an interview at a specific time slot, and confirming the
+              booking with both sides by email and in-app notification.
+            </p>
+            <p className="mt-3">
+              For recruitment agencies it goes further than the event. The same record
+              carries through a pipeline to the offer, the placement, the invoice and the
+              compliance file &mdash; see{" "}
+              <Link href="/how-it-works" className="text-primary hover:underline">
+                how it works
+              </Link>
+              .
             </p>
           </section>
 
@@ -38,8 +46,8 @@ export default async function AboutPage() {
             <h2 className="text-xl font-semibold mb-2">Who it&apos;s for</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>
-                <strong>Students</strong> — build a profile, browse companies and
-                external job listings, and book interview slots in one click.
+                <strong>Candidates</strong> — build a profile, browse companies, and book
+                interview slots in one click.
               </li>
               <li>
                 <strong>Recruiters</strong> — post jobs, review applications, and accept,
@@ -51,6 +59,21 @@ export default async function AboutPage() {
                 moderate jobs, manage participants, send reminders, and export bookings.
               </li>
             </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-2">Where it works</h2>
+            <p>
+              There are three parties: the employer who hires, the partner who sources,
+              and the candidate. Nothing in the platform assumes which country each one is
+              in, so the same system works whichever way people move.
+            </p>
+            <p className="mt-3">
+              What is country-specific comes from where the operator is licensed rather
+              than from a route we assumed &mdash; business tax, fees quoted in months of
+              salary, residence and work permit types. We kept those specific on purpose.
+              A compliance feature that hedges is one that fails an audit.
+            </p>
           </section>
 
           <section>
@@ -66,8 +89,9 @@ export default async function AboutPage() {
                 TECXMATE
               </a>{" "}
               in partnership with the Vietnamese Student Association in Taiwan (VSATW)
-              for the V-GEN TRIDENT career fair, then generalized into a reusable
-              platform for similar student-focused hiring events.
+              for the V-GEN TRIDENT career fair. That was the first corridor it ran, not
+              the shape of the product: the platform was generalised from it into
+              something any operator can run their own hiring on.
             </p>
           </section>
 

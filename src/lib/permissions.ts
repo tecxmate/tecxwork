@@ -43,7 +43,15 @@ export type Capability =
   /** See what has been billed and what is outstanding. */
   | "invoice:read"
   /** Raise, issue, void an invoice, or record a payment against one. */
-  | "invoice:write";
+  | "invoice:write"
+  /**
+   * Invite someone into the workspace, or revoke an invitation.
+   *
+   * Admin only, and deliberately narrower than the commercial capabilities: a seat is a
+   * line on the customer's bill, so handing this to account managers would let the people
+   * who negotiate the contract also inflate it.
+   */
+  | "member:invite";
 
 /**
  * The matrix. Each row is a job, not a rank — a coordinator is not "less than" a recruiter,
@@ -67,6 +75,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "offer:approve",
     "invoice:read",
     "invoice:write",
+    "member:invite",
   ],
 
   // Owns the client relationship end to end, which is why this is the only other role

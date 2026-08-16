@@ -3,7 +3,7 @@ title: Platform Manual (screens & functions)
 type: topic
 slug: platform-manual
 date: 2026-08-08
-updated: 2026-08-11
+updated: 2026-08-12
 attributed_to: [niko]
 belongs_to: [tecxwork, recruitment-workflows]
 source: chat
@@ -18,9 +18,13 @@ A comprehensive, workflow-driven operating manual covering **every screen and fu
 of the platform across all four roles. Built 2026-08-08 at niko's request, serving three
 audiences at once: end-user onboarding, investor/partner product tour, and internal handover.
 
-**Live:** https://yangluck.tecxmate.com/documentation — linked from the site footer.
-**In repo:** `public/documentation.html` (7.7 MB, 51 screenshots inlined as base64 WebP;
-works served *and* offline). Trilingual EN / 繁中 / VN. See `docs/manual/README.md`.
+**Not hosted since 2026-08-12.** `/documentation` and the file behind it were removed — the
+manual inlines 51 screenshots of a client's live workspace and the route served them to
+anyone who guessed the URL. Handed over as a file now; see
+[decisions/2026-08-12-documentation-route-closed.md](../decisions/2026-08-12-documentation-route-closed.md).
+**Built to:** `docs/manual/dist/documentation.html` — gitignored, and deliberately outside
+`public/` so a rebuild cannot silently re-publish it (7.7 MB, 51 screenshots inlined as
+base64 WebP; works offline). Trilingual EN / 繁中 / VN. See `docs/manual/README.md`.
 **Public build strips `data-internal` blocks** — and their strings in the i18n dictionary,
 not just their DOM nodes.
 **Artifact:** https://claude.ai/code/artifact/dc62f299-3a37-43be-86e9-99e93d412d9e

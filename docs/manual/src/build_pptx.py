@@ -34,7 +34,9 @@ SRC = os.path.join(HERE, "manual.src.html")
 SHOTS = os.path.join(HERE, "screenshots")
 STRINGS = os.path.join(HERE, "strings")
 DIAGRAMS = os.environ.get("DECK_ASSETS", "/tmp/deck-assets")
-OUTDIR = os.path.normpath(os.path.join(HERE, "..", "..", "..", "public"))
+# Not public/: the decks carry the same live-workspace screenshots as the manual, and
+# anything under public/ is downloadable at a guessable URL even when nothing links it.
+OUTDIR = os.path.normpath(os.path.join(HERE, "..", "dist"))
 
 # 16:9
 W, H = Inches(13.333), Inches(7.5)
@@ -345,11 +347,13 @@ def build(lang: str) -> str:
     s = prs.slides.add_slide(blank); bg(s, WHITE)
     tf = textbox(s, Inches(0.9), Inches(2.7), Inches(11.5), Inches(2.0))
     para(tf, d["title"], 30, INK, first=True, font=disp, ea=ea, space_after=14)
-    para(tf, "yangluck.tecxmate.com/documentation", 17, ACCENT, ea=ea, space_after=10)
+    # No URL: the manual is not hosted. It shipped as a single self-contained HTML file
+    # built to docs/manual/dist/, and is handed over as a file rather than a link.
     para(tf, "The full manual — every control on every screen, in English, 繁體中文 and "
-             "Tiếng Việt — lives at the link above and works offline.", 12.5, MUTED, ea=ea)
+             "Tiếng Việt — is a single file that works offline.", 12.5, MUTED, ea=ea)
 
     out = os.path.join(OUTDIR, "tecxwork-manual%s.pptx" % ("" if lang == "en" else "-" + lang))
+    os.makedirs(OUTDIR, exist_ok=True)
     prs.save(out)
     mb = os.path.getsize(out) / 1024 / 1024
     print("%-34s %3d slides  %5.1f MB" % (os.path.basename(out), len(prs.slides.__iter__.__self__._sldIdLst), mb))

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,9 +20,11 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { useStudentI18n } from "@/components/student-locale-provider";
+import { interpolate } from "@/lib/student-messages";
 import { StudentLanguageSwitcher } from "@/components/student-language-switcher";
 import { AppTopBarActions } from "@/components/app-topbar-actions";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 type ErrorState =
   | { code: "NONE" }
@@ -32,6 +34,7 @@ type ErrorState =
 
 export default function LoginPage() {
   const router = useRouter();
+  const nextParam = useSearchParams().get("next");
   const { messages } = useStudentI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,15 +69,36 @@ export default function LoginPage() {
         body: JSON.stringify({ email: cleanEmail, password }),
       });
 
-      const data = await res.json();
+      // Parse defensively. A route handler that throws — a missing env var, a database
+      // that will not connect — returns Next's HTML error page, not JSON. Calling
+      // res.json() before checking res.ok made that throw, land in the catch below, and
+      // report a server fault as "network error": the one message that sends someone to
+      // check their wifi when the problem is on our side.
+      let data: {
+        code?: string;
+        error?: string;
+        user?: { role?: string };
+      } | null = null;
+      try {
+        data = await res.json();
+      } catch {
+        // Left null — handled by status below.
+      }
 
-      if (!res.ok) {
-        if (data.code === "USER_NOT_FOUND") {
+      if (!res.ok || !data) {
+        if (data?.code === "USER_NOT_FOUND") {
           setErrorState({ code: "USER_NOT_FOUND", email: cleanEmail });
-        } else if (data.code === "INVALID_PASSWORD") {
+        } else if (data?.code === "INVALID_PASSWORD") {
           setErrorState({
             code: "INVALID_PASSWORD",
             message: data.error || messages.login.invalidPassword,
+          });
+        } else if (res.status >= 500 || !data) {
+          // Name the status: "500" is what turns "it is broken" into something the
+          // person on the other end can actually look up.
+          setErrorState({
+            code: "OTHER",
+            message: interpolate(messages.login.serverError, { status: res.status }),
           });
         } else {
           setErrorState({
@@ -85,14 +109,27 @@ export default function LoginPage() {
         return;
       }
 
-      // Success — route by role
-      if (data.user.role === "admin") {
-        router.push("/admin");
-      } else if (data.user.role === "recruiter") {
-        router.push("/dashboard/interviews");
-      } else {
-        router.push("/browse");
+      // A 200 with no user is a malformed response, not a successful sign-in. Routing on
+      // it would land the person on /browse looking signed out with no error shown.
+      if (!data.user) {
+        setErrorState({
+          code: "OTHER",
+          message: interpolate(messages.login.serverError, { status: res.status }),
+        });
+        return;
       }
+
+      // Success — honour an explicit destination (an invitation link, say), else route by
+      // role. safeRedirectPath refuses anything that is not a same-site path, so a mailed
+      // `?next=https://evil.example` cannot bounce someone off the site right after they
+      // authenticate.
+      const roleHome =
+        data.user.role === "admin"
+          ? "/admin"
+          : data.user.role === "recruiter"
+            ? "/dashboard/interviews"
+            : "/browse";
+      router.push(safeRedirectPath(nextParam, roleHome));
       router.refresh();
     } catch {
       setErrorState({

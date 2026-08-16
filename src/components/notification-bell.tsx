@@ -40,9 +40,13 @@ const DEFAULT_LABELS: NotificationBellLabels = {
 export function NotificationBell({
   variant = "popover",
   labels: labelsProp,
+  collapsed = false,
 }: {
-  variant?: "popover" | "inline";
+  /** `rail` is the sidebar footer row: full-width trigger, panel opening upward. */
+  variant?: "popover" | "inline" | "rail";
   labels?: NotificationBellLabels;
+  /** Rail variant only — icon with no label, and the panel clears the narrow rail. */
+  collapsed?: boolean;
 }) {
   const labels = labelsProp ?? DEFAULT_LABELS;
   const router = useRouter();
@@ -303,6 +307,62 @@ export function NotificationBell({
       </div>
     </div>
   );
+
+  if (variant === "rail") {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setOpen(!open)}
+          aria-label={
+            unreadCount > 0
+              ? `${labels.notifications} (${unreadCount} unread)`
+              : labels.notifications
+          }
+          title={collapsed ? labels.notifications : undefined}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+            open
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            collapsed && "justify-center px-0"
+          )}
+        >
+          <span className="relative flex shrink-0 items-center">
+            <Bell className="h-4 w-4" />
+            {/* Collapsed, the dot is the only unread signal there is room for. */}
+            {unreadCount > 0 && collapsed ? (
+              <span
+                className="absolute -right-1 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background"
+                aria-hidden="true"
+              />
+            ) : null}
+          </span>
+          {!collapsed ? (
+            <>
+              <span className="truncate">{labels.notifications}</span>
+              {unreadCount > 0 ? (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              ) : null}
+            </>
+          ) : null}
+        </button>
+
+        {open ? (
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+        ) : null}
+        {open ? (
+          // Upward and to the right: the trigger sits at the bottom of a narrow rail,
+          // so a downward panel would open off-screen and a left-aligned one would be
+          // clipped to the rail's width.
+          <div className="dropdown-panel absolute bottom-full left-0 z-50 mb-2 w-80 overflow-hidden rounded-xl border bg-card whitespace-normal shadow-lg">
+            {panel}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   if (variant === "inline") {
     return (

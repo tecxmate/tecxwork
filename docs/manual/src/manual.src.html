@@ -124,9 +124,11 @@ html{scroll-behavior:smooth}
 .lang-switch button:hover{color:var(--ink)}
 .lang-switch button[aria-pressed="true"]{background:var(--surface);color:var(--accent-ink);
   font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.lang-switch-bar{display:none;margin:0}
-@media (max-width:1080px){.lang-switch-bar{display:inline-flex;margin-left:auto}
-  .nav-bar-title{flex:0 1 auto}}
+/* Language and theme live in the rail, never in the mobile bar: three controls plus a
+   title do not fit a phone width, and the title was being ellipsised to make room. */
+.rail-controls{display:flex;flex-wrap:wrap;gap:var(--s2);margin:0 0 var(--s5)}
+.rail-controls .lang-switch{margin:0}
+@media (max-width:1080px){.nav-bar-title{flex:1 1 auto;min-width:0}}
 
 /* Chinese and Vietnamese set better with a slightly looser measure. */
 :root[lang="zh-Hant"] body,:root[lang="vi"] body{line-height:1.72}
@@ -365,11 +367,6 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
     Contents
   </button>
 <span class="nav-bar-title" data-t="3">TECXWORK User Manual</span>
-<div aria-label="Language" class="lang-switch lang-switch-bar" role="group">
-<button aria-pressed="true" data-lang="en" type="button">EN</button>
-<button aria-pressed="false" data-lang="zh" type="button">繁中</button>
-<button aria-pressed="false" data-lang="vi" type="button">VN</button>
-</div>
 </header>
 <div aria-hidden="true" class="nav-scrim"></div>
 <div aria-label="Screenshot viewer" aria-modal="true" class="lightbox" id="lightbox" role="dialog">
@@ -398,10 +395,17 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
 <button aria-label="Close contents" class="rail-close" data-ta="a1035" type="button">✕</button>
 <p class="rail-brand" data-t="5">TECXWORK</p>
 <p class="rail-sub" data-t="6">User Manual · Yang Luck 揚運 build</p>
+<div class="rail-controls">
 <div aria-label="Language" class="lang-switch" role="group">
 <button aria-pressed="true" data-lang="en" type="button">EN</button>
 <button aria-pressed="false" data-lang="zh" type="button">繁中</button>
 <button aria-pressed="false" data-lang="vi" type="button">VN</button>
+</div>
+<div aria-label="Theme" class="lang-switch theme-switch" role="group">
+<button aria-pressed="true" data-t="1140" data-theme-set="auto" type="button">Auto</button>
+<button aria-pressed="false" data-t="1141" data-theme-set="light" type="button">Light</button>
+<button aria-pressed="false" data-t="1142" data-theme-set="dark" type="button">Dark</button>
+</div>
 </div>
 <h4 data-t="7">Start here</h4>
 <ol>
@@ -2232,6 +2236,29 @@ footer{border-top:1px solid var(--line);margin-top:var(--s8);padding:var(--s5) 0
     var btn = e.target.closest ? e.target.closest('.lang-switch button') : null;
     if (btn) apply(btn.getAttribute('data-lang'));
   });
+
+  /* Theme. The dark and light token blocks already existed but nothing ever set
+     data-theme, so the manual could only follow the OS. "auto" removes the attribute
+     and hands control back to prefers-color-scheme. */
+  var TKEY = 'tw-manual-theme';
+  function applyTheme(mode) {
+    var root = document.documentElement;
+    if (mode === 'auto') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', mode);
+    var tb = document.querySelectorAll('.theme-switch button');
+    for (var t = 0; t < tb.length; t++) {
+      tb[t].setAttribute('aria-pressed',
+        tb[t].getAttribute('data-theme-set') === mode ? 'true' : 'false');
+    }
+    try { localStorage.setItem(TKEY, mode); } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.theme-switch button') : null;
+    if (b) applyTheme(b.getAttribute('data-theme-set'));
+  });
+  var savedTheme = 'auto';
+  try { savedTheme = localStorage.getItem(TKEY) || 'auto'; } catch (e) {}
+  applyTheme(savedTheme);
 
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) {}

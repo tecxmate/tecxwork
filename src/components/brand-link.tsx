@@ -3,8 +3,17 @@
 import { useRouter } from "next/navigation";
 import { type MouseEvent } from "react";
 import { BRAND_SPLASH_EVENT, type BrandSplashDetail } from "@/components/brand-splash";
+import { BrandMark } from "@/components/brand-mark";
 
-export function BrandLink({ href = "/" }: { href?: string }) {
+export function BrandLink({
+  href = "/",
+  hideWordmark = false,
+  className = "flex items-center gap-2",
+}: {
+  href?: string;
+  hideWordmark?: boolean;
+  className?: string;
+}) {
   const router = useRouter();
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
@@ -17,16 +26,8 @@ export function BrandLink({ href = "/" }: { href?: string }) {
   }
 
   return (
-    <a href={href} onClick={handleClick} className="flex items-center gap-2">
-      <img
-        src="/yang-luck-logo.png"
-        alt="Yang Luck 揚運國際"
-        className="h-8 w-8 rounded-md bg-white object-contain p-1 ring-1 ring-black/5"
-      />
-      <span className="flex items-baseline gap-1.5 text-primary">
-        <span className="font-wordmark text-xl italic">Yang Luck</span>
-        <span className="font-heading text-xl font-semibold">揚運</span>
-      </span>
+    <a href={href} onClick={handleClick} className={className}>
+      <BrandMark hideWordmark={hideWordmark} />
     </a>
   );
 }

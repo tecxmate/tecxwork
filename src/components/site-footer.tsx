@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 
 export function SiteFooter() {
@@ -6,7 +7,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-xl md:max-w-none">
         <div className="space-y-0.5 md:flex md:flex-wrap md:items-center md:justify-center md:gap-x-2 md:gap-y-1 md:space-y-0">
           <p className="text-sm leading-tight">
-            &copy; 2026 Yang Luck 揚運 by{" "}
+            &copy; 2026 {BRAND.displayName} by{" "}
             <a
               href="https://tecxmate.com"
               target="_blank"
@@ -26,14 +27,13 @@ export function SiteFooter() {
               Privacy
             </Link>
             <span className="opacity-40">&middot;</span>
+            <Link href="/how-it-works" className="underline hover:text-primary">
+              How it works
+            </Link>
+            <span className="opacity-40">&middot;</span>
             <Link href="/tutorial" className="underline hover:text-primary">
               Tutorial
             </Link>
-            <span className="opacity-40">&middot;</span>
-            {/* Static file in public/, so a plain <a> — Link would client-navigate and 404. */}
-            <a href="/documentation" className="underline hover:text-primary">
-              Documentation
-            </a>
             <span className="opacity-40">&middot;</span>
             <Link href="/about" className="underline hover:text-primary">
               About

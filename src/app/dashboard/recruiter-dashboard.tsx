@@ -21,6 +21,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { TeamView, type TeamData } from "./team-view";
 import { cn } from "@/lib/utils";
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
@@ -90,6 +91,7 @@ type Section =
   | "compliance"
   | "reports"
   | "jobs"
+  | "team"
   | "company";
 const APPLICANTS_NOTICE_DISMISSED_KEY =
   "recruiter_applicants_compliance_notice_dismissed_v1";
@@ -153,6 +155,7 @@ export function RecruiterDashboard({
   pipelineStages = null,
   offers = null,
   billing = null,
+  team = null,
 }: {
   recruiter: Recruiter;
   /** What this member's org role permits — used to hide tabs that would only redirect. */
@@ -170,6 +173,7 @@ export function RecruiterDashboard({
   pipelineStages?: StageRow[] | null;
   offers?: OffersData | null;
   billing?: BillingData | null;
+  team?: TeamData | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -206,7 +210,9 @@ export function RecruiterDashboard({
                 ? "/dashboard/reports"
                 : section === "jobs"
                   ? "/dashboard/jobs"
-                  : "/dashboard/company";
+                  : section === "team"
+                    ? "/dashboard/team"
+                    : "/dashboard/company";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -246,7 +252,16 @@ export function RecruiterDashboard({
   return (
     // The rail sits beside the whole workspace, so it stays put while the page changes.
     <div className="flex min-h-full flex-1">
-      <DashboardSidebar isAgency={isAgency} capabilities={capabilities} />
+      <DashboardSidebar
+        isAgency={isAgency}
+        capabilities={capabilities}
+        // The company, not the role: it says which account you are acting in.
+        accountName={recruiter.company}
+        accountRole={messages.common.recruiter}
+        logoutLabel={messages.common.logout}
+        notificationLabels={messages.notifications}
+        accountMenuExtra={<RecruiterLanguageSwitcher />}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
       <AppTopBar
@@ -257,6 +272,9 @@ export function RecruiterDashboard({
         capabilities={capabilities}
         // The rail carries navigation on desktop; the bar keeps it for small screens.
         hideDesktopNav
+        // Brand, notifications and account all live in the rail now, so on desktop this
+        // bar would be an empty strip.
+        hideOnDesktop
         mobileActions={<RecruiterLanguageSwitcher />}
         showActionsOnMobile
         accountLabels={{
@@ -342,6 +360,14 @@ export function RecruiterDashboard({
             ) : (
               <p className="py-16 text-center text-sm text-muted-foreground">
                 Reports are available for agency accounts.
+              </p>
+            )
+          ) : section === "team" ? (
+            team ? (
+              <TeamView initial={team} />
+            ) : (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Team management is available to workspace administrators.
               </p>
             )
           ) : section === "jobs" ? (
