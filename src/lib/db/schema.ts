@@ -442,6 +442,50 @@ export const orgs = pgTable("orgs", {
  * so a leaked database dump cannot be used to join a tenant. Accepting is what creates the
  * membership row, which is why `insert(memberships)` had no caller before this table.
  */
+/**
+ * A machine credential for one workspace.
+ *
+ * Deliberately bound to the user who created it (`ownerUserId`) rather than standing alone.
+ * A key acts *as that person*, narrowed by its own scopes — so every downstream check,
+ * every ownership rule and every audit row keeps working unchanged, and "who did this"
+ * still names a human. A free-floating robot identity would have needed a parallel
+ * authorisation path, which is the kind of second door that quietly outlives the reason it
+ * was cut.
+ *
+ * Only the SHA-256 of the token is stored. `prefix` is the first few characters, kept in
+ * clear so a list can show which key is which without the secret being recoverable.
+ */
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    /** Whose authority this key borrows. Revoking their membership does not revoke the key
+     *  — see lib/api-keys.ts, which re-checks the membership on every request. */
+    ownerUserId: integer("owner_user_id")
+      .notNull()
+      .references(() => users.id),
+    /** Human label, so a list of keys is readable a year later. */
+    name: text("name").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    prefix: text("prefix").notNull(),
+    /** Capability strings (see lib/permissions.ts). Always a subset of what the owner holds. */
+    scopes: text("scopes").array().notNull(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("api_keys_token_hash_idx").on(table.tokenHash),
+    index("api_keys_org_idx").on(table.orgId, table.createdAt),
+  ]
+);
+
 export const orgInvites = pgTable(
   "org_invites",
   {

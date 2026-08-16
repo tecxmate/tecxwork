@@ -1900,3 +1900,16 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, taiwan-compliance, d
 - `/api/org/audit` is **GET only, deliberately**. `audit_log` has no update or delete path anywhere in the codebase and this route does not add one: an audit editable through the API that writes it is not evidence.
 - Tests assert the properties, not the plumbing: the matrix AND the route both refuse a recruiter; entries are org-scoped; system-actor rows survive; pagination has no overlap (id tiebreak in the ordering); and a serialised event containing the field name `email` contains no `@` — the property that makes it safe to show a viewer.
 - Verified: 297 tests (was 288), lint 0 errors, build clean; `/dashboard/audit` + `/api/org/audit` in the manifest.
+
+## [2026-08-16] feat | Machine auth — `api_keys` and a bearer path through the one gate
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
+- The blocker named in the original connector audit — "there is no machine auth anywhere; the only bearer token in the codebase is `CRON_SECRET`" — is closed. This is Phase 1 of the recorded path; only the MCP transport and OAuth remain.
+- **A key borrows a person's authority rather than standing alone** (`owner_user_id`), narrowed by its own scopes. That choice is the whole design: every ownership rule, capability check and audit row keeps working unchanged, and "who did this" still names a human. A standalone robot identity would have needed a second authorisation path beside the human one — the kind of door that outlives the reason it was cut.
+- **Scopes are intersected at REQUEST time, not creation time.** Demote the owner and the key narrows with them; remove their membership and it stops working. Otherwise a key is a way to keep authority you have formally lost. Both are tested (`admin` → `coordinator` drops `invoice:write` but keeps `candidate:read`; deleting the membership returns null).
+- The org is re-read per request, so a **suspended tenant or a lapsed trial refuses machine traffic exactly as it refuses a browser**, and `api_access` (a `scale`-plan feature declared back in the plans work) is the monetisation hook — both tested.
+- **Wired through `headers()` rather than by taking the request as an argument**, so all 84 existing agency routes gained machine access with no signature change. Both paths converge on the same `AgencyActor`, which is what stops "can a token do this?" becoming a second, divergent authorisation story.
+- Only the SHA-256 is stored; `prefix` is kept in clear so a list identifies a key without the secret. Every resolution failure returns one message — distinguishing "unknown" from "revoked" tells an attacker whether they guessed a real key.
+- Minting is gated on `member:invite`: letting something that is not a person act inside the workspace is an administrative decision of the same weight as adding a colleague.
+- Migration `db:update:api-keys` (additive, idempotent); `api_keys` added to the test truncate list.
+- Verified: 309 tests (was 297), lint 0 errors, build clean.
+- **Not done:** no UI to mint a key yet (API only), and per-key rate limiting still rides the per-IP, non-atomic limiter — recorded in the audit as needing an atomic store before real agent traffic.
