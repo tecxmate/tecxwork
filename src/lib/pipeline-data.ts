@@ -1,6 +1,6 @@
 import { and, eq, isNull, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { getRecruiterFromSession } from "@/lib/auth";
+import type { RecruiterActor } from "@/lib/actor";
 import {
   applications,
   applicantProfiles,
@@ -36,22 +36,18 @@ import type {
  *
  * Returns null when there is no recruiter session or the recruiter has no jobs.
  */
-export async function getPipelineBoard(): Promise<PipelineBoard | null> {
-  const auth = await getRecruiterFromSession();
-  if (!auth) return null;
-
+export async function getPipelineBoard(
+  actor: RecruiterActor
+): Promise<PipelineBoard | null> {
   const db = getDb();
-  const [me] = await db
-    .select({
-      id: recruiters.id,
-      company: recruiters.company,
-      clientKind: recruiters.clientKind,
-      orgId: recruiters.orgId,
-    })
-    .from(recruiters)
-    .where(eq(recruiters.id, auth.recruiterId))
-    .limit(1);
-  if (!me) return null;
+  // The actor carries who is asking; this function only decides what to fetch. It reads no
+  // session, so a script, a test or a token-authenticated connector can call it.
+  const me = {
+    id: actor.recruiterId,
+    company: actor.company,
+    clientKind: actor.clientKind,
+    orgId: actor.orgId,
+  };
 
   const isAgency = me.clientKind === "agency";
 

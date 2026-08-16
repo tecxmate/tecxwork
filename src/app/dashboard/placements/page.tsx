@@ -11,13 +11,15 @@ export const dynamic = "force-dynamic";
 export default async function RecruiterPlacementsPage() {
   // Agency-only, and only for roles that may see the commercial picture. The actor also
   // carries the orgId every query below must be scoped to.
-  const [data, crm, actor] = await Promise.all([
+  const [data, actor] = await Promise.all([
     getRecruiterDashboardData(),
-    getAgencyCrm(),
     getAgencyActor("placement:read"),
   ]);
 
-  if (!crm || !actor) redirect("/dashboard/pipeline");
+  if (!actor) redirect("/dashboard/pipeline");
+
+  const crm = await getAgencyCrm(actor.orgId);
+  if (!crm) redirect("/dashboard/pipeline");
 
   const lifecycle = await getPlacementLifecycle(actor.orgId);
 
