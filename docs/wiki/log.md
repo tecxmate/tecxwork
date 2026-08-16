@@ -1993,3 +1993,13 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
 - `Vary: Host` added to both documents so a cache cannot serve one tenant's discovery to another.
 - With `PLATFORM_ROOT_DOMAIN` unset the behaviour is the old one — the apex for everybody — which keeps a single-domain deployment working and matches the deliberate choice in `tenant-host.ts` not to guess a tenant from a header.
 - Verified: 368 tests (was 357), lint 0 errors, build clean.
+
+## [2026-08-16] docs | How to actually connect an agent
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- `docs/connectors.md` — the thing that was missing for the connector to be *usable* rather than merely built. Written for the person doing the connecting, not for whoever wrote the code.
+- **A repo file, not a route.** The 2026-08-12 decision closed `/documentation` deliberately; this respects it. README points at it.
+- Leads with the **three preconditions** (plan carries `api_access`, workspace active, the connecting person's role holds the scope), because a connection that "silently does nothing" is almost always one of them — and the third is the one that surprises people: an interviewer holds no capabilities, so an interviewer who approves a connection grants nothing.
+- Says plainly to use the **workspace's own subdomain, not the apex** — which is only true because of the discovery fix earlier today, and is the sort of thing that produces a silent failure if a customer guesses wrong.
+- Has a **"when it does not work" table** mapping each symptom to its cause, including the two that read as bugs but are correct behaviour: no tools appearing (the granting member's role holds none of the scopes) and everything 403ing after a plan change (`api_access` is a plan feature).
+- Every number and name in it was checked against the code rather than recalled: the five tool names and their capabilities, 300/min per credential, `scale` as the only plan with `api_access`, token and refresh lifetimes.
+- Corrected one claim while writing: the rate limit is per *credential*, not only per API key — an OAuth access token gets its own bucket the same way.
