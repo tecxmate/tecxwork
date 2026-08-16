@@ -1670,6 +1670,15 @@ attributed_to: [claude-code]   belongs_to: [platform-manual, tecxwork]
 - **Two real bugs found by the tooling on the way:** `add-ats-compliance.ts`'s ON CONFLICT predates the partial unique index (fails on any current-schema DB — fixed); and confirmation that the applicant slot picker still keys on the hardcoded `EVENT_CONFIG.date`, not the admin row — the known-gaps bug, now with a reproduction recorded in topics/platform-manual.md.
 - Verified: build.py clean, i18n 1144 keys × 3 enforced, all four checkers green (anchors/mobile-nav under Chromium — WebKit undownloadable in CCR; re-run there before calling those two fully verified). tsc + lint clean.
 
+## [2026-08-11] incident | Prod carried an unmerged branch's schema for two months
+attributed_to: [claude-code]   belongs_to: [tecxwork, neon-account-topology]
+- Migrating prod ahead of fast-forwarding `main` onto the ATS codebase, `drizzle-kit push` asked ~30 create-vs-rename questions. Those questions *were* the finding: drizzle only asks when the database holds an object the schema doesn't.
+- Cause: `41183dd` on `multi-tenant-exploration` (06-06) — **applied to prod, never merged anywhere**. Its own message says so: *"Applied + verified in prod … 39 memberships, 170 participants."* Left `organizations`, `events`, `event_participants`, `memberships`, `event_id` on 9 tables, and two orphan enums.
+- **The hazard produced no prompt.** `memberships` exists in both schemas with different meanings (FK→`organizations` vs `orgs`; `membership_role` vs `member_role`; index order flipped). Being an existing table, drizzle would have silently ALTERed it — reshaping the ATS **access-control** table around 39 rows of unrelated event data.
+- **Decision: park, don't drop.** `schemaFilter` defaults to `public`, so moving orphans to a `legacy` schema hides them from drizzle while keeping rows recoverable. Enums travel with their tables (a referenced enum can't be dropped). `event_id` dropped outright — 1 event existed, so the column held no information. Push then ran purely additive: 22 tables, no prompts. Full record: [decisions/2026-08-11-prod-schema-drift-legacy-parking.md](decisions/2026-08-11-prod-schema-drift-legacy-parking.md).
+- **Rule established:** never apply a migration to prod from an unmerged branch, and treat *any* prompt from a prod `push` as a stop signal. Corollary both agents on this problem learned the hard way — the repo is not a description of production; check the database.
+- `main` fast-forwarded `00646e1 → 7bc0400` afterwards. `legacy` still holds ~737 rows; `DROP SCHEMA legacy CASCADE` once the deploy is confirmed good.
+
 ## [2026-08-11] fix | Client branding removed from the public site; brand made per-deployment
 attributed_to: [niko]   belongs_to: [tecxwork, design-system]
 - niko: *"remove any yangluck branding i dont want to expose our customer now."* Moving `main` onto this codebase put a **client's name and logo on the public site** — the header, splash, footer, page title and several copy strings were hardcoded to Yang Luck.
@@ -1828,6 +1837,15 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
 - **Made `getEventBranding` survive a pre-migration database.** The tenant-scoped read hard-depended on `event_config.org_id`; without it every query failed and the whole public site fell back to hardcoded `EVENT_CONFIG`, losing the admin-controlled event name, dates and imagery. Now catches Postgres `42703` (undefined_column) **only** — a genuinely broken query still surfaces — and falls back to the unscoped read. Deploy order no longer matters for the public site.
 - Proved it rather than asserting it: `src/test/event-branding-premigration.test.ts` drops the column, inserts a config row via raw SQL (drizzle would name the dropped column), asserts the DB value is served rather than the static default, and restores the column in `afterAll`.
 - Verified: 273 tests (was 272), lint 0 errors, build clean, schema restored after the DDL-mutating test.
+
+## [2026-08-14] fix | One expiry window; /about no longer assumes a corridor
+attributed_to: [niko]   belongs_to: [taiwan-compliance, public-homepage]
+- niko: *"fix this — the 30/60/90-day expiry mismatch and /about's corridor contradiction."* Both had been flagged on 08-12 and left for him to call.
+- **The mismatch was a real bug, and the code said so itself.** `export/compliance/route.ts` declared `const EXPIRING_SOON_DAYS = 60` directly under a comment reading *"Matches the dashboard's definition of 'needs attention'"* — the dashboard used 30. A permit was "expiring" on screen and "valid" in the spreadsheet handed to an inspector.
+- The window existed as a bare `30` in **three** further files (`agency-crm`, `candidate-search`, `placement-lifecycle`), each rebuilding the same midnight-UTC cutoff by hand. Now one `src/lib/compliance-window.ts` exporting `EXPIRING_SOON_DAYS = 30` and a `complianceWindow()` helper returning `{today, cutoff}` together — separately computed bounds are how they drift.
+- **The 90 was left alone, deliberately.** The evidence pack reports a count under a row labelled "Expiring within 90 days": a stated reporting horizon for the 評鑑, not an operational alert. It now has its own named `EVALUATION_HORIZON_DAYS`, and the row label is built from the constant so the number and the words cannot diverge.
+- `/about` rewritten to the corridor-agnostic framing: three parties, no assumed countries, jurisdiction following the operator's licence. **The VSATW / V-GEN TRIDENT history stays** — the 08-11 decision says VN→TW is the first corridor *not the model*, so deleting the origin story would have been the opposite mistake; it is now worded as "the first corridor it ran, not the shape of the product".
+- Verified: **201/201 tests pass** (agency-crm, candidate-search, placement-lifecycle and evidence-exports all directly cover this), tsc 0, lint 0 errors, `/about` renders 200 with no corridor language left.
 
 ## [2026-08-14] feat | Workspace home + activation checklist — a new tenant now has a way in
 attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]

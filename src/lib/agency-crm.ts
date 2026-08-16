@@ -11,6 +11,7 @@ import {
   complianceDocuments,
   applicantProfiles,
 } from "@/lib/db/schema";
+import { complianceWindow } from "@/lib/compliance-window";
 
 export type ComplianceStatus = "expired" | "expiring_soon" | "valid";
 
@@ -144,10 +145,7 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
       )
     );
 
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  const soonCutoff = new Date(today);
-  soonCutoff.setUTCDate(soonCutoff.getUTCDate() + 30);
+  const { today, cutoff: soonCutoff } = complianceWindow();
   const docStatus = (expiry: string | null): ComplianceStatus => {
     if (!expiry) return "valid";
     const d = new Date(`${expiry}T00:00:00Z`);
