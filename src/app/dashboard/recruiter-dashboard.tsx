@@ -24,6 +24,7 @@ import {
 import { useRouter } from "next/navigation";
 import { TeamView, type TeamData } from "./team-view";
 import { HomeView, type HomeData } from "./home-view";
+import { AuditView, type AuditData } from "./audit-view";
 import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
@@ -83,6 +84,7 @@ type Recruiter = {
 
 type Section =
   | "home"
+  | "audit"
   | "interviews"
   | "applicants"
   | "candidates"
@@ -161,6 +163,7 @@ export function RecruiterDashboard({
   billing = null,
   team = null,
   home = null,
+  audit = null,
 }: {
   recruiter: Recruiter;
   /** What this member's org role permits — used to hide tabs that would only redirect. */
@@ -180,6 +183,7 @@ export function RecruiterDashboard({
   billing?: BillingData | null;
   team?: TeamData | null;
   home?: HomeData | null;
+  audit?: AuditData | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -200,6 +204,8 @@ export function RecruiterDashboard({
   const currentPath =
     section === "home"
       ? "/dashboard/home"
+      : section === "audit"
+        ? "/dashboard/audit"
       : section === "interviews"
       ? "/dashboard/interviews"
       : section === "applicants"
@@ -385,6 +391,8 @@ export function RecruiterDashboard({
             )
           ) : section === "home" ? (
             home ? <HomeView data={home} /> : null
+          ) : section === "audit" ? (
+            audit ? <AuditView initial={audit} /> : null
           ) : section === "team" ? (
             team ? (
               <TeamView initial={team} />

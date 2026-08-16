@@ -17,6 +17,7 @@ import {
   Users,
   UserCog,
   LayoutDashboard,
+  ScrollText,
 } from "lucide-react";
 
 import type { UserRole } from "@/lib/auth";
@@ -180,6 +181,15 @@ export const navItemsByRole: Record<NavRole, NavItem[]> = {
       label: "My Company",
       icon: Building2,
       matches: ["/dashboard/company"],
+    },
+    {
+      href: "/dashboard/audit",
+      label: "Audit",
+      icon: ScrollText,
+      matches: ["/dashboard/audit"],
+      // Oversight, not operations — admins and viewers only, matching `audit:read`.
+      capability: "audit:read",
+      agencyOnly: true,
     },
     {
       href: "/dashboard/team",

@@ -45,6 +45,16 @@ export type Capability =
   /** Raise, issue, void an invoice, or record a payment against one. */
   | "invoice:write"
   /**
+   * Read the audit trail: who did what, to which record, and when.
+   *
+   * An oversight capability rather than an operational one, which is why it is held by
+   * `admin` and `viewer` and by nobody in between. A viewer's whole job is reporting and
+   * oversight; a recruiter's is not, and letting the people being audited read the audit
+   * is how a trail stops being one. The log stores field NAMES and metadata, never
+   * candidate PII, so this grants no access to the candidate database.
+   */
+  | "audit:read"
+  /**
    * Invite someone into the workspace, or revoke an invitation.
    *
    * Admin only, and deliberately narrower than the commercial capabilities: a seat is a
@@ -76,6 +86,7 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
     "invoice:read",
     "invoice:write",
     "member:invite",
+    "audit:read",
   ],
 
   // Owns the client relationship end to end, which is why this is the only other role
@@ -151,7 +162,14 @@ const ROLE_CAPABILITIES: Record<MemberRole, readonly Capability[]> = {
 
   // Reporting and oversight. Reads the commercial picture, never the raw candidate
   // database — an observer with no operational need does not get PII.
-  viewer: ["client:read", "placement:read", "compliance:read", "offer:read", "invoice:read"],
+  viewer: [
+    "client:read",
+    "placement:read",
+    "compliance:read",
+    "offer:read",
+    "invoice:read",
+    "audit:read",
+  ],
 };
 
 export function can(role: MemberRole, capability: Capability): boolean {
