@@ -18,6 +18,8 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Yang Luck 揚運國際](stakeholders/yang-luck.md) — client; the ESA licensee operating the Vietnam→Taiwan corridor
 
 ## Decisions
+- [2026-08-11 — Production carried an abandoned branch's schema; park it, don't drop it](decisions/2026-08-11-prod-schema-drift-legacy-parking.md) — an unmerged branch's migration sat in prod for 2 months; `memberships` name-collided with the ATS table and would have been silently ALTERed. Orphans parked in a `legacy` schema; a clean prod push must now ask nothing
+
 - [2026-08-12 — SaaS tenancy and the commercial model](decisions/2026-08-12-saas-tenancy-and-commercial-model.md) — ACCEPTED: per-seat tiers, no payment processor (統一發票), sales-led provisioning, subdomain per tenant; entitlement derived from capabilities so all 84 routes gained plan enforcement unedited
 - [2026-08-11 — Client portal design: the compliance clock in the client's hands](decisions/2026-08-11-client-portal-design.md) — PROPOSED: magic-link auth for agency-invited contacts, portal sessions separate from org memberships, phase 1 = read-only worker permit clock; PIPA basis + phasing await niko
 - [2026-08-11 — The platform is corridor-agnostic; VN→TW is the first corridor, not the model](decisions/2026-08-11-corridor-agnostic-positioning.md) — niko: don't assume Vietnam supplies and Taiwan hires; revenue-split question reframed in roles (employer / supply-side / candidate). Jurisdiction (營業稅, ESA, ARC) is deliberately not genericised
