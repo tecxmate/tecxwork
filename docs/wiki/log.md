@@ -1972,3 +1972,13 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
 - **Scope intersection at the consent screen is now proven, not just claimed:** an admin sees both requested scopes, an interviewer (who holds nothing) sees an empty list and the "your role cannot grant these" notice, and an unsupported scope string is dropped entirely.
 - Small find: `createOrg` does not return the org's `name`, so the test carries it. Not worth changing the signature over, but noted for the next caller that assumes otherwise.
 - Verified: 353 tests (was 347), lint 0 errors, build clean.
+
+## [2026-08-16] fix | CSRF on the consent approval — the one form POST that grants access
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Audited what I had just shipped and found a real gap: `POST /api/oauth/authorize` is a **form** submission that issues an authorization code, and it had no cross-site forgery check.
+- **PKCE is no defence here.** An attacker who forges this request generated the verifier themselves, so a code issued to *their* registered client — delivered to *their* registered redirect — is a code they can spend. The victim's browser supplies only the cookie.
+- The session cookie is `SameSite=Lax`, which already stops a cross-site form POST from carrying it, **so this was likely not exploitable today**. It is still not redundant: Lax treats every subdomain of the registrable domain as same-site, and this product puts **a tenant on each subdomain** — so "same-site" is a wider circle here than in a single-domain app, and the circle that matters for a consent screen is same-*origin*.
+- Check refuses `Sec-Fetch-Site` of anything but `same-origin` (so `same-site` is refused too, which is the subdomain case), and refuses an `Origin` whose host differs from the request's. **Hosts, not full origins** — the deployment sits behind TLS termination, so comparing schemes would reject honest requests whose internal URL is `http` while the browser saw `https`.
+- A request carrying neither header is allowed: that is curl or a test, and CSRF needs a victim's browser and its cookies. `Origin: null` (sandboxed iframe, `data:` document) is refused.
+- Four tests: cross-origin refused, **sibling subdomain refused** (the case that justifies the check existing), the real form accepted with a 303 carrying the code, and scopes still re-intersected — a hidden field is attacker-controlled input like any other, so an interviewer submitting a tampered `scope=client:read` gets `invalid_scope`.
+- Verified: 357 tests (was 353), lint 0 errors, build clean.

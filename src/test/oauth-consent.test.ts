@@ -6,6 +6,8 @@ import { registerClient } from "@/lib/oauth";
 import type { MemberRole } from "@/lib/ats-auth";
 import { createOrg } from "@/lib/provisioning";
 import AuthorizePage from "@/app/oauth/authorize/page";
+import { POST as approvePost } from "@/app/api/oauth/authorize/route";
+import { NextRequest } from "next/server";
 import { clearSession, seedRecruiter, withSession } from "./helpers";
 
 /**
@@ -164,5 +166,94 @@ describe("oauth consent — what it offers", () => {
       query(client.clientId, { scope: "client:read candidate:erase not:a:scope" })
     );
     expect(result.props.scopes).toEqual(["client:read"]);
+  });
+});
+
+describe("oauth consent — approval cannot be forged", () => {
+  /** The approval POST as a browser sends it: a form, with the headers a browser attaches. */
+  function approval(headers: Record<string, string>, clientId: string) {
+    return new NextRequest("http://app.tecxwork.test/api/oauth/authorize", {
+      method: "POST",
+      headers: new Headers({
+        "content-type": "application/x-www-form-urlencoded",
+        host: "app.tecxwork.test",
+        ...headers,
+      }),
+      body: new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: REDIRECT,
+        state: "xyz",
+        code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+        scope: "client:read",
+      }).toString(),
+    });
+  }
+
+  it("refuses a submission from another origin", async () => {
+    // PKCE is no defence here — an attacker who forges this generated the verifier, so a
+    // code issued to their client is a code they can spend.
+    const org = await newOrg();
+    const member = await memberOf(org.id);
+    const client = await newClient();
+    await withSession({ userId: member.userId, email: member.email, role: "recruiter" });
+
+    const res = await approvePost(
+      approval(
+        { origin: "https://evil.example", "sec-fetch-site": "cross-site" },
+        client.clientId
+      )
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("refuses a submission from a sibling subdomain", async () => {
+    // The reason this check is not redundant with SameSite=Lax: a tenant lives on a
+    // subdomain, and Lax counts every subdomain as same-site.
+    const org = await newOrg();
+    const member = await memberOf(org.id);
+    const client = await newClient();
+    await withSession({ userId: member.userId, email: member.email, role: "recruiter" });
+
+    const res = await approvePost(
+      approval(
+        { origin: "https://other-tenant.tecxwork.test", "sec-fetch-site": "same-site" },
+        client.clientId
+      )
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("accepts the form the consent page itself submitted", async () => {
+    const org = await newOrg();
+    const member = await memberOf(org.id);
+    const client = await newClient();
+    await withSession({ userId: member.userId, email: member.email, role: "recruiter" });
+
+    const res = await approvePost(
+      approval(
+        { origin: "http://app.tecxwork.test", "sec-fetch-site": "same-origin" },
+        client.clientId
+      )
+    );
+    // 303 back to the client's redirect URI, carrying the code.
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toContain("code=");
+  });
+
+  it("still re-intersects scopes, because a hidden field is attacker-controlled too", async () => {
+    // An interviewer holds nothing. A tampered form asking for client:read must not get it.
+    const org = await newOrg();
+    const member = await memberOf(org.id, "interviewer");
+    const client = await newClient();
+    await withSession({ userId: member.userId, email: member.email, role: "recruiter" });
+
+    const res = await approvePost(
+      approval(
+        { origin: "http://app.tecxwork.test", "sec-fetch-site": "same-origin" },
+        client.clientId
+      )
+    );
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("invalid_scope");
   });
 });

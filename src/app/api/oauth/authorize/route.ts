@@ -14,6 +14,20 @@ import { capabilitiesFor, type Capability } from "@/lib/permissions";
  * own form is a consent screen that can be forged into granting scopes nobody saw.
  */
 export async function POST(req: NextRequest) {
+  // Cross-site forgery check, before anything reads the session. This is the one form POST
+  // in the app that grants access, and PKCE does not help here: an attacker who forges this
+  // request generated the verifier themselves, so a code issued to their client is a code
+  // they can spend.
+  //
+  // The session cookie is `SameSite=Lax`, which already stops a cross-site form POST from
+  // carrying it. This is not redundant with that. Lax treats every subdomain of the same
+  // registrable domain as same-site, and this product puts a tenant on each subdomain — so
+  // "same-site" is a wider circle here than in a single-domain app, and the check that
+  // matters is same-*origin*.
+  if (!sameOrigin(req)) {
+    return NextResponse.json({ error: "invalid_request" }, { status: 403 });
+  }
+
   const actor = await getAgencyActor();
   if (!actor) {
     return NextResponse.redirect(new URL("/login", req.url), { status: 303 });
@@ -77,4 +91,33 @@ export async function POST(req: NextRequest) {
 
   // 303 so the browser follows with GET rather than re-POSTing to the client.
   return NextResponse.redirect(target.toString(), { status: 303 });
+}
+
+/**
+ * Did this POST come from a page on this exact origin?
+ *
+ * Browsers send `Origin` on every POST and `Sec-Fetch-Site` on every request, so a forged
+ * submission from another page announces itself. Hosts are compared rather than full
+ * origins because the deployment sits behind a proxy that can terminate TLS — comparing
+ * schemes would reject honest requests whose internal URL is `http` while the browser saw
+ * `https`.
+ *
+ * A request carrying neither header is allowed: those are non-browser callers (curl, a
+ * test), which are not the threat — CSRF needs a victim's browser and its cookies.
+ */
+function sameOrigin(req: NextRequest): boolean {
+  // `same-site` is deliberately refused alongside `cross-site`: a tenant subdomain is
+  // same-site with the app and must not be able to submit this form.
+  const fetchSite = req.headers.get("sec-fetch-site");
+  if (fetchSite && fetchSite !== "same-origin") return false;
+
+  const origin = req.headers.get("origin");
+  if (!origin) return true;
+  if (origin === "null") return false; // a sandboxed iframe or a `data:` document
+
+  try {
+    return new URL(origin).host === (req.headers.get("host") ?? new URL(req.url).host);
+  } catch {
+    return false;
+  }
 }
