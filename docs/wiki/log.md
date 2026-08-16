@@ -1962,3 +1962,13 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
 - Scopes are shown in the panel with the **same sentences the consent screen used**, not capability strings. Someone deciding whether to disconnect is answering the question they were asked when they connected; different words on the two screens would be hard to reconcile.
 - Revocation is immediate — `resolveOAuthActor` re-reads the row per request, so the application's next call fails rather than its next hour. Asserted directly rather than inferred from the DB write.
 - Verified: 347 tests (was 339), lint 0 errors, build clean.
+
+## [2026-08-16] test | The consent screen's refusals, and the sign-in bounce
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Audited the OAuth flow's **most likely real-world failure** rather than its happy path: a client opens the authorize URL in a browser that has never signed in. Losing the query string there would strand the flow with no way back, and nothing covered it.
+- It holds — `redirect("/login?next=…")` round-trips the whole request, and `safeRedirectPath` on the login side accepts it because it is a same-site absolute path. Now asserted, including that the `client_id` survives the round trip.
+- Also covered the refusals, which are the flow's **real** access control (registration hands out an identity and grants nothing): unregistered client, a redirect the client never registered, and PKCE missing or `plain`.
+- The tests assert the **element the server component returns**, not rendered HTML — the question is which branch it took and what it was about to display, not how it looks. Cheap, and it reads like the code it guards.
+- **Scope intersection at the consent screen is now proven, not just claimed:** an admin sees both requested scopes, an interviewer (who holds nothing) sees an empty list and the "your role cannot grant these" notice, and an unsupported scope string is dropped entirely.
+- Small find: `createOrg` does not return the org's `name`, so the test carries it. Not worth changing the signature over, but noted for the next caller that assumes otherwise.
+- Verified: 353 tests (was 347), lint 0 errors, build clean.
