@@ -5,6 +5,7 @@ import { getRecruiterDashboardData } from "../recruiter-data";
 import { getAgencyActor } from "@/lib/agency-auth";
 import { getTeam } from "@/lib/members";
 import { listApiKeys } from "@/lib/api-keys";
+import { listGrants } from "@/lib/oauth";
 import { capabilitiesFor } from "@/lib/permissions";
 import { hasFeature } from "@/lib/plans";
 
@@ -25,9 +26,10 @@ export default async function RecruiterTeamPage() {
 
   if (!actor) redirect("/dashboard/pipeline");
 
-  const [team, apiKeys] = await Promise.all([
+  const [team, apiKeys, connections] = await Promise.all([
     getTeam(actor.orgId),
     listApiKeys(actor.orgId),
+    listGrants(actor.orgId),
   ]);
 
   return (
@@ -56,6 +58,15 @@ export default async function RecruiterTeamPage() {
             expiresAt: k.expiresAt ? k.expiresAt.toISOString() : null,
             createdAt: k.createdAt.toISOString(),
           })),
+          // This page already requires `member:invite`, so every grant in the workspace is
+          // both visible and revocable here. The route applies the rule independently.
+          connections: connections.map((c) => ({
+            ...c,
+            grantedAt: c.grantedAt.toISOString(),
+            expiresAt: c.expiresAt.toISOString(),
+            revocable: true,
+          })),
+          viewerUserId: actor.userId,
           // The form offers only what this member could delegate; the server
           // re-checks, so this is UX rather than the control.
           grantableScopes: [...capabilitiesFor(actor.role)],

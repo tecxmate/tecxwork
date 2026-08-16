@@ -146,9 +146,12 @@ tokens. A replayed code is treated as a compromise and revokes the whole grant. 
 intersected against the granting member's role *at every resolution*, so a demotion takes
 effect immediately instead of being frozen into the token.
 
-**Owed before this is announced to a customer:** a workspace-settings screen to review and
-revoke connected applications. `revokeGrant()` exists and is tested; the UI that calls it
-does not, and the consent copy already promises it.
+**Connected applications** (`/api/org/connections` + the panel on the Team screen) closes
+the loop the consent copy opened. The gate takes no capability: revoking access is never a
+privileged action, so the rule is *your own grants always, the whole workspace's if you hold
+`member:invite`*. A grant is not a row anywhere — it is the tuple (org, user, client)
+implied by its live tokens — so the list folds token churn back into one line per
+application.
 
 **The two rules recorded in 2026-08 held, and a third was forced by building it.** No tool
 accepts `orgId`; nothing destructive or financial ships in v1; and **no tool returns

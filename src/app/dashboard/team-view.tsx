@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ApiKeysPanel, type ApiKeySummaryDto } from "./api-keys-panel";
+import { ConnectionsPanel, type ConnectionDto } from "./connections-panel";
 
 /**
  * The workspace's people.
@@ -38,6 +39,10 @@ type Invite = { id: number; email: string; role: string; expiresAt: string };
 
 export type TeamData = {
   apiKeys: ApiKeySummaryDto[];
+  /** OAuth grants — applications approved through a Connect button. */
+  connections: ConnectionDto[];
+  /** So the list can say "approved by you" rather than repeating the viewer's own name. */
+  viewerUserId: number;
   /** Scopes the viewer may delegate — their own capabilities. */
   grantableScopes: string[];
   apiAccessEnabled: boolean;
@@ -256,6 +261,8 @@ export function TeamView({ initial }: { initial: TeamData }) {
         grantableScopes={data.grantableScopes}
         apiAccessEnabled={data.apiAccessEnabled}
       />
+
+      <ConnectionsPanel initial={data.connections} viewerUserId={data.viewerUserId} />
     </div>
   );
 }

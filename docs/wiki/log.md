@@ -1951,3 +1951,14 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
 - `candidate:read` is still absent from every connector path. The PIPA basis for streaming candidate data to a model provider is unanswered, and a consent checkbox is not an answer to it.
 - Migration `db:update:oauth` (additive, idempotent); the three oauth tables added to the test truncate list.
 - Verified: 339 tests (was 327), lint 0 errors, build clean with all six new routes in the manifest.
+
+## [2026-08-16] feat | Connected applications — paying the debt the consent screen created
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- The OAuth consent copy says "You can revoke this at any time from your workspace settings". That screen did not exist, which made it a **false promise on a consent screen** — worse than no promise. It exists now: `/api/org/connections` (GET + DELETE) and a `ConnectionsPanel` on the Team page.
+- **A grant is not a row anywhere.** It is the tuple (org, user, client) implied by its live tokens, and a refresh mints more of them. `listGrants()` folds those back into one application per line — an administrator needs to see *applications*, not token churn. The fold is in TypeScript, not SQL, because the honest aggregate over `scopes` is a set union (Postgres has no plain `max()` for arrays) and the live row count is inherently small.
+- **The gate takes no capability at all.** Revoking access is never a privileged action, and gating it would strand exactly the people who most need it. The rule inside instead: **your own grants always; every grant in the workspace if you hold `member:invite`.** A recruiter can grant, so a recruiter must be able to withdraw without asking an admin — otherwise the consent sentence is still false for everyone below admin.
+- Admins can see and revoke a colleague's connection because an application reading the workspace's data is the *workspace's* business, not only the granter's — same reasoning that puts API keys behind `member:invite`.
+- **Cross-tenant revocation returns the same success shape and does nothing**, so the response cannot be used to confirm that a grant exists in another workspace. Tested by asserting the other tenant's token still resolves afterwards.
+- Scopes are shown in the panel with the **same sentences the consent screen used**, not capability strings. Someone deciding whether to disconnect is answering the question they were asked when they connected; different words on the two screens would be hard to reconcile.
+- Revocation is immediate — `resolveOAuthActor` re-reads the row per request, so the application's next call fails rather than its next hour. Asserted directly rather than inferred from the DB write.
+- Verified: 347 tests (was 339), lint 0 errors, build clean.

@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   memberships,
@@ -8,6 +8,7 @@ import {
   oauthTokens,
   orgs,
   recruiters,
+  users,
 } from "@/lib/db/schema";
 import type { MemberRole } from "@/lib/ats-auth";
 import { can, type Capability } from "@/lib/permissions";
@@ -407,6 +408,85 @@ export async function revokeGrant(
         isNull(oauthTokens.revokedAt)
       )
     );
+}
+
+/**
+ * The connected applications a workspace can see and revoke.
+ *
+ * A "grant" is not a row anywhere — it is the tuple (org, user, client) implied by the live
+ * tokens issued under it. Folding those tokens back into one line per grant is what makes
+ * the consent screen's promise ("you can revoke this at any time") answerable: an
+ * administrator needs to see *applications*, not the token churn underneath them.
+ *
+ * The fold happens in TypeScript rather than SQL because the honest aggregate over `scopes`
+ * is a set union, which Postgres has no plain `max()` for, and because the row count here is
+ * inherently small — expired tokens are excluded and a refresh revokes its predecessor, so
+ * what survives is roughly one access token per active connection.
+ */
+export type GrantSummary = {
+  clientId: string;
+  clientName: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  scopes: Capability[];
+  /** When the connection was first approved. */
+  grantedAt: Date;
+  /** When it lapses on its own if nobody revokes it and nobody uses it. */
+  expiresAt: Date;
+};
+
+export async function listGrants(orgId: number): Promise<GrantSummary[]> {
+  const rows = await getDb()
+    .select({
+      clientId: oauthTokens.clientId,
+      userId: oauthTokens.userId,
+      scopes: oauthTokens.scopes,
+      createdAt: oauthTokens.createdAt,
+      expiresAt: oauthTokens.expiresAt,
+      clientName: oauthClients.name,
+      userName: users.name,
+      userEmail: users.email,
+    })
+    .from(oauthTokens)
+    .innerJoin(oauthClients, eq(oauthClients.clientId, oauthTokens.clientId))
+    .innerJoin(users, eq(users.id, oauthTokens.userId))
+    .where(
+      and(
+        eq(oauthTokens.orgId, orgId),
+        isNull(oauthTokens.revokedAt),
+        gt(oauthTokens.expiresAt, new Date())
+      )
+    );
+
+  const byGrant = new Map<string, GrantSummary>();
+  for (const row of rows) {
+    const key = `${row.userId}:${row.clientId}`;
+    const existing = byGrant.get(key);
+    if (!existing) {
+      byGrant.set(key, {
+        clientId: row.clientId,
+        clientName: row.clientName,
+        userId: row.userId,
+        userName: row.userName,
+        userEmail: row.userEmail,
+        scopes: row.scopes as Capability[],
+        grantedAt: row.createdAt,
+        expiresAt: row.expiresAt,
+      });
+      continue;
+    }
+    // Earliest token is when the connection began; latest expiry is when it actually ends.
+    if (row.createdAt < existing.grantedAt) existing.grantedAt = row.createdAt;
+    if (row.expiresAt > existing.expiresAt) existing.expiresAt = row.expiresAt;
+    for (const scope of row.scopes as Capability[]) {
+      if (!existing.scopes.includes(scope)) existing.scopes.push(scope);
+    }
+  }
+
+  return [...byGrant.values()].sort(
+    (a, b) => b.grantedAt.getTime() - a.grantedAt.getTime()
+  );
 }
 
 /* ------------------------------------------------------------------ resolving -- */

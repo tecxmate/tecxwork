@@ -67,9 +67,28 @@ live. Apollo and Buffer both ship this; a customer evaluating a connector expect
   the four read capabilities the connector's tools already use. In particular
   `candidate:read` is still absent — the PIPA basis for streaming candidate data to a model
   provider remains niko's open question, and a consent checkbox is not an answer to it.
-- **No revocation UI yet.** `revokeGrant()` exists and is tested; the workspace-settings
-  screen that calls it is the next increment. The consent copy already promises it, which is
-  a debt to pay before this is announced to a customer.
+## Addendum — connected applications (same day)
+
+The consent copy promised revocation from workspace settings, and that screen did not exist
+— a false promise on a consent screen, which is worse than no promise. `/api/org/connections`
+and a panel on the Team page now close it.
+
+Two decisions inside it worth recording:
+
+- **The gate takes no capability.** Revoking access is never a privileged action, and gating
+  it would strand exactly the people who most need it. The rule is applied inside instead:
+  your own grants always, every grant in the workspace if you hold `member:invite`. A
+  recruiter can grant, so a recruiter must be able to withdraw without asking an
+  administrator — otherwise the consent sentence stays false for everyone below admin.
+  Administrators see colleagues' connections because an application reading the workspace's
+  data is the workspace's business, not only the granter's.
+- **A grant is not a row.** It is the tuple (org, user, client) implied by its live tokens,
+  and a refresh mints more of them. `listGrants()` folds them into one line per application,
+  in TypeScript rather than SQL, because the honest aggregate over `scopes` is a set union
+  and Postgres has no plain `max()` for arrays.
+
+Cross-tenant revocation returns the same success shape and does nothing, so the response
+cannot confirm that a grant exists in another workspace.
 
 ## Shape
 
