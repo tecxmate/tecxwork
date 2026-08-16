@@ -1982,3 +1982,14 @@ attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
 - A request carrying neither header is allowed: that is curl or a test, and CSRF needs a victim's browser and its cookies. `Origin: null` (sandboxed iframe, `data:` document) is refused.
 - Four tests: cross-origin refused, **sibling subdomain refused** (the case that justifies the check existing), the real form accepted with a 303 carrying the code, and scopes still re-intersected — a hidden field is attacker-controlled input like any other, so an interviewer submitting a tampered `scope=client:read` gets `invalid_scope`.
 - Verified: 357 tests (was 353), lint 0 errors, build clean.
+
+## [2026-08-16] fix | Discovery named the apex from every tenant subdomain
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Second real bug found by auditing my own OAuth work. `issuer()` returned the **build-time** `NEXT_PUBLIC_SITE_URL` regardless of which host the request arrived on — but this product puts **a tenant on every subdomain**, which is the commercial model niko chose on 2026-08-12.
+- So a customer at `yangluck.tecxwork.com` who fetched `/.well-known/oauth-protected-resource` there got a document naming `https://tecxwork.com`. RFC 8414 and RFC 9728 both have the client check that the issuer matches where it fetched from, so this is a **silent failure or a silent retarget to the apex** — and it breaks the Connect button for exactly the customers who have their own subdomain.
+- It was also **self-contradictory inside one flow**: the `/api/mcp` 401 builds its `resource_metadata` pointer from `req.url` (host-derived), so the client was sent to a tenant URL that answered with an apex document.
+- Fixed by deriving the issuer per request. **The Host header is attacker-controlled, so it is validated rather than trusted** — accepted only when it is the platform's own domain, a single-label subdomain of it, or a loopback development host; anything else falls back to the configured URL. An unvalidated Host here would let someone hand a client a discovery document pointing at their own token endpoint.
+- `a.b.tecxwork.com` is refused, matching the rule `parseTenantSlug` already applies: treating a multi-label host as a tenant is how a wildcard-certificate holder impersonates every tenant at once.
+- `Vary: Host` added to both documents so a cache cannot serve one tenant's discovery to another.
+- With `PLATFORM_ROOT_DOMAIN` unset the behaviour is the old one — the apex for everybody — which keeps a single-domain deployment working and matches the deliberate choice in `tenant-host.ts` not to guess a tenant from a header.
+- Verified: 368 tests (was 357), lint 0 errors, build clean.

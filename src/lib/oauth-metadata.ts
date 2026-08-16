@@ -8,13 +8,57 @@ import { getPublicBaseUrl } from "@/lib/email";
  * publishes the same pair; it is the mechanism behind a working Connect button.
  */
 
-/** The issuer must match exactly what clients will see, or discovery fails silently. */
-export function issuer(): string {
-  return getPublicBaseUrl();
+/**
+ * The issuer — the origin the client is actually talking to.
+ *
+ * This has to be derived per request rather than read from a build-time variable, because
+ * every tenant lives on its own subdomain. A customer at `yangluck.tecxwork.com` who
+ * discovers there and is handed `https://tecxwork.com` gets a document that does not
+ * describe the server they asked: RFC 8414 and RFC 9728 both have the client check that the
+ * issuer matches where it fetched from, so the mismatch is a silent failure or a silent
+ * retarget to the apex. Either way the Connect button stops working for exactly the
+ * customers who have their own subdomain.
+ *
+ * **The Host header is attacker-controlled**, so it is validated rather than trusted: it is
+ * accepted only when it is the platform's own domain, a single-label subdomain of it, or a
+ * loopback development host. Anything else falls back to the configured public URL. An
+ * unvalidated Host here would let someone hand a client a discovery document pointing at
+ * their own token endpoint.
+ */
+export function issuerForHost(host: string | null | undefined): string {
+  const fallback = getPublicBaseUrl();
+  if (!host) return fallback;
+
+  const normalized = host.trim().toLowerCase();
+  const bare = normalized.split(":")[0] ?? "";
+  if (!bare) return fallback;
+
+  // Development: `localhost`, `127.0.0.1`, and `<slug>.localhost` are all http.
+  if (bare === "localhost" || bare === "127.0.0.1" || bare.endsWith(".localhost")) {
+    return `http://${normalized}`;
+  }
+
+  // The origin the deployment already knows it serves — covers apex and preview URLs.
+  try {
+    if (bare === new URL(fallback).host.split(":")[0]) return fallback;
+  } catch {
+    /* a malformed configured URL is the fallback's problem, not this function's */
+  }
+
+  const root = process.env.PLATFORM_ROOT_DOMAIN?.trim().toLowerCase().replace(/^\.+|\.+$/g, "");
+  if (root && bare !== root && bare.endsWith(`.${root}`)) {
+    const prefix = bare.slice(0, -(root.length + 1));
+    // A single label only. `a.b.tecxwork.com` is not a tenant, and treating it as one is how
+    // a wildcard-certificate holder impersonates every tenant at once.
+    if (!prefix.includes(".")) return `https://${bare}`;
+  }
+  if (root && bare === root) return `https://${bare}`;
+
+  return fallback;
 }
 
-export function authorizationServerMetadata() {
-  const base = issuer();
+export function authorizationServerMetadata(host?: string | null) {
+  const base = issuerForHost(host);
   return {
     issuer: base,
     authorization_endpoint: `${base}/oauth/authorize`,
@@ -31,8 +75,8 @@ export function authorizationServerMetadata() {
   };
 }
 
-export function protectedResourceMetadata() {
-  const base = issuer();
+export function protectedResourceMetadata(host?: string | null) {
+  const base = issuerForHost(host);
   return {
     resource: `${base}/api/mcp`,
     authorization_servers: [base],
