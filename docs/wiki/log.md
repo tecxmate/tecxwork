@@ -1913,3 +1913,14 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
 - Migration `db:update:api-keys` (additive, idempotent); `api_keys` added to the test truncate list.
 - Verified: 309 tests (was 297), lint 0 errors, build clean.
 - **Not done:** no UI to mint a key yet (API only), and per-key rate limiting still rides the per-IP, non-atomic limiter — recorded in the audit as needing an atomic store before real agent traffic.
+
+## [2026-08-16] feat | Key-minting UI + an atomic per-key rate limiter
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Two gaps I had named when shipping machine auth, closed before starting the MCP transport. niko is travelling and asked for the sequence to continue.
+- **Key minting UI** on the Team screen (`api-keys-panel.tsx`), same `member:invite` gate as seats — letting something that is not a person act in the workspace is an administrative decision of the same weight as adding a colleague. The scope chips are built from **the caller's own capabilities**, so the form cannot offer a delegation the server would refuse; the server re-checks regardless, so this is UX rather than the control. The token is shown once, with the reason stated ("only a hash is stored").
+- **Atomic rate limiting.** `lib/rate-limit.ts` documents its own weakness — the Vercel cache has get/set but no atomic increment, so two callers each read N and write N+1. Harmless for a browser; it is *the* failure mode for agents, which burst in parallel on one credential. New `lib/rate-limit-atomic.ts` uses `INSERT … ON CONFLICT DO UPDATE … RETURNING count`, atomic in one statement, on a new `rate_limit_counters` table.
+- **Per-KEY, not per-IP** (300/min): agents share egress addresses, so an IP bucket would either throttle unrelated tenants together or be set so high it limits nothing. The gate now answers **429** with a reset time.
+- The limiter is a **fixed window**, so a burst straddling a boundary can briefly see up to 2× the limit — recorded as the accepted, bounded trade for one row and one statement per request, versus the unbounded overshoot it replaces.
+- **The test that justifies the file:** twenty concurrent callers race for ten slots and exactly ten succeed. A read-then-write limiter cannot pass it.
+- Migration `db:update:rate-limit` (additive, idempotent); `rate_limit_counters` added to the test truncate list.
+- Verified: 315 tests (was 309), lint 0 errors, build clean. Next: `/api/mcp`.

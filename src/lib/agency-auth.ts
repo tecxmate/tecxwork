@@ -8,7 +8,15 @@ import type { MemberRole } from "@/lib/ats-auth";
 import { can, type Capability } from "@/lib/permissions";
 import { planAllows } from "@/lib/plans";
 import { resolveApiKeyActor, touchApiKey } from "@/lib/api-keys";
+import { consumeRateLimit } from "@/lib/rate-limit-atomic";
 import { getTenant, getTenantById, tenantBlock } from "@/lib/tenant";
+
+/**
+ * Generous enough that ordinary automation never notices, low enough that a runaway loop
+ * is stopped before it costs a database. Per key, per minute.
+ */
+const API_KEY_RATE_LIMIT = 300;
+const API_KEY_RATE_WINDOW_SECONDS = 60;
 
 export type AgencyActor = {
   orgId: number;
@@ -61,7 +69,7 @@ export async function getAgencyActor(
 
 type Resolution =
   | { ok: true; actor: AgencyActor }
-  | { ok: false; error: string; status: 401 | 403 };
+  | { ok: false; error: string; status: 401 | 403 | 429 };
 
 /**
  * A machine caller presents `Authorization: Bearer tw_…`; a person presents a cookie.
@@ -124,6 +132,23 @@ async function resolveFromApiKey(
   // so this single check enforces both.
   if (capability && !actor.scopes.includes(capability)) {
     return { ok: false, error: "This key does not have that scope.", status: 403 };
+  }
+
+  // Per-KEY, not per-IP: agents share egress addresses, so an IP bucket would either
+  // throttle unrelated tenants together or be set so high it limits nothing. Atomic,
+  // because parallel bursts from one credential are exactly what the cache-based limiter
+  // cannot count correctly.
+  const limited = await consumeRateLimit(
+    `api_key:${actor.keyId}`,
+    API_KEY_RATE_LIMIT,
+    API_KEY_RATE_WINDOW_SECONDS
+  );
+  if (!limited.success) {
+    return {
+      ok: false,
+      error: `Rate limit exceeded. Try again after ${new Date(limited.reset * 1000).toISOString()}.`,
+      status: 429,
+    };
   }
 
   void touchApiKey(actor.keyId);

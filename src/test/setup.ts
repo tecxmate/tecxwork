@@ -138,6 +138,7 @@ beforeEach(async () => {
       pipeline_stages,
       pipeline_templates,
       api_keys,
+      rate_limit_counters,
       memberships,
       org_invites,
       orgs,

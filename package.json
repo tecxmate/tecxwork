@@ -50,6 +50,7 @@
     "db:update:ats-pools": "npx tsx src/lib/db/add-ats-pools.ts",
     "db:update:saas-tenancy": "npx tsx src/lib/db/add-saas-tenancy.ts",
     "db:update:api-keys": "npx tsx src/lib/db/add-api-keys.ts",
+    "db:update:rate-limit": "npx tsx src/lib/db/add-rate-limit-counters.ts",
     "db:doctor": "npx tsx src/lib/db/doctor.ts",
     "db:seed:demo-applicant": "npx tsx src/lib/db/seed-demo-applicant.ts",
     "db:seed:report-demo": "npx tsx src/lib/db/seed-report-demo.ts",

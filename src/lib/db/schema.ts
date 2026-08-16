@@ -10,6 +10,7 @@ import {
   pgEnum,
   index,
   uniqueIndex,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 // ---- Enums ----
@@ -483,6 +484,32 @@ export const apiKeys = pgTable(
   (table) => [
     uniqueIndex("api_keys_token_hash_idx").on(table.tokenHash),
     index("api_keys_org_idx").on(table.orgId, table.createdAt),
+  ]
+);
+
+/**
+ * Atomic rate-limit counters.
+ *
+ * The Vercel-cache limiter in `lib/rate-limit.ts` documents its own weakness: the cache
+ * exposes get/set with no atomic increment, so two concurrent callers can each read N and
+ * write N+1. For a browser that overshoot is harmless. For machine callers it is the whole
+ * problem — agents burst, in parallel, from one credential.
+ *
+ * A Postgres upsert is atomic in a single statement, which is all this needs. One row per
+ * (bucket, window); old windows are swept opportunistically rather than by a cron.
+ */
+export const rateLimitCounters = pgTable(
+  "rate_limit_counters",
+  {
+    /** Identifies what is being limited, e.g. `api_key:42`. */
+    bucket: text("bucket").notNull(),
+    /** Unix seconds at the start of the fixed window. */
+    windowStart: integer("window_start").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.bucket, table.windowStart] }),
+    index("rate_limit_window_idx").on(table.windowStart),
   ]
 );
 
