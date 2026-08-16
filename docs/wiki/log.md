@@ -1924,3 +1924,14 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
 - **The test that justifies the file:** twenty concurrent callers race for ten slots and exactly ten succeed. A read-then-write limiter cannot pass it.
 - Migration `db:update:rate-limit` (additive, idempotent); `rate_limit_counters` added to the test truncate list.
 - Verified: 315 tests (was 309), lint 0 errors, build clean. Next: `/api/mcp`.
+
+## [2026-08-16] feat | `/api/mcp` — the connector the whole thread was for
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Phase 2 of the recorded path. MCP SDK added as a **real** dependency — it was present only as a transitive dep of `shadcn`, which would have vanished on any shadcn update.
+- `WebStandardStreamableHTTPServerTransport` (not the Node one) because a Next 16 route handler speaks Web `Request`/`Response`. **Stateless** (`sessionIdGenerator: undefined`): serverless instances share no memory, so a session map would be written by one invocation and looked for by another — an intermittent failure that only appears under load.
+- **Bearer-only, session deliberately refused.** A cookie is sent automatically by the browser, so honouring one here would make the endpoint reachable from any page a signed-in user visits. A key has to be pasted on purpose.
+- Tools are **filtered to the key's scopes before being advertised** — an agent that can see a tool will try it — and re-authorised per call.
+- **Third safety rule added, forced by building it: no candidate PII in v1.** The PIPA basis for streaming candidate data to a model provider is still niko's open question, so v1 does not answer it by default. `search_candidates` is therefore absent and `get_compliance_summary` returns counts rather than the rows (which carry names).
+- **Finding worth acting on separately: `searchCandidates()` has no org filter at all** — access rests purely on the `candidate:read` capability, making the pool platform-wide rather than per-tenant. Possibly intended for a marketplace; not currently stated anywhere, and the candidates page calls the pool "the agency's own asset", which reads the other way.
+- **A test caught a real design flaw, not a test bug.** The tool handler originally called `requireAgency()`, which re-derives the bearer from ambient `headers()` — while the route had *already* resolved the key from `req.headers`. One fact, two sources. Split `authorizeApiKey(actor, capability)` out of the resolver so the transport authorises the actor it already holds.
+- Verified: 327 tests (was 315), lint 0 errors, build clean, `/api/mcp` in the manifest. Protocol tests drive real JSON-RPC through the route: initialize, tools/list, tools/call, and a scope-excluded tool called by name anyway.

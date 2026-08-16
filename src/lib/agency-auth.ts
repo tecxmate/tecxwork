@@ -7,7 +7,7 @@ import { memberships, recruiters } from "@/lib/db/schema";
 import type { MemberRole } from "@/lib/ats-auth";
 import { can, type Capability } from "@/lib/permissions";
 import { planAllows } from "@/lib/plans";
-import { resolveApiKeyActor, touchApiKey } from "@/lib/api-keys";
+import { resolveApiKeyActor, touchApiKey, type ApiKeyActor } from "@/lib/api-keys";
 import { consumeRateLimit } from "@/lib/rate-limit-atomic";
 import { getTenant, getTenantById, tenantBlock } from "@/lib/tenant";
 
@@ -67,7 +67,7 @@ export async function getAgencyActor(
   return result.ok ? result.actor : null;
 }
 
-type Resolution =
+export type Resolution =
   | { ok: true; actor: AgencyActor }
   | { ok: false; error: string; status: 401 | 403 | 429 };
 
@@ -107,6 +107,23 @@ async function resolveFromApiKey(
   // workspace suspended. Distinguishing them tells an attacker whether they guessed a real
   // key.
   if (!actor) return { ok: false, error: "Invalid API key", status: 401 };
+  return authorizeApiKey(actor, capability);
+}
+
+/**
+ * Authorise an already-resolved key actor.
+ *
+ * Split out because a caller that has *already* resolved the credential must not have to
+ * resolve it again from ambient request state. The MCP transport is exactly that caller: it
+ * reads the token off the request to decide which tools to advertise, and then needs the
+ * same commercial, plan, scope and rate-limit checks applied per call. Re-deriving the
+ * actor from `headers()` there meant one fact with two sources, which is a bug waiting for
+ * the day they disagree.
+ */
+export async function authorizeApiKey(
+  actor: ApiKeyActor,
+  capability?: Capability
+): Promise<Resolution> {
 
   const org = await getTenantById(actor.orgId);
   if (!org) return { ok: false, error: "Workspace not found.", status: 403 };

@@ -127,6 +127,32 @@ on `scale` — so when machine auth arrives it has a tenant to belong to and a f
 on. Phase 0 (actor decoupling) is still the next step and is still the prerequisite; the
 provisioning module was written actor-free from the start as a down payment on it.
 
+## Status — 2026-08-16: the connector ships
+
+Phases 0–2 of the recorded path are done. `/api/mcp` is live behind bearer auth.
+
+| Phase | State |
+|---|---|
+| 0 — actor decoupling | done |
+| 1 — API keys + bearer in the gate | done, with a minting UI and an atomic per-key limiter |
+| 2 — `/api/mcp` Streamable HTTP | done, 5 read-only tools |
+| 3 — OAuth 2.1 + dynamic client registration | open |
+
+**The two rules recorded in 2026-08 held, and a third was forced by building it.** No tool
+accepts `orgId`; nothing destructive or financial ships in v1; and **no tool returns
+candidate PII**, because the lawful basis for streaming candidate data to a model provider
+is still unanswered and is not this codebase's decision to make.
+
+Two things that rule turned up, both worth acting on independently of connectors:
+
+- **`searchCandidates()` has no org filter at all.** Access rests entirely on the
+  `candidate:read` capability, so the pool it searches is platform-wide rather than
+  per-tenant. That may be intended — students register once on a marketplace — but it is
+  not currently *stated* anywhere, and the screen above it calls the pool "the agency's own
+  asset", which reads the other way. Worth settling regardless of the connector.
+- **`AgencyCrm.compliance.attention` carries candidate names**, so `get_compliance_summary`
+  deliberately reads past it to the totals. The compliance clock keeps its value as counts.
+
 ## Open questions
 
 - **PIPA basis for agent access.** A connector streams candidate names, schools, ARC and
