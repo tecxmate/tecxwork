@@ -1935,3 +1935,19 @@ attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
 - **Finding worth acting on separately: `searchCandidates()` has no org filter at all** — access rests purely on the `candidate:read` capability, making the pool platform-wide rather than per-tenant. Possibly intended for a marketplace; not currently stated anywhere, and the candidates page calls the pool "the agency's own asset", which reads the other way.
 - **A test caught a real design flaw, not a test bug.** The tool handler originally called `requireAgency()`, which re-derives the bearer from ambient `headers()` — while the route had *already* resolved the key from `req.headers`. One fact, two sources. Split `authorizeApiKey(actor, capability)` out of the resolver so the transport authorises the actor it already holds.
 - Verified: 327 tests (was 315), lint 0 errors, build clean, `/api/mcp` in the manifest. Protocol tests drive real JSON-RPC through the route: initialize, tools/list, tools/call, and a scope-excluded tool called by name anyway.
+
+## [2026-08-16] feat | OAuth 2.1 — the Connect button
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Phase 3, the last item on the recorded connector path. An MCP client can now offer **Connect** instead of asking a customer to paste a key into a config file. Scopes are the existing `Capability` strings — no second permission vocabulary.
+- **PKCE S256 required, not optional.** These are public clients (a desktop MCP client cannot keep a secret), so an intercepted code would otherwise be sufficient on its own. `plain` is refused.
+- **A replayed code revokes the whole grant**, including the tokens it already produced — the safe reading of a code used twice is that someone else has a copy. Tested.
+- **Refresh tokens rotate**; the predecessor stops working, so a stolen one has a bounded life and its use is detectable.
+- **Redirect URIs match exactly**: https anywhere, http only on loopback (a desktop client redirects to a port on the user's own machine, where there is no https to have). No wildcards, no fragments.
+- **Registration is unauthenticated on purpose** (RFC 7591) — it grants nothing. A registered client can only *ask*, and asking produces a consent screen. Gating it would break discovery for no security.
+- **Scopes are intersected twice**: at the consent screen against the signing-in person's role, so the screen cannot display a delegation they could not make; and again at every token resolution against their *current* role, so a demotion takes effect immediately rather than being frozen into the token.
+- **The token is not the tenant** — `orgId` comes from the grant, never the request, so the MCP rule "no tool accepts an orgId" survives the new credential type. A grant also dies on revocation, expiry, workspace suspension, or plan downgrade off `api_access`, each tested independently.
+- Consent copy is written for someone who has never heard the word "scope": each permission is a sentence about what the app will see. A consent screen nobody understands produces no consent.
+- **Debt named rather than hidden:** `revokeGrant()` exists and is tested, but the settings screen that calls it does not — and the consent copy already promises it. That UI is owed before this is announced to a customer.
+- `candidate:read` is still absent from every connector path. The PIPA basis for streaming candidate data to a model provider is unanswered, and a consent checkbox is not an answer to it.
+- Migration `db:update:oauth` (additive, idempotent); the three oauth tables added to the test truncate list.
+- Verified: 339 tests (was 327), lint 0 errors, build clean with all six new routes in the manifest.

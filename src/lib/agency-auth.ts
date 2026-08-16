@@ -9,6 +9,7 @@ import { can, type Capability } from "@/lib/permissions";
 import { planAllows } from "@/lib/plans";
 import { resolveApiKeyActor, touchApiKey, type ApiKeyActor } from "@/lib/api-keys";
 import { consumeRateLimit } from "@/lib/rate-limit-atomic";
+import { resolveOAuthActor } from "@/lib/oauth";
 import { getTenant, getTenantById, tenantBlock } from "@/lib/tenant";
 
 /**
@@ -102,6 +103,25 @@ async function resolveFromApiKey(
   token: string,
   capability?: Capability
 ): Promise<Resolution> {
+  // An OAuth access token and an API key are two ways to present the same kind of actor, so
+  // they converge here rather than forking the authorisation path.
+  if (token.startsWith("two_")) {
+    const oauth = await resolveOAuthActor(token);
+    if (!oauth) return { ok: false, error: "Invalid access token", status: 401 };
+    return authorizeApiKey(
+      {
+        keyId: oauth.tokenId,
+        orgId: oauth.orgId,
+        userId: oauth.userId,
+        recruiterId: oauth.recruiterId,
+        role: oauth.role,
+        plan: oauth.plan,
+        scopes: oauth.scopes,
+      },
+      capability
+    );
+  }
+
   const actor = await resolveApiKeyActor(token);
   // One message for every failure — unknown, revoked, expired, owner no longer a member,
   // workspace suspended. Distinguishing them tells an attacker whether they guessed a real

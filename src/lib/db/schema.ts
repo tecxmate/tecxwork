@@ -513,6 +513,98 @@ export const rateLimitCounters = pgTable(
   ]
 );
 
+/**
+ * OAuth 2.1 clients, registered dynamically.
+ *
+ * MCP clients register themselves (RFC 7591) rather than being configured by hand — that is
+ * what lets someone paste a URL into Claude and get a working connector, with no
+ * administrator in the loop. Registration therefore authenticates nobody: it hands out an
+ * identity, not an authorisation. Everything that matters is decided later, at the consent
+ * screen, by a human who is already signed in.
+ */
+export const oauthClients = pgTable(
+  "oauth_clients",
+  {
+    id: serial("id").primaryKey(),
+    /** Public identifier, safe to log. */
+    clientId: text("client_id").notNull(),
+    /** Null for public clients, which prove themselves with PKCE instead of a secret. */
+    clientSecretHash: text("client_secret_hash"),
+    name: text("name").notNull(),
+    /** Exact-match allowlist. A redirect target is where tokens end up, so it is never fuzzy. */
+    redirectUris: text("redirect_uris").array().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("oauth_clients_client_id_idx").on(table.clientId)]
+);
+
+/**
+ * Authorization codes — single-use, short-lived, PKCE-bound.
+ *
+ * Stored hashed like every other credential here. `consumedAt` rather than a delete so a
+ * replay is *detectable*: a second exchange of the same code is evidence of interception,
+ * and a deleted row would be indistinguishable from a typo.
+ */
+export const oauthAuthCodes = pgTable(
+  "oauth_auth_codes",
+  {
+    id: serial("id").primaryKey(),
+    codeHash: text("code_hash").notNull(),
+    clientId: text("client_id").notNull(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    scopes: text("scopes").array().notNull(),
+    redirectUri: text("redirect_uri").notNull(),
+    /** PKCE: the S256 challenge the exchange must produce a verifier for. */
+    codeChallenge: text("code_challenge").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("oauth_auth_codes_hash_idx").on(table.codeHash)]
+);
+
+/**
+ * Issued access and refresh tokens.
+ *
+ * Same shape as `api_keys` on purpose: org-scoped, hashed, scoped to capabilities, and
+ * bound to the user who granted consent — so an OAuth caller and a key caller resolve to
+ * the same actor and travel the same authorisation path. One story, not two.
+ */
+export const oauthTokens = pgTable(
+  "oauth_tokens",
+  {
+    id: serial("id").primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    kind: text("kind").notNull(), // access | refresh
+    clientId: text("client_id").notNull(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    scopes: text("scopes").array().notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("oauth_tokens_hash_idx").on(table.tokenHash),
+    index("oauth_tokens_grant_idx").on(table.orgId, table.userId, table.clientId),
+  ]
+);
+
 export const orgInvites = pgTable(
   "org_invites",
   {

@@ -81,7 +81,12 @@ describe("mcp — authentication", () => {
   it("refuses a request with no bearer token", async () => {
     const res = await POST(rpc(null, INIT));
     expect(res.status).toBe(401);
-    expect(res.headers.get("WWW-Authenticate")).toBe("Bearer");
+
+    // RFC 9728: the challenge points at the protected-resource document, so a client can
+    // turn this 401 into an OAuth sign-in rather than a dead end.
+    const challenge = res.headers.get("WWW-Authenticate") ?? "";
+    expect(challenge).toMatch(/^Bearer\b/);
+    expect(challenge).toContain("/.well-known/oauth-protected-resource");
   });
 
   it("refuses an unknown token", async () => {

@@ -5,6 +5,7 @@ import { authorizeApiKey, clientIp } from "@/lib/agency-auth";
 import { logAudit } from "@/lib/audit";
 import { inputShapeFor, toolsForScopes } from "@/lib/mcp-tools";
 import { resolveApiKeyActor } from "@/lib/api-keys";
+import { resolveOAuthActor } from "@/lib/oauth";
 
 /**
  * The MCP endpoint.
@@ -33,15 +34,42 @@ export async function POST(req: NextRequest) {
   if (!token) {
     return NextResponse.json(
       { error: "Authorization: Bearer <api key> required" },
-      { status: 401, headers: { "WWW-Authenticate": "Bearer" } }
+      {
+        status: 401,
+        headers: {
+          // Points the client at discovery, so a 401 becomes a sign-in rather than a
+          // dead end (RFC 9728).
+          "WWW-Authenticate": `Bearer resource_metadata="${new URL("/.well-known/oauth-protected-resource", req.url).toString()}"`,
+        },
+      }
     );
   }
 
-  const keyActor = await resolveApiKeyActor(token);
+  // Either credential resolves to the same actor shape, so everything below is identical.
+  const oauth = token.startsWith("two_") ? await resolveOAuthActor(token) : null;
+  const keyActor = oauth
+    ? {
+        keyId: oauth.tokenId,
+        orgId: oauth.orgId,
+        userId: oauth.userId,
+        recruiterId: oauth.recruiterId,
+        role: oauth.role,
+        plan: oauth.plan,
+        scopes: oauth.scopes,
+      }
+    : await resolveApiKeyActor(token);
+
   if (!keyActor) {
     return NextResponse.json(
       { error: "Invalid API key" },
-      { status: 401, headers: { "WWW-Authenticate": "Bearer" } }
+      {
+        status: 401,
+        headers: {
+          // Points the client at discovery, so a 401 becomes a sign-in rather than a
+          // dead end (RFC 9728).
+          "WWW-Authenticate": `Bearer resource_metadata="${new URL("/.well-known/oauth-protected-resource", req.url).toString()}"`,
+        },
+      }
     );
   }
 

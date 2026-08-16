@@ -129,14 +129,26 @@ provisioning module was written actor-free from the start as a down payment on i
 
 ## Status — 2026-08-16: the connector ships
 
-Phases 0–2 of the recorded path are done. `/api/mcp` is live behind bearer auth.
+Phases 0–3 of the recorded path are done. `/api/mcp` is live, reachable with either an API
+key or an OAuth access token.
 
 | Phase | State |
 |---|---|
 | 0 — actor decoupling | done |
 | 1 — API keys + bearer in the gate | done, with a minting UI and an atomic per-key limiter |
 | 2 — `/api/mcp` Streamable HTTP | done, 5 read-only tools |
-| 3 — OAuth 2.1 + dynamic client registration | open |
+| 3 — OAuth 2.1 + dynamic client registration | done — see `decisions/2026-08-16-oauth-for-connectors.md` |
+
+OAuth means the customer sees a **Connect** button rather than a config file to paste a key
+into: RFC 8414 + RFC 9728 discovery, RFC 7591 registration, auth code + PKCE (S256, never
+`plain`), a consent screen that names each permission in a sentence, and rotating refresh
+tokens. A replayed code is treated as a compromise and revokes the whole grant. Scopes are
+intersected against the granting member's role *at every resolution*, so a demotion takes
+effect immediately instead of being frozen into the token.
+
+**Owed before this is announced to a customer:** a workspace-settings screen to review and
+revoke connected applications. `revokeGrant()` exists and is tested; the UI that calls it
+does not, and the consent copy already promises it.
 
 **The two rules recorded in 2026-08 held, and a third was forced by building it.** No tool
 accepts `orgId`; nothing destructive or financial ships in v1; and **no tool returns
