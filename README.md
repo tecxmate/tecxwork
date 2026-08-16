@@ -27,6 +27,14 @@ Taiwan school data:
 - then run `npm run db:seed:schools` once to import the bilingual Taiwan school dataset from `public/dataset/`
 - the signup API reads from Neon, not from the local CSV files at request time
 
+## Connecting an AI agent
+
+The platform exposes a remote MCP server at `/api/mcp`, reachable with OAuth 2.1 or an API
+key. See [docs/connectors.md](docs/connectors.md) for how to connect one, what the five
+tools return, and the three rules that decide whether it is safe.
+
+Subdomain routing and per-tenant connector discovery need `PLATFORM_ROOT_DOMAIN` set.
+
 ## Getting Started
 
 First, run the development server:

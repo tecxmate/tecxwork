@@ -54,7 +54,7 @@ function routeGuard(req: NextRequest, pathname: string): NextResponse | null {
       return NextResponse.redirect(new URL("/admin", req.url));
     }
     if (session.role === "recruiter") {
-      return NextResponse.redirect(new URL("/dashboard/interviews", req.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.redirect(new URL("/browse", req.url));
   }

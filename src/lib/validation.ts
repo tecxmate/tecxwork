@@ -88,6 +88,12 @@ export const applicantSignupSchema = z.object({
   portfolioUrl: z.string().trim().optional(),
   description: z.string().trim().optional(),
   pipaConsent: z.boolean(),
+  /**
+   * Separate, optional, and never implied by `pipaConsent`. Ticking it widens the recorded
+   * purpose to cover AI-assisted matching, which is the only way a candidate's data can
+   * reach a connector.
+   */
+  aiMatchingConsent: z.boolean().optional(),
   wantsNewsletter: z.boolean().optional(),
 });
 

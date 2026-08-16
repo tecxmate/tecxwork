@@ -21,5 +21,7 @@ async function redirectFromLegacy(
     redirect("/dashboard/company");
   }
 
-  redirect("/dashboard/interviews");
+  // Home decides where an agency lands; it redirects client-company recruiters
+  // straight on to their interviews, so this stays a single entry point.
+  redirect("/dashboard/home");
 }

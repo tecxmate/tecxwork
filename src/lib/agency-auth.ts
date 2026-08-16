@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
@@ -6,7 +7,17 @@ import { memberships, recruiters } from "@/lib/db/schema";
 import type { MemberRole } from "@/lib/ats-auth";
 import { can, type Capability } from "@/lib/permissions";
 import { planAllows } from "@/lib/plans";
+import { resolveApiKeyActor, touchApiKey, type ApiKeyActor } from "@/lib/api-keys";
+import { consumeRateLimit } from "@/lib/rate-limit-atomic";
+import { resolveOAuthActor } from "@/lib/oauth";
 import { getTenant, getTenantById, tenantBlock } from "@/lib/tenant";
+
+/**
+ * Generous enough that ordinary automation never notices, low enough that a runaway loop
+ * is stopped before it costs a database. Per key, per minute.
+ */
+const API_KEY_RATE_LIMIT = 300;
+const API_KEY_RATE_WINDOW_SECONDS = 60;
 
 export type AgencyActor = {
   orgId: number;
@@ -57,11 +68,141 @@ export async function getAgencyActor(
   return result.ok ? result.actor : null;
 }
 
-type Resolution =
+export type Resolution =
   | { ok: true; actor: AgencyActor }
-  | { ok: false; error: string; status: 401 | 403 };
+  | { ok: false; error: string; status: 401 | 403 | 429 };
 
+/**
+ * A machine caller presents `Authorization: Bearer tw_…`; a person presents a cookie.
+ *
+ * Read through `headers()` rather than by taking the request as an argument, so every one
+ * of the existing agency routes gained machine access without a signature change. The two
+ * paths converge on the same `AgencyActor`, which is what stops "can a token do this?" from
+ * becoming a second, divergent authorisation story.
+ */
 async function resolveAgencyActor(capability?: Capability): Promise<Resolution> {
+  const token = await bearerFromHeaders();
+  if (token) return resolveFromApiKey(token, capability);
+  return resolveFromSession(capability);
+}
+
+async function bearerFromHeaders(): Promise<string | null> {
+  try {
+    const header = (await headers()).get("authorization");
+    if (!header) return null;
+    const [scheme, value] = header.split(" ");
+    if (!value || scheme.toLowerCase() !== "bearer") return null;
+    return value.trim() || null;
+  } catch {
+    // No request headers available (a prerender, a script). Not a machine caller.
+    return null;
+  }
+}
+
+async function resolveFromApiKey(
+  token: string,
+  capability?: Capability
+): Promise<Resolution> {
+  // An OAuth access token and an API key are two ways to present the same kind of actor, so
+  // they converge here rather than forking the authorisation path.
+  if (token.startsWith("two_")) {
+    const oauth = await resolveOAuthActor(token);
+    if (!oauth) return { ok: false, error: "Invalid access token", status: 401 };
+    return authorizeApiKey(
+      {
+        keyId: oauth.tokenId,
+        orgId: oauth.orgId,
+        userId: oauth.userId,
+        recruiterId: oauth.recruiterId,
+        role: oauth.role,
+        plan: oauth.plan,
+        scopes: oauth.scopes,
+      },
+      capability
+    );
+  }
+
+  const actor = await resolveApiKeyActor(token);
+  // One message for every failure — unknown, revoked, expired, owner no longer a member,
+  // workspace suspended. Distinguishing them tells an attacker whether they guessed a real
+  // key.
+  if (!actor) return { ok: false, error: "Invalid API key", status: 401 };
+  return authorizeApiKey(actor, capability);
+}
+
+/**
+ * Authorise an already-resolved key actor.
+ *
+ * Split out because a caller that has *already* resolved the credential must not have to
+ * resolve it again from ambient request state. The MCP transport is exactly that caller: it
+ * reads the token off the request to decide which tools to advertise, and then needs the
+ * same commercial, plan, scope and rate-limit checks applied per call. Re-deriving the
+ * actor from `headers()` there meant one fact with two sources, which is a bug waiting for
+ * the day they disagree.
+ */
+export async function authorizeApiKey(
+  actor: ApiKeyActor,
+  capability?: Capability
+): Promise<Resolution> {
+
+  const org = await getTenantById(actor.orgId);
+  if (!org) return { ok: false, error: "Workspace not found.", status: 403 };
+  const blocked = tenantBlock(org);
+  if (blocked) return { ok: false, error: blocked.message, status: 403 };
+
+  // A host that names a tenant still decides which workspace the request is for, so a key
+  // cannot be pointed at someone else's subdomain.
+  const tenant = await getTenant();
+  if (tenant && tenant.id !== actor.orgId) {
+    return { ok: false, error: "You do not have access to this workspace.", status: 403 };
+  }
+
+  if (capability && !planAllows(org.plan, capability)) {
+    return {
+      ok: false,
+      error: "This feature is not included in your current plan.",
+      status: 403,
+    };
+  }
+
+  // `scopes` is already the intersection of the key's grant and the owner's current role,
+  // so this single check enforces both.
+  if (capability && !actor.scopes.includes(capability)) {
+    return { ok: false, error: "This key does not have that scope.", status: 403 };
+  }
+
+  // Per-KEY, not per-IP: agents share egress addresses, so an IP bucket would either
+  // throttle unrelated tenants together or be set so high it limits nothing. Atomic,
+  // because parallel bursts from one credential are exactly what the cache-based limiter
+  // cannot count correctly.
+  const limited = await consumeRateLimit(
+    `api_key:${actor.keyId}`,
+    API_KEY_RATE_LIMIT,
+    API_KEY_RATE_WINDOW_SECONDS
+  );
+  if (!limited.success) {
+    return {
+      ok: false,
+      error: `Rate limit exceeded. Try again after ${new Date(limited.reset * 1000).toISOString()}.`,
+      status: 429,
+    };
+  }
+
+  void touchApiKey(actor.keyId);
+
+  return {
+    ok: true,
+    actor: {
+      orgId: actor.orgId,
+      recruiterId: actor.recruiterId,
+      userId: actor.userId,
+      role: actor.role,
+      plan: org.plan,
+    },
+  };
+}
+
+async function resolveFromSession(capability?: Capability): Promise<Resolution> {
   const auth = await getRecruiterFromSession();
   if (!auth) return { ok: false, error: "Not signed in", status: 401 };
 

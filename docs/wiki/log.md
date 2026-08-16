@@ -1846,3 +1846,173 @@ attributed_to: [niko]   belongs_to: [taiwan-compliance, public-homepage]
 - **The 90 was left alone, deliberately.** The evidence pack reports a count under a row labelled "Expiring within 90 days": a stated reporting horizon for the 評鑑, not an operational alert. It now has its own named `EVALUATION_HORIZON_DAYS`, and the row label is built from the constant so the number and the words cannot diverge.
 - `/about` rewritten to the corridor-agnostic framing: three parties, no assumed countries, jurisdiction following the operator's licence. **The VSATW / V-GEN TRIDENT history stays** — the 08-11 decision says VN→TW is the first corridor *not the model*, so deleting the origin story would have been the opposite mistake; it is now worded as "the first corridor it ran, not the shape of the product".
 - Verified: **201/201 tests pass** (agency-crm, candidate-search, placement-lifecycle and evidence-exports all directly cover this), tsc 0, lint 0 errors, `/about` renders 200 with no corridor language left.
+
+## [2026-08-14] feat | Workspace home + activation checklist — a new tenant now has a way in
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, saas-strategy]
+- niko: "continue to make this a durable SaaS. and polished like Lark, Apollo.io, ClickUp". PR #23 merged first (36cceda).
+- **The gap this closes:** provisioning could create a workspace, but a new tenant landed on `/dashboard/interviews` — an empty table with no indication of what to do. The product was reachable and not enterable. That is the most visible distance from the products niko named.
+- New `src/lib/activation.ts` (actor-free, takes an orgId): six setup steps **derived from the data**, never from a stored `onboarding_completed` flag. A flag drifts — it reads done after someone deletes their only client, and pending for every tenant provisioned by hand before the feature existed. Deriving costs six counting queries issued in one `Promise.all` and is always true; there is a test that deletes a client and watches the step untick.
+- **Steps are filtered by plan, and the denominator shrinks with them.** "Record a placement" is not a task a starter customer is failing — counting it would put 100% out of reach.
+- **Trial state reuses the gate's own `isTrialExpired`**, so the banner and the refusal cannot disagree. A workspace reading "3 days left" while every request is refused is worse than either message alone.
+- Checklist retires itself at 100%, so an established workspace stops seeing it every morning; home then carries plan, seats, trial, and a compliance-attention card (expired or inside 60 days).
+- `/dashboard` now forwards to `/dashboard/home`, which redirects client-company recruiters straight on to interviews — one entry point, agency-only content. Login and the proxy's signed-in redirect follow the same path; the proxy test was updated with it.
+- Verified: 284 tests (was 273), lint 0 errors, build clean.
+
+## [2026-08-14] feat | Empty states — and a compliance screen that was quietly reassuring
+attributed_to: [claude-code]   belongs_to: [tecxwork, design-system]
+- Continuing the "polished like Lark/Apollo/ClickUp" pass. New shared `src/components/empty-state.tsx`; wired into the two agency screens that rendered bare tables (clients, compliance). Takes strings rather than i18n keys, so the copy lives beside the rest of each screen's `T` record instead of a second place that can drift.
+- **Real bug found, not just cosmetics:** the compliance screen showed **"All valid"** whenever nothing needed attention — including when **zero documents had ever been filed**. A brand-new workspace was told its compliance was fine. `compliance.total` was already on the payload and simply unused; the empty tracker is now its own state ("No documents filed yet" + Add document), and "All valid" is reserved for the case where documents exist and none is expiring. This is the one screen that must never sound confident about paperwork nobody has seen.
+- Copy written in both zh and en to match the existing per-view convention.
+- Verified: 284 tests, lint 0 errors, build clean.
+
+## [2026-08-14] fix | 404 page, and a pipeline empty state that named the wrong problem
+attributed_to: [claude-code]   belongs_to: [tecxwork, design-system]
+- **`src/app/not-found.tsx` added.** `error.tsx` and `global-error.tsx` already existed, so a page that *threw* was handled while a page that simply did not exist fell through to Next's unbranded default. The two now read the same way: say what happened, don't blame the person, offer somewhere to go. `/dashboard` is deliberately not offered — a signed-out visitor would hit a second dead end at the login redirect.
+- **Second instance of the same bug class as the compliance one.** The pipeline board rendered "No candidates in the pipeline yet" whenever `pipelineBoard.jobs.length === 0` — the condition is *no job openings*, not *no candidates*. A new workspace was told to find candidates when what it needed was an opening to put them in. Now names the actual state and links to Post an opening.
+- Both are the same failure: a message describing a state the code was not actually testing, which sends people to the wrong fix. Worth watching for elsewhere.
+- Pre-existing lint warnings in `recruiter-dashboard.tsx` (3 unused lucide imports left by main's rail refactor) confirmed present on main and deliberately left — cleaning them would churn work someone else may still have in flight.
+- Verified: 284 tests, lint 0 errors, build clean, `/_not-found` in the route manifest.
+
+## [2026-08-14] feat | `npm run db:doctor` — the migration question is now one command
+attributed_to: [claude-code]   belongs_to: [tecxwork, saas-strategy]
+- I had twice told niko the migration blocker was unresolvable from this session (no production credentials) and twice asked someone else to answer it. Better to make answering it trivial than to keep asking.
+- `src/lib/db/doctor.ts` + `npm run db:doctor`: **strictly read-only** — every statement is a SELECT against `information_schema` or a COUNT — so it is safe to point at production, which is the whole point. Prints the **host only**, never the connection string, and flags when the host looks like a prod one.
+- Reports: which of the 8 core ATS tables exist; whether each saas-tenancy column is present; org/membership/invite counts; `event_config` rows including how many are platform-default (warns above 1); then a **verdict** naming the next step.
+- Three verdicts, each **verified against a real database** rather than reasoned about: fully migrated (`tecxwork_test`) → "Ready"; ATS present with columns dropped (`unmigrated_check`) → "tenancy migration outstanding, run db:update:saas-tenancy"; ATS entirely absent (`no_ats_check`) → "the agency product cannot run here … agency routes are already failing on current main, independently of this work."
+- That third verdict is the one that matters: it is the hypothesis raised by 21 migration scripts refusing prod, and it is now checkable in ten seconds instead of being an open question blocking a deploy.
+- `docs/handoff-codex.md` updated to lead with the command instead of `\d orgs`.
+
+## [2026-08-16] refactor | Actor decoupling — the data layer stops reading the request
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
+- niko picked this over polish. It is Phase 0 of the connector path recorded in `topics/agent-connectors.md`, and the reason the rest of that path is now reachable.
+- `getAgencyCrm()` and `getPipelineBoard()` each read the session cookie, resolved the recruiter, and only then did their real work — callable from exactly one place (a browser request) and untestable without mocking `next/headers`.
+- New `src/lib/actor.ts`: a `RecruiterActor` value plus `resolveRecruiterActor()`, now **the only session-reading function in the data path**. `getPipelineBoard(actor)` takes it; `getAgencyCrm(orgId)` takes just the org, matching the convention already set by `provisioning.ts` and `members.ts`. `source: "session" | "token"` is on the actor so an audit row can record *how* a caller authenticated, not only who they were.
+- The four call sites now resolve the actor at the edge and pass it down. In the three agency pages the CRM fetch moved out of the `Promise.all` and after the actor guard — deliberately sequenced, because the org is the tenant boundary and has to be established before anything is read.
+- **Tests assert the actual property:** every case runs after `clearSession()`. Before the refactor each call returned null on its first line for want of a cookie. One test also pins the tenant boundary — `getAgencyCrm(mine)` cannot see another org's clients.
+- **Two domain facts the tests taught me**, both worth recording because both look like bugs: the board returns null when an org has **no job openings** (not "no candidates" — the same mislabel fixed in the UI earlier), and for an agency actor it lists openings belonging to **client-company** recruiters in the same org, excluding the agency's own (`ne(clientKind, "agency")`) — an agency places *into* clients.
+- Verified: 288 tests (was 284), lint 0 errors, build clean.
+
+## [2026-08-16] feat | Audit trail becomes readable — `audit:read`, `/dashboard/audit`
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, taiwan-compliance, data-privacy]
+- `audit_log` has been written on every mutation since the ATS tenancy migration and read by **nothing**. A trail nobody can open is not a control, it is storage — and for a product whose moat is the compliance clock, "who moved this candidate, and when" is part of what is being sold.
+- New capability **`audit:read`, held by `admin` and `viewer` and by nobody in between.** Oversight, not operations: letting the people being audited read the audit is how a trail stops being one. A viewer's documented job is reporting and oversight, and this grants no candidate access — the table stores field NAMES and metadata, never values.
+- `src/lib/audit-log.ts` (actor-free, takes an orgId): filters by action, record type, actor and date; distinct filter options are drawn from the org's own history so a new action appears in the dropdown the first time it is recorded. **Left join to `users`, not inner** — a cron or system actor has no user row, and those are the entries an inspection asks about most.
+- `/api/org/audit` is **GET only, deliberately**. `audit_log` has no update or delete path anywhere in the codebase and this route does not add one: an audit editable through the API that writes it is not evidence.
+- Tests assert the properties, not the plumbing: the matrix AND the route both refuse a recruiter; entries are org-scoped; system-actor rows survive; pagination has no overlap (id tiebreak in the ordering); and a serialised event containing the field name `email` contains no `@` — the property that makes it safe to show a viewer.
+- Verified: 297 tests (was 288), lint 0 errors, build clean; `/dashboard/audit` + `/api/org/audit` in the manifest.
+
+## [2026-08-16] feat | Machine auth — `api_keys` and a bearer path through the one gate
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
+- The blocker named in the original connector audit — "there is no machine auth anywhere; the only bearer token in the codebase is `CRON_SECRET`" — is closed. This is Phase 1 of the recorded path; only the MCP transport and OAuth remain.
+- **A key borrows a person's authority rather than standing alone** (`owner_user_id`), narrowed by its own scopes. That choice is the whole design: every ownership rule, capability check and audit row keeps working unchanged, and "who did this" still names a human. A standalone robot identity would have needed a second authorisation path beside the human one — the kind of door that outlives the reason it was cut.
+- **Scopes are intersected at REQUEST time, not creation time.** Demote the owner and the key narrows with them; remove their membership and it stops working. Otherwise a key is a way to keep authority you have formally lost. Both are tested (`admin` → `coordinator` drops `invoice:write` but keeps `candidate:read`; deleting the membership returns null).
+- The org is re-read per request, so a **suspended tenant or a lapsed trial refuses machine traffic exactly as it refuses a browser**, and `api_access` (a `scale`-plan feature declared back in the plans work) is the monetisation hook — both tested.
+- **Wired through `headers()` rather than by taking the request as an argument**, so all 84 existing agency routes gained machine access with no signature change. Both paths converge on the same `AgencyActor`, which is what stops "can a token do this?" becoming a second, divergent authorisation story.
+- Only the SHA-256 is stored; `prefix` is kept in clear so a list identifies a key without the secret. Every resolution failure returns one message — distinguishing "unknown" from "revoked" tells an attacker whether they guessed a real key.
+- Minting is gated on `member:invite`: letting something that is not a person act inside the workspace is an administrative decision of the same weight as adding a colleague.
+- Migration `db:update:api-keys` (additive, idempotent); `api_keys` added to the test truncate list.
+- Verified: 309 tests (was 297), lint 0 errors, build clean.
+- **Not done:** no UI to mint a key yet (API only), and per-key rate limiting still rides the per-IP, non-atomic limiter — recorded in the audit as needing an atomic store before real agent traffic.
+
+## [2026-08-16] feat | Key-minting UI + an atomic per-key rate limiter
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Two gaps I had named when shipping machine auth, closed before starting the MCP transport. niko is travelling and asked for the sequence to continue.
+- **Key minting UI** on the Team screen (`api-keys-panel.tsx`), same `member:invite` gate as seats — letting something that is not a person act in the workspace is an administrative decision of the same weight as adding a colleague. The scope chips are built from **the caller's own capabilities**, so the form cannot offer a delegation the server would refuse; the server re-checks regardless, so this is UX rather than the control. The token is shown once, with the reason stated ("only a hash is stored").
+- **Atomic rate limiting.** `lib/rate-limit.ts` documents its own weakness — the Vercel cache has get/set but no atomic increment, so two callers each read N and write N+1. Harmless for a browser; it is *the* failure mode for agents, which burst in parallel on one credential. New `lib/rate-limit-atomic.ts` uses `INSERT … ON CONFLICT DO UPDATE … RETURNING count`, atomic in one statement, on a new `rate_limit_counters` table.
+- **Per-KEY, not per-IP** (300/min): agents share egress addresses, so an IP bucket would either throttle unrelated tenants together or be set so high it limits nothing. The gate now answers **429** with a reset time.
+- The limiter is a **fixed window**, so a burst straddling a boundary can briefly see up to 2× the limit — recorded as the accepted, bounded trade for one row and one statement per request, versus the unbounded overshoot it replaces.
+- **The test that justifies the file:** twenty concurrent callers race for ten slots and exactly ten succeed. A read-then-write limiter cannot pass it.
+- Migration `db:update:rate-limit` (additive, idempotent); `rate_limit_counters` added to the test truncate list.
+- Verified: 315 tests (was 309), lint 0 errors, build clean. Next: `/api/mcp`.
+
+## [2026-08-16] feat | `/api/mcp` — the connector the whole thread was for
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Phase 2 of the recorded path. MCP SDK added as a **real** dependency — it was present only as a transitive dep of `shadcn`, which would have vanished on any shadcn update.
+- `WebStandardStreamableHTTPServerTransport` (not the Node one) because a Next 16 route handler speaks Web `Request`/`Response`. **Stateless** (`sessionIdGenerator: undefined`): serverless instances share no memory, so a session map would be written by one invocation and looked for by another — an intermittent failure that only appears under load.
+- **Bearer-only, session deliberately refused.** A cookie is sent automatically by the browser, so honouring one here would make the endpoint reachable from any page a signed-in user visits. A key has to be pasted on purpose.
+- Tools are **filtered to the key's scopes before being advertised** — an agent that can see a tool will try it — and re-authorised per call.
+- **Third safety rule added, forced by building it: no candidate PII in v1.** The PIPA basis for streaming candidate data to a model provider is still niko's open question, so v1 does not answer it by default. `search_candidates` is therefore absent and `get_compliance_summary` returns counts rather than the rows (which carry names).
+- **Finding worth acting on separately: `searchCandidates()` has no org filter at all** — access rests purely on the `candidate:read` capability, making the pool platform-wide rather than per-tenant. Possibly intended for a marketplace; not currently stated anywhere, and the candidates page calls the pool "the agency's own asset", which reads the other way.
+- **A test caught a real design flaw, not a test bug.** The tool handler originally called `requireAgency()`, which re-derives the bearer from ambient `headers()` — while the route had *already* resolved the key from `req.headers`. One fact, two sources. Split `authorizeApiKey(actor, capability)` out of the resolver so the transport authorises the actor it already holds.
+- Verified: 327 tests (was 315), lint 0 errors, build clean, `/api/mcp` in the manifest. Protocol tests drive real JSON-RPC through the route: initialize, tools/list, tools/call, and a scope-excluded tool called by name anyway.
+
+## [2026-08-16] feat | OAuth 2.1 — the Connect button
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Phase 3, the last item on the recorded connector path. An MCP client can now offer **Connect** instead of asking a customer to paste a key into a config file. Scopes are the existing `Capability` strings — no second permission vocabulary.
+- **PKCE S256 required, not optional.** These are public clients (a desktop MCP client cannot keep a secret), so an intercepted code would otherwise be sufficient on its own. `plain` is refused.
+- **A replayed code revokes the whole grant**, including the tokens it already produced — the safe reading of a code used twice is that someone else has a copy. Tested.
+- **Refresh tokens rotate**; the predecessor stops working, so a stolen one has a bounded life and its use is detectable.
+- **Redirect URIs match exactly**: https anywhere, http only on loopback (a desktop client redirects to a port on the user's own machine, where there is no https to have). No wildcards, no fragments.
+- **Registration is unauthenticated on purpose** (RFC 7591) — it grants nothing. A registered client can only *ask*, and asking produces a consent screen. Gating it would break discovery for no security.
+- **Scopes are intersected twice**: at the consent screen against the signing-in person's role, so the screen cannot display a delegation they could not make; and again at every token resolution against their *current* role, so a demotion takes effect immediately rather than being frozen into the token.
+- **The token is not the tenant** — `orgId` comes from the grant, never the request, so the MCP rule "no tool accepts an orgId" survives the new credential type. A grant also dies on revocation, expiry, workspace suspension, or plan downgrade off `api_access`, each tested independently.
+- Consent copy is written for someone who has never heard the word "scope": each permission is a sentence about what the app will see. A consent screen nobody understands produces no consent.
+- **Debt named rather than hidden:** `revokeGrant()` exists and is tested, but the settings screen that calls it does not — and the consent copy already promises it. That UI is owed before this is announced to a customer.
+- `candidate:read` is still absent from every connector path. The PIPA basis for streaming candidate data to a model provider is unanswered, and a consent checkbox is not an answer to it.
+- Migration `db:update:oauth` (additive, idempotent); the three oauth tables added to the test truncate list.
+- Verified: 339 tests (was 327), lint 0 errors, build clean with all six new routes in the manifest.
+
+## [2026-08-16] feat | Connected applications — paying the debt the consent screen created
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- The OAuth consent copy says "You can revoke this at any time from your workspace settings". That screen did not exist, which made it a **false promise on a consent screen** — worse than no promise. It exists now: `/api/org/connections` (GET + DELETE) and a `ConnectionsPanel` on the Team page.
+- **A grant is not a row anywhere.** It is the tuple (org, user, client) implied by its live tokens, and a refresh mints more of them. `listGrants()` folds those back into one application per line — an administrator needs to see *applications*, not token churn. The fold is in TypeScript, not SQL, because the honest aggregate over `scopes` is a set union (Postgres has no plain `max()` for arrays) and the live row count is inherently small.
+- **The gate takes no capability at all.** Revoking access is never a privileged action, and gating it would strand exactly the people who most need it. The rule inside instead: **your own grants always; every grant in the workspace if you hold `member:invite`.** A recruiter can grant, so a recruiter must be able to withdraw without asking an admin — otherwise the consent sentence is still false for everyone below admin.
+- Admins can see and revoke a colleague's connection because an application reading the workspace's data is the *workspace's* business, not only the granter's — same reasoning that puts API keys behind `member:invite`.
+- **Cross-tenant revocation returns the same success shape and does nothing**, so the response cannot be used to confirm that a grant exists in another workspace. Tested by asserting the other tenant's token still resolves afterwards.
+- Scopes are shown in the panel with the **same sentences the consent screen used**, not capability strings. Someone deciding whether to disconnect is answering the question they were asked when they connected; different words on the two screens would be hard to reconcile.
+- Revocation is immediate — `resolveOAuthActor` re-reads the row per request, so the application's next call fails rather than its next hour. Asserted directly rather than inferred from the DB write.
+- Verified: 347 tests (was 339), lint 0 errors, build clean.
+
+## [2026-08-16] test | The consent screen's refusals, and the sign-in bounce
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Audited the OAuth flow's **most likely real-world failure** rather than its happy path: a client opens the authorize URL in a browser that has never signed in. Losing the query string there would strand the flow with no way back, and nothing covered it.
+- It holds — `redirect("/login?next=…")` round-trips the whole request, and `safeRedirectPath` on the login side accepts it because it is a same-site absolute path. Now asserted, including that the `client_id` survives the round trip.
+- Also covered the refusals, which are the flow's **real** access control (registration hands out an identity and grants nothing): unregistered client, a redirect the client never registered, and PKCE missing or `plain`.
+- The tests assert the **element the server component returns**, not rendered HTML — the question is which branch it took and what it was about to display, not how it looks. Cheap, and it reads like the code it guards.
+- **Scope intersection at the consent screen is now proven, not just claimed:** an admin sees both requested scopes, an interviewer (who holds nothing) sees an empty list and the "your role cannot grant these" notice, and an unsupported scope string is dropped entirely.
+- Small find: `createOrg` does not return the org's `name`, so the test carries it. Not worth changing the signature over, but noted for the next caller that assumes otherwise.
+- Verified: 353 tests (was 347), lint 0 errors, build clean.
+
+## [2026-08-16] fix | CSRF on the consent approval — the one form POST that grants access
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Audited what I had just shipped and found a real gap: `POST /api/oauth/authorize` is a **form** submission that issues an authorization code, and it had no cross-site forgery check.
+- **PKCE is no defence here.** An attacker who forges this request generated the verifier themselves, so a code issued to *their* registered client — delivered to *their* registered redirect — is a code they can spend. The victim's browser supplies only the cookie.
+- The session cookie is `SameSite=Lax`, which already stops a cross-site form POST from carrying it, **so this was likely not exploitable today**. It is still not redundant: Lax treats every subdomain of the registrable domain as same-site, and this product puts **a tenant on each subdomain** — so "same-site" is a wider circle here than in a single-domain app, and the circle that matters for a consent screen is same-*origin*.
+- Check refuses `Sec-Fetch-Site` of anything but `same-origin` (so `same-site` is refused too, which is the subdomain case), and refuses an `Origin` whose host differs from the request's. **Hosts, not full origins** — the deployment sits behind TLS termination, so comparing schemes would reject honest requests whose internal URL is `http` while the browser saw `https`.
+- A request carrying neither header is allowed: that is curl or a test, and CSRF needs a victim's browser and its cookies. `Origin: null` (sandboxed iframe, `data:` document) is refused.
+- Four tests: cross-origin refused, **sibling subdomain refused** (the case that justifies the check existing), the real form accepted with a 303 carrying the code, and scopes still re-intersected — a hidden field is attacker-controlled input like any other, so an interviewer submitting a tampered `scope=client:read` gets `invalid_scope`.
+- Verified: 357 tests (was 353), lint 0 errors, build clean.
+
+## [2026-08-16] fix | Discovery named the apex from every tenant subdomain
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- Second real bug found by auditing my own OAuth work. `issuer()` returned the **build-time** `NEXT_PUBLIC_SITE_URL` regardless of which host the request arrived on — but this product puts **a tenant on every subdomain**, which is the commercial model niko chose on 2026-08-12.
+- So a customer at `yangluck.tecxwork.com` who fetched `/.well-known/oauth-protected-resource` there got a document naming `https://tecxwork.com`. RFC 8414 and RFC 9728 both have the client check that the issuer matches where it fetched from, so this is a **silent failure or a silent retarget to the apex** — and it breaks the Connect button for exactly the customers who have their own subdomain.
+- It was also **self-contradictory inside one flow**: the `/api/mcp` 401 builds its `resource_metadata` pointer from `req.url` (host-derived), so the client was sent to a tenant URL that answered with an apex document.
+- Fixed by deriving the issuer per request. **The Host header is attacker-controlled, so it is validated rather than trusted** — accepted only when it is the platform's own domain, a single-label subdomain of it, or a loopback development host; anything else falls back to the configured URL. An unvalidated Host here would let someone hand a client a discovery document pointing at their own token endpoint.
+- `a.b.tecxwork.com` is refused, matching the rule `parseTenantSlug` already applies: treating a multi-label host as a tenant is how a wildcard-certificate holder impersonates every tenant at once.
+- `Vary: Host` added to both documents so a cache cannot serve one tenant's discovery to another.
+- With `PLATFORM_ROOT_DOMAIN` unset the behaviour is the old one — the apex for everybody — which keeps a single-domain deployment working and matches the deliberate choice in `tenant-host.ts` not to guess a tenant from a header.
+- Verified: 368 tests (was 357), lint 0 errors, build clean.
+
+## [2026-08-16] docs | How to actually connect an agent
+attributed_to: [claude-code]   belongs_to: [tecxwork, agent-connectors]
+- `docs/connectors.md` — the thing that was missing for the connector to be *usable* rather than merely built. Written for the person doing the connecting, not for whoever wrote the code.
+- **A repo file, not a route.** The 2026-08-12 decision closed `/documentation` deliberately; this respects it. README points at it.
+- Leads with the **three preconditions** (plan carries `api_access`, workspace active, the connecting person's role holds the scope), because a connection that "silently does nothing" is almost always one of them — and the third is the one that surprises people: an interviewer holds no capabilities, so an interviewer who approves a connection grants nothing.
+- Says plainly to use the **workspace's own subdomain, not the apex** — which is only true because of the discovery fix earlier today, and is the sort of thing that produces a silent failure if a customer guesses wrong.
+- Has a **"when it does not work" table** mapping each symptom to its cause, including the two that read as bugs but are correct behaviour: no tools appearing (the granting member's role holds none of the scopes) and everything 403ing after a plan change (`api_access` is a plan feature).
+- Every number and name in it was checked against the code rather than recalled: the five tool names and their capabilities, 300/min per credential, `scale` as the only plan with `api_access`, token and refresh lifetimes.
+- Corrected one claim while writing: the rate limit is per *credential*, not only per API key — an OAuth access token gets its own bucket the same way.
+
+## [2026-08-16] fix | The candidate pool was platform-wide; PIPA basis now decided
+attributed_to: [niko, claude-code]   belongs_to: [tecxwork, agent-connectors, data-privacy]
+- niko settled both open questions: the candidate search **should** be org-scoped, and the PIPA basis for connectors **should** be applied rather than left open.
+- **The bug.** `searchCandidates()` had no org filter at all, so every agency with `candidate:read` read every other agency's candidates. With one agency that was harmless — platform-wide *was* the agency's own pool. Multi-tenancy turned it into a cross-tenant PII leak, and the page above it has always claimed the opposite: *"The candidate pool is the agency's own asset."* The comment was right; the code never implemented it.
+- **The rule niko chose:** an agency sees its own worked pipeline (anyone who applied to its jobs) **plus the unclaimed pool** — self-registered candidates nobody has picked up. Once a candidate applies to Agency A, Agency B stops seeing them. Sourcing survives, which matters because the public signup funnel is what agencies pay for; browsing a competitor's pipeline does not.
+- **Two further leaks in the same function**, both found by fixing the first: **facet counts** were computed over the whole table (a chip reading "Vietnam 812" to a workspace that may see nine discloses the shape of every competitor's pipeline without showing a name), and **`appliedTo`** listed job titles from *any* org, so a candidate shared by two agencies exposed the other's open roles — through a field whose entire purpose is stopping *this* agency re-sourcing someone.
+- **The PIPA answer is a split, not a widening.** The signup consent says — in all three languages — "visible to **recruiters** for this recruitment event". That covers an agency's staff. It does **not** stretch to a third-party model provider outside Taiwan: different purpose, different recipient, in practice an international transmission. So `ai_assisted_matching` is a **separate optional checkbox** with its own honest wording in en/zh-TW/vi. Quietly reusing the old consent would have been the easy, wrong move.
+- `search_candidates` now exists, gated twice: the `candidate:read` capability *and* the narrower purpose. **It returns nothing until candidates opt in** — that is the mechanism working, and it is documented as such so it does not read as a broken tool. Email, phone and CV link are withheld even from consented rows: consent to being *matched* by an assistant is not consent to having contact details read out by one.
+- **A near-miss worth recording.** The signup path never stamped `consent_purpose` — only the Phase 5 backfill did. A strict basis check would have hidden **every candidate registered since**. `hasLawfulBasis` therefore reads a null purpose as the recruitment consent (which is what the backfill's own `COALESCE` already assumed, and what the form actually showed), and a null never resolves to the AI purpose. Signup now stamps consent, purpose and an 18-month retention date directly.
+- Second near-miss: `= ANY(${array})` in a Drizzle template binds the whole array as one parameter, and Postgres rejects it as a malformed array literal. `inArray` over the `coalesce` expression is the correct spelling.
+- The in-memory and SQL forms of the rule are asserted **against each other** across every consent combination — two implementations of one rule drift, and the SQL one drifts silently.
+- Verified: 378 tests (was 368), lint 0 errors, build clean.
