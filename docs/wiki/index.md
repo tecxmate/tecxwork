@@ -18,6 +18,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Yang Luck 揚運國際](stakeholders/yang-luck.md) — client; the ESA licensee operating the Vietnam→Taiwan corridor
 
 ## Decisions
+- [2026-09-14 — tecxwork's contribution to marketecx is aggregates, not rows](decisions/2026-09-14-marketecx-tecxwork-contribution.md) — PROPOSED: only derived counts leave tecxwork (consent_purpose is recruitment, not market intelligence); `clients.unified_business_no` becomes the join key and gets backfilled against bizmap's registry; the hiring-leads-revenue claim must be tested before it is built on
 - [2026-08-11 — Production carried an abandoned branch's schema; park it, don't drop it](decisions/2026-08-11-prod-schema-drift-legacy-parking.md) — an unmerged branch's migration sat in prod for 2 months; `memberships` name-collided with the ATS table and would have been silently ALTERed. Orphans parked in a `legacy` schema; a clean prod push must now ask nothing
 
 - [2026-08-12 — SaaS tenancy and the commercial model](decisions/2026-08-12-saas-tenancy-and-commercial-model.md) — ACCEPTED: per-seat tiers, no payment processor (統一發票), sales-led provisioning, subdomain per tenant; entitlement derived from capabilities so all 84 routes gained plan enforcement unedited
@@ -61,6 +62,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [2026-04-20 — Custom Booking Engine over Cal.com](decisions/2026-04-20-custom-booking-engine.md) — decision to build native logic for high-concurrency event
 
 ## Topics
+- [marketecx](topics/marketecx.md) — proposed product joining bizmap's business census, alphatecx's market data and tecxwork's hiring data behind a Claude connector; 統編 is the join key and alphatecx is the side that lacks it
 *Areas, products, events, and synthesised concepts. Topics don't make decisions; stakeholders do.*
 
 - [tecxwork web app](topics/tecxwork.md) — the product itself (area: full stack)
