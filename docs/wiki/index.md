@@ -18,6 +18,7 @@ Catalog of every page in `docs/wiki/`. One line per page. Update on every create
 - [Yang Luck 揚運國際](stakeholders/yang-luck.md) — client; the ESA licensee operating the Vietnam→Taiwan corridor
 
 ## Decisions
+- [2026-09-15 — bizmap/marketecx is the flagship; tecxwork feeds it and is not sold](decisions/2026-09-15-flagship-is-bizmap-tecxwork-feeds-it.md) — [niko]: monetizing tecxwork and alphatecx both touch a legal gray zone. Reads that zone as taiwan-compliance §1 (unlicensed matching **for profit**), so it retires the independent Tecxmate product, not the Yang Luck / licensed-agency line where the customer holds the ESA licence. The principle across all three systems: sell where the licence is already held or not needed — and a licence travels with the data, not the repo
 - [2026-09-14 — tecxwork's contribution to marketecx is aggregates, not rows](decisions/2026-09-14-marketecx-tecxwork-contribution.md) — PROPOSED: only derived counts leave tecxwork (consent_purpose is recruitment, not market intelligence); `clients.unified_business_no` becomes the join key and gets backfilled against bizmap's registry; the hiring-leads-revenue claim must be tested before it is built on
 - [2026-08-11 — Production carried an abandoned branch's schema; park it, don't drop it](decisions/2026-08-11-prod-schema-drift-legacy-parking.md) — an unmerged branch's migration sat in prod for 2 months; `memberships` name-collided with the ATS table and would have been silently ALTERed. Orphans parked in a `legacy` schema; a clean prod push must now ask nothing
 

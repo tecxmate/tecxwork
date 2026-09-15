@@ -3,13 +3,13 @@ title: tecxwork's contribution to marketecx is aggregates, not rows
 type: decision
 slug: 2026-09-14-marketecx-tecxwork-contribution
 date: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-15
 attributed_to: [niko, claude-code]
 belongs_to: [marketecx, tecxwork]
 source: chat
 status: proposed
 tags: [marketecx, pipa, integration, design-system]
-related: [marketecx, saas-strategy]
+related: [marketecx, saas-strategy, 2026-09-15-flagship-is-bizmap-tecxwork-feeds-it]
 ---
 
 ## Context
@@ -68,6 +68,16 @@ compliance story ([2026-07-27](2026-07-27-yang-luck-licensee-positioning.md)) wa
   panel needed one on 2026-09-14 and had to source it from here. The fix is one published
   `tecxmate-tokens.css` carrying both modes, consumed by all three products — otherwise each
   new surface re-derives a dark theme, differently.
+
+## Update, 2026-09-15 — the boundary holds, and gains a second reason
+
+[niko] settled the commercial shape: bizmap/marketecx is the flagship and the only surface
+sold; tecxwork's data supports it and is not monetised
+([decision](2026-09-15-flagship-is-bizmap-tecxwork-feeds-it.md)). Nothing above changes —
+the aggregates-only rule was set by `consent_purpose`, which no commercial decision moves.
+What changes is that **no revenue is taken for anything derived from `applicant_profiles`**,
+and the minimum cell size becomes load-bearing: derived employment counts inside a *sold*
+product are a harder §20 question than the same counts published freely.
 
 ## Provenance
 
