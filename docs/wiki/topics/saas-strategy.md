@@ -3,14 +3,24 @@ title: SaaS Strategy & Product Pivot
 type: topic
 slug: saas-strategy
 date: 2026-05-04
-updated: 2026-05-04
+updated: 2026-09-15
 attributed_to: [niko]
 belongs_to: [tecxmate]
 source: document
 status: active
 tags: [strategy, product, pivot, saas]
-related: [tecxwork, v-gen-trident-2026]
+related: [tecxwork, v-gen-trident-2026, 2026-09-15-flagship-is-bizmap-tecxwork-feeds-it]
 ---
+
+> **Qualified 2026-09-15.** [niko] named bizmap/marketecx the flagship and said monetizing
+> tecxwork touches a legal gray zone. Read as [taiwan-compliance](taiwan-compliance.md) §1 —
+> unlicensed matching **for profit** — that retires the *independent Tecxmate product* this
+> page describes, while leaving the licensed-agency line
+> ([Yang Luck](../decisions/2026-07-27-yang-luck-licensee-positioning.md),
+> [per-seat SaaS](../decisions/2026-08-12-saas-tenancy-and-commercial-model.md)) standing,
+> because there the customer holds the licence. See
+> [2026-09-15-flagship-is-bizmap-tecxwork-feeds-it](../decisions/2026-09-15-flagship-is-bizmap-tecxwork-feeds-it.md),
+> including the narrower/wider reading it flags for [niko] to confirm.
 
 ## Overview
 The project is pivoting from a custom single-event scheduling tool for V-GEN into a reusable, multi-tenant B2B SaaS product for event organizers and recruiters.
