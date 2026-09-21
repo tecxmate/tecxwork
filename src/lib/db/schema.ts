@@ -1406,3 +1406,113 @@ export const feedbackReports = pgTable("feedback_reports", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
 });
+
+// ---- AI screening interview (text-only demo) ----------------------------------
+//
+// One interview belongs to one application, so a report always lands next to the
+// candidate it is about and inherits that row's tenant. The candidate opens it
+// from a token in a link and never signs in: a first-round screen that requires
+// an account is a screen half the pipeline never starts.
+//
+// Deliberately NOT folded into `bookings` (a scheduled human interview) or
+// `scorecards` (a human's verdict on one). This is a third thing — a machine
+// that produces evidence for a human — and merging it with either would make
+// "who assessed this candidate" unanswerable in the audit trail.
+
+export const aiInterviewStatusEnum = pgEnum("ai_interview_status", [
+  "invited",
+  "in_progress",
+  "completed",
+  "abandoned",
+  "expired",
+]);
+
+export const aiInterviews = pgTable(
+  "ai_interviews",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id").references(() => orgs.id),
+    applicationId: integer("application_id")
+      .notNull()
+      .references(() => applications.id),
+    // Denormalised from the application so the candidate-facing route can build
+    // the whole interview without a join through a tenant-scoped table.
+    jobOpeningId: integer("job_opening_id")
+      .notNull()
+      .references(() => jobOpenings.id),
+    applicantId: integer("applicant_id")
+      .notNull()
+      .references(() => applicantProfiles.id),
+
+    // The link. Random, single-purpose, and expiring — it is the only credential
+    // on the candidate side, so it carries no meaning and is never reused.
+    token: text("token").notNull().unique(),
+    status: aiInterviewStatusEnum("status").notNull().default("invited"),
+    locale: text("locale").notNull().default("en"),
+
+    // What the interviewer decided to assess, and the claim ledger it is holding
+    // the candidate to. Both evolve during the interview; both are internal.
+    competencies: jsonb("competencies").notNull().default([]),
+    claims: jsonb("claims").notNull().default([]),
+    // The per-turn assessments, kept so the final report is written from the
+    // interviewer's own contemporaneous notes rather than re-read from scratch.
+    notes: jsonb("notes").notNull().default([]),
+
+    report: jsonb("report"),
+    integrity: jsonb("integrity"),
+    fitScore: integer("fit_score"),
+    recommendation: text("recommendation"),
+    integrityScore: integer("integrity_score"),
+
+    // Consent is recorded, not assumed: the telemetry in ai_interview_turns is
+    // personal data under 個資法 and the disclosure list the candidate actually
+    // saw is stored with it, so a later change to the wording cannot rewrite
+    // what a past candidate agreed to.
+    consentAt: timestamp("consent_at", { withTimezone: true }),
+    consentDisclosures: jsonb("consent_disclosures").notNull().default([]),
+
+    createdByUserId: integer("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("ai_interviews_application_idx").on(table.applicationId),
+    index("ai_interviews_org_status_idx").on(table.orgId, table.status),
+  ]
+);
+
+export const aiInterviewTurns = pgTable(
+  "ai_interview_turns",
+  {
+    id: serial("id").primaryKey(),
+    interviewId: integer("interview_id")
+      .notNull()
+      .references(() => aiInterviews.id),
+    // 0-based question number. A question and the answer to it share an index:
+    // the pair is the unit everything else reports on.
+    idx: integer("idx").notNull(),
+
+    kind: text("kind").notNull(),
+    question: text("question").notNull(),
+    // What a good answer contains, and — for a false-premise question — the
+    // detail deliberately got wrong. Recruiter-visible, candidate-never.
+    lookingFor: text("looking_for").notNull().default(""),
+    plantedError: jsonb("planted_error"),
+    targets: jsonb("targets").notNull().default([]),
+    timeLimitSec: integer("time_limit_sec").notNull().default(90),
+    wordCap: integer("word_cap").notNull().default(50),
+
+    answer: text("answer"),
+    // How the answer was composed. Counts and durations only — never which keys
+    // were pressed, and nothing from outside this page.
+    telemetry: jsonb("telemetry"),
+    signals: jsonb("signals").notNull().default([]),
+    assessment: jsonb("assessment"),
+
+    askedAt: timestamp("asked_at", { withTimezone: true }).notNull().defaultNow(),
+    answeredAt: timestamp("answered_at", { withTimezone: true }),
+  },
+  (table) => [uniqueIndex("unique_ai_interview_turn").on(table.interviewId, table.idx)]
+);
