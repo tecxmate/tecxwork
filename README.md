@@ -21,6 +21,15 @@ NEXT_PUBLIC_SITE_URL=https://your-production-origin.example
 Optional push notifications also need `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and
 `VAPID_PRIVATE_KEY`.
 
+The AI screening interviewer needs `ANTHROPIC_API_KEY`. Without it the feature
+answers 503 and says so in the recruiter panel rather than failing open — the
+rest of the app is unaffected. Two optional knobs trade latency against depth:
+`INTERVIEW_EFFORT_TURN` (default `medium`; this call runs while the candidate
+waits) and `INTERVIEW_EFFORT_OFFLINE` (default `high`; preparing the interview
+and writing the report). Apply its schema once with
+`npm run db:update:ai-interviews`. See
+[docs/wiki/topics/ai-interviewer.md](docs/wiki/topics/ai-interviewer.md).
+
 Taiwan school data:
 - the applicant school lookup is stored in the `schools` table in Neon
 - use `npm run db:push` after schema changes
