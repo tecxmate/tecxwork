@@ -6,12 +6,12 @@ import {
   jobOrders,
   submissions,
   placements,
-  recruiters,
   pipelineStages,
   complianceDocuments,
   applicantProfiles,
 } from "@/lib/db/schema";
 import { complianceWindow } from "@/lib/compliance-window";
+import { recruiterForUser } from "@/lib/request-cache";
 
 export type ComplianceStatus = "expired" | "expiring_soon" | "valid";
 
@@ -59,11 +59,7 @@ export async function getAgencyCrm(): Promise<AgencyCrm | null> {
   if (!auth) return null;
 
   const db = getDb();
-  const [me] = await db
-    .select({ clientKind: recruiters.clientKind, orgId: recruiters.orgId })
-    .from(recruiters)
-    .where(eq(recruiters.id, auth.recruiterId))
-    .limit(1);
+  const me = await recruiterForUser(auth.session.userId);
   if (!me || me.clientKind !== "agency" || me.orgId == null) return null;
   const orgId = me.orgId;
 

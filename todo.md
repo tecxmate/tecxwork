@@ -3,6 +3,40 @@
 Open items, newest section first. Tick a box when it is done rather than deleting
 the line — a done item with its reason still reads as the record of a decision.
 
+## Database indexes
+
+Found 2026-09-22 while measuring dashboard round trips. Reproduce with:
+
+```sql
+-- foreign keys with no index whose leading column is that key
+SELECT c.conrelid::regclass, a.attname
+FROM pg_constraint c
+JOIN unnest(c.conkey) WITH ORDINALITY k(attnum, ord) ON true
+JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = k.attnum
+WHERE c.contype = 'f'
+  AND NOT EXISTS (SELECT 1 FROM pg_index i
+                  WHERE i.indrelid = c.conrelid AND (i.indkey::int2[])[0] = k.attnum);
+```
+
+- [x] **`memberships(user_id)`** — done, in this change. It is the one that could not
+      wait: `getMember()` asks "which org is this user in" before any ATS route does
+      its own work, and `unique_org_member` cannot answer it because `user_id` is that
+      index's *second* column. Everything else below can.
+
+- [ ] **Decide the other 29 against production row counts.** Postgres does not index
+      foreign keys automatically; this schema has **65 unindexed FK columns, 30 of
+      which a dashboard page load actually filters on** — mostly the tenant-scoping
+      columns (`org_id` on `applications`, `clients`, `job_orders`, `placements`,
+      `submissions`, `job_openings`; `client_id` on `invoices`, `job_orders`,
+      `placements`).
+
+      Deliberately **not** done blind. At demo volume (36 candidates) Postgres
+      correctly seq-scans all of them, so nothing here can be measured on the seed
+      data, and 30 new indexes is real write amplification on tables the ATS writes
+      to on every stage move. Pull the row counts from production first, index the
+      tables that are actually large, and measure with `EXPLAIN (ANALYZE, BUFFERS)`
+      rather than by counting missing indexes.
+
 ## AI screening interviewer
 
 Shipped 2026-09-21 (PR #36). Background: [`docs/wiki/topics/ai-interviewer.md`](docs/wiki/topics/ai-interviewer.md).
