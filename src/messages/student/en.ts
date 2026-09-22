@@ -39,8 +39,8 @@ export const studentEnMessages = {
     viewSite: "View Site",
   },
   landing: {
-    heroBadge: "VSATW JOB FAIR 2026",
-    heroTitle: "V-GEN TRIDENT",
+    heroBadge: "TECXWORK DEMO FAIR 2026",
+    heroTitle: "DEMO CAREER FAIR",
     eventHighlightsTitle: "Event Highlights",
     eventHighlightsSubtitle: "Moments from our career fair events",
     companiesTitle: "Participating Companies",

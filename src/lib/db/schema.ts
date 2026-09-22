@@ -1228,30 +1228,30 @@ export const emailVerificationCodes = pgTable("email_verification_codes", {
 export const eventConfig = pgTable("event_config", {
   id: serial("id").primaryKey(),
   orgId: integer("org_id").references(() => orgs.id),
-  eventName: text("event_name").notNull().default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
+  eventName: text("event_name").notNull().default("TECXWORK DEMO CAREER FAIR 2026"),
   emailEventName: text("email_event_name")
     .notNull()
-    .default("VSATW JOB FAIR 2026: V-GEN TRIDENT"),
+    .default("TECXWORK DEMO CAREER FAIR 2026"),
   tagline: text("tagline")
     .notNull()
     .default("The Vietnamese Generation — Versatile in Talent, Value in Action"),
   organizer: text("organizer")
     .notNull()
     .default("Vietnamese Student Association in Taiwan"),
-  organizerShort: text("organizer_short").notNull().default("VSATW"),
+  organizerShort: text("organizer_short").notNull().default("TECXWORK"),
   hostedAt: text("hosted_at")
     .notNull()
-    .default("MCUT (Ming Chi University of Technology)"),
+    .default("Demo Campus Convention Hall"),
   hostedAtFull: text("hosted_at_full")
     .notNull()
-    .default("Ming Chi University of Technology"),
+    .default("Demo Campus Convention Hall"),
   displayDate: text("display_date").notNull().default("June 6, 2026"),
   displayYear: text("display_year").notNull().default("2026"),
   eventEndDate: timestamp("event_end_date", { withTimezone: true }),
   eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
   location: text("location")
     .notNull()
-    .default("MCUT (Ming Chi University of Technology)"),
+    .default("Demo Campus Convention Hall"),
   slotDurationMinutes: integer("slot_duration_minutes").notNull().default(15),
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
   startHour: integer("start_hour").notNull().default(10),

@@ -46,8 +46,8 @@ export const studentZhTwMessages = {
   },
   landing: {
     ...studentEnMessages.landing,
-    heroBadge: "VSATW 2026 就業博覽會",
-    heroTitle: "VSATW JOB FAIR 2026: V-GEN TRIDENT",
+    heroBadge: "TECXWORK 2026 示範就業博覽會",
+    heroTitle: "TECXWORK DEMO CAREER FAIR 2026",
     eventHighlightsTitle: "活動精選",
     eventHighlightsSubtitle: "就業博覽會活動花絮",
     companiesTitle: "參展公司",
