@@ -484,7 +484,14 @@ export const memberships = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [uniqueIndex("unique_org_member").on(table.orgId, table.userId)]
+  (table) => [
+    uniqueIndex("unique_org_member").on(table.orgId, table.userId),
+    // "which org is this user in", which is the FIRST question every ATS route
+    // asks — getMember() runs it before any handler does its own work. The unique
+    // index above cannot serve it: user_id is its SECOND column, so a lookup by
+    // user alone seq-scans. Confirmed with EXPLAIN against a local Postgres.
+    index("memberships_user_idx").on(table.userId),
+  ]
 );
 
 /**
