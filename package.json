@@ -52,6 +52,7 @@
     "db:update:ai-interviews": "npx tsx src/lib/db/add-ai-interviews.ts",
     "db:update:memberships-user-index": "npx tsx src/lib/db/add-memberships-user-index.ts",
     "db:seed:demo-applicant": "npx tsx src/lib/db/seed-demo-applicant.ts",
+    "db:seed:demo-company": "npx tsx src/lib/db/seed-demo-company.ts",
     "db:seed:report-demo": "npx tsx src/lib/db/seed-report-demo.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",
     "db:seed:schools": "npx tsx src/lib/db/import-schools.ts",
