@@ -3,7 +3,7 @@ title: Demo DB state for manual/screenshot capture
 type: topic
 slug: demo-db-manual-capture
 date: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-12
 attributed_to: [claude-code]
 belongs_to: [neon-account-topology, data-privacy]
 source: observation
@@ -70,3 +70,27 @@ npm run dev
 node scratchpad/capture-all.mjs      # 56 screenshots, 5 role passes
 python3 scratchpad/build.py          # inline WebP -> manual.html
 ```
+
+## 2026-08-11 production push request
+
+Niko asked to run `DATABASE_URL="<prod pooled URL>" npx drizzle-kit push` from
+`demo/yang-luck`, which is already the current branch. Because `.env.local` points at the real
+`ep-delicate-lab...-pooler` production DB and this topic documents a prior `drizzle-kit push`
+truncate risk on the demo DB, agents must not silently substitute `.env.local` for the
+placeholder. Require either the exact pooled URL in the shell environment or an explicit
+confirmation to use `.env.local`'s production value before pushing schema.
+
+## 2026-08-12 production push result
+
+The confirmed production pooled URL reached Neon, but `drizzle-kit push` produced a destructive
+diff and was aborted at the confirmation prompt. Drizzle wanted to drop populated legacy event
+state: `organizations` (1 row), `events` (1 row), `event_participants` (170 rows), and
+`event_id` columns on `allowed_domains`, `bookings`, `job_openings`, `recruiters`,
+`recruiter_email_approvals`, `event_config`, `slots`, and `applicant_slots`. Do not rerun with
+`--force`. Production needs additive, hand-reviewed migrations that preserve event tables and
+`event_id` data.
+
+After pulling `demo/yang-luck` to `7bc0400`, rerunning `npx drizzle-kit push` against the same
+production pooled host completed with `Changes applied` and did not present the earlier
+destructive drop prompt. The pulled schema removed the stale external-jobs/crawler definitions
+from `schema.ts` while preserving production's legacy event tables/columns.

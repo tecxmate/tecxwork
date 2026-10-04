@@ -3,13 +3,13 @@ title: Neon account topology & MCP wiring
 type: topic
 slug: neon-account-topology
 date: 2026-06-06
-updated: 2026-06-06
+updated: 2026-08-16
 attributed_to: [claude-code]
 belongs_to: [tecxwork]
 source: observation
 status: active
 tags: [neon, mcp, database, infra, auth]
-related: [architecture-overview, stale-unpooled-db-url]
+related: [architecture-overview, stale-unpooled-db-url, demo-db-manual-capture]
 ---
 
 # Neon account topology & MCP wiring
@@ -43,3 +43,36 @@ or Neon SSO silently hands the same session back. Sign in with the other Neon lo
 `delicate-lab` / `bitter-hill`. Confirmed by niko (2026-06-06) that a separate login owns them.
 
 See also [[stale-unpooled-db-url]] — a related "wrong Neon DB" footgun in `.env.local`.
+
+## 2026-08-16 production credential hygiene
+
+A production Neon `DATABASE_URL` password for the primary `ep-delicate-lab-aos3iphg`
+database was pasted into a chat transcript. Treat that credential as compromised: rotate the
+password in Neon and update Vercel's production `DATABASE_URL` before running more production
+diagnostics. Do not preserve the old password in shell history, wiki notes, logs, or command
+transcripts.
+
+For one-off diagnostics, export the URL without echoing or storing it:
+
+```bash
+read -rs DATABASE_URL && export DATABASE_URL
+```
+
+The read-only `db:doctor` script from PR #32 imports `./seed-sql`, so it must live beside that
+module at `src/lib/db/doctor.ts`; copying it to `/tmp/doctor.ts` breaks module resolution. On a
+branch where `package.json` has the script, run `npm run db:doctor` after exporting
+`DATABASE_URL`. Otherwise, fetch the branch and materialize only `src/lib/db/doctor.ts` into that
+same path, then run `npx tsx src/lib/db/doctor.ts`.
+
+The 2026-08-16 doctor run against the primary production pooled host found the ATS tables present
+but the saas-tenancy migration missing: `orgs.status`, `orgs.plan`, `orgs.seat_limit`,
+`orgs.trial_ends_at`, `orgs.billing_email`, and `event_config.org_id` were absent. Production had
+zero `orgs`, zero `memberships`, no `org_invites` table, and one platform-default `event_config`
+row. Verdict: the agency schema exists, but agency routes that read the new commercial tenancy
+columns will 500 until the additive PR #32 `add-saas-tenancy.ts` migration runs.
+
+Later on 2026-08-16, Niko approved applying that additive production migration. The migration
+completed successfully against the primary pooled host: no org rows existed to backfill,
+`org_invites` was created with zero rows, and the singleton platform-default `event_config` row
+remained. A follow-up doctor run reported: ATS schema present, saas-tenancy applied, and verdict
+`Ready`.

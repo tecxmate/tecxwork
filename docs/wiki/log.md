@@ -1670,6 +1670,24 @@ attributed_to: [claude-code]   belongs_to: [platform-manual, tecxwork]
 - **Two real bugs found by the tooling on the way:** `add-ats-compliance.ts`'s ON CONFLICT predates the partial unique index (fails on any current-schema DB — fixed); and confirmation that the applicant slot picker still keys on the hardcoded `EVENT_CONFIG.date`, not the admin row — the known-gaps bug, now with a reproduction recorded in topics/platform-manual.md.
 - Verified: build.py clean, i18n 1144 keys × 3 enforced, all four checkers green (anchors/mobile-nav under Chromium — WebKit undownloadable in CCR; re-run there before calling those two fully verified). tsc + lint clean.
 
+## [2026-08-11] ingest | Yang Luck production drizzle push guard
+attributed_to: [niko]   belongs_to: [demo-db-manual-capture, neon-account-topology]
+- Niko asked to run `DATABASE_URL="<prod pooled URL>" npx drizzle-kit push` from `demo/yang-luck`.
+- Current branch is already `demo/yang-luck`; `.env.local` points at real `ep-delicate-lab...-pooler` production.
+- Updated topics/demo-db-manual-capture.md: do not silently substitute `.env.local`; require exact pooled URL or explicit confirmation.
+
+## [2026-08-12] ingest | Production drizzle push aborted
+attributed_to: [niko]   belongs_to: [demo-db-manual-capture, neon-account-topology]
+- Confirmed production pooled URL reached Neon after unsandboxed network approval.
+- `drizzle-kit push` was aborted: it proposed dropping populated `organizations`, `events`, `event_participants`, plus populated legacy `event_id` columns across bookings/slots/recruiters/job tables.
+- Updated topics/demo-db-manual-capture.md: do not use `--force`; production needs additive reviewed migrations.
+
+## [2026-08-12] ingest | Production drizzle push applied after pull
+attributed_to: [niko]   belongs_to: [demo-db-manual-capture, neon-account-topology]
+- Pulled `demo/yang-luck` to `7bc0400` before retrying the production schema push.
+- `npx drizzle-kit push` against the production pooled Neon host completed with `Changes applied`.
+- Updated topics/demo-db-manual-capture.md: the successful retry depended on the pulled schema no longer producing the earlier destructive drop prompt.
+
 ## [2026-08-11] incident | Prod carried an unmerged branch's schema for two months
 attributed_to: [claude-code]   belongs_to: [tecxwork, neon-account-topology]
 - Migrating prod ahead of fast-forwarding `main` onto the ATS codebase, `drizzle-kit push` asked ~30 create-vs-rename questions. Those questions *were* the finding: drizzle only asks when the database holds an object the schema doesn't.
@@ -1856,3 +1874,27 @@ attributed_to: [niko]   belongs_to: [platform-manual]
 - `artifact-fragment.html` rebuilt — it inlines the screenshots as base64, so patching the .webp files alone would have left 56 Yang Luck captures in the public repo.
 - **Deliberately not fixed:** the two auth headings still reading "Yang Luck 揚運", the homepage hero (that is `event_config.event_name`, tenant data), the demo content, and the Next dev-tools badge. niko: *"if this is inefficient. hold it until the full system finishes and retake everything"* — so the per-string chase stops here.
 - New page: [decisions/2026-08-16-screenshot-rebrand-by-repaint.md](decisions/2026-08-16-screenshot-rebrand-by-repaint.md)
+## [2026-08-16] ingest | Production DB doctor and credential rotation note
+attributed_to: [niko]   belongs_to: [neon-account-topology, demo-db-manual-capture]
+- A production Neon `DATABASE_URL` password for the primary `ep-delicate-lab-aos3iphg` database was pasted into chat; rotate it in Neon and update Vercel before further production diagnostics.
+- The PR #32 `db:doctor` file must run from `src/lib/db/doctor.ts` because it imports `./seed-sql`; `/tmp/doctor.ts` fails module resolution.
+- Updated topics/neon-account-topology.md with the credential-hygiene and doctor-location rule, without recording any secret value.
+
+## [2026-08-16] ingest | Production DB doctor verdict
+attributed_to: [niko]   belongs_to: [neon-account-topology, demo-db-manual-capture]
+- Ran the read-only PR #32 doctor against the primary production pooled host after exporting `DATABASE_URL` via hidden stdin.
+- Verdict: ATS schema present, but saas-tenancy migration outstanding; missing columns are the commercial org columns plus `event_config.org_id`.
+- Current checkout had `src/lib/db/doctor.ts` untracked but lacked the PR #32 npm scripts and `add-saas-tenancy.ts`; applying the fix required explicitly materializing/running that migration.
+
+## [2026-08-16] ingest | Production saas-tenancy migration applied
+attributed_to: [niko]   belongs_to: [neon-account-topology, demo-db-manual-capture]
+- Niko approved applying the additive PR #32 `add-saas-tenancy.ts` migration to the primary production pooled host.
+- Migration completed: `org_invites` exists with 0 rows, `orgs` remains empty, and there is 1 platform-default `event_config` row.
+- Follow-up doctor verdict: `Ready`; ATS schema is present and the saas-tenancy migration has been applied.
+
+## [2026-08-29] ingest | Two log.md merge conflicts resolved as unions; branch pulled current
+attributed_to: [niko]   belongs_to: [tecxwork]
+- The checkout was sitting on a half-finished merge (`MERGE_HEAD` present, `docs/wiki/log.md` unmerged) before anything could be pulled. The working copy had already been hand-resolved to *theirs plus the three newest 08-16 entries*, silently dropping three `ours` entries (the Yang Luck drizzle-push guard/abort/apply trio).
+- **`log.md` is append-only, so every conflict in it is a union, never a choice.** Both resolutions restored all headings from both sides and were verified by diffing the sorted `## ` heading sets of stages `:2` and `:3` against the result — zero missing on either side, zero markers left. That check is cheaper and more reliable than reading the hunks.
+- Second conflict came in with the pull (`e340535`, PR #19): our three drizzle-push `ingest` entries against upstream's `[2026-08-11] incident | Prod carried an unmerged branch's schema for two months`. Both kept — they describe the same production push from the operator's and the post-mortem's side, so dropping either would have lost half the story.
+- Branch `demo/yang-luck` is now current with origin (3 local merge commits ahead, unpushed). `CLAUDE.md`/`AGENTS.md` were unchanged by the pull — newest versions are the ones already in force.
