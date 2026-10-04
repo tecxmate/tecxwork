@@ -1,23 +1,20 @@
 "use client";
 
-import { type KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { type KeyboardEvent, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, BellRing, Check, X, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { usePush } from "@/lib/use-push";
+import {
+  getServerSnapshot,
+  getSnapshot,
+  patchFeed,
+  subscribe,
+  type NotificationItem,
+} from "@/lib/notification-feed";
 
-type Notification = {
-  id: number;
-  type: string;
-  title: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-  metadata?: {
-    url?: string;
-  };
-};
+type Notification = NotificationItem;
 
 export type NotificationBellLabels = {
   notifications: string;
@@ -51,28 +48,18 @@ export function NotificationBell({
   const labels = labelsProp ?? DEFAULT_LABELS;
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const { pushEnabled, supported: pushSupported, enablePush } = usePush();
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const res = await fetch("/api/notifications?limit=10");
-      if (!res.ok) return;
-      const data = await res.json();
-      setNotifications(data.notifications ?? []);
-      setUnreadCount(data.unreadCount ?? 0);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  // One poller for the page, not one per bell — see lib/notification-feed.ts. The
+  // bell renders in both the top bar and the sidebar footer, so this component
+  // mounts twice at every viewport with one of the two hidden by CSS. Hidden is
+  // still mounted, and two intervals meant two identical requests.
+  const { notifications, unreadCount } = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot
+  );
 
   async function markAllRead() {
     setLoading(true);
@@ -82,8 +69,7 @@ export function NotificationBell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ markAllRead: true }),
       });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
+      patchFeed({ notifications: notifications.map((n) => ({ ...n, read: true })), unreadCount: 0 });
     } finally {
       setLoading(false);
     }
@@ -95,10 +81,10 @@ export function NotificationBell({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notificationIds: [id] }),
     });
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-    setUnreadCount((c) => Math.max(0, c - 1));
+    patchFeed({
+      notifications: notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      unreadCount: Math.max(0, unreadCount - 1),
+    });
   }
 
   async function openNotification(notification: Notification) {

@@ -2,7 +2,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
 import {
-  recruiters,
   pipelineTemplates,
   pipelineStages,
   applications,
@@ -12,6 +11,7 @@ import {
   placements,
 } from "@/lib/db/schema";
 import type { StageKind } from "@/lib/pipeline-types";
+import { recruiterForUser } from "@/lib/request-cache";
 
 export type FunnelRow = {
   stageKind: StageKind;
@@ -51,11 +51,7 @@ export async function getPipelineReport(): Promise<PipelineReport | null> {
   if (!auth) return null;
 
   const db = getDb();
-  const [me] = await db
-    .select({ clientKind: recruiters.clientKind, orgId: recruiters.orgId })
-    .from(recruiters)
-    .where(eq(recruiters.id, auth.recruiterId))
-    .limit(1);
+  const me = await recruiterForUser(auth.session.userId);
   if (!me || me.clientKind !== "agency" || me.orgId == null) return null;
   const orgId = me.orgId;
 

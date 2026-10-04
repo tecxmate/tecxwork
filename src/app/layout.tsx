@@ -77,7 +77,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "tuyển dụng Đài Loan",
       "kỹ sư Việt Nam Đài Loan",
       "job fair Taiwan Vietnam",
-      "VSATW",
+      "TECXWORK",
     ],
     icons: {
       icon: [

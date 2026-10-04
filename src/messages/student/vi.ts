@@ -46,8 +46,8 @@ export const studentViMessages = {
   },
   landing: {
     ...studentEnMessages.landing,
-    heroBadge: "VSATW JOB FAIR 2026",
-    heroTitle: "VSATW JOB FAIR 2026: V-GEN TRIDENT",
+    heroBadge: "TECXWORK DEMO FAIR 2026",
+    heroTitle: "TECXWORK DEMO CAREER FAIR 2026",
     eventHighlightsTitle: "Điểm nhấn sự kiện",
     eventHighlightsSubtitle: "Những khoảnh khắc từ các sự kiện hội chợ việc làm của chúng tôi",
     companiesTitle: "Công ty tham gia",

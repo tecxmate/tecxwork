@@ -1,9 +1,6 @@
-import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
 import { getRecruiterFromSession } from "@/lib/auth";
-import { memberships, recruiters } from "@/lib/db/schema";
 import type { MemberRole } from "@/lib/ats-auth";
 import { can, type Capability } from "@/lib/permissions";
 import { planAllows } from "@/lib/plans";
@@ -11,6 +8,7 @@ import { resolveApiKeyActor, touchApiKey, type ApiKeyActor } from "@/lib/api-key
 import { consumeRateLimit } from "@/lib/rate-limit-atomic";
 import { resolveOAuthActor } from "@/lib/oauth";
 import { getTenant, getTenantById, tenantBlock } from "@/lib/tenant";
+import { membershipRole, recruiterForUser } from "@/lib/request-cache";
 
 /**
  * Generous enough that ordinary automation never notices, low enough that a runaway loop
@@ -206,12 +204,7 @@ async function resolveFromSession(capability?: Capability): Promise<Resolution> 
   const auth = await getRecruiterFromSession();
   if (!auth) return { ok: false, error: "Not signed in", status: 401 };
 
-  const db = getDb();
-  const [me] = await db
-    .select({ clientKind: recruiters.clientKind, orgId: recruiters.orgId })
-    .from(recruiters)
-    .where(eq(recruiters.id, auth.recruiterId))
-    .limit(1);
+  const me = await recruiterForUser(auth.session.userId);
 
   if (!me || me.clientKind !== "agency" || me.orgId == null) {
     return {
@@ -246,13 +239,10 @@ async function resolveFromSession(capability?: Capability): Promise<Resolution> 
   // The membership — not the session — carries the org role. Scope the lookup to the org we
   // just resolved: a user could hold memberships in several orgs, and the role that matters
   // is the one for the tenant they are acting in.
-  const [membership] = await db
-    .select({ role: memberships.role })
-    .from(memberships)
-    .where(
-      and(eq(memberships.userId, auth.session.userId), eq(memberships.orgId, me.orgId))
-    )
-    .limit(1);
+  // Memoised on (user, org) — see lib/request-cache.ts. Three server components on
+  // /dashboard/clients each resolve the agency actor independently, so this exact
+  // lookup ran three times per render.
+  const membership = await membershipRole(auth.session.userId, me.orgId);
 
   // No membership means no role, and no role means no permissions. Denying is the only safe
   // reading — inferring one from the recruiter row would hand out authority by accident.

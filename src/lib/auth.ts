@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { db, applicantProfiles, recruiters, sessions, users } from "@/lib/db";
+import { db, applicantProfiles, sessions, users } from "@/lib/db";
 import { and, eq, lt } from "drizzle-orm";
+import { recruiterIdForUser, sessionExpiry } from "@/lib/request-cache";
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -111,14 +112,14 @@ export async function getSession(): Promise<SessionPayload | null> {
   // so it is refused rather than trusted; the holder simply signs in again.
   if (!payload.jti) return null;
 
-  const [row] = await db
-    .select({ expiresAt: sessions.expiresAt })
-    .from(sessions)
-    .where(eq(sessions.id, payload.jti))
-    .limit(1);
+  // Memoised per request on the session id — see lib/request-cache.ts. The cookie
+  // and the signature are checked here, every time; only the "is this row still
+  // there" round trip is shared, and only with callers that already hold the same
+  // jti. One render of /dashboard/clients was making this exact query six times.
+  const expiresAt = await sessionExpiry(payload.jti);
 
   // Deleted (signed out, password reset, account closed) or past its expiry.
-  if (!row || row.expiresAt.getTime() <= Date.now()) return null;
+  if (!expiresAt || expiresAt.getTime() <= Date.now()) return null;
 
   return payload;
 }
@@ -179,13 +180,9 @@ export async function getRecruiterFromSession(): Promise<
   const session = await getSession();
   if (!session || session.role !== "recruiter") return null;
 
-  const [rec] = await db
-    .select({ id: recruiters.id })
-    .from(recruiters)
-    .where(eq(recruiters.userId, session.userId));
-
-  if (!rec) return null;
-  return { session, recruiterId: rec.id };
+  const recruiterId = await recruiterIdForUser(session.userId);
+  if (recruiterId == null) return null;
+  return { session, recruiterId };
 }
 
 export type LoginResult =

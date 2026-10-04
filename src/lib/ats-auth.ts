@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { memberships, recruiters, applications } from "@/lib/db/schema";
+import { applications } from "@/lib/db/schema";
+import { membershipRole, recruiterIdForUser } from "@/lib/request-cache";
 
 export type MemberRole =
   | "admin"
@@ -30,26 +31,25 @@ export async function getMember(): Promise<Member | null> {
   const session = await getSession();
   if (!session) return null;
 
-  const db = getDb();
-  const [m] = await db
-    .select({ orgId: memberships.orgId, role: memberships.role })
-    .from(memberships)
-    .where(eq(memberships.userId, session.userId))
-    .limit(1);
+  // Both memoised per request on the user id — see lib/request-cache.ts. getMember()
+  // itself is deliberately NOT memoised: it reads the session, and a memo keyed on
+  // nothing is the one shape that could serve one request's answer to another.
+  //
+  // They run together rather than in sequence. Neither needs the other's result, and
+  // on Neon each is a WebSocket round trip, so awaiting them one after the other cost
+  // a round trip on every ATS route for nothing.
+  const [m, recruiterId] = await Promise.all([
+    membershipRole(session.userId),
+    recruiterIdForUser(session.userId),
+  ]);
   if (!m) return null;
-
-  const [r] = await db
-    .select({ id: recruiters.id })
-    .from(recruiters)
-    .where(eq(recruiters.userId, session.userId))
-    .limit(1);
 
   return {
     userId: session.userId,
     email: session.email,
     orgId: m.orgId,
     role: m.role as MemberRole,
-    recruiterId: r?.id ?? null,
+    recruiterId,
   };
 }
 

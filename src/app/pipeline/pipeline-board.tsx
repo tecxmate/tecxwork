@@ -17,6 +17,7 @@ import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AiInterviewPanel } from "@/components/ai-interview-panel";
 import { CandidateTimeline } from "@/components/candidate-timeline";
 import { cn } from "@/lib/utils";
 import {
@@ -525,6 +526,10 @@ function CandidatePanelBody({
           >
             {t.cv} →
           </Button>
+
+          <div className="border-t border-border/60 pt-4">
+            <AiInterviewPanel applicationId={card.id} locale={locale} />
+          </div>
 
           <div className="border-t border-border/60 pt-4">
             <CandidateTimeline applicationId={card.id} locale={locale} />

@@ -57,7 +57,9 @@ export const getTenant = cache(async (): Promise<Tenant | null> => {
   return getTenantBySlug(slug);
 });
 
-export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
+// Memoised for the same reason getTenant() above is, and keyed on the slug so it
+// also serves callers that name a tenant without going through the host.
+export const getTenantBySlug = cache(async (slug: string): Promise<Tenant | null> => {
   const [row] = await getDb()
     .select({
       id: orgs.id,
@@ -73,9 +75,11 @@ export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
     .where(eq(orgs.slug, slug))
     .limit(1);
   return row ?? null;
-}
+});
 
-export async function getTenantById(orgId: number): Promise<Tenant | null> {
+// The org row read by every agency-scoped loader once it knows the org. It was read
+// three times on one render of /dashboard/clients.
+export const getTenantById = cache(async (orgId: number): Promise<Tenant | null> => {
   const [row] = await getDb()
     .select({
       id: orgs.id,
@@ -91,7 +95,7 @@ export async function getTenantById(orgId: number): Promise<Tenant | null> {
     .where(eq(orgs.id, orgId))
     .limit(1);
   return row ?? null;
-}
+});
 
 /**
  * Whether a tenant may be served, independent of who is asking.

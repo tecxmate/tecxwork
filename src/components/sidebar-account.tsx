@@ -77,7 +77,10 @@ export function SidebarAccount({
         aria-haspopup="menu"
         title={collapsed ? `${name} — ${role}` : undefined}
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors",
+          // px-3, not px-2: this row sits in the same px-2 rail as the nav items and
+          // the notification bell, which all use px-3. At px-2 the avatar sat at 16px
+          // against their 20.
+          "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors",
           open ? "bg-muted" : "hover:bg-muted",
           collapsed && "justify-center px-0"
         )}

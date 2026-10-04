@@ -10,6 +10,7 @@ import {
   applicantProfiles,
 } from "@/lib/db/schema";
 import { complianceWindow } from "@/lib/compliance-window";
+import { recruiterForUser } from "@/lib/request-cache";
 
 export type ComplianceStatus = "expired" | "expiring_soon" | "valid";
 

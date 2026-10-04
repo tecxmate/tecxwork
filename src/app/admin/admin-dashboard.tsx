@@ -1457,7 +1457,7 @@ export function AdminDashboard({
                           <Input
                             value={branding.eventName}
                             onChange={(e) => setBranding({ ...branding, eventName: e.target.value })}
-                            placeholder="VSATW JOB FAIR 2026: V-GEN TRIDENT"
+                            placeholder="TECXWORK DEMO CAREER FAIR 2026"
                             className="h-8 text-xs"
                           />
                         </label>
@@ -1466,7 +1466,7 @@ export function AdminDashboard({
                           <Input
                             value={branding.emailEventName}
                             onChange={(e) => setBranding({ ...branding, emailEventName: e.target.value })}
-                            placeholder="VSATW JOB FAIR 2026: V-GEN TRIDENT"
+                            placeholder="TECXWORK DEMO CAREER FAIR 2026"
                             className="h-8 text-xs"
                           />
                         </label>
@@ -1491,7 +1491,7 @@ export function AdminDashboard({
                           <Input
                             value={branding.organizerShort}
                             onChange={(e) => setBranding({ ...branding, organizerShort: e.target.value })}
-                            placeholder="VSATW"
+                            placeholder="TECXWORK"
                             className="h-8 text-xs"
                           />
                         </label>
@@ -1500,7 +1500,7 @@ export function AdminDashboard({
                           <Input
                             value={branding.hostedAt}
                             onChange={(e) => setBranding({ ...branding, hostedAt: e.target.value })}
-                            placeholder="MCUT (Ming Chi University of Technology)"
+                            placeholder="Demo Campus Convention Hall"
                             className="h-8 text-xs"
                           />
                         </label>

@@ -232,7 +232,12 @@ export function SidebarBrand({
           {toggleButton}
         </div>
       ) : (
-        <div className="flex items-center gap-2">
+        // px-3 inside the wrapper's px-2, which is what every other row in the
+        // rail does — a nav item, the notification bell. Without it the wordmark
+        // started at 8px while every icon below it started at 20, and the logo
+        // read as falling off the left edge. The collapsed branch above stays
+        // unpadded: it centres its contents in a 68px rail.
+        <div className="flex items-center gap-2 px-3">
           <BrandLink href="/" className="flex min-w-0 items-center gap-2" />
           <div className="ml-auto">{toggleButton}</div>
         </div>
