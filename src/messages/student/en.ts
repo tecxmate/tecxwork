@@ -277,6 +277,8 @@ export const studentEnMessages = {
       "I consent to making my profile, education information, and CV link visible to recruiters for this recruitment event in accordance with Taiwan's Personal Data Protection Act, and I agree to the Platform Terms and Privacy Policy.",
     legalNotice:
       "Students are responsible for confirming they are legally allowed to work in Taiwan before accepting any job, internship, or part-time role. If you are an international student, overseas Chinese student, or other foreign national, you may need a valid work permit and may be subject to working-hour limits during the academic semester.",
+    aiMatchingConsent:
+      "(Optional) I also allow recruiters to use AI assistants to search and shortlist my profile. This means my profile information may be sent to an AI service provider, which may process it outside Taiwan. You can leave this unticked and still be found by recruiters normally.",
     newsletter:
       "(Optional) Subscribe to the V-GEN Talent Network to receive updates on future career fairs and job opportunities.",
     registering: "Registering...",

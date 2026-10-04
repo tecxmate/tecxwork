@@ -7,8 +7,27 @@ import {
   jobOpenings,
 } from "@/lib/db/schema";
 import { complianceWindow } from "@/lib/compliance-window";
+import {
+  PIPA_PURPOSE,
+  lawfulBasisSql,
+  orgVisibilitySql,
+  type PipaPurpose,
+} from "@/lib/pipa";
 
 export type CandidateFilters = {
+  /**
+   * The workspace asking. **Required in practice** — it is optional only so the platform
+   * operator's own tooling can search across tenants deliberately, and every product caller
+   * passes it. See `orgVisibilitySql` for what a workspace may see.
+   */
+  orgId?: number;
+  /**
+   * What the results will be used for. Defaults to the consent the signup form has always
+   * collected; a connector must ask for `AI_ASSISTED`, which most candidates will not have
+   * given. Never widen this default — it is the difference between a lawful search and an
+   * unlawful one.
+   */
+  purpose?: PipaPurpose;
   q?: string;
   nationality?: string;
   studyLevel?: string;
@@ -80,8 +99,15 @@ export async function searchCandidates(
   const page = Math.max(1, filters.page ?? 1);
   const size = Math.min(filters.pageSize ?? PAGE_SIZE, EXPORT_LIMIT);
 
-  const notErased = isNull(applicantProfiles.anonymizedAt);
-  const conditions = [notErased];
+  // Two gates before any filter the user typed, because both decide whether a row may be
+  // read at all rather than whether it matches: the lawful basis for this purpose, and the
+  // asking workspace's visibility. Expressed in SQL so the excluded rows are never loaded —
+  // filtering them out afterwards would still have read them, and "we fetched it but did not
+  // display it" is not a defence anyone accepts.
+  const conditions = [lawfulBasisSql(filters.purpose ?? PIPA_PURPOSE.RECRUITMENT)];
+  if (filters.orgId !== undefined) {
+    conditions.push(orgVisibilitySql(filters.orgId));
+  }
 
   const q = filters.q?.trim();
   if (q) {
@@ -151,7 +177,18 @@ export async function searchCandidates(
           })
           .from(applications)
           .leftJoin(jobOpenings, eq(applications.jobOpeningId, jobOpenings.id))
-          .where(inArray(applications.applicantId, ids))
+          .where(
+            and(
+              inArray(applications.applicantId, ids),
+              // Only this workspace's own positions. A candidate can sit in two agencies'
+              // pipelines at once, and listing the other's job titles here would leak what a
+              // competitor is hiring for — through a field whose whole purpose is to stop
+              // *this* agency re-sourcing someone it already has.
+              filters.orgId === undefined
+                ? undefined
+                : eq(applications.orgId, filters.orgId)
+            )
+          )
       : Promise.resolve([] as { applicantId: number; title: string | null }[]),
     ids.length
       ? db
@@ -208,29 +245,32 @@ export async function searchCandidates(
     hits = hits.filter((h) => h.docStatus === "expired" || h.docStatus === "expiring");
   }
 
-  const facets = await buildFacets(notErased);
+  // Facets are built over the same visible pool, not the whole table. A count is data: chips
+  // reading "Vietnam 812" to a workspace that may see nine candidates would disclose the
+  // size and shape of every competitor's pipeline without showing a single name.
+  const facets = await buildFacets(and(...conditions));
 
   return { hits, total: count, page, pageSize: size, facets };
 }
 
-/** Facet counts over the whole (non-erased) pool, so the chips show real totals. */
-async function buildFacets(notErased: ReturnType<typeof isNull>) {
+/** Facet counts over the pool this caller may actually see, so the chips show real totals. */
+async function buildFacets(visible: ReturnType<typeof and>) {
   const db = getDb();
   const [nat, lvl, skillRows] = await Promise.all([
     db
       .select({ value: applicantProfiles.nationality, count: sql<number>`count(*)::int` })
       .from(applicantProfiles)
-      .where(and(notErased, ne(applicantProfiles.nationality, "")))
+      .where(and(visible, ne(applicantProfiles.nationality, "")))
       .groupBy(applicantProfiles.nationality),
     db
       .select({ value: applicantProfiles.studyLevel, count: sql<number>`count(*)::int` })
       .from(applicantProfiles)
-      .where(and(notErased, ne(applicantProfiles.studyLevel, "")))
+      .where(and(visible, ne(applicantProfiles.studyLevel, "")))
       .groupBy(applicantProfiles.studyLevel),
     db
       .select({ value: sql<string>`unnest(${applicantProfiles.skills})`, count: sql<number>`count(*)::int` })
       .from(applicantProfiles)
-      .where(notErased)
+      .where(visible)
       .groupBy(sql`1`),
   ]);
 

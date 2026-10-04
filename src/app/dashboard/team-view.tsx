@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ApiKeysPanel, type ApiKeySummaryDto } from "./api-keys-panel";
+import { ConnectionsPanel, type ConnectionDto } from "./connections-panel";
 
 /**
  * The workspace's people.
@@ -36,6 +38,14 @@ type Member = {
 type Invite = { id: number; email: string; role: string; expiresAt: string };
 
 export type TeamData = {
+  apiKeys: ApiKeySummaryDto[];
+  /** OAuth grants — applications approved through a Connect button. */
+  connections: ConnectionDto[];
+  /** So the list can say "approved by you" rather than repeating the viewer's own name. */
+  viewerUserId: number;
+  /** Scopes the viewer may delegate — their own capabilities. */
+  grantableScopes: string[];
+  apiAccessEnabled: boolean;
   members: Member[];
   invites: Invite[];
   seats: { limit: number; used: number };
@@ -245,6 +255,14 @@ export function TeamView({ initial }: { initial: TeamData }) {
         Removing someone releases their seat and ends their access. Everything they created —
         jobs, candidates, placements — stays with the workspace.
       </p>
+
+      <ApiKeysPanel
+        initial={data.apiKeys}
+        grantableScopes={data.grantableScopes}
+        apiAccessEnabled={data.apiAccessEnabled}
+      />
+
+      <ConnectionsPanel initial={data.connections} viewerUserId={data.viewerUserId} />
     </div>
   );
 }

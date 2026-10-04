@@ -8,12 +8,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AgencyFormDialog, type FieldDef } from "@/components/agency-form-dialog";
+import { EmptyState } from "@/components/empty-state";
 import type { AgencyCrm } from "@/lib/agency-crm";
 
 type Locale = "zh" | "en";
 
 const T: Record<Locale, Record<string, string>> = {
   zh: {
+    emptyTitle: "還沒有客戶企業",
+    emptySub: "客戶企業是你派任人才的公司；職缺委託與服務費都掛在它底下。",
     title: "客戶管理 Clients",
     subtitle: "客戶企業 · 職缺委託 · 推薦 · 媒合成功",
     clients: "客戶企業",
@@ -64,6 +67,8 @@ const T: Record<Locale, Record<string, string>> = {
     fFeeAmount: "服務費金額",
   },
   en: {
+    emptyTitle: "No clients yet",
+    emptySub: "A client is a company you place people into. Job orders and fees hang off it.",
     title: "Clients",
     subtitle: "Accounts · job orders · submissions · placements",
     clients: "Clients",
@@ -385,6 +390,20 @@ export function ClientsCrmView({ crm }: { crm: AgencyCrm }) {
       ) : null}
 
       <Card className="overflow-hidden p-0">
+        {/* Headers over nothing read as a failed load rather than an empty account. */}
+        {crm.clients.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title={t.emptyTitle}
+            detail={t.emptySub}
+            action={
+              <Button size="sm" onClick={() => setDialog("client")}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                {t.addClient}
+              </Button>
+            }
+          />
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -424,6 +443,7 @@ export function ClientsCrmView({ crm }: { crm: AgencyCrm }) {
             </tbody>
           </table>
         </div>
+        )}
       </Card>
     </section>
   );

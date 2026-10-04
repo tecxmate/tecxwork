@@ -1,6 +1,5 @@
 import { and, eq, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { getRecruiterFromSession } from "@/lib/auth";
 import {
   clients,
   jobOrders,
@@ -50,18 +49,15 @@ export type AgencyCrm = {
 };
 
 /**
- * Agency CRM roll-up (clients → job orders → submissions → placements), scoped
- * to the logged-in AGENCY recruiter's org. Returns null for non-agency
- * recruiters (the caller redirects them away).
+ * Agency CRM roll-up (clients → job orders → submissions → placements) for one org.
+ *
+ * Takes the org rather than reading the session: the caller has already established who is
+ * asking and whether they may ask (`getAgencyActor`), and repeating that here made the
+ * function callable from exactly one place. The tenant boundary is the `orgId` argument —
+ * every query below filters on it, and nothing in this file can widen it.
  */
-export async function getAgencyCrm(): Promise<AgencyCrm | null> {
-  const auth = await getRecruiterFromSession();
-  if (!auth) return null;
-
+export async function getAgencyCrm(orgId: number): Promise<AgencyCrm | null> {
   const db = getDb();
-  const me = await recruiterForUser(auth.session.userId);
-  if (!me || me.clientKind !== "agency" || me.orgId == null) return null;
-  const orgId = me.orgId;
 
   const [clientRows, orderRows, subRows, placeRows] = await Promise.all([
     db

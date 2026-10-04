@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  KanbanSquare,
   LogOut,
   Mail,
   FileText,
@@ -22,6 +23,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TeamView, type TeamData } from "./team-view";
+import { HomeView, type HomeData } from "./home-view";
+import { AuditView, type AuditData } from "./audit-view";
+import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
 import { RecruiterLanguageSwitcher } from "@/components/recruiter-language-switcher";
 import { useRecruiterI18n } from "@/components/recruiter-locale-provider";
@@ -79,6 +83,8 @@ type Recruiter = {
 };
 
 type Section =
+  | "home"
+  | "audit"
   | "interviews"
   | "applicants"
   | "candidates"
@@ -156,6 +162,8 @@ export function RecruiterDashboard({
   offers = null,
   billing = null,
   team = null,
+  home = null,
+  audit = null,
 }: {
   recruiter: Recruiter;
   /** What this member's org role permits — used to hide tabs that would only redirect. */
@@ -174,6 +182,8 @@ export function RecruiterDashboard({
   offers?: OffersData | null;
   billing?: BillingData | null;
   team?: TeamData | null;
+  home?: HomeData | null;
+  audit?: AuditData | null;
 }) {
   const router = useRouter();
   const { messages } = useRecruiterI18n();
@@ -192,7 +202,11 @@ export function RecruiterDashboard({
       }
     });
   const currentPath =
-    section === "interviews"
+    section === "home"
+      ? "/dashboard/home"
+      : section === "audit"
+        ? "/dashboard/audit"
+      : section === "interviews"
       ? "/dashboard/interviews"
       : section === "applicants"
         ? "/dashboard/applicants"
@@ -323,9 +337,22 @@ export function RecruiterDashboard({
               {pipelineBoard && pipelineBoard.jobs.length > 0 ? (
                 <DashboardPipeline board={pipelineBoard} />
               ) : (
-                <p className="py-16 text-center text-sm text-muted-foreground">
-                  No candidates in the pipeline yet.
-                </p>
+                // The condition is "no job openings", not "no candidates" — the old copy
+                // named the wrong thing and sent people looking for a candidate to add
+                // when what they needed was an opening to add one to.
+                <EmptyState
+                  icon={KanbanSquare}
+                  title="No job openings yet"
+                  detail="The board groups candidates by the opening they applied to, so post an opening first and applicants will appear here."
+                  action={
+                    <Link
+                      href="/dashboard/jobs"
+                      className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+                    >
+                      Post an opening
+                    </Link>
+                  }
+                />
               )}
             </>
           ) : section === "candidates" ? (
@@ -362,6 +389,10 @@ export function RecruiterDashboard({
                 Reports are available for agency accounts.
               </p>
             )
+          ) : section === "home" ? (
+            home ? <HomeView data={home} /> : null
+          ) : section === "audit" ? (
+            audit ? <AuditView initial={audit} /> : null
           ) : section === "team" ? (
             team ? (
               <TeamView initial={team} />

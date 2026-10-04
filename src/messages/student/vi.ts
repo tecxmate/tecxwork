@@ -277,6 +277,8 @@ export const studentViMessages = {
     cvHint: "Chia sẻ link CV trên Google Drive và cài đặt quyền truy cập là \"Bất kỳ ai có đường link đều có thể xem\", để các công ty có thể mở CV của bạn.",
     consentText: "Tôi đồng ý chia sẻ hồ sơ, thông tin học vấn và liên kết CV của mình cho các nhà tuyển dụng trong sự kiện này theo Đạo luật Bảo vệ Dữ liệu Cá nhân (PIPA) của Đài Loan, và tôi đồng ý với Điều khoản Nền tảng cùng Chính sách Bảo mật.",
     legalNotice: "Sinh viên có trách nhiệm xác nhận mình được phép làm việc hợp pháp tại Đài Loan trước khi chấp nhận bất kỳ công việc, thực tập hoặc công việc bán thời gian nào. Nếu bạn là sinh viên quốc tế, sinh viên Hoa kiều hoặc công dân nước ngoài khác, bạn có thể cần giấy phép làm việc hợp lệ và có thể phải chịu giới hạn giờ làm việc trong học kỳ.",
+    aiMatchingConsent:
+      "(Tùy chọn) Tôi cũng cho phép nhà tuyển dụng sử dụng trợ lý AI để tìm kiếm và sàng lọc hồ sơ của tôi. Điều này có nghĩa là thông tin hồ sơ của tôi có thể được gửi đến một nhà cung cấp dịch vụ AI và có thể được xử lý bên ngoài Đài Loan. Bạn có thể không chọn mục này và vẫn được nhà tuyển dụng tìm thấy như bình thường.",
     newsletter: "(Tùy chọn) Đăng ký Mạng lưới Tài năng V-GEN để nhận thông tin cập nhật về các hội chợ việc làm và cơ hội việc làm trong tương lai.",
     registering: "Đang đăng ký...",
     alreadyHaveAccount: "Đã có tài khoản?",

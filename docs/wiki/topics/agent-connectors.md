@@ -127,6 +127,47 @@ on `scale` — so when machine auth arrives it has a tenant to belong to and a f
 on. Phase 0 (actor decoupling) is still the next step and is still the prerequisite; the
 provisioning module was written actor-free from the start as a down payment on it.
 
+## Status — 2026-08-16: the connector ships
+
+Phases 0–3 of the recorded path are done. `/api/mcp` is live, reachable with either an API
+key or an OAuth access token.
+
+| Phase | State |
+|---|---|
+| 0 — actor decoupling | done |
+| 1 — API keys + bearer in the gate | done, with a minting UI and an atomic per-key limiter |
+| 2 — `/api/mcp` Streamable HTTP | done, 5 read-only tools |
+| 3 — OAuth 2.1 + dynamic client registration | done — see `decisions/2026-08-16-oauth-for-connectors.md` |
+
+OAuth means the customer sees a **Connect** button rather than a config file to paste a key
+into: RFC 8414 + RFC 9728 discovery, RFC 7591 registration, auth code + PKCE (S256, never
+`plain`), a consent screen that names each permission in a sentence, and rotating refresh
+tokens. A replayed code is treated as a compromise and revokes the whole grant. Scopes are
+intersected against the granting member's role *at every resolution*, so a demotion takes
+effect immediately instead of being frozen into the token.
+
+**Connected applications** (`/api/org/connections` + the panel on the Team screen) closes
+the loop the consent copy opened. The gate takes no capability: revoking access is never a
+privileged action, so the rule is *your own grants always, the whole workspace's if you hold
+`member:invite`*. A grant is not a row anywhere — it is the tuple (org, user, client)
+implied by its live tokens — so the list folds token churn back into one line per
+application.
+
+**The two rules recorded in 2026-08 held, and a third was forced by building it.** No tool
+accepts `orgId`; nothing destructive or financial ships in v1; and **no tool returns
+candidate PII**, because the lawful basis for streaming candidate data to a model provider
+is still unanswered and is not this codebase's decision to make.
+
+Two things that rule turned up, both worth acting on independently of connectors:
+
+- **`searchCandidates()` has no org filter at all.** Access rests entirely on the
+  `candidate:read` capability, so the pool it searches is platform-wide rather than
+  per-tenant. That may be intended — students register once on a marketplace — but it is
+  not currently *stated* anywhere, and the screen above it calls the pool "the agency's own
+  asset", which reads the other way. Worth settling regardless of the connector.
+- **`AgencyCrm.compliance.attention` carries candidate names**, so `get_compliance_summary`
+  deliberately reads past it to the totals. The compliance clock keeps its value as counts.
+
 ## Open questions
 
 - **PIPA basis for agent access.** A connector streams candidate names, schools, ARC and

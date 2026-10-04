@@ -8,12 +8,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AgencyFormDialog, type FieldDef } from "@/components/agency-form-dialog";
+import { EmptyState } from "@/components/empty-state";
 import type { AgencyCrm, ComplianceDocRow, ComplianceStatus } from "@/lib/agency-crm";
 
 type Locale = "zh" | "en";
 
 const T: Record<Locale, Record<string, string>> = {
   zh: {
+    emptyTitle: "還沒有建檔的證件",
+    emptySub: "建立 ARC、工作許可或體檢報告後，到期日會開始倒數，並在失效前主動提醒。",
     addDoc: "新增證件",
     newDoc: "新增證件紀錄",
     newDocSub: "ARC、工作許可、護照或體檢報告，含到期日。",
@@ -42,6 +45,8 @@ const T: Record<Locale, Record<string, string>> = {
     expiry: "到期日",
   },
   en: {
+    emptyTitle: "No documents filed yet",
+    emptySub: "File an ARC, work permit or health check and its expiry starts counting down, surfacing before it lapses.",
     addDoc: "Add document",
     newDoc: "New document record",
     newDocSub: "ARC, work permit, passport or medical check, with its expiry date.",
@@ -283,6 +288,22 @@ export function ComplianceView({ compliance }: { compliance: AgencyCrm["complian
               </tbody>
             </table>
           </div>
+        </Card>
+      ) : compliance.total === 0 ? (
+        // "All valid" over an empty tracker would read as reassurance about documents that
+        // were never filed — the one place this screen must not sound confident.
+        <Card className="overflow-hidden p-0">
+          <EmptyState
+            icon={FileText}
+            title={t.emptyTitle}
+            detail={t.emptySub}
+            action={
+              <Button size="sm" onClick={() => setAdding(true)}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                {t.addDoc}
+              </Button>
+            }
+          />
         </Card>
       ) : (
         <p className="text-sm text-muted-foreground">{t.allValid}</p>

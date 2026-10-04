@@ -4,6 +4,7 @@ import { COOKIE_NAME, createSession, getSession, hashPassword } from "@/lib/auth
 import { sanitizeWorkExperiences } from "@/lib/student-profile";
 import { asc, count, desc, ilike, or, sql, eq, and, gte } from "drizzle-orm";
 import { applicantSignupSchema, parseJsonBody } from "@/lib/validation";
+import { PIPA_PURPOSE, retentionDateFrom } from "@/lib/pipa";
 
 // GET — applicant profile listing for recruiter/admin review.
 export async function GET(req: NextRequest) {
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
     portfolioUrl,
     description,
     pipaConsent,
+    aiMatchingConsent,
     wantsNewsletter,
   } = body;
 
@@ -158,6 +160,10 @@ export async function POST(req: NextRequest) {
   const normalizedWorkExperiences = sanitizeWorkExperiences(workExperiences);
 
   try {
+    // One timestamp for the consent and the retention window it starts, so the two can never
+    // describe different moments.
+    const now = new Date();
+
     // Create user account
     const passwordHash = await hashPassword(password);
     const [user] = await db
@@ -192,6 +198,15 @@ export async function POST(req: NextRequest) {
         portfolioUrl: portfolioUrl ?? "",
         description: description ?? "",
         pipaConsent,
+        // Record what was consented to, when, and for how long — rather than leaving it to
+        // a migration to infer later. The AI purpose is only stored when the separate,
+        // optional checkbox was ticked; the required PIPA box never implies it, because its
+        // wording says "visible to recruiters" and nothing about a model provider.
+        consentAt: now,
+        consentPurpose: aiMatchingConsent
+          ? PIPA_PURPOSE.AI_ASSISTED
+          : PIPA_PURPOSE.RECRUITMENT,
+        retentionUntil: retentionDateFrom(now),
         wantsNewsletter: !!wantsNewsletter,
       })
       .returning();

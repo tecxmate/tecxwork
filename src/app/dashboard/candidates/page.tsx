@@ -34,6 +34,9 @@ export default async function RecruiterCandidatesPage({
 
   const docs = one("docs");
   const result = await searchCandidates({
+    // The pool this workspace may see: its own worked pipeline plus candidates nobody has
+    // claimed. Without this the search read every tenant's candidates.
+    orgId: actor.orgId,
     q: one("q"),
     nationality: one("nationality"),
     studyLevel: one("studyLevel"),

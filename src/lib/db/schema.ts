@@ -10,6 +10,7 @@ import {
   pgEnum,
   index,
   uniqueIndex,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 // ---- Enums ----
@@ -442,6 +443,168 @@ export const orgs = pgTable("orgs", {
  * so a leaked database dump cannot be used to join a tenant. Accepting is what creates the
  * membership row, which is why `insert(memberships)` had no caller before this table.
  */
+/**
+ * A machine credential for one workspace.
+ *
+ * Deliberately bound to the user who created it (`ownerUserId`) rather than standing alone.
+ * A key acts *as that person*, narrowed by its own scopes — so every downstream check,
+ * every ownership rule and every audit row keeps working unchanged, and "who did this"
+ * still names a human. A free-floating robot identity would have needed a parallel
+ * authorisation path, which is the kind of second door that quietly outlives the reason it
+ * was cut.
+ *
+ * Only the SHA-256 of the token is stored. `prefix` is the first few characters, kept in
+ * clear so a list can show which key is which without the secret being recoverable.
+ */
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: serial("id").primaryKey(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    /** Whose authority this key borrows. Revoking their membership does not revoke the key
+     *  — see lib/api-keys.ts, which re-checks the membership on every request. */
+    ownerUserId: integer("owner_user_id")
+      .notNull()
+      .references(() => users.id),
+    /** Human label, so a list of keys is readable a year later. */
+    name: text("name").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    prefix: text("prefix").notNull(),
+    /** Capability strings (see lib/permissions.ts). Always a subset of what the owner holds. */
+    scopes: text("scopes").array().notNull(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("api_keys_token_hash_idx").on(table.tokenHash),
+    index("api_keys_org_idx").on(table.orgId, table.createdAt),
+  ]
+);
+
+/**
+ * Atomic rate-limit counters.
+ *
+ * The Vercel-cache limiter in `lib/rate-limit.ts` documents its own weakness: the cache
+ * exposes get/set with no atomic increment, so two concurrent callers can each read N and
+ * write N+1. For a browser that overshoot is harmless. For machine callers it is the whole
+ * problem — agents burst, in parallel, from one credential.
+ *
+ * A Postgres upsert is atomic in a single statement, which is all this needs. One row per
+ * (bucket, window); old windows are swept opportunistically rather than by a cron.
+ */
+export const rateLimitCounters = pgTable(
+  "rate_limit_counters",
+  {
+    /** Identifies what is being limited, e.g. `api_key:42`. */
+    bucket: text("bucket").notNull(),
+    /** Unix seconds at the start of the fixed window. */
+    windowStart: integer("window_start").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.bucket, table.windowStart] }),
+    index("rate_limit_window_idx").on(table.windowStart),
+  ]
+);
+
+/**
+ * OAuth 2.1 clients, registered dynamically.
+ *
+ * MCP clients register themselves (RFC 7591) rather than being configured by hand — that is
+ * what lets someone paste a URL into Claude and get a working connector, with no
+ * administrator in the loop. Registration therefore authenticates nobody: it hands out an
+ * identity, not an authorisation. Everything that matters is decided later, at the consent
+ * screen, by a human who is already signed in.
+ */
+export const oauthClients = pgTable(
+  "oauth_clients",
+  {
+    id: serial("id").primaryKey(),
+    /** Public identifier, safe to log. */
+    clientId: text("client_id").notNull(),
+    /** Null for public clients, which prove themselves with PKCE instead of a secret. */
+    clientSecretHash: text("client_secret_hash"),
+    name: text("name").notNull(),
+    /** Exact-match allowlist. A redirect target is where tokens end up, so it is never fuzzy. */
+    redirectUris: text("redirect_uris").array().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("oauth_clients_client_id_idx").on(table.clientId)]
+);
+
+/**
+ * Authorization codes — single-use, short-lived, PKCE-bound.
+ *
+ * Stored hashed like every other credential here. `consumedAt` rather than a delete so a
+ * replay is *detectable*: a second exchange of the same code is evidence of interception,
+ * and a deleted row would be indistinguishable from a typo.
+ */
+export const oauthAuthCodes = pgTable(
+  "oauth_auth_codes",
+  {
+    id: serial("id").primaryKey(),
+    codeHash: text("code_hash").notNull(),
+    clientId: text("client_id").notNull(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    scopes: text("scopes").array().notNull(),
+    redirectUri: text("redirect_uri").notNull(),
+    /** PKCE: the S256 challenge the exchange must produce a verifier for. */
+    codeChallenge: text("code_challenge").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("oauth_auth_codes_hash_idx").on(table.codeHash)]
+);
+
+/**
+ * Issued access and refresh tokens.
+ *
+ * Same shape as `api_keys` on purpose: org-scoped, hashed, scoped to capabilities, and
+ * bound to the user who granted consent — so an OAuth caller and a key caller resolve to
+ * the same actor and travel the same authorisation path. One story, not two.
+ */
+export const oauthTokens = pgTable(
+  "oauth_tokens",
+  {
+    id: serial("id").primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    kind: text("kind").notNull(), // access | refresh
+    clientId: text("client_id").notNull(),
+    orgId: integer("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    scopes: text("scopes").array().notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("oauth_tokens_hash_idx").on(table.tokenHash),
+    index("oauth_tokens_grant_idx").on(table.orgId, table.userId, table.clientId),
+  ]
+);
+
 export const orgInvites = pgTable(
   "org_invites",
   {
