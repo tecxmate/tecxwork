@@ -649,6 +649,86 @@
      FOOTNOTES
      ============================================================= */
   .ds-footer { margin-top: 120px; padding-top: 40px; border-top: 1px solid hsl(var(--border)); display: flex; justify-content: space-between; font-size: 12px; color: hsl(var(--text-tertiary)); }
+
+  /* =============================================================
+     v1.1 — PRODUCT RULES (Taiwan Atlas, Sep–Oct 2026)
+     ============================================================= */
+  :root {
+    /* Data roles */
+    --rising:      353 78% 43%;   /* #c2182b — Taiwan convention: up is red */
+    --falling:     150 83% 26%;   /* #0b7a43 — down is green */
+    --paid:        42 63% 33%;    /* #8a6a1f — part of a paid plan */
+    --data-quiet:  259 100% 89%;  /* #d9c8ff — background data */
+
+    /* Motion */
+    --dur-tap: 120ms;
+    --dur-ui: 200ms;
+    --dur-panel: 300ms;
+    --ease-standard: cubic-bezier(.4, 0, .2, 1);
+    --ease-decel: cubic-bezier(0, 0, .2, 1);
+  }
+  .v11 { display: inline-block; vertical-align: middle; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--primary-dark)); background: hsl(var(--primary) / 0.1); padding: 2px 6px; border-radius: 4px; margin-left: 6px; white-space: nowrap; }
+  .rules { grid-template-columns: repeat(2, 1fr); gap: 1px; background: hsl(var(--border)); border: 1px solid hsl(var(--border)); }
+  .rule { background: #fff; padding: 24px 28px; }
+  .rules > .rule:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .rule h4 { font-size: 16px; margin-bottom: 8px; }
+  .rule p { font-size: 14px; color: hsl(var(--text-secondary)); line-height: 1.6; max-width: 62ch; }
+  .rule code, .spec code, .ds-footer code { background: hsl(var(--muted)); padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .spec { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid hsl(var(--border)); font-size: 14px; }
+  .spec th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--text-tertiary)); padding: 12px 20px; border-bottom: 1px solid hsl(var(--border)); }
+  .spec td { padding: 14px 20px; border-bottom: 1px solid hsl(var(--divider)); vertical-align: top; color: hsl(var(--text-secondary)); }
+  .spec tr:last-child td { border-bottom: none; }
+  .spec td:first-child { color: hsl(var(--text-primary)); font-weight: 600; white-space: nowrap; }
+  .spec td:nth-child(2) { font-variant-numeric: tabular-nums; white-space: nowrap; color: hsl(var(--text-primary)); }
+
+  /* Phone schematics */
+  .phones { display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-start; background: #fff; border: 1px solid hsl(var(--border)); padding: 32px; }
+  .phone-fig { display: flex; flex-direction: column; gap: 12px; width: 200px; }
+  .phone-cap { font-size: 12px; color: hsl(var(--text-secondary)); line-height: 1.5; }
+  .phone-cap strong { display: block; color: hsl(var(--text-primary)); font-size: 13px; margin-bottom: 2px; }
+  .phone { position: relative; width: 168px; height: 320px; border: 1px solid hsl(var(--border-medium)); border-radius: 22px; overflow: hidden; background: #eef0f3; }
+  .phone .dotmap { position: absolute; inset: 0; background-image: radial-gradient(hsl(var(--primary) / .55) 1.5px, transparent 2px); background-size: 14px 17px; }
+  .phone .sheet { position: absolute; left: 0; right: 0; bottom: 34px; background: #fff; border-radius: 16px 16px 0 0; border-top: 1px solid hsl(var(--border)); padding: 20px 12px 0; overflow: hidden; }
+  .phone .sheet::before { content: ""; position: absolute; top: 7px; left: 50%; width: 32px; height: 4px; margin-left: -16px; border-radius: 3px; background: hsl(var(--border-medium)); }
+  .phone .sheet.half { top: 52%; }
+  .phone .sheet.full { top: 0; border-radius: 0; border-top: none; }
+  .phone .sheet.nohandle { padding-top: 14px; }
+  .phone .sheet.nohandle::before { display: none; }
+  .phone .line { height: 7px; border-radius: 2px; background: hsl(var(--divider)); margin-bottom: 9px; }
+  .phone .line.ink { background: hsl(var(--border-medium)); width: 60%; height: 9px; }
+  .phone .line.s { width: 78%; }
+  .phone .line.xs { width: 44%; margin-bottom: 18px; }
+  .phone .menu { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; background: #fff; border-top: 1px solid hsl(var(--border)); display: flex; justify-content: space-around; align-items: center; }
+  .phone .menu i { width: 16px; height: 16px; border-radius: 4px; background: hsl(var(--border)); }
+  .phone .menu i.on { background: hsl(var(--primary)); }
+  .phone .field { height: 26px; border-radius: 13px; border: 1px solid hsl(var(--primary)); margin-bottom: 8px; display: flex; align-items: center; padding: 0 10px; font-size: 10px; color: hsl(var(--text-primary)); }
+  .phone .hit { display: flex; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid hsl(var(--divider)); }
+  .phone .hit i { width: 14px; height: 14px; border-radius: 50%; background: hsl(var(--primary) / .18); flex: none; }
+  .phone .hit span { flex: 1; }
+  .phone .tools { position: absolute; right: 8px; top: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .phone .tools i { width: 20px; height: 20px; border-radius: 6px; background: #fff; border: 1px solid hsl(var(--border)); }
+  .phone .count { position: absolute; left: 8px; top: 10px; height: 20px; padding: 0 8px; border-radius: 6px; background: #fff; border: 1px solid hsl(var(--border)); font-size: 9px; font-weight: 600; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
+
+  /* Data rows and states */
+  .rowlist { background: #fff; border: 1px solid hsl(var(--border)); max-width: 640px; }
+  .drow { display: grid; grid-template-columns: 1fr 96px 16px 56px; gap: 12px; align-items: center; padding: 14px 20px; border-bottom: 1px solid hsl(var(--divider)); font-size: 14px; }
+  .drow:last-child { border-bottom: none; }
+  .drow .nm { font-weight: 500; }
+  .drow .sub { display: block; font-size: 12px; font-weight: 400; color: hsl(var(--text-secondary)); }
+  .drow .amt, .drow .pct { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .drow .amt { color: hsl(var(--text-secondary)); }
+  .up { color: hsl(var(--rising)); }
+  .down { color: hsl(var(--falling)); }
+  .drow.locked { background: hsl(var(--paid) / .07); grid-template-columns: 1fr; color: hsl(var(--paid)); font-size: 13px; font-weight: 500; }
+  .states { grid-template-columns: repeat(4, 1fr); gap: 1px; background: hsl(var(--border)); border: 1px solid hsl(var(--border)); }
+  .state { background: #fff; padding: 24px; }
+  .state .big { font-size: 28px; line-height: 42px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-bottom: 6px; }
+  .state .big.word { font-size: 20px; }
+  .state p { font-size: 13px; color: hsl(var(--text-secondary)); }
+  .saynot { grid-template-columns: 1fr 1fr; gap: 1px; background: hsl(var(--border)); border: 1px solid hsl(var(--border)); }
+  .saynot > div { background: #fff; padding: 24px 28px; }
+  .saynot ul { margin: 0; padding: 0; list-style: none; font-size: 14px; line-height: 2; }
+  .saynot .no li { color: hsl(var(--text-tertiary)); text-decoration: line-through; }
 </style>
 </head>
 <body>
@@ -661,7 +741,7 @@
   <div class="hero-meta">
     <span class="dot"></span>
     <span>Tecxmate / Design System</span>
-    <span>v1.0 · Apr 2026</span>
+    <span>v1.1 · Oct 2026</span>
   </div>
   <div style="display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; margin-bottom: 20px;">
     <span class="wordmark" style="font-size: 68px;">tecxmate</span>
@@ -711,6 +791,30 @@
       <div class="principle-num">04</div>
       <h4>Glow on hover</h4>
       <p>Interactive cards light up with a colored border and ambient shadow matching their category — not a blunt elevation.</p>
+    </div>
+  </div>
+
+  <div class="ds-sub" style="margin-top: 40px;">Added from product work <span class="v11">v1.1</span></div>
+  <div class="grid principles">
+    <div class="principle">
+      <div class="principle-num">05</div>
+      <h4>Fewer moving parts</h4>
+      <p>When something opens, one element changes and everything else stays still. Count the elements and the things that move. Remove one of each if you can.</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">06</div>
+      <h4>The same place in every state</h4>
+      <p>A control keeps its position when a card opens, a filter is set or the page is dragged. A screen looks the same at rest and in motion.</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">07</div>
+      <h4>Highlight only what was chosen</h4>
+      <p>An overview singles nothing out. An area, a row or a figure is emphasised only after the reader selects it.</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">08</div>
+      <h4>An honest state for everything</h4>
+      <p>Loading, failed, withheld and zero each look different. A failure never shows as a number.</p>
     </div>
   </div>
 </section>
@@ -918,6 +1022,42 @@
       <span class="hex">#666666</span>
     </div>
   </div>
+
+  <div class="ds-sub" style="margin-top: 40px;">Data roles <span class="v11">v1.1</span></div>
+  <div class="grid g-4">
+    <div class="swatch">
+      <div class="swatch-chip on-dark" style="background: hsl(var(--rising)); height: 120px;">
+        <div class="name"><span>Rising</span><span>up</span></div>
+      </div>
+      <div class="swatch-meta"><span class="hex">#C2182B</span><span>--rising</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-chip on-dark" style="background: hsl(var(--falling)); height: 120px;">
+        <div class="name"><span>Falling</span><span>down</span></div>
+      </div>
+      <div class="swatch-meta"><span class="hex">#0B7A43</span><span>--falling</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-chip on-dark" style="background: hsl(var(--paid)); height: 120px;">
+        <div class="name"><span>Paid</span><span>plan</span></div>
+      </div>
+      <div class="swatch-meta"><span class="hex">#8A6A1F</span><span>--paid</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-chip" style="background: hsl(var(--data-quiet)); height: 120px;">
+        <div class="name"><span>Data, quiet</span><span>ground</span></div>
+      </div>
+      <div class="swatch-meta"><span class="hex">#D9C8FF</span><span>--data-quiet</span></div>
+    </div>
+  </div>
+  <div style="height: 16px;"></div>
+  <div class="grid rules">
+    <div class="rule"><h4>Rising is red and falling is green <span class="v11">v1.1</span></h4><p>This is the convention in Taiwan, and we keep it in every language. Each figure also carries ▲ or ▼, so colour is never the only sign.</p></div>
+    <div class="rule"><h4>Size is purple, direction is red or green <span class="v11">v1.1</span></h4><p>Bars, dots and rankings use the brand purple. Only a change over time takes the direction colours.</p></div>
+    <div class="rule"><h4>Gold means part of a paid plan <span class="v11">v1.1</span></h4><p>Gold marks a locked row or a paid feature. It has no other use.</p></div>
+    <div class="rule"><h4>Small white text sits on the darker purple <span class="v11">v1.1</span></h4><p>White text under 18px on <code>#8c52ff</code> measures 4.4 to 1. On <code>#6b3fcc</code> it measures 7.0 to 1. Large buttons and marks keep the brand purple.</p></div>
+    <div class="rule"><h4>Both themes are designed and both are checked <span class="v11">v1.1</span></h4><p>A product with a dark theme gets its own dark values for every token. A change is looked at in dark and in light before it is called done.</p></div>
+  </div>
 </section>
 
 <!-- =============================================================
@@ -995,6 +1135,16 @@
       <span class="usage">Meta &amp; legal</span>
     </div>
   </div>
+
+  <div class="ds-sub" style="margin-top: 40px;">Rules for product text <span class="v11">v1.1</span></div>
+  <div class="grid rules">
+    <div class="rule"><h4>Labels never wrap <span class="v11">v1.1</span></h4><p>A button, tab, chip, pill or menu label stays on one line. Shorten the words first. If they still do not fit, the label ends in an ellipsis.</p></div>
+    <div class="rule"><h4>Names may take two lines <span class="v11">v1.1</span></h4><p>An industry, a company or a place can run to a second line in a list, then an ellipsis. The numbers beside it stay on one line. The detail screen shows the full name.</p></div>
+    <div class="rule"><h4>Chinese uses the device face <span class="v11">v1.1</span></h4><p>PingFang TC or Noto Sans TC for interface text, and Noto Serif TC beside Instrument Serif. The interface needs no web font.</p></div>
+    <div class="rule"><h4>Every name is stored as its owner wrote it <span class="v11">v1.1</span></h4><p>Chinese, Vietnamese, Arabic, accents and emoji survive sign-up, storage and display. Each new form is tested with them.</p></div>
+    <div class="rule"><h4>Exports embed their fonts <span class="v11">v1.1</span></h4><p>A tool that makes a PDF or a video has no reader device to fall back on. It embeds a Traditional Chinese font.</p></div>
+    <div class="rule"><h4>Text fields are 16px or larger <span class="v11">v1.1</span></h4><p>A field keeps the page still when it takes focus. The page never zooms, scrolls or shifts under the keyboard.</p></div>
+  </div>
 </section>
 
 <!-- =============================================================
@@ -1069,6 +1219,23 @@
       <div><span class="label">Hero · Shader</span><h4 style="margin-top: 8px;">Purple radial wash</h4></div>
       <span class="t-caption">Reserved for hero / landing</span>
     </div>
+  </div>
+
+  <div class="ds-sub" style="margin-top: 40px;">Product sizes <span class="v11">v1.1</span></div>
+  <table class="spec"><thead><tr><th>Thing</th><th>Value</th><th>Note</th></tr></thead><tbody>
+<tr><td>Tap target</td><td>44px or more</td><td>A link inside a sentence may look shorter. Its tap area is still 44px tall.</td></tr>
+<tr><td>Map control height</td><td>46px</td><td>The count, the toolbar buttons and the search row share it.</td></tr>
+<tr><td>Control corner</td><td>12px</td><td>Controls that float on a map or a photo. Full pills are for search fields and filter chips.</td></tr>
+<tr><td>Sheet corner</td><td>16px</td><td>Top corners of a card that slides up on a phone. Marketing cards stay square.</td></tr>
+<tr><td>Sheet handle</td><td>40 × 5px</td><td>Centred, in the border colour, in both themes.</td></tr>
+<tr><td>Bottom menu</td><td>52px</td><td>One row of buttons. A 22px credit line sits above it.</td></tr>
+<tr><td>Gap between neighbours</td><td>8px or more</td><td>An opened control never touches the one beside it.</td></tr>
+<tr><td>Phone widths to check</td><td>360 · 390 · 414px</td><td>Every change is checked at all three.</td></tr>
+</tbody></table>
+  <div style="height: 16px;"></div>
+  <div class="grid rules">
+    <div class="rule"><h4>Shadows are short <span class="v11">v1.1</span></h4><p>Use <code>0 1px 3px</code> at rest. Wide soft shadows and background blur are left out, because some viewers and exports draw them as hard blocks.</p></div>
+    <div class="rule"><h4>A hard edge is softened with a fade <span class="v11">v1.1</span></h4><p>Where a menu meets the content above it, a 28px fade in the menu colour replaces the border. The fade takes no taps.</p></div>
   </div>
 </section>
 
@@ -1525,9 +1692,155 @@
   </div>
 </section>
 
+<!-- =============================================================
+     MOTION (v1.1)
+============================================================= -->
+<section class="ds">
+  <div class="ds-eyebrow">09 · Motion <span class="v11">v1.1</span></div>
+  <h2 class="ds-title">Short, smooth, and quiet.</h2>
+  <p class="ds-lede">Three durations and two curves cover every product. Motion explains where something came from. It never performs.</p>
+  <table class="spec"><thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead><tbody>
+<tr><td>--dur-tap</td><td>120ms</td><td>A press.</td></tr>
+<tr><td>--dur-ui</td><td>200ms</td><td>A colour, a chevron, a pill, a popover.</td></tr>
+<tr><td>--dur-panel</td><td>300ms</td><td>A panel, a sheet, a dialog, a page.</td></tr>
+<tr><td>--ease-standard</td><td>cubic-bezier(.4, 0, .2, 1)</td><td>The default, and every exit.</td></tr>
+<tr><td>--ease-decel</td><td>cubic-bezier(0, 0, .2, 1)</td><td>Entrances.</td></tr>
+</tbody></table>
+  <div style="height: 16px;"></div>
+  <div class="grid rules">
+    <div class="rule"><h4>One set of tokens <span class="v11">v1.1</span></h4><p>No transition names a raw duration or curve. A build check fails if one does.</p></div>
+    <div class="rule"><h4>Only transform and opacity move <span class="v11">v1.1</span></h4><p>Width, height, position and clip paths are never animated. A panel that grows is laid out at its final size and revealed through a window that slides.</p></div>
+    <div class="rule"><h4>Nothing is measured while a finger moves <span class="v11">v1.1</span></h4><p>Sizes are read once when the drag starts. Each frame sets one transform. A map is never redrawn per frame.</p></div>
+    <div class="rule"><h4>A drag follows the finger <span class="v11">v1.1</span></h4><p>The release decides by distance or by speed. A long drag or a quick flick closes a card. A short one springs back.</p></div>
+    <div class="rule"><h4>Short and smooth, never a snap <span class="v11">v1.1</span></h4><p>Every change of state has a transition from the token set. None of them is a show.</p></div>
+    <div class="rule"><h4>Reduced motion means no transition <span class="v11">v1.1</span></h4><p>When the reader turns animation off, the new state applies in the same step as the tap. A shortened animation is still an animation.</p></div>
+  </div>
+</section>
+
+<!-- =============================================================
+     PRODUCT UI (v1.1)
+============================================================= -->
+<section class="ds">
+  <div class="ds-eyebrow">10 · Product UI <span class="v11">v1.1</span></div>
+  <h2 class="ds-title">Phones, maps, and cards.</h2>
+  <p class="ds-lede">Rules for products people hold in one hand. They came from building 臺灣地圖集 Taiwan Atlas, and they apply to any app with a map, a list or a sliding card.</p>
+  <div class="ds-sub">Card heights and search on a phone <span class="v11">v1.1</span></div>
+  <div class="phones">
+    <div class="phone-fig">
+      <div class="phone"><div class="dotmap"></div><div class="count">499,729</div><div class="tools"><i></i><i></i><i></i></div>
+        <div class="sheet half"><div class="line ink"></div><div class="line s"></div><div class="line"></div><div class="line xs"></div></div>
+        <div class="menu"><i class="on"></i><i></i><i></i></div></div>
+      <div class="phone-cap"><strong>Half</strong>The card opens at half height. The map and its controls stay in use above it.</div>
+    </div>
+    <div class="phone-fig">
+      <div class="phone">
+        <div class="sheet full"><div class="line ink"></div><div class="line s"></div><div class="line"></div><div class="line xs"></div><div class="line ink"></div><div class="line s"></div><div class="line"></div><div class="line xs"></div><div class="line ink"></div><div class="line s"></div><div class="line"></div><div class="line xs"></div></div>
+        <div class="menu"><i></i><i></i><i class="on"></i></div></div>
+      <div class="phone-cap"><strong>Full</strong>Dragged up, the card reaches the top of the screen. No strip of map is left above it.</div>
+    </div>
+    <div class="phone-fig">
+      <div class="phone">
+        <div class="sheet full nohandle" style="bottom:0"><div class="field">咖啡</div><div class="hit"><i></i><span><div class="line ink" style="margin-bottom:5px;width:60%"></div><div class="line xs" style="margin:0"></div></span></div><div class="hit"><i></i><span><div class="line ink" style="margin-bottom:5px;width:74%"></div><div class="line xs" style="margin:0"></div></span></div><div class="hit"><i></i><span><div class="line ink" style="margin-bottom:5px;width:52%"></div><div class="line xs" style="margin:0"></div></span></div><div class="hit"><i></i><span><div class="line ink" style="margin-bottom:5px;width:66%"></div><div class="line xs" style="margin:0"></div></span></div><div class="hit"><i></i><span><div class="line ink" style="margin-bottom:5px;width:58%"></div><div class="line xs" style="margin:0"></div></span></div><div class="hit"><i></i><span><div class="line ink" style="margin-bottom:5px;width:70%"></div><div class="line xs" style="margin:0"></div></span></div></div></div>
+      <div class="phone-cap"><strong>Search</strong>Search takes the whole screen. The field sits at the top and the results are a list. Choosing one returns to the map.</div>
+    </div>
+  </div>
+  <div style="height: 16px;"></div>
+  <div class="grid rules">
+    <div class="rule"><h4>A card has two heights <span class="v11">v1.1</span></h4><p>Half shows the map above it. Full reaches the top of the screen. No height in between leaves a thin strip of map.</p></div>
+    <div class="rule"><h4>Search is a full screen <span class="v11">v1.1</span></h4><p>Typing opens a full-screen list of results with the field at the top. The map returns when the reader picks a result or goes back.</p></div>
+    <div class="rule"><h4>A handle that shows is a handle that works <span class="v11">v1.1</span></h4><p>Every card that slides up carries the same handle. A swipe down on it closes the card. Scrolling the content still scrolls.</p></div>
+    <div class="rule"><h4>One card answers one question <span class="v11">v1.1</span></h4><p>A card has at most two levels: a summary with tabs, then one detail screen with one way back to the tab the reader left.</p></div>
+    <div class="rule"><h4>A selector at the top sets the scope below <span class="v11">v1.1</span></h4><p>A period or an area selector changes the headline, the chart, the lists and the detail together.</p></div>
+    <div class="rule"><h4>The title and the content name the same place <span class="v11">v1.1</span></h4><p>A sheet titled Taipei City never shows another county under it.</p></div>
+    <div class="rule"><h4>The count is the legend <span class="v11">v1.1</span></h4><p>The control that explains a map shows the number of things on screen. It grows in place into the full legend. There is no second panel.</p></div>
+    <div class="rule"><h4>A toolbar is a column and keeps its shape <span class="v11">v1.1</span></h4><p>On a phone the tools stack in one column. The column does not change when a card or the legend opens.</p></div>
+    <div class="rule"><h4>The source credit is always on screen <span class="v11">v1.1</span></h4><p>Open-data licences require it in every state of the page. Notices sit on the left. The one offer sits on the right and is slightly heavier.</p></div>
+    <div class="rule"><h4>One blocking dialog at a time <span class="v11">v1.1</span></h4><p>A second dialog waits for the first to close.</p></div>
+    <div class="rule"><h4>A button beside each gesture <span class="v11">v1.1</span></h4><p>Anything a pinch or a swipe can do, a visible button can also do.</p></div>
+    <div class="rule"><h4>One map per page <span class="v11">v1.1</span></h4><p>Each page has one map with its own layers. Layers do not pile up across pages, and the map does not rotate.</p></div>
+  </div>
+</section>
+
+<!-- =============================================================
+     DATA (v1.1)
+============================================================= -->
+<section class="ds">
+  <div class="ds-eyebrow">11 · Data <span class="v11">v1.1</span></div>
+  <h2 class="ds-title">Figures people can trust.</h2>
+  <p class="ds-lede">How a number, a list and a locked row look, and what a product may say about where a figure comes from.</p>
+  <div class="ds-sub">A list of figures <span class="v11">v1.1</span></div>
+  <div class="rowlist">
+    <div class="drow"><span class="nm">Repair and installation of industrial machinery and equipment<span class="sub">Manufacturing</span></span><span class="amt">NT$29.3bn</span><span class="up">▲</span><span class="pct up">25.6%</span></div>
+    <div class="drow"><span class="nm">Other financial services<span class="sub">Finance</span></span><span class="amt">NT$33.2bn</span><span class="up">▲</span><span class="pct up">9.4%</span></div>
+    <div class="drow"><span class="nm">Warehousing<span class="sub">Transport</span></span><span class="amt">NT$24.1bn</span><span class="down">▼</span><span class="pct down">15.6%</span></div>
+    <div class="drow locked">Part of a paid plan · one sample row is shown</div>
+  </div>
+  <div class="ds-sub" style="margin-top: 32px;">Four states, four looks <span class="v11">v1.1</span></div>
+  <div class="grid states">
+    <div class="state"><div class="big">499,729</div><p>A real figure, with its source and date under it.</p></div>
+    <div class="state"><div class="big">&lt;5</div><p>A count of 1 to 4 is never shown.</p></div>
+    <div class="state"><div class="big">…</div><p>Still loading, or the load failed.</p></div>
+    <div class="state"><div class="big word">withheld</div><p>The source held it back.</p></div>
+  </div>
+  <div style="height: 16px;"></div>
+  <div class="grid rules">
+    <div class="rule"><h4>Results and sources go out, the method stays in <span class="v11">v1.1</span></h4><p>A screen, a document, an API reply, an AI connector and a post say what a number is and where it comes from. None of them explains how it was produced.</p></div>
+    <div class="rule"><h4>Every number carries its source and its date <span class="v11">v1.1</span></h4><p>The source and the date sit beside the figure or directly under the list.</p></div>
+    <div class="rule"><h4>Zero is a real answer <span class="v11">v1.1</span></h4><p>Loading and failure show an ellipsis. Zero is kept for real zeros.</p></div>
+    <div class="rule"><h4>Small counts are hidden <span class="v11">v1.1</span></h4><p>A count of 1 to 4 shows as &lt;5. So does any figure that would let a reader work one out by subtraction.</p></div>
+    <div class="rule"><h4>People are counts, never rows <span class="v11">v1.1</span></h4><p>A sole proprietor or a partnership is a person. Their name, id and address stay out of anything paid, exported or sent to a client.</p></div>
+    <div class="rule"><h4>An estimate is labelled an estimate <span class="v11">v1.1</span></h4><p>The product never presents a figure it does not hold as a fact.</p></div>
+    <div class="rule"><h4>Arrows share a column and figures share another <span class="v11">v1.1</span></h4><p>Figures are right-aligned with tabular numerals. A unit that repeats on every row is said once, under the list.</p></div>
+    <div class="rule"><h4>A change needs two positive amounts <span class="v11">v1.1</span></h4><p>Without them the row shows no percentage.</p></div>
+    <div class="rule"><h4>A period selector works like a stock viewer <span class="v11">v1.1</span></h4><p>Short labels such as 2M, 1Y, 3Y and 5Y. One plain sentence says what is compared with what.</p></div>
+    <div class="rule"><h4>Paid content is locked on the server <span class="v11">v1.1</span></h4><p>A free reader sees the lock, one sample row and where to get the rest. The paid rows are never sent to their browser.</p></div>
+  </div>
+</section>
+
+<!-- =============================================================
+     VOICE (v1.1)
+============================================================= -->
+<section class="ds">
+  <div class="ds-eyebrow">12 · Voice <span class="v11">v1.1</span></div>
+  <h2 class="ds-title">Plain, confident, bilingual.</h2>
+  <p class="ds-lede">How product copy sounds in every language we ship.</p>
+  <div class="grid saynot">
+    <div><div class="ds-sub">Say</div><ul><li>TBIS Intelligence · 臺灣商情</li><li>499,729 businesses</li><li>Data did not load</li><li>Part of a paid plan</li></ul></div>
+    <div class="no"><div class="ds-sub">Not</div><ul><li>Solutions for your business</li><li>Legend · 1</li><li>0 businesses, when nothing loaded</li><li>Upgrade now to unlock!</li></ul></div>
+  </div>
+  <div style="height: 16px;"></div>
+  <div class="grid rules">
+    <div class="rule"><h4>Speak as an equal <span class="v11">v1.1</span></h4><p>Lead with our own name and what we know. The copy does not address the customer's size or ask for their business.</p></div>
+    <div class="rule"><h4>Plain words and full sentences <span class="v11">v1.1</span></h4><p>A client should not need our vocabulary. Words such as layer, coordinate, API and CSV stay out of client text.</p></div>
+    <div class="rule"><h4>Say what it is <span class="v11">v1.1</span></h4><p>A sentence states what a thing is. It does not define the thing by what it is not.</p></div>
+    <div class="rule"><h4>One name for one thing <span class="v11">v1.1</span></h4><p>If two things in a product carry the same words, one of them is renamed.</p></div>
+    <div class="rule"><h4>A label states what will happen <span class="v11">v1.1</span></h4><p>An error says what went wrong and what to do next.</p></div>
+    <div class="rule"><h4>The local language comes first <span class="v11">v1.1</span></h4><p>Chinese first with English beside it, through one mechanism. English mode shows no Chinese except a proper name with no English form.</p></div>
+    <div class="rule"><h4>Shorten the longer language <span class="v11">v1.1</span></h4><p>If four labels fit in Chinese and not in English, the English is shortened. The page the label opens keeps the full title.</p></div>
+    <div class="rule"><h4>Official names and Traditional characters <span class="v11">v1.1</span></h4><p>Taiwan products write 臺北市, as the government does.</p></div>
+  </div>
+</section>
+
+<!-- =============================================================
+     PRACTICE (v1.1)
+============================================================= -->
+<section class="ds">
+  <div class="ds-eyebrow">13 · Practice <span class="v11">v1.1</span></div>
+  <h2 class="ds-title">How we change a screen.</h2>
+  <p class="ds-lede">The working order that keeps a public product stable while it changes every day.</p>
+  <div class="grid rules">
+    <div class="rule"><h4>A mock-up comes first <span class="v11">v1.1</span></h4><p>Anything visual is mocked up on real screenshots and real figures. The build starts after the owner approves it.</p></div>
+    <div class="rule"><h4>Change only what was asked <span class="v11">v1.1</span></h4><p>Anything else that looks wrong is noted and raised. It is not changed on the side.</p></div>
+    <div class="rule"><h4>Check it where the reader will see it <span class="v11">v1.1</span></h4><p>A phone at 390 × 844, a slowed processor, dark and light, and the real address the reader opens. A preview behind a sign-in wall must load its data like the live site.</p></div>
+    <div class="rule"><h4>A check fails before the fix and passes after it <span class="v11">v1.1</span></h4><p>A check that only ever passed proves nothing.</p></div>
+    <div class="rule"><h4>A timing check waits for the settled state <span class="v11">v1.1</span></h4><p>It polls for the final state within a limit. It never counts frames.</p></div>
+    <div class="rule"><h4>Stage first, then release <span class="v11">v1.1</span></h4><p>The public site only receives a build that passed every check and that the owner tried on the preview.</p></div>
+  </div>
+</section>
+
 <div class="ds-footer">
-  <span>Tecxmate · Design System · v1.0 · April 2026</span>
-  <span>Sourced from <code>tecxmate/tecxmate@main</code> · app/globals.css · tailwind.config.ts</span>
+  <span>Tecxmate · Design System · v1.1 · October 2026</span>
+  <span>Sourced from <code>tecxmate/tecxmate@main</code> · app/globals.css · tailwind.config.ts · product rules from <code>tecxmate/bizmap</code>, marked v1.1</span>
 </div>
 
 </main>
